@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, List, Activity, Bell, ChevronUp, ChevronDown, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Clock, Monitor } from 'lucide-react';
+import { X, List, Activity, ChevronUp, ChevronDown, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Monitor } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 // ─── INSTRUMENT CONFIG ────────────────────────────────────────────────────────
 const INSTRUMENTS = [
@@ -368,6 +369,17 @@ export default function XTradingTerminal({ account }) {
     if (dailyLoss >= rules.dailyDDLimit || maxLoss >= rules.maxDDLimit) {
       setAccountBlocked(true);
       addLog(`⚠ DRAWDOWN LIMIT REACHED — Trading suspended`, false);
+      // Mark account as failed in DB
+      if (account?.id) {
+        base44.entities.ChallengeAccount.update(account.id, {
+          status: 'failed',
+          daily_drawdown_used: Math.max(dailyLoss, 0),
+          max_drawdown_used: Math.max(maxLoss, 0),
+          equity: equity,
+          balance: sessionBalance,
+          pnl: sessionBalance - accountSize,
+        }).catch(() => {});
+      }
     }
   }, [equity]);
 
@@ -417,24 +429,64 @@ export default function XTradingTerminal({ account }) {
     setActivityLog(prev => [{ msg, time: new Date().toLocaleTimeString(), ok }, ...prev.slice(0, 49)]);
   }, []);
 
+  const syncAccountToDB = useCallback((newBalance, newClosedTrades, allPositions, currentEquity) => {
+    if (!account?.id) return;
+    const trades = newClosedTrades;
+    const totalTrades = trades.length;
+    const wins = trades.filter(t => t.pnl > 0).length;
+    const winRate = totalTrades > 0 ? parseFloat(((wins / totalTrades) * 100).toFixed(1)) : 0;
+    const totalPnl = parseFloat((newBalance - accountSize).toFixed(2));
+    const dailyDDUsed = parseFloat((Math.max(0, (newBalance - currentEquity) / accountSize * 100)).toFixed(2));
+    const maxDDUsed = parseFloat((Math.max(0, (accountSize - currentEquity) / accountSize * 100)).toFixed(2));
+    const profitTargetProgress = parseFloat((Math.max(0, totalPnl / accountSize * 100)).toFixed(2));
+    base44.entities.ChallengeAccount.update(account.id, {
+      balance: newBalance,
+      equity: currentEquity,
+      pnl: totalPnl,
+      daily_pnl: parseFloat((currentEquity - newBalance).toFixed(2)),
+      win_rate: winRate,
+      total_trades: totalTrades,
+      daily_drawdown_used: dailyDDUsed,
+      max_drawdown_used: maxDDUsed,
+      profit_target_progress: profitTargetProgress,
+    }).catch(() => {});
+  }, [account?.id, accountSize]);
+
   const closePositionById = useCallback((id, closePrice, closePnl, reason = 'Manual') => {
     setPositions(prev => {
       const pos = prev.find(p => p.id === id);
       if (!pos) return prev;
-      setSessionBalance(b => parseFloat((b + closePnl).toFixed(2)));
-      setClosedTrades(ct => [{
-        ...pos, close: closePrice, pnl: closePnl, closeTime: new Date().toLocaleTimeString(), reason,
-      }, ...ct.slice(0, 99)]);
+      const newBalance = parseFloat((sessionBalance + closePnl).toFixed(2));
+      setSessionBalance(newBalance);
+      setClosedTrades(ct => {
+        const updated = [{ ...pos, close: closePrice, pnl: closePnl, closeTime: new Date().toLocaleTimeString(), reason }, ...ct.slice(0, 99)];
+        // Sync to DB after each trade close (use setTimeout to let state settle)
+        setTimeout(() => syncAccountToDB(newBalance, updated, prev.filter(p => p.id !== id), newBalance + floatPnl), 100);
+        return updated;
+      });
       addLog(`${pos.type} ${pos.lots} ${pos.symbol} closed @ ${typeof closePrice === 'number' ? closePrice.toFixed(pos.digits || 2) : closePrice} — ${closePnl >= 0 ? '+' : ''}$${closePnl.toFixed(2)} [${reason}]`, closePnl >= 0);
       return prev.filter(p => p.id !== id);
     });
-  }, [addLog]);
+  }, [addLog, sessionBalance, floatPnl, syncAccountToDB]);
 
   const placeOrder = () => {
     if (accountBlocked) return;
     const inst = INSTRUMENTS.find(i => i.symbol === selectedSymbol);
     const p = prices[selectedSymbol];
     const lotsNum = parseFloat(lots) || 0.01;
+
+    // Enforce max lots rule
+    if (lotsNum > rules.maxLots) {
+      addLog(`❌ Lot size ${lotsNum} exceeds max allowed ${rules.maxLots} lots`, false);
+      return;
+    }
+
+    // Enforce leverage / margin check
+    const reqMargin = calcMargin(selectedSymbol, lotsNum, account?.leverage);
+    if (reqMargin > freeMargin) {
+      addLog(`❌ Insufficient margin — required $${reqMargin.toFixed(0)}, available $${freeMargin.toFixed(0)} (Leverage: ${account?.leverage || '1:100'})`, false);
+      return;
+    }
 
     if (orderType === 'market') {
       if (!p || p.bid === null) { addLog(`No live price for ${selectedSymbol} yet`, false); return; }
