@@ -137,13 +137,33 @@ function calcPnl(pos, currentPrice) {
   return parseFloat(pnl.toFixed(2));
 }
 
-function calcMargin(symbol, lots, leverage) {
+// MT5-style margin: Margin = (Lots × ContractSize × OpenPrice) / Leverage
+function calcMargin(symbol, lots, leverage, currentBid) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
   const lev = parseInt((leverage || '1:100').split(':')[1]) || 100;
   if (!inst) return 0;
-  if (inst.type === 'crypto') return (lots * 60000) / lev;
-  if (inst.type === 'fx') return (lots * inst.contractSize) / lev;
-  return lots * 500 / lev;
+  // Use a realistic reference price if live price not available yet
+  const REF_PRICES = {
+    'BTC/USD': 65000, 'ETH/USD': 3200, 'XAU/USD': 2338,
+    'EUR/USD': 1.082, 'GBP/USD': 1.270, 'USD/JPY': 154.8, 'NAS100': 18254,
+  };
+  const price = currentBid || REF_PRICES[symbol] || 1;
+  if (inst.type === 'crypto') {
+    // Crypto: 1 lot = 1 coin, margin = (lots × price) / leverage
+    return (lots * price) / lev;
+  } else if (inst.type === 'fx') {
+    // FX: margin = (lots × contractSize × price) / leverage — for USD quote pairs price ≈ 1
+    // For pairs like EUR/USD the base is EUR, so contract value in USD = lots × contractSize × price
+    // For USD/JPY the base is USD, contract value = lots × contractSize × 1
+    const isUsdBase = symbol.startsWith('USD/');
+    const contractValueUsd = isUsdBase
+      ? lots * inst.contractSize                          // USD/JPY: value already in USD
+      : lots * inst.contractSize * price;                 // EUR/USD, GBP/USD: convert to USD
+    return contractValueUsd / lev;
+  } else {
+    // Indices: margin = lots × price / leverage
+    return (lots * price) / lev;
+  }
 }
 
 function PriceCell({ value, digits }) {
@@ -358,7 +378,10 @@ export default function XTradingTerminal({ account }) {
   }, 0);
 
   const equity = sessionBalance + floatPnl;
-  const totalMargin = positions.reduce((s, p) => s + calcMargin(p.symbol, p.lots, account?.leverage), 0);
+  const totalMargin = positions.reduce((s, p) => {
+    const pp = prices[p.symbol];
+    return s + calcMargin(p.symbol, p.lots, account?.leverage, pp?.bid);
+  }, 0);
   const freeMargin = equity - totalMargin;
 
   // Real-time DD check
@@ -490,8 +513,8 @@ export default function XTradingTerminal({ account }) {
       return;
     }
 
-    // Enforce leverage / margin check
-    const reqMargin = calcMargin(selectedSymbol, lotsNum, account?.leverage);
+    // Enforce leverage / margin check (MT5-style: price-based)
+    const reqMargin = calcMargin(selectedSymbol, lotsNum, account?.leverage, p?.bid);
     if (reqMargin > freeMargin) {
       addLog(`❌ Insufficient margin — required $${reqMargin.toFixed(0)}, available $${freeMargin.toFixed(0)} (Leverage: ${account?.leverage || '1:100'})`, false);
       return;
@@ -537,7 +560,7 @@ export default function XTradingTerminal({ account }) {
   const currentPrice = prices[selectedSymbol];
   const leverage = account?.leverage || '1:100';
   const lotsNum = parseFloat(lots) || 0.01;
-  const marginReq = calcMargin(selectedSymbol, lotsNum, leverage);
+  const marginReq = calcMargin(selectedSymbol, lotsNum, leverage, currentPrice?.bid);
   const TF_OPTS = [
     { label: '1m', val: '1' }, { label: '5m', val: '5' }, { label: '15m', val: '15' },
     { label: '1h', val: '60' }, { label: '4h', val: '240' }, { label: '1D', val: 'D' },

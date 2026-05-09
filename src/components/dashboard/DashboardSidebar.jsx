@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -23,11 +23,12 @@ const navItems = [
   { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'affiliate', label: 'Affiliate', icon: Users },
   { id: 'kyc', label: 'KYC Verification', icon: ShieldCheck },
+  { id: 'trash', label: 'Trash Accounts', icon: Trash2 },
   { id: 'support', label: 'Support', icon: HeadphonesIcon },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount }) {
+export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount = 0 }) {
   const handleNav = (id) => {
     setActivePage(id);
     setIsOpen(false);
@@ -36,7 +37,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/5">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.06]" style={{ background: 'rgba(255,92,0,0.03)' }}>
         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
           <span className="text-primary font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
@@ -77,12 +78,17 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 isActive
                   ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  : item.id === 'trash'
+                    ? 'text-red-400/70 hover:text-red-400 hover:bg-red-500/5'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
               }`}
             >
-              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/70 group-hover:text-red-400' : 'text-muted-foreground group-hover:text-foreground'}`} />
               <span className="flex-1 text-left">{item.label}</span>
-              {isActive && <ChevronRight className="w-3 h-3 text-primary/60" />}
+              {item.id === 'trash' && trashCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white">{trashCount}</span>
+              )}
+              {isActive && item.id !== 'trash' && <ChevronRight className="w-3 h-3 text-primary/60" />}
             </button>
           );
         })}
@@ -166,8 +172,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </button>
 
       {/* Desktop sidebar */}
-      <div className="hidden md:flex flex-col w-56 border-r border-white/5 h-screen sticky top-0"
-        style={{ background: 'rgba(8,8,10,0.98)' }}>
+      <div className="hidden md:flex flex-col w-56 border-r border-white/[0.06] h-screen sticky top-0"
+        style={{ background: 'rgba(5,5,7,0.97)', backdropFilter: 'blur(32px)' }}>
         <SidebarContent />
       </div>
 

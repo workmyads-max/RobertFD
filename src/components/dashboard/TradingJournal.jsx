@@ -60,6 +60,7 @@ export default function TradingJournal({ user }) {
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 5),
+    select: (data) => data.filter(a => a.status !== 'failed'),
   });
 
   const deleteMutation = useMutation({

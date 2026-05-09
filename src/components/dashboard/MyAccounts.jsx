@@ -141,8 +141,8 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
-  // Only show real accounts, no demo fallback
-  const displayAccounts = accounts;
+  // Only show active/funded/passed/pending accounts — failed ones go to Trash
+  const displayAccounts = accounts.filter(a => a.status !== 'failed');
 
   return (
     <div>

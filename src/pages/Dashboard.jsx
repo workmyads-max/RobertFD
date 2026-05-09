@@ -32,6 +32,8 @@ import KYC from '../components/dashboard/KYC';
 import LiveChat from '../components/dashboard/LiveChat';
 import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
+import TrashAccounts from '../components/dashboard/TrashAccounts';
+import TradingBackground from '../components/dashboard/TradingBackground';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -63,6 +65,7 @@ export default function Dashboard() {
   });
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
+  const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);
@@ -92,6 +95,7 @@ export default function Dashboard() {
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'terminal': return <XTradingTerminal account={activeAccount || primaryActiveAccount} />;
       case 'xcopier': return <XCopier />;
+      case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'calendar': return <EconomicCalendar />;
       case 'news': return <MarketNews />;
@@ -123,11 +127,14 @@ export default function Dashboard() {
   const isTerminal = activePage === 'terminal';
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
+      {/* Animated trading background */}
+      {!isTerminal && <TradingBackground />}
+
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       <LiveChat user={user} />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
         <DashboardSidebar
           activePage={activePage}
           setActivePage={setActivePage}
@@ -136,9 +143,11 @@ export default function Dashboard() {
           isOpen={sidebarOpen}
           setIsOpen={setSidebarOpen}
           unreadCount={notifications.filter(n => n.display_mode !== 'banner').length}
+          trashCount={failedAccountsCount}
         />
 
-        <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}>
+        <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
+          style={!isTerminal ? { background: 'transparent' } : {}}>
           <div className={isTerminal ? 'h-full' : 'p-6 md:p-8 max-w-[1400px] mx-auto'}>
             <AnimatePresence mode="wait">
               <motion.div
