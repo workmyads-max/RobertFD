@@ -151,6 +151,7 @@ export default function XTradingTerminalNew({ account }) {
   const isActive = !!(account && (account.status === 'active' || account.status === 'funded' || account.status === 'passed'));
   const prices = useLivePrices();
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USD');
+  const [timeframe, setTimeframe] = useState('60');
   const [orderSide, setOrderSide] = useState('BUY');
   const [orderType, setOrderType] = useState('market');
   const [pendingPrice, setPendingPrice] = useState('');
@@ -163,6 +164,7 @@ export default function XTradingTerminalNew({ account }) {
   const [activityLog, setActivityLog] = useState([{ msg: `Terminal connected`, time: new Date().toLocaleTimeString(), ok: true }]);
   const [selectedPos, setSelectedPos] = useState(null);
   const [accountBlocked, setAccountBlocked] = useState(false);
+  const [isLoadingChart, setIsLoadingChart] = useState(false);
   const rules = getAccountRules(account);
 
   const accountSize = account?.account_size || 100000;
@@ -362,12 +364,147 @@ export default function XTradingTerminalNew({ account }) {
             </div>
           </div>
 
-          {/* Full Chart Area */}
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8">
-            <div className="text-center">
-              <div className="text-5xl font-mono font-black text-primary/20 mb-4">{selectedSymbol}</div>
-              <div className="text-sm text-muted-foreground/60 font-mono">TradingView Chart Integration Ready</div>
-              <div className="text-xs text-muted-foreground/40 mt-2">Chart renders full terminal width</div>
+          {/* Full Chart Area with Timeframes */}
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            {/* Timeframe Controls */}
+            <div className="px-6 py-3 flex items-center gap-2 border-b flex-wrap"
+              style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(5,5,8,0.6)' }}>
+              {[
+                { label: '1m', val: '1' },
+                { label: '5m', val: '5' },
+                { label: '15m', val: '15' },
+                { label: '1h', val: '60' },
+                { label: '4h', val: '240' },
+                { label: '1D', val: 'D' },
+              ].map(tf => (
+                <motion.button
+                  key={tf.val}
+                  onClick={() => {
+                    setIsLoadingChart(true);
+                    setTimeout(() => setIsLoadingChart(false), 600);
+                    setTimeframe(tf.val);
+                  }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all font-mono ${
+                    timeframe === tf.val
+                      ? 'text-white'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  style={{
+                    background: timeframe === tf.val
+                      ? 'linear-gradient(135deg, rgba(255,92,0,0.8), rgba(255,92,0,0.6))'
+                      : 'rgba(255,255,255,0.04)',
+                    boxShadow: timeframe === tf.val
+                      ? '0 4px 16px rgba(255,92,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                      : 'none',
+                    border: `1px solid ${timeframe === tf.val ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                  }}>
+                  {tf.label}
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Chart Display with Cinematic Transition */}
+            <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8">
+              <AnimatePresence mode="wait">
+                {isLoadingChart ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{
+                      background: 'radial-gradient(circle, rgba(255,92,0,0.1), transparent)',
+                    }}>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      className="relative">
+                      <div className="w-12 h-12 rounded-full border-2 border-transparent"
+                        style={{
+                          borderTopColor: '#FF5C00',
+                          borderRightColor: 'rgba(255,92,0,0.3)',
+                          boxShadow: '0 0 20px rgba(255,92,0,0.3)',
+                        }} />
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        className="absolute inset-0 w-12 h-12 rounded-full border-2 border-transparent"
+                        style={{
+                          borderBottomColor: 'rgba(204,255,0,0.5)',
+                          borderLeftColor: 'rgba(204,255,0,0.2)',
+                        }} />
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={`chart-${selectedSymbol}-${timeframe}`}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{
+                      duration: 0.8,
+                      ease: [0.22, 1, 0.36, 1],
+                      staggerChildren: 0.1,
+                    }}
+                    className="text-center w-full">
+                    <motion.div
+                      initial={{ opacity: 0, letterSpacing: '-0.1em' }}
+                      animate={{ opacity: 1, letterSpacing: '0em' }}
+                      transition={{ delay: 0.1, duration: 0.6 }}
+                      className="text-6xl font-mono font-black text-primary/30 mb-6 tracking-tight">
+                      {selectedSymbol}
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, duration: 0.6, type: 'spring', stiffness: 100 }}
+                      className="mb-4">
+                      <div className="text-5xl font-black text-foreground inline-block">
+                        {currentPrice?.bid?.toFixed(selected.digits) || '—'}
+                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                        className={`text-lg font-bold mt-2 ${(currentPrice?.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {(currentPrice?.pct || 0) >= 0 ? '▲' : '▼'} {Math.abs(currentPrice?.pct || 0).toFixed(2)}%
+                      </motion.div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.5 }}
+                      className="text-sm text-muted-foreground/60 font-mono">
+                      {selectedSymbol} • {['1m', '5m', '15m', '1h', '4h', '1D'][['1', '5', '15', '60', '240', 'D'].indexOf(timeframe)]} Timeframe
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.5, duration: 0.8 }}
+                      className="mt-6 h-1 rounded-full"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent, #FF5C00, #CCFF00, transparent)',
+                        transformOrigin: 'left',
+                      }} />
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 0.6 }}
+                      className="mt-8 text-xs text-muted-foreground/50 font-mono">
+                      <div>TradingView Chart Integration Ready</div>
+                      <div className="mt-1">Chart renders with cinematic transitions</div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </motion.div>
