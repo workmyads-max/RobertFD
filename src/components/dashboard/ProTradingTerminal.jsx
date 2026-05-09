@@ -5,12 +5,12 @@ import { base44 } from '@/api/base44Client';
 import AccountBreachAlert from './AccountBreachAlert';
 
 const INSTRUMENTS = [
-  { symbol: 'BTC/USD', digits: 2, contractSize: 1, wsSymbol: 'btcusdt', type: 'crypto' },
-  { symbol: 'ETH/USD', digits: 2, contractSize: 1, wsSymbol: 'ethusdt', type: 'crypto' },
   { symbol: 'EUR/USD', digits: 5, contractSize: 100000, type: 'fx', spreadPips: 0.00012 },
   { symbol: 'GBP/USD', digits: 5, contractSize: 100000, type: 'fx', spreadPips: 0.00015 },
+  { symbol: 'USD/JPY', digits: 3, contractSize: 100000, type: 'fx', spreadPips: 0.015 },
+  { symbol: 'USD/CHF', digits: 5, contractSize: 100000, type: 'fx', spreadPips: 0.00018 },
+  { symbol: 'AUD/USD', digits: 5, contractSize: 100000, type: 'fx', spreadPips: 0.00020 },
   { symbol: 'XAU/USD', digits: 2, contractSize: 100, type: 'fx', spreadPips: 0.35 },
-  { symbol: 'NAS100', digits: 2, contractSize: 1, type: 'index', spreadPips: 1.2 },
 ];
 
 function useLivePrices() {
@@ -22,51 +22,20 @@ function useLivePrices() {
   );
 
   useEffect(() => {
-    const cryptoSymbols = INSTRUMENTS.filter(i => i.type === 'crypto').map(i => i.wsSymbol);
-    const streams = cryptoSymbols.map(s => `${s}@ticker`).join('/');
-    let ws;
-    let wsRetryTimer;
-
-    const connectWS = () => {
-      ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
-      ws.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-        const d = msg.data;
-        if (!d || !d.s) return;
-        const inst = INSTRUMENTS.find(i => i.wsSymbol === d.s.toLowerCase());
-        if (!inst) return;
-        const bid = parseFloat(d.b);
-        const ask = parseFloat(d.a);
-        const pct = parseFloat(d.P);
-        setPrices(prev => ({
-          ...prev,
-          [inst.symbol]: { 
-            bid, ask, pct, 
-            high: Math.max(prev[inst.symbol]?.high || bid, bid),
-            low: Math.min(prev[inst.symbol]?.low || bid, bid),
-            volume: parseFloat(d.v),
-            prev: prev[inst.symbol]?.bid 
-          },
-        }));
-      };
-      ws.onerror = () => {};
-      ws.onclose = () => {
-        wsRetryTimer = setTimeout(connectWS, 3000);
-      };
-    };
-    connectWS();
-
     const FX_SEEDS = {
-      'XAU/USD': { bid: 2338.15, spreadPips: 0.35 },
       'EUR/USD': { bid: 1.08215, spreadPips: 0.00012 },
       'GBP/USD': { bid: 1.27048, spreadPips: 0.00015 },
-      'NAS100': { bid: 18254.00, spreadPips: 1.2 },
+      'USD/JPY': { bid: 154.780, spreadPips: 0.015 },
+      'USD/CHF': { bid: 0.89450, spreadPips: 0.00018 },
+      'AUD/USD': { bid: 0.67234, spreadPips: 0.00020 },
+      'XAU/USD': { bid: 2338.15, spreadPips: 0.35 },
     };
     
     setPrices(prev => {
       const next = { ...prev };
       Object.entries(FX_SEEDS).forEach(([sym, cfg]) => {
         const inst = INSTRUMENTS.find(i => i.symbol === sym);
+        if (!inst) return;
         next[sym] = {
           bid: cfg.bid,
           ask: parseFloat((cfg.bid + cfg.spreadPips).toFixed(inst.digits)),
@@ -83,13 +52,13 @@ function useLivePrices() {
     const fxInterval = setInterval(() => {
       setPrices(prev => {
         const next = { ...prev };
-        INSTRUMENTS.filter(i => i.type !== 'crypto').forEach(inst => {
+        INSTRUMENTS.forEach(inst => {
           const cur = next[inst.symbol];
           if (!cur || cur.bid === null) return;
-          const volatility = inst.type === 'fx' ? cur.bid * 0.000015 : cur.bid * 0.00008;
+          const volatility = cur.bid * 0.000015;
           const move = (Math.random() - 0.499) * volatility;
           const newBid = parseFloat((cur.bid + move).toFixed(inst.digits));
-          const spread = inst.spreadPips || (cur.ask - cur.bid);
+          const spread = inst.spreadPips;
           const newAsk = parseFloat((newBid + spread).toFixed(inst.digits));
           const newPct = parseFloat(((cur.pct || 0) + (Math.random() - 0.5) * 0.01).toFixed(2));
           next[inst.symbol] = {
@@ -104,11 +73,9 @@ function useLivePrices() {
         });
         return next;
       });
-    }, 800);
+    }, 500);
 
     return () => {
-      if (ws) ws.close();
-      clearTimeout(wsRetryTimer);
       clearInterval(fxInterval);
     };
   }, []);
@@ -227,6 +194,7 @@ export default function ProTradingTerminal({ account }) {
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USD');
   const [side, setSide] = useState('buy');
   const [leverage, setLeverage] = useState(50);
+  const [breachAlert, setBreachAlert] = useState(null);
   const [price, setPrice] = useState('');
   const [amount, setAmount] = useState('');
   const [positions, setPositions] = useState([]);
@@ -236,7 +204,29 @@ export default function ProTradingTerminal({ account }) {
   const currentPrice = prices[selectedSymbol];
   const selected = INSTRUMENTS.find(i => i.symbol === selectedSymbol);
   const accountSize = account?.account_size || 100000;
-  const equity = accountSize + positions.reduce((s, p) => s + (p.pnl || 0), 0);
+  const totalPnl = positions.reduce((s, p) => s + (p.pnl || 0), 0);
+  const equity = accountSize + totalPnl;
+  const usedMargin = positions.reduce((s, p) => s + (p.margin || 0), 0);
+  const marginLevel = usedMargin > 0 ? (equity / usedMargin) * 100 : 100;
+
+  // Real-time breach detection
+  useEffect(() => {
+    if (marginLevel < 50 && !breachAlert) {
+      setBreachAlert('warning');
+      if (account?.id) {
+        base44.entities.ChallengeAccount.update(account.id, {
+          equity: equity,
+          balance: accountSize,
+          pnl: totalPnl,
+          daily_drawdown_used: Math.max(0, ((accountSize - equity) / accountSize) * 100),
+        }).catch(() => {});
+      }
+    } else if (marginLevel < 20 && breachAlert !== 'critical') {
+      setBreachAlert('critical');
+    } else if (marginLevel >= 50) {
+      setBreachAlert(null);
+    }
+  }, [marginLevel, breachAlert, account?.id, equity, accountSize, totalPnl]);
 
   const handlePlaceOrder = () => {
     if (!price || !amount || !currentPrice) return;
@@ -341,17 +331,43 @@ export default function ProTradingTerminal({ account }) {
 
         {/* Right: Trading Panel */}
         <div className="w-72 flex-shrink-0 flex flex-col border-white/10" style={{ background: '#050509' }}>
-          {/* Leverage */}
-          <div className="px-4 py-3 border-b border-white/10">
-            <div className="text-xs text-muted-foreground mb-2">Leverage: {leverage}x</div>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={leverage}
-              onChange={e => setLeverage(parseInt(e.target.value))}
-              className="w-full h-1 bg-white/10 rounded-full accent-primary"
-            />
+          {/* Leverage & Margin Status */}
+          <div className="px-4 py-3 border-b border-white/10 space-y-3">
+            <div>
+              <div className="text-xs text-muted-foreground mb-2">Leverage: 1:{leverage}</div>
+              <input
+                type="range"
+                min="10"
+                max="500"
+                step="10"
+                value={leverage}
+                onChange={e => setLeverage(parseInt(e.target.value))}
+                className="w-full h-1 bg-white/10 rounded-full accent-primary"
+              />
+              <div className="text-[9px] text-muted-foreground mt-1 flex justify-between">
+                <span>1:10</span>
+                <span>1:500</span>
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Margin Level</div>
+              <div className={`text-sm font-bold ${marginLevel > 100 ? 'text-emerald-400' : marginLevel > 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                {marginLevel.toFixed(1)}%
+              </div>
+              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mt-1">
+                <div
+                  className={`h-full transition-all ${marginLevel > 100 ? 'bg-emerald-500' : marginLevel > 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${Math.min(marginLevel, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {breachAlert && (
+              <div className={`p-2 rounded-lg text-[10px] font-bold text-white ${breachAlert === 'critical' ? 'bg-red-600' : 'bg-yellow-600'}`}>
+                {breachAlert === 'critical' ? '⚠ CRITICAL MARGIN' : '⚠ LOW MARGIN WARNING'}
+              </div>
+            )}
           </div>
 
           {/* Buy/Sell Tabs */}
@@ -403,8 +419,13 @@ export default function ProTradingTerminal({ account }) {
                 <span>Total</span>
                 <span>≈ ${(parseFloat(price || 0) * parseFloat(amount || 0)).toFixed(2)}</span>
               </div>
-              <div className="p-2 rounded-lg text-xs font-mono text-foreground" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                Margin: ${((parseFloat(price || 0) * parseFloat(amount || 0)) / leverage).toFixed(2)}
+              <div className="space-y-1 text-xs">
+                <div className="p-2 rounded-lg font-mono text-foreground" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  Required Margin: ${((parseFloat(price || 0) * parseFloat(amount || 0)) / leverage).toFixed(2)}
+                </div>
+                <div className="p-2 rounded-lg font-mono text-foreground" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  Available Margin: ${(equity - usedMargin).toFixed(2)}
+                </div>
               </div>
             </div>
 
