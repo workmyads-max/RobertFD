@@ -148,6 +148,42 @@ function calcMargin(symbol, lots, leverage, currentBid) {
   }
 }
 
+function PriceChart({ symbol, prices }) {
+  const inst = INSTRUMENTS.find(i => i.symbol === symbol);
+  const p = prices[symbol];
+  const [priceHistory, setPriceHistory] = useState([]);
+
+  useEffect(() => {
+    if (!p || p.bid === null) return;
+    setPriceHistory(prev => {
+      const updated = [...prev, { time: new Date().toLocaleTimeString(), price: p.bid }];
+      return updated.slice(-60);
+    });
+  }, [p?.bid]);
+
+  if (!p || p.bid === null || priceHistory.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <span className="text-sm text-muted-foreground">Loading {symbol} data...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-8">
+      <div className="text-center">
+        <div className="text-5xl font-mono font-black text-primary mb-3">{p.bid.toFixed(inst?.digits || 2)}</div>
+        <div className={`text-lg font-bold mb-6 ${(p.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+          {(p.pct || 0) >= 0 ? '▲' : '▼'} {Math.abs(p.pct || 0).toFixed(2)}%
+        </div>
+        <div className="text-xs text-muted-foreground font-mono">
+          {symbol} • Last {priceHistory.length} ticks
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function XTradingTerminalNew({ account }) {
   const isActive = !!(account && (account.status === 'active' || account.status === 'funded' || account.status === 'passed'));
   const prices = useLivePrices();
@@ -184,24 +220,26 @@ export default function XTradingTerminalNew({ account }) {
   const freeMargin = equity - totalMargin;
 
   useEffect(() => {
-    if (positions.length === 0) return;
-    const dailyLoss = ((sessionBalance - equity) / accountSize) * 100;
-    const maxLoss = ((accountSize - equity) / accountSize) * 100;
-    if (dailyLoss >= rules.dailyDDLimit || maxLoss >= rules.maxDDLimit) {
+    if (positions.length === 0 || !accountSize || accountSize === 0) return;
+    const dailyLoss = Math.abs(((sessionBalance - equity) / accountSize) * 100);
+    const maxLoss = Math.abs(((accountSize - equity) / accountSize) * 100);
+    const isBreached = dailyLoss >= rules.dailyDDLimit || maxLoss >= rules.maxDDLimit;
+    
+    if (isBreached && !accountBlocked) {
       setAccountBlocked(true);
-      addLog(`DRAWDOWN LIMIT REACHED`, false);
+      addLog(`⚠ DRAWDOWN LIMIT REACHED — Trading suspended`, false);
       if (account?.id) {
         base44.entities.ChallengeAccount.update(account.id, {
           status: 'failed',
-          daily_drawdown_used: Math.max(dailyLoss, 0),
-          max_drawdown_used: Math.max(maxLoss, 0),
+          daily_drawdown_used: dailyLoss,
+          max_drawdown_used: maxLoss,
           equity: equity,
           balance: sessionBalance,
           pnl: sessionBalance - accountSize,
         }).catch(() => {});
       }
     }
-  }, [equity]);
+  }, [equity, sessionBalance, accountSize, rules.dailyDDLimit, rules.maxDDLimit, accountBlocked, account?.id, addLog]);
 
   const addLog = useCallback((msg, ok = true) => {
     setActivityLog(prev => [{ msg, time: new Date().toLocaleTimeString(), ok }, ...prev.slice(0, 49)]);
@@ -406,106 +444,9 @@ export default function XTradingTerminalNew({ account }) {
               ))}
             </div>
 
-            {/* Chart Display with Cinematic Transition */}
-            <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8">
-              <AnimatePresence mode="wait">
-                {isLoadingChart ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{
-                      background: 'radial-gradient(circle, rgba(255,92,0,0.1), transparent)',
-                    }}>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                      className="relative">
-                      <div className="w-12 h-12 rounded-full border-2 border-transparent"
-                        style={{
-                          borderTopColor: '#FF5C00',
-                          borderRightColor: 'rgba(255,92,0,0.3)',
-                          boxShadow: '0 0 20px rgba(255,92,0,0.3)',
-                        }} />
-                      <motion.div
-                        animate={{ rotate: -360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                        className="absolute inset-0 w-12 h-12 rounded-full border-2 border-transparent"
-                        style={{
-                          borderBottomColor: 'rgba(204,255,0,0.5)',
-                          borderLeftColor: 'rgba(204,255,0,0.2)',
-                        }} />
-                    </motion.div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={`chart-${selectedSymbol}-${timeframe}`}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                      duration: 0.8,
-                      ease: [0.22, 1, 0.36, 1],
-                      staggerChildren: 0.1,
-                    }}
-                    className="text-center w-full">
-                    <motion.div
-                      initial={{ opacity: 0, letterSpacing: '-0.1em' }}
-                      animate={{ opacity: 1, letterSpacing: '0em' }}
-                      transition={{ delay: 0.1, duration: 0.6 }}
-                      className="text-6xl font-mono font-black text-primary/30 mb-6 tracking-tight">
-                      {selectedSymbol}
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2, duration: 0.6, type: 'spring', stiffness: 100 }}
-                      className="mb-4">
-                      <div className="text-5xl font-black text-foreground inline-block">
-                        {currentPrice?.bid?.toFixed(selected.digits) || '—'}
-                      </div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                        className={`text-lg font-bold mt-2 ${(currentPrice?.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {(currentPrice?.pct || 0) >= 0 ? '▲' : '▼'} {Math.abs(currentPrice?.pct || 0).toFixed(2)}%
-                      </motion.div>
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                      className="text-sm text-muted-foreground/60 font-mono">
-                      {selectedSymbol} • {['1m', '5m', '15m', '1h', '4h', '1D'][['1', '5', '15', '60', '240', 'D'].indexOf(timeframe)]} Timeframe
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ delay: 0.5, duration: 0.8 }}
-                      className="mt-6 h-1 rounded-full"
-                      style={{
-                        background: 'linear-gradient(90deg, transparent, #FF5C00, #CCFF00, transparent)',
-                        transformOrigin: 'left',
-                      }} />
-
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6, duration: 0.6 }}
-                      className="mt-8 text-xs text-muted-foreground/50 font-mono">
-                      <div>TradingView Chart Integration Ready</div>
-                      <div className="mt-1">Chart renders with cinematic transitions</div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* Chart Display */}
+            <div className="flex-1 relative overflow-hidden">
+              <PriceChart symbol={selectedSymbol} prices={prices} />
             </div>
           </div>
         </motion.div>
