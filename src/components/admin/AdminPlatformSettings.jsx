@@ -63,10 +63,10 @@ export default function AdminPlatformSettings() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+        <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
           <Settings className="w-6 h-6 text-primary" /> Trading Platform API
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">Configure MT5 and TradeLocker API credentials</p>
+        <p className="text-base text-muted-foreground font-mono mt-1">Configure MT5 and TradeLocker API credentials</p>
       </div>
 
       {/* Platform tabs */}

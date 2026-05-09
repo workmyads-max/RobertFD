@@ -39,10 +39,10 @@ export default function AdminChallenges() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+        <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
           <Zap className="w-6 h-6 text-primary" /> Manage Challenges
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">Edit challenge pricing and rules</p>
+        <p className="text-base text-muted-foreground font-mono mt-1">Edit challenge pricing and rules</p>
       </div>
 
       <div className="space-y-4">

@@ -41,10 +41,10 @@ export default function DashboardSettings({ user }) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+        <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
           <Settings className="w-6 h-6 text-primary" /> Settings
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">Manage your Robert Funds account</p>
+        <p className="text-base text-muted-foreground font-mono mt-1">Manage your Robert Funds account</p>
       </div>
 
       <div className="flex gap-6">

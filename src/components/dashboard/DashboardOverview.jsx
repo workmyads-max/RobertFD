@@ -83,10 +83,10 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-black text-foreground">
+          <h1 className="text-4xl font-black text-foreground">
             Welcome back, <span className="text-primary">{user?.full_name?.split(' ')[0] || 'Trader'}</span>
           </h1>
-          <p className="text-muted-foreground text-sm mt-1 font-mono">
+          <p className="text-muted-foreground text-base mt-1 font-mono">
             Robert Funds — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>

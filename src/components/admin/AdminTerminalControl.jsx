@@ -52,10 +52,10 @@ export default function AdminTerminalControl() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
+        <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
           <Monitor className="w-6 h-6 text-primary" /> XTrading Terminal Control
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">Manage instruments, settings, and global controls</p>
+        <p className="text-base text-muted-foreground font-mono mt-1">Manage instruments, settings, and global controls</p>
       </div>
 
       {/* Global Settings */}

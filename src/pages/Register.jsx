@@ -79,8 +79,8 @@ export default function Register() {
             border: '1px solid rgba(255,255,255,0.1)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
-          <h1 className="text-2xl font-black text-foreground mb-2">Start Trading</h1>
-          <p className="text-sm text-muted-foreground mb-6">Create your Robert Funds account</p>
+          <h1 className="text-3xl font-black text-foreground mb-2">Start Trading</h1>
+          <p className="text-base text-muted-foreground mb-6">Create your Robert Funds account</p>
 
           <form onSubmit={handleRegister} className="space-y-4 mb-6">
             {/* Full Name field */}
