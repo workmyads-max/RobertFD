@@ -1,0 +1,50 @@
+{
+  "name": "AffiliateProfile",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string"
+    },
+    "referred_by_code": {
+      "type": "string"
+    },
+    "referred_by_email": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "total_earned": {
+      "type": "number",
+      "default": 0
+    },
+    "total_pending": {
+      "type": "number",
+      "default": 0
+    },
+    "total_paid": {
+      "type": "number",
+      "default": 0
+    },
+    "referral_clicks": {
+      "type": "number",
+      "default": 0
+    },
+    "total_referrals": {
+      "type": "number",
+      "default": 0
+    },
+    "conversions": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_email",
+    "referral_code"
+  ]
+}

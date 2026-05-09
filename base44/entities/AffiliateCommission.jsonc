@@ -1,0 +1,56 @@
+{
+  "name": "AffiliateCommission",
+  "type": "object",
+  "properties": {
+    "affiliate_email": {
+      "type": "string"
+    },
+    "referred_email": {
+      "type": "string"
+    },
+    "commission_type": {
+      "type": "string",
+      "enum": [
+        "challenge_purchase",
+        "payout_reward"
+      ],
+      "default": "challenge_purchase"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "source_amount": {
+      "type": "number"
+    },
+    "commission_rate": {
+      "type": "number"
+    },
+    "commission_amount": {
+      "type": "number"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "withdrawal_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "paid"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "affiliate_email",
+    "commission_amount",
+    "commission_type"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "Certificate",
+  "type": "object",
+  "properties": {
+    "certificate_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "trader_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "phase1_passed",
+        "phase2_passed",
+        "funded",
+        "first_payout",
+        "consistency",
+        "special"
+      ],
+      "default": "phase1_passed"
+    },
+    "title": {
+      "type": "string"
+    },
+    "account_id": {
+      "type": "string"
+    },
+    "account_size": {
+      "type": "number"
+    },
+    "challenge_type": {
+      "type": "string"
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_email",
+    "type",
+    "title"
+  ]
+}

@@ -5,6 +5,9 @@
     "account_id": {
       "type": "string"
     },
+    "user_email": {
+      "type": "string"
+    },
     "amount": {
       "type": "number"
     },
@@ -30,10 +33,34 @@
       ],
       "default": "pending"
     },
+    "profit_split_pct": {
+      "type": "number",
+      "default": 80
+    },
+    "company_share": {
+      "type": "number"
+    },
+    "trader_share": {
+      "type": "number"
+    },
+    "affiliate_reward": {
+      "type": "number",
+      "default": 0
+    },
+    "withdrawal_fee": {
+      "type": "number",
+      "default": 25
+    },
+    "final_amount": {
+      "type": "number"
+    },
     "notes": {
       "type": "string"
     },
     "transaction_id": {
+      "type": "string"
+    },
+    "admin_notes": {
       "type": "string"
     }
   },

@@ -81,9 +81,9 @@ export default function Dashboard() {
       case 'news': return <MarketNews />;
       case 'journal': return <TradingJournal user={user} />;
       case 'billing': return <Billing />;
-      case 'withdrawals': return <Withdrawals />;
-      case 'certificates': return <Certificates />;
-      case 'affiliate': return <Affiliate />;
+      case 'withdrawals': return <Withdrawals user={user} />;
+      case 'certificates': return <Certificates user={user} />;
+      case 'affiliate': return <Affiliate user={user} />;
       case 'support': return <Support />;
       case 'settings': return <DashboardSettings user={user} />;
       case 'notifications': return <NotificationCenter notifications={notifications} />;

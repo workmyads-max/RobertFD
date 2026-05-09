@@ -29,10 +29,27 @@ export default function AdminAccounts() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data) => editItem
-      ? base44.entities.ChallengeAccount.update(editItem.id, data)
-      : base44.entities.ChallengeAccount.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-accounts'] }); setShowForm(false); setEditItem(null); setForm(BLANK); },
+    mutationFn: async (data) => {
+      const result = editItem
+        ? await base44.entities.ChallengeAccount.update(editItem.id, data)
+        : await base44.entities.ChallengeAccount.create(data);
+
+      // Auto-issue certificates on key status changes
+      if (data.user_email && data.status) {
+        const { maybeIssueCertificate } = await import('@/lib/certUtils');
+        if (data.status === 'passed' && data.phase === 'phase1') {
+          await maybeIssueCertificate({ userEmail: data.user_email, traderName: data.user_email, type: 'phase1_passed', accountId: data.account_id, accountSize: data.account_size, challengeType: data.challenge_type }).catch(() => {});
+        }
+        if (data.status === 'passed' && data.phase === 'phase2') {
+          await maybeIssueCertificate({ userEmail: data.user_email, traderName: data.user_email, type: 'phase2_passed', accountId: data.account_id, accountSize: data.account_size, challengeType: data.challenge_type }).catch(() => {});
+        }
+        if (data.status === 'funded') {
+          await maybeIssueCertificate({ userEmail: data.user_email, traderName: data.user_email, type: 'funded', accountId: data.account_id, accountSize: data.account_size, challengeType: data.challenge_type }).catch(() => {});
+        }
+      }
+      return result;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-accounts'] }); qc.invalidateQueries({ queryKey: ['certificates'] }); setShowForm(false); setEditItem(null); setForm(BLANK); },
   });
 
   const deleteMutation = useMutation({
@@ -112,7 +129,7 @@ export default function AdminAccounts() {
               <span className="text-xs text-muted-foreground capitalize">{a.challenge_type === 'two-step' ? '2-Step' : 'Instant'} / {a.account_type}</span>
               <span className="text-xs text-foreground">${(a.account_size||0).toLocaleString()}</span>
               <span className="text-xs text-muted-foreground capitalize">{a.phase?.replace('phase', 'P')}</span>
-              <select value={a.status} onChange={e => saveMutation.mutate({ id: a.id, data: { status: e.target.value } })}
+              <select value={a.status} onChange={e => saveMutation.mutate({ ...a, status: e.target.value })}
                 className="text-[10px] font-mono px-2 py-1 rounded-lg outline-none capitalize"
                 style={{ background: `${sc}15`, color: sc, border: `1px solid ${sc}30` }}>
                 {STATUS_OPTS.map(s => <option key={s} value={s} className="bg-[#0e0e10] text-foreground">{s}</option>)}

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 async function confirmAndProvisionAccount(order) {
+  const { distributeAffiliateCommissions } = await import('@/lib/certUtils');
   // 1. Mark order as confirmed
   await base44.entities.Order.update(order.id, { payment_status: 'confirmed' });
 
@@ -34,7 +35,18 @@ async function confirmAndProvisionAccount(order) {
     login_credentials: credentials,
   });
 
-  // 3. Notify user
+  // 3. Distribute affiliate commissions for challenge purchase
+  if (order.email && order.price) {
+    try {
+      await distributeAffiliateCommissions({
+        buyerEmail: order.email,
+        orderId: order.order_id || order.id,
+        challengePrice: order.price,
+      });
+    } catch (e) { /* silent - affiliate not required */ }
+  }
+
+  // 4. Notify user
   await base44.entities.Notification.create({
     title: '🎉 Account Activated!',
     message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account ($${(order.account_size||0).toLocaleString()}) is now LIVE. Account ID: ${accountId}. Open the XTrading Terminal to start trading. Credentials: ${credentials}`,
