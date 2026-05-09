@@ -82,19 +82,26 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <div>
+        <div className="flex-1">
           <h1 className="text-4xl font-black text-foreground">
-            Welcome back, <span className="text-primary">{user?.full_name?.split(' ')[0] || 'Trader'}</span>
+            Welcome back, <span className="text-primary">{user?.full_name || 'Trader'}</span>
           </h1>
-          <p className="text-muted-foreground text-base mt-1 font-mono">
-            Robert Funds — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
+          <div className="text-muted-foreground text-sm mt-2 font-mono space-y-1">
+            <div>📍 Company: <span className="text-primary">Robert Funds</span> • 🌍 IP: <span className="text-foreground">192.168.1.1</span> • 🇦🇪 UAE</div>
+            <div>📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • 🕐 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} GMT+4</div>
+          </div>
         </div>
-        <button onClick={onStartChallenge}
-          className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
-          style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
-          <Plus className="w-4 h-4" /> New Challenge ↗
-        </button>
+        <div className="hidden md:flex flex-col gap-2">
+          <button onClick={onStartChallenge}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+            <Plus className="w-4 h-4" /> New Challenge
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>
+            🔗 Mirror Trades <span className="ml-auto text-muted-foreground">(0)</span>
+          </button>
+        </div>
       </div>
 
       {/* Pending activation notice */}

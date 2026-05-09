@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, List, Activity, ChevronUp, ChevronDown, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Monitor } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import AccountBreachAlert from './AccountBreachAlert';
+import TradingSessionCards from './TradingSessionCards';
 
 // ─── INSTRUMENT CONFIG ────────────────────────────────────────────────────────
 const INSTRUMENTS = [
@@ -846,6 +848,12 @@ export default function XTradingTerminal({ account }) {
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* SESSION CARDS SECTION */}
+      <div className="border-t border-white/5 flex-shrink-0 p-4" style={{ background: 'rgba(4,4,6,0.98)' }}>
+        <AccountBreachAlert account={account} />
+        <TradingSessionCards account={account} positions={positions} pendingOrders={pendingOrders} />
       </div>
 
       {/* BOTTOM PANEL */}

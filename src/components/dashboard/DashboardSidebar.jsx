@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -134,6 +134,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-platforms', label: 'Platforms API', icon: Cpu },
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },
+              { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;

@@ -27,6 +27,7 @@ import AdminAccounts from '../components/admin/AdminAccounts';
 import AdminPlatformSettings from '../components/admin/AdminPlatformSettings';
 import AdminChallenges from '../components/admin/AdminChallenges';
 import AdminTerminalControl from '../components/admin/AdminTerminalControl';
+import AdminRiskManagement from '../components/admin/AdminRiskManagement';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
@@ -132,6 +133,7 @@ export default function Dashboard() {
       case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-challenges': return isAdmin ? <AdminChallenges /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-terminal': return isAdmin ? <AdminTerminalControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
