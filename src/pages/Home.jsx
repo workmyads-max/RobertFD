@@ -21,7 +21,7 @@ import LiveChat from '../components/landing/LiveChat';
 import Footer from '../components/landing/Footer';
 
 const IMAGES = {
-  hero: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/9f7dc99e1_generated_b6779f22.png',
+  hero: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1800&q=80&fit=crop',
   dashboard: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/075fdda4e_generated_image.png',
   infrastructure: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/680576437_generated_16455ac0.png',
   mobile: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/4636aef08_generated_image.png',
