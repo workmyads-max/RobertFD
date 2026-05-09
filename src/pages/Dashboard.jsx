@@ -7,6 +7,7 @@ import XTradingTerminal from '../components/dashboard/XTradingTerminal';
 import Analytics from '../components/dashboard/Analytics';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
 import MarketNews from '../components/dashboard/MarketNews';
+import Leaderboard from '../components/dashboard/Leaderboard';
 import TradingJournal from '../components/dashboard/TradingJournal';
 import Billing from '../components/dashboard/Billing';
 import Withdrawals from '../components/dashboard/Withdrawals';
@@ -105,6 +106,7 @@ export default function Dashboard() {
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'calendar': return <EconomicCalendar />;
       case 'news': return <MarketNews />;
+      case 'leaderboard': return <Leaderboard />;
       case 'journal': return <TradingJournal user={user} />;
       case 'billing': return <Billing />;
       case 'withdrawals': return <Withdrawals user={user} />;

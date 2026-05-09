@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, User, Lock, Wallet, Bell, Save } from 'lucide-react';
+import { Settings, User, Lock, Wallet, Bell, Save, Upload, Camera } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation } from '@tanstack/react-query';
 
@@ -16,10 +16,27 @@ export default function DashboardSettings({ user }) {
   const [profile, setProfile] = useState({ full_name: user?.full_name || '', email: user?.email || '' });
   const [wallets, setWallets] = useState({ usdt_trc20: '', bitcoin: '' });
   const [notifs, setNotifs] = useState({ email: true, payouts: true, news: false, marketing: false });
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
   });
+
+  const handlePhotoUpload = async (file) => {
+    if (!file) return;
+    setUploadLoading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProfilePhoto(file_url);
+      await base44.auth.updateMe({ profile_photo_url: file_url });
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -54,6 +71,42 @@ export default function DashboardSettings({ user }) {
           {activeTab === 'profile' && (
             <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <h3 className="text-base font-bold text-foreground mb-5">Profile Information</h3>
+              
+              {/* Profile Photo */}
+              <div className="mb-6">
+                <label className="text-xs font-mono text-muted-foreground mb-3 block uppercase">Profile Photo</label>
+                <div className="flex items-center gap-4">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold border-2"
+                    style={{
+                      background: profilePhoto ? `url(${profilePhoto})` : 'linear-gradient(135deg, rgba(255,92,0,0.1), rgba(204,255,0,0.05))',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderColor: 'rgba(255,92,0,0.3)',
+                    }}>
+                    {!profilePhoto && (user?.full_name?.charAt(0)?.toUpperCase() || '?')}
+                  </motion.div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadLoading}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                      <Upload className="w-4 h-4" /> {uploadLoading ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handlePhotoUpload(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                    <p className="text-[11px] text-muted-foreground">JPG, PNG max 5MB</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-4 mb-6">
                 {[
                   { label: 'Full Name', key: 'full_name', placeholder: 'Your full name' },
