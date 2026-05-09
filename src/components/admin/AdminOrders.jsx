@@ -5,11 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 async function confirmAndProvisionAccount(order) {
-  const { distributeAffiliateCommissions } = await import('@/lib/certUtils');
   // 1. Mark order as confirmed
   await base44.entities.Order.update(order.id, { payment_status: 'confirmed' });
 
-  // 2. Create the funded challenge account — status ACTIVE only after admin approval
+  // 2. Create the funded challenge account
   const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
   const credentials = `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
   await base44.entities.ChallengeAccount.create({
@@ -35,27 +34,18 @@ async function confirmAndProvisionAccount(order) {
     login_credentials: credentials,
   });
 
-  // 3. Distribute affiliate commissions for challenge purchase
-  if (order.email && order.price) {
-    try {
-      await distributeAffiliateCommissions({
-        buyerEmail: order.email,
-        orderId: order.order_id || order.id,
-        challengePrice: order.price,
-      });
-    } catch (e) { /* silent - affiliate not required */ }
-  }
-
-  // 4. Notify user
-  await base44.entities.Notification.create({
-    title: '🎉 Account Activated!',
-    message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account ($${(order.account_size||0).toLocaleString()}) is now LIVE. Account ID: ${accountId}. Open the XTrading Terminal to start trading. Credentials: ${credentials}`,
-    type: 'payout',
-    priority: 'high',
-    display_mode: 'popup',
-    is_active: true,
-    target: 'all',
-  });
+  // 3. Notify user
+  try {
+    await base44.entities.Notification.create({
+      title: '🎉 Account Activated!',
+      message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account ($${(order.account_size||0).toLocaleString()}) is now LIVE. Account ID: ${accountId}. Open the XTrading Terminal to start trading. Credentials: ${credentials}`,
+      type: 'payout',
+      priority: 'high',
+      display_mode: 'popup',
+      is_active: true,
+      target: 'all',
+    });
+  } catch (e) { /* silent */ }
 
   return accountId;
 }
@@ -88,6 +78,10 @@ export default function AdminOrders() {
       qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });
       setSelected(null);
+      alert('✅ Account activated successfully!');
+    },
+    onError: (err) => {
+      alert(`❌ Error: ${err?.message || 'Failed to activate account'}`);
     },
   });
 
@@ -212,16 +206,16 @@ export default function AdminOrders() {
               </div>
               <div className="px-5 pb-5 flex gap-3">
                 <button onClick={() => confirmMutation.mutate(selected)}
-                  disabled={selected.payment_status === 'confirmed' || confirmMutation.isPending}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+                  disabled={confirmMutation.isPending || updateMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
                   style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
                   {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
                 </button>
                 <button onClick={() => updateMutation.mutate({ id: selected.id, data: { payment_status: 'failed' } })}
-                  disabled={selected.payment_status === 'failed'}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+                  disabled={confirmMutation.isPending || updateMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
                   style={{ background: 'rgba(239,68,68,0.8)' }}>
-                  ✗ Reject Order
+                  {updateMutation.isPending ? '⏳...' : '✗ Reject Order'}
                 </button>
               </div>
             </motion.div>
