@@ -288,205 +288,215 @@ export default function XTradingTerminalNew({ account }) {
 
   return (
     <div className="flex flex-col h-full" style={{ background: '#030305' }}>
-      {/* Header */}
+      {/* Compact Status Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="px-6 py-4 border-b flex items-center justify-between"
-        style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'linear-gradient(90deg, rgba(255,92,0,0.08), rgba(255,92,0,0.02))' }}>
+        className="px-4 py-2 border-b flex items-center justify-between text-xs"
+        style={{
+          borderColor: 'rgba(255,255,255,0.08)',
+          background: 'linear-gradient(90deg, rgba(255,92,0,0.05), rgba(0,0,0,0.2))',
+          backdropFilter: 'blur(20px)',
+        }}>
         <div className="flex items-center gap-4">
-          <div className="flex flex-col">
-            <span className="text-sm font-black text-foreground">{account?.account_id}</span>
-            <span className="text-xs text-muted-foreground font-mono">{leverage} • {account?.account_type} • {account?.phase?.replace('phase', 'Phase ')}</span>
-          </div>
-          <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-          <div className="flex items-center gap-6 text-xs font-mono">
-            <div>
-              <div className="text-muted-foreground/60">Balance</div>
-              <div className="text-lg font-black text-foreground">${sessionBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground/60">Equity</div>
-              <div className={`text-lg font-black ${equity >= sessionBalance ? 'text-emerald-400' : 'text-red-400'}`}>${equity.toFixed(2)}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground/60">Free Margin</div>
-              <div className={`text-lg font-black ${freeMargin > 0 ? 'text-emerald-400' : 'text-red-400'}`}>${freeMargin.toFixed(2)}</div>
-            </div>
+          <span className="font-mono font-black text-primary">{account?.account_id}</span>
+          <div className="flex items-center gap-3 text-muted-foreground/70 font-mono text-[10px]">
+            <span>{leverage}</span>
+            <span>•</span>
+            <span>${sessionBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+            <span>•</span>
+            <span className={equity >= sessionBalance ? 'text-emerald-400' : 'text-red-400'}>${equity.toFixed(2)}</span>
           </div>
         </div>
-        <AccountBreachAlert account={account} />
+        <div className="flex items-center gap-2">
+          <AccountBreachAlert account={account} />
+          {accountBlocked && <span className="text-red-400 font-bold">⚠ SUSPENDED</span>}
+        </div>
       </motion.div>
 
-      {accountBlocked && (
-        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="overflow-hidden"
-          style={{ background: 'rgba(239,68,68,0.15)', borderBottom: '1px solid rgba(239,68,68,0.4)' }}>
-          <div className="flex items-center gap-3 px-6 py-3">
-            <AlertCircle className="w-5 h-5 text-red-400" />
-            <span className="text-xs font-bold text-red-400">DRAWDOWN LIMIT REACHED — Trading Suspended</span>
+      {/* Main Area: Chart (Full Width) + Right Order Panel */}
+      <div className="flex flex-1 overflow-hidden gap-0">
+        {/* Chart Area - 85% width */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="flex-1 flex flex-col border-r relative"
+          style={{
+            borderColor: 'rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, rgba(255,92,0,0.03), rgba(0,0,0,0.4))',
+          }}>
+          {/* Chart Header */}
+          <div className="px-6 py-3 border-b flex items-center justify-between"
+            style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(5,5,8,0.6)' }}>
+            <div className="flex items-center gap-4">
+              <span className="text-base font-black text-foreground">{selectedSymbol}</span>
+              {currentPrice?.bid !== null && (
+                <>
+                  <span className="text-3xl font-mono font-black text-primary">{currentPrice?.bid?.toFixed(selected.digits)}</span>
+                  <span className={`text-sm font-bold ${(currentPrice?.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {(currentPrice?.pct || 0) >= 0 ? '▲' : '▼'} {Math.abs(currentPrice?.pct || 0).toFixed(2)}%
+                  </span>
+                </>
+              )}
+            </div>
+            {/* Market Watch Mini */}
+            <div className="flex items-center gap-2 overflow-x-auto" style={{ maxWidth: '600px' }}>
+              {INSTRUMENTS.map(inst => {
+                const p = prices[inst.symbol];
+                const isActive = selectedSymbol === inst.symbol;
+                const isUp = (p?.pct || 0) >= 0;
+                return (
+                  <motion.button
+                    key={inst.symbol}
+                    onClick={() => setSelectedSymbol(inst.symbol)}
+                    whileHover={{ scale: 1.05 }}
+                    className={`px-3 py-1 rounded-lg text-[9px] font-mono transition-all flex-shrink-0 ${isActive ? 'bg-primary/20 border-primary/40' : 'hover:bg-white/5'}`}
+                    style={{
+                      border: `1px solid ${isActive ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    }}>
+                    <div className="font-bold text-foreground">{inst.symbol}</div>
+                    {p?.bid !== null && (
+                      <span className={`ml-1.5 ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {p.bid.toFixed(inst.digits)}
+                      </span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Full Chart Area */}
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="text-5xl font-mono font-black text-primary/20 mb-4">{selectedSymbol}</div>
+              <div className="text-sm text-muted-foreground/60 font-mono">TradingView Chart Integration Ready</div>
+              <div className="text-xs text-muted-foreground/40 mt-2">Chart renders full terminal width</div>
+            </div>
           </div>
         </motion.div>
-      )}
 
-      {/* Main Trading Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left - Market Watch */}
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-          className="w-56 border-r overflow-y-auto flex flex-col"
-          style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(8,8,12,0.8)' }}>
-          <div className="p-4 border-b sticky top-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <h3 className="text-xs font-black text-foreground uppercase tracking-widest">Market Watch</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {INSTRUMENTS.map(inst => {
-              const p = prices[inst.symbol];
-              const isActive = selectedSymbol === inst.symbol;
-              const isUp = (p?.pct || 0) >= 0;
-              return (
-                <motion.button key={inst.symbol} onClick={() => setSelectedSymbol(inst.symbol)}
-                  whileHover={{ x: 4 }}
-                  className={`w-full px-3 py-3 border-b text-left transition-all ${isActive ? 'bg-primary/10' : 'hover:bg-white/5'}`}
-                  style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-foreground">{inst.symbol}</span>
-                    <span className={`text-[9px] font-bold ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {isUp ? '▲' : '▼'} {Math.abs(p?.pct || 0).toFixed(2)}%
-                    </span>
-                  </div>
-                  {p?.bid !== null && p?.bid !== undefined ? (
-                    <div className="text-xs font-mono text-muted-foreground">
-                      {p.bid.toFixed(inst.digits)}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-muted-foreground/30">Loading...</div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Center - Chart Placeholder */}
-        <div className="flex-1 border-r flex items-center justify-center"
-          style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(255,92,0,0.05), rgba(0,0,0,0.3))' }}>
-          <div className="text-center">
-            <div className="text-sm font-black text-foreground mb-2">{selectedSymbol}</div>
-            <div className="text-3xl font-mono font-black text-primary">{currentPrice?.bid?.toFixed(selected.digits) || '—'}</div>
-            <div className="text-xs text-muted-foreground mt-2 font-mono">TradingView Integration Ready</div>
-          </div>
-        </div>
-
-        {/* Right - Order Panel */}
+        {/* Right Order Panel - 15% width */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-          className="w-72 border-l flex flex-col overflow-hidden"
-          style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(8,8,12,0.8)' }}>
-          <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <h3 className="text-xs font-black text-foreground uppercase tracking-widest">{selectedSymbol}</h3>
+          className="w-80 border-l flex flex-col overflow-hidden"
+          style={{
+            borderColor: 'rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.01))',
+            backdropFilter: 'blur(30px)',
+          }}>
+          <div className="p-3 border-b flex items-center justify-between"
+            style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h3 className="text-xs font-black text-foreground uppercase tracking-widest">Order Ticket</h3>
+            <span className="text-[10px] font-mono text-muted-foreground/60">{account?.account_type}</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Buy/Sell Toggle */}
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* BUY/SELL Toggle */}
             <div className="grid grid-cols-2 gap-2">
               {['BUY', 'SELL'].map(side => (
                 <motion.button key={side} onClick={() => setOrderSide(side)}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`py-3 rounded-xl text-xs font-black transition-all ${orderSide === side ? 'text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  className={`py-2.5 rounded-xl text-xs font-black transition-all ${orderSide === side ? 'text-white' : 'text-muted-foreground'}`}
                   style={{
-                    background: orderSide === side ? (side === 'BUY' ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)') : 'rgba(255,255,255,0.04)',
-                    boxShadow: orderSide === side ? `0 4px 12px ${side === 'BUY' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` : 'none',
+                    background: orderSide === side
+                      ? (side === 'BUY' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)')
+                      : 'rgba(255,255,255,0.05)',
+                    boxShadow: orderSide === side
+                      ? `0 4px 12px ${side === 'BUY' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
+                      : 'none',
                   }}>
                   {side === 'BUY' ? '▲' : '▼'} {side}
                 </motion.button>
               ))}
             </div>
 
-            {/* Live Price */}
-            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="text-[10px] text-muted-foreground/70 mb-1">Current Price</div>
+            {/* Current Price */}
+            <div className="rounded-lg p-3" style={{
+              background: 'linear-gradient(135deg, rgba(96,165,250,0.1), rgba(96,165,250,0.02))',
+              border: '1px solid rgba(96,165,250,0.25)',
+            }}>
+              <div className="text-[9px] text-muted-foreground/60 font-mono uppercase mb-1">Price</div>
               <div className="text-2xl font-black text-foreground">{currentPrice?.bid?.toFixed(selected.digits) || '—'}</div>
             </div>
 
-            {/* Order Type & Inputs */}
+            {/* Order Type */}
             <div>
-              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase block mb-2">Order Type</label>
+              <label className="text-[9px] font-mono text-muted-foreground/60 uppercase block mb-1.5">Type</label>
               <select value={orderType} onChange={e => setOrderType(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-xs text-foreground outline-none"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                className="w-full rounded-lg px-3 py-2 text-xs text-foreground outline-none font-mono"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {[{ val: 'market', label: 'Market' }, { val: 'buy_limit', label: 'Buy Limit' }, { val: 'sell_limit', label: 'Sell Limit' }].map(ot => (
                   <option key={ot.val} value={ot.val} style={{ background: '#0a0a0f' }}>{ot.label}</option>
                 ))}
               </select>
             </div>
 
-            {orderType !== 'market' && (
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground/70 uppercase block mb-2">Price</label>
-                <input value={pendingPrice} onChange={e => setPendingPrice(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
-              </div>
-            )}
+            {/* Lots */}
+            <div>
+              <label className="text-[9px] font-mono text-muted-foreground/60 uppercase block mb-1.5">Lots</label>
+              <input value={lots} onChange={e => setLots(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-xs text-foreground outline-none font-mono"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+            </div>
 
-            {[
-              { label: 'Lots', val: lots, set: setLots },
-              { label: 'Stop Loss', val: sl, set: setSl },
-              { label: 'Take Profit', val: tp, set: setTp },
-            ].map(({ label, val, set }) => (
-              <div key={label}>
-                <label className="text-[10px] font-bold text-muted-foreground/70 uppercase block mb-2">{label}</label>
-                <input value={val} onChange={e => set(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
-              </div>
-            ))}
+            {/* SL/TP Row */}
+            <div className="grid grid-cols-2 gap-2">
+              {[{ label: 'SL', val: sl, set: setSl }, { label: 'TP', val: tp, set: setTp }].map(({ label, val, set }) => (
+                <div key={label}>
+                  <label className="text-[9px] font-mono text-muted-foreground/60 uppercase block mb-1">{label}</label>
+                  <input value={val} onChange={e => set(e.target.value)}
+                    className="w-full rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none font-mono"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                </div>
+              ))}
+            </div>
 
             {/* Margin Info */}
-            <div className="rounded-lg p-3" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' }}>
-              <div className="flex justify-between text-[9px] font-mono mb-1">
-                <span className="text-muted-foreground">Margin Req</span>
+            <div className="rounded-lg p-2.5 text-[9px] font-mono space-y-1" style={{
+              background: 'linear-gradient(135deg, rgba(255,92,0,0.1), rgba(255,92,0,0.03))',
+              border: '1px solid rgba(255,92,0,0.25)',
+            }}>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Margin:</span>
                 <span className="text-foreground font-bold">${marginReq.toFixed(0)}</span>
               </div>
-              <div className="flex justify-between text-[9px] font-mono">
-                <span className="text-muted-foreground">Free Margin</span>
-                <span className={`font-bold ${freeMargin < marginReq ? 'text-red-400' : 'text-emerald-400'}`}>${freeMargin.toFixed(0)}</span>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Free:</span>
+                <span className={freeMargin < marginReq ? 'text-red-400' : 'text-emerald-400'}>${freeMargin.toFixed(0)}</span>
               </div>
             </div>
 
             {/* Execute Button */}
             <motion.button onClick={placeOrder} disabled={accountBlocked}
               whileHover={!accountBlocked ? { scale: 1.02 } : {}}
-              whileTap={!accountBlocked ? { scale: 0.98 } : {}}
-              className="w-full py-3 rounded-lg text-xs font-black text-white transition-all disabled:opacity-40"
+              className="w-full py-3 rounded-lg text-xs font-black text-white transition-all disabled:opacity-40 mt-4"
               style={{
-                background: !accountBlocked ? (orderSide === 'BUY' ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #ef4444, #dc2626)') : '#222',
-                boxShadow: !accountBlocked ? (orderSide === 'BUY' ? '0 4px 16px rgba(16,185,129,0.3)' : '0 4px 16px rgba(239,68,68,0.3)') : 'none',
+                background: !accountBlocked
+                  ? (orderSide === 'BUY' ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #ef4444, #dc2626)')
+                  : '#333',
+                boxShadow: !accountBlocked
+                  ? `0 6px 20px ${orderSide === 'BUY' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`
+                  : 'none',
               }}>
-              {accountBlocked ? '🔒 SUSPENDED' : `${orderSide === 'BUY' ? '▲' : '▼'} ${orderSide} ${lotsNum} ${selectedSymbol}`}
+              {accountBlocked ? '🔒 SUSPENDED' : `${orderSide === 'BUY' ? '▲' : '▼'} TRADE`}
             </motion.button>
           </div>
         </motion.div>
       </div>
 
-      {/* Bottom Positions Panel */}
+      {/* Bottom Positions Panel - Compact */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="border-t h-48 flex flex-col"
+        className="border-t h-40 flex flex-col"
         style={{
-          borderColor: 'rgba(255,255,255,0.1)',
-          background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.02), rgba(255,92,0,0.04))',
+          borderColor: 'rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.02))',
           backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
         }}>
-        <div className="px-6 py-3 border-b flex items-center justify-between"
+        <div className="px-4 py-2 border-b flex items-center justify-between text-xs font-mono"
           style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-          <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Open Positions ({positions.length})</h4>
-          <div className="flex items-center gap-1">
-            {positions.length > 0 && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            )}
-          </div>
+          <span className="font-black text-foreground">Open ({positions.length})</span>
+          {positions.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-x-auto p-2 flex gap-2">
           {positions.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
-              <span className="text-xs text-muted-foreground/40">No open positions</span>
+            <div className="w-full flex items-center justify-center">
+              <span className="text-xs text-muted-foreground/40">No positions</span>
             </div>
           ) : (
             positions.map(pos => {
@@ -495,57 +505,33 @@ export default function XTradingTerminalNew({ account }) {
               const livePnl = p ? calcPnl(pos, livePrice) : 0;
               const isProfit = livePnl >= 0;
               return (
-                <motion.div key={pos.id} onClick={() => setSelectedPos(pos.id)}
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="p-4 rounded-xl flex items-center justify-between cursor-pointer group transition-all"
+                <motion.div key={pos.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex-shrink-0 p-3 rounded-lg cursor-pointer group"
                   style={{
-                    background: selectedPos === pos.id
-                      ? 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.08))'
-                      : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-                    border: `1px solid ${selectedPos === pos.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                    border: '1px solid rgba(255,255,255,0.12)',
                     backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    boxShadow: selectedPos === pos.id ? '0 8px 24px rgba(255,92,0,0.15)' : '0 4px 12px rgba(0,0,0,0.2)',
+                    minWidth: '200px',
                   }}>
-                  <div className="flex-1 text-xs">
-                    <div className="flex items-center gap-2 mb-2">
-                      <motion.div whileHover={{ scale: 1.1 }}
-                        className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white"
-                        style={{
-                          background: pos.type === 'BUY' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)',
-                          boxShadow: pos.type === 'BUY' ? '0 4px 12px rgba(16,185,129,0.3)' : '0 4px 12px rgba(239,68,68,0.3)',
-                        }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-black text-white"
+                        style={{ background: pos.type === 'BUY' ? '#10b981' : '#ef4444' }}>
                         {pos.type === 'BUY' ? '▲' : '▼'}
-                      </motion.div>
-                      <div>
-                        <span className="font-bold text-foreground">{pos.symbol}</span>
-                        <span className="text-muted-foreground/60 ml-2">•</span>
-                        <span className="text-muted-foreground/80 ml-2 font-mono">{pos.lots} lots</span>
                       </div>
+                      <span className="text-xs font-bold text-foreground">{pos.symbol}</span>
                     </div>
-                    <div className="text-muted-foreground/70 font-mono text-[9px] ml-8">
-                      Entry: {typeof pos.entry === 'number' ? pos.entry.toFixed(selected.digits) : pos.entry}
-                    </div>
-                  </div>
-                  <div className="text-right flex items-end gap-3">
-                    <div>
-                      <div className={`text-base font-black ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}
-                        style={{
-                          textShadow: `0 0 12px ${isProfit ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`,
-                        }}>
-                        {isProfit ? '+' : ''}${livePnl.toFixed(2)}
-                      </div>
-                      <div className={`text-[9px] font-mono ${isProfit ? 'text-emerald-400/60' : 'text-red-400/60'}`}>
-                        {((livePnl / sessionBalance) * 100).toFixed(2)}%
-                      </div>
-                    </div>
-                    <motion.button whileHover={{ scale: 1.15, rotate: 90 }} whileTap={{ scale: 0.9 }}
+                    <motion.button
                       onClick={e => { e.stopPropagation(); closePositionById(pos.id, livePrice, livePnl); }}
-                      className="p-2 rounded-lg text-red-400/60 hover:text-red-400 transition-all group-hover:bg-red-500/10"
-                      style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
-                      <X className="w-4 h-4" />
+                      whileHover={{ scale: 1.1 }}
+                      className="text-red-400/60 hover:text-red-400">
+                      <X className="w-3 h-3" />
                     </motion.button>
+                  </div>
+                  <div className="text-[9px] font-mono text-muted-foreground/70 mb-1">{pos.lots} lots @ {typeof pos.entry === 'number' ? pos.entry.toFixed(selected.digits) : pos.entry}</div>
+                  <div className={`text-sm font-black ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isProfit ? '+' : ''}${livePnl.toFixed(2)}
                   </div>
                 </motion.div>
               );
