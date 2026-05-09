@@ -1,0 +1,45 @@
+{
+  "name": "WithdrawalRequest",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "usdt_trc20",
+        "bitcoin",
+        "bank_wire"
+      ]
+    },
+    "wallet_address": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "processing",
+        "paid",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "account_id",
+    "amount",
+    "method"
+  ]
+}

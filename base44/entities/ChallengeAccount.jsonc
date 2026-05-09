@@ -1,0 +1,105 @@
+{
+  "name": "ChallengeAccount",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "two-step",
+        "instant"
+      ],
+      "default": "two-step"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "swing",
+        "standard"
+      ],
+      "default": "standard"
+    },
+    "account_size": {
+      "type": "number"
+    },
+    "platform": {
+      "type": "string",
+      "default": "xtrading"
+    },
+    "leverage": {
+      "type": "string",
+      "default": "1:100"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "passed",
+        "failed",
+        "funded"
+      ],
+      "default": "pending"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "phase1",
+        "phase2",
+        "funded"
+      ],
+      "default": "phase1"
+    },
+    "balance": {
+      "type": "number",
+      "default": 0
+    },
+    "equity": {
+      "type": "number",
+      "default": 0
+    },
+    "pnl": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_pnl": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_drawdown_used": {
+      "type": "number",
+      "default": 0
+    },
+    "max_drawdown_used": {
+      "type": "number",
+      "default": 0
+    },
+    "profit_target_progress": {
+      "type": "number",
+      "default": 0
+    },
+    "win_rate": {
+      "type": "number",
+      "default": 0
+    },
+    "total_trades": {
+      "type": "number",
+      "default": 0
+    },
+    "login_credentials": {
+      "type": "string"
+    },
+    "server": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "challenge_type",
+    "account_size"
+  ]
+}

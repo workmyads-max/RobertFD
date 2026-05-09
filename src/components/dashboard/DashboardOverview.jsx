@@ -31,14 +31,21 @@ function StatCard({ stat, i }) {
   );
 }
 
-export default function DashboardOverview({ user }) {
+export default function DashboardOverview({ user, onStartChallenge }) {
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-foreground">
-          Welcome back, <span className="text-primary">{user?.full_name?.split(' ')[0] || 'Trader'}</span>
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1 font-mono">Robert Funds Dashboard — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-foreground">
+            Welcome back, <span className="text-primary">{user?.full_name?.split(' ')[0] || 'Trader'}</span>
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1 font-mono">Robert Funds Dashboard — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+        <button onClick={onStartChallenge}
+          className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+          style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+          + Start New Challenge
+        </button>
       </div>
 
       {/* Stats */}

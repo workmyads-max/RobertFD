@@ -102,7 +102,8 @@ function PricingCard({ plan, index, isInstant }) {
             {plan.price}
           </span>
         </div>
-        <button
+        <a
+          href={`/checkout?type=${isInstant ? 'instant' : 'two-step'}&size=${plan.raw}`}
           className={`w-full py-2.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 group-hover:gap-2 ${
             isBestValue
               ? 'text-white'
@@ -115,7 +116,7 @@ function PricingCard({ plan, index, isInstant }) {
         >
           Get Started
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-        </button>
+        </a>
       </div>
     </motion.div>
   );

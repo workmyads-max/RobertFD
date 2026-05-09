@@ -1,0 +1,90 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "two-step",
+        "instant"
+      ]
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "swing",
+        "standard"
+      ]
+    },
+    "account_size": {
+      "type": "number"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "leverage": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "usdt_trc20",
+        "bitcoin"
+      ]
+    },
+    "payment_address": {
+      "type": "string"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "awaiting_confirmation",
+        "confirmed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "account_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "challenge_type",
+    "account_size",
+    "price"
+  ]
+}
