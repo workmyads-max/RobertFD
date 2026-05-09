@@ -292,7 +292,7 @@ export default function XTradingTerminalNew({ account }) {
     <div className="flex flex-col h-full" style={{ background: '#030305' }}>
       {/* Compact Status Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="px-4 py-2 border-b flex items-center justify-between text-xs"
+        className="px-2 md:px-4 py-2 border-b flex items-center justify-between text-[10px] md:text-xs flex-wrap gap-2"
         style={{
           borderColor: 'rgba(255,255,255,0.08)',
           background: 'linear-gradient(90deg, rgba(255,92,0,0.05), rgba(0,0,0,0.2))',
@@ -315,30 +315,30 @@ export default function XTradingTerminalNew({ account }) {
       </motion.div>
 
       {/* Main Area: Chart (Full Width) + Right Order Panel */}
-      <div className="flex flex-1 overflow-hidden gap-0">
-        {/* Chart Area - 85% width */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden gap-0">
+        {/* Chart Area */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="flex-1 flex flex-col border-r relative"
+          className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r relative"
           style={{
             borderColor: 'rgba(255,255,255,0.08)',
             background: 'linear-gradient(135deg, rgba(255,92,0,0.03), rgba(0,0,0,0.4))',
           }}>
           {/* Chart Header */}
-          <div className="px-6 py-3 border-b flex items-center justify-between"
+          <div className="px-3 md:px-6 py-2 md:py-3 border-b flex items-center justify-between flex-wrap gap-2"
             style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(5,5,8,0.6)' }}>
-            <div className="flex items-center gap-4">
-              <span className="text-base font-black text-foreground">{selectedSymbol}</span>
+            <div className="flex items-center gap-2 md:gap-4">
+              <span className="text-sm md:text-base font-black text-foreground">{selectedSymbol}</span>
               {currentPrice?.bid !== null && (
                 <>
-                  <span className="text-3xl font-mono font-black text-primary">{currentPrice?.bid?.toFixed(selected.digits)}</span>
-                  <span className={`text-sm font-bold ${(currentPrice?.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className="text-2xl md:text-3xl font-mono font-black text-primary">{currentPrice?.bid?.toFixed(selected.digits)}</span>
+                  <span className={`text-xs md:text-sm font-bold ${(currentPrice?.pct || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {(currentPrice?.pct || 0) >= 0 ? '▲' : '▼'} {Math.abs(currentPrice?.pct || 0).toFixed(2)}%
                   </span>
                 </>
               )}
             </div>
             {/* Market Watch Mini */}
-            <div className="flex items-center gap-2 overflow-x-auto" style={{ maxWidth: '600px' }}>
+            <div className="flex items-center gap-1 overflow-x-auto flex-1 md:flex-none" style={{ maxWidth: '100%' }}>
               {INSTRUMENTS.map(inst => {
                 const p = prices[inst.symbol];
                 const isActive = selectedSymbol === inst.symbol;
@@ -348,7 +348,7 @@ export default function XTradingTerminalNew({ account }) {
                     key={inst.symbol}
                     onClick={() => setSelectedSymbol(inst.symbol)}
                     whileHover={{ scale: 1.05 }}
-                    className={`px-3 py-1 rounded-lg text-[9px] font-mono transition-all flex-shrink-0 ${isActive ? 'bg-primary/20 border-primary/40' : 'hover:bg-white/5'}`}
+                    className={`px-2 md:px-3 py-1 rounded-lg text-[8px] md:text-[9px] font-mono transition-all flex-shrink-0 ${isActive ? 'bg-primary/20 border-primary/40' : 'hover:bg-white/5'}`}
                     style={{
                       border: `1px solid ${isActive ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.1)'}`,
                     }}>
@@ -509,23 +509,23 @@ export default function XTradingTerminalNew({ account }) {
           </div>
         </motion.div>
 
-        {/* Right Order Panel - 15% width */}
+        {/* Right Order Panel */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-          className="w-80 border-l flex flex-col overflow-hidden"
+          className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l flex flex-col overflow-hidden max-h-96 lg:max-h-none"
           style={{
             borderColor: 'rgba(255,255,255,0.08)',
             background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.01))',
             backdropFilter: 'blur(30px)',
           }}>
-          <div className="p-3 border-b flex items-center justify-between"
+          <div className="p-2 md:p-3 border-b flex items-center justify-between text-xs md:text-sm"
             style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
             <h3 className="text-xs font-black text-foreground uppercase tracking-widest">Order Ticket</h3>
             <span className="text-[10px] font-mono text-muted-foreground/60">{account?.account_type}</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3">
             {/* BUY/SELL Toggle */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-2">
               {['BUY', 'SELL'].map(side => (
                 <motion.button key={side} onClick={() => setOrderSide(side)}
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -619,18 +619,18 @@ export default function XTradingTerminalNew({ account }) {
 
       {/* Bottom Positions Panel - Compact */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="border-t h-40 flex flex-col"
+        className="border-t h-32 md:h-40 flex flex-col"
         style={{
           borderColor: 'rgba(255,255,255,0.08)',
           background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.02))',
           backdropFilter: 'blur(40px)',
         }}>
-        <div className="px-4 py-2 border-b flex items-center justify-between text-xs font-mono"
+        <div className="px-2 md:px-4 py-1.5 md:py-2 border-b flex items-center justify-between text-[9px] md:text-xs font-mono"
           style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <span className="font-black text-foreground">Open ({positions.length})</span>
           {positions.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
         </div>
-        <div className="flex-1 overflow-x-auto p-2 flex gap-2">
+        <div className="flex-1 overflow-x-auto p-1.5 md:p-2 flex gap-1.5 md:gap-2">
           {positions.length === 0 ? (
             <div className="w-full flex items-center justify-center">
               <span className="text-xs text-muted-foreground/40">No positions</span>
@@ -644,12 +644,12 @@ export default function XTradingTerminalNew({ account }) {
               return (
                 <motion.div key={pos.id}
                   whileHover={{ scale: 1.02 }}
-                  className="flex-shrink-0 p-3 rounded-lg cursor-pointer group"
+                  className="flex-shrink-0 p-2 md:p-3 rounded-lg cursor-pointer group"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
                     border: '1px solid rgba(255,255,255,0.12)',
                     backdropFilter: 'blur(20px)',
-                    minWidth: '200px',
+                    minWidth: '160px',
                   }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">

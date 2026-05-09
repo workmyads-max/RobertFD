@@ -91,7 +91,7 @@ export default function PerformanceInsights({ accounts }) {
   return (
     <div className="space-y-6">
       {/* Top Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         <StatMetric 
           label="Win Rate" 
           value={`${data.avgWinRate}%`} 
@@ -119,13 +119,13 @@ export default function PerformanceInsights({ accounts }) {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-3 md:gap-4">
         {/* Equity Curve */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-4 md:p-6"
           style={{
             background: 'linear-gradient(135deg, rgba(96,165,250,0.1), rgba(96,165,250,0.03))',
             border: '1px solid rgba(96,165,250,0.25)',
@@ -163,7 +163,7 @@ export default function PerformanceInsights({ accounts }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-4 md:p-6"
           style={{
             background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.03))',
             border: '1px solid rgba(16,185,129,0.25)',
@@ -219,7 +219,7 @@ export default function PerformanceInsights({ accounts }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-2xl p-6"
+        className="rounded-2xl p-4 md:p-6"
         style={{
           background: 'linear-gradient(135deg, rgba(255,92,0,0.1), rgba(204,255,0,0.03))',
           border: '1px solid rgba(255,92,0,0.25)',
