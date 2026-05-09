@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, TrendingUp, TrendingDown, Settings, Eye, EyeOff, Zap, AlertCircle, CheckCircle, Clock, Trash2, MoreVertical } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import AccountBreachAlert from './AccountBreachAlert';
+import TradingSessionCards from './TradingSessionCards';
 
 const INSTRUMENTS = [
   { symbol: 'BTC/USD', digits: 2, pipValue: 0.01, contractSize: 1, wsSymbol: 'btcusdt', type: 'crypto' },
@@ -615,6 +616,11 @@ export default function XTradingTerminalNew({ account }) {
             </motion.button>
           </div>
         </motion.div>
+      </div>
+
+      {/* Session Cards Section */}
+      <div className="border-t px-2 md:px-4 py-3 md:py-4 flex-shrink-0" style={{ background: 'rgba(4,4,6,0.98)' }}>
+        <TradingSessionCards account={account} positions={positions} pendingOrders={pendingOrders} />
       </div>
 
       {/* Bottom Positions Panel - Compact */}
