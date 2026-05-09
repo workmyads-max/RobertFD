@@ -9,18 +9,31 @@ function StatCard({ label, value, sub, color, icon: Icon, i }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.07 }}
-      className="rounded-2xl p-5"
-      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-primary" />
+      transition={{ delay: i * 0.07, type: 'spring', stiffness: 100 }}
+      whileHover={{ scale: 1.02, y: -4 }}
+      className="rounded-2xl p-6 group relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.03))',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+      }}>
+      {/* Glow effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: 'radial-gradient(circle at top right, rgba(255,92,0,0.15), transparent)',
+        }} />
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{label}</span>
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+            <Icon className="w-5 h-5 text-primary" />
+          </motion.div>
         </div>
+        <div className="text-3xl font-black text-foreground mb-2">{value}</div>
+        <div className={`text-xs font-mono ${color}`}>{sub}</div>
       </div>
-      <div className="text-2xl font-black text-foreground mb-1">{value}</div>
-      <div className={`text-xs font-mono ${color}`}>{sub}</div>
     </motion.div>
   );
 }
@@ -129,9 +142,13 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
             {/* Challenge Progress — primary account */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="lg:col-span-2 rounded-2xl p-6"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, type: 'spring' }}
+              className="lg:col-span-2 rounded-2xl p-6 group relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.02))',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 8px 32px rgba(255,92,0,0.08)',
+              }}
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -159,37 +176,61 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min((p.current / p.target) * 100, 100)}%` }}
-                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full"
-                      style={{ background: p.color }}
-                    />
+                      transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                      className="h-full rounded-full relative overflow-hidden"
+                      style={{
+                        background: `linear-gradient(90deg, ${p.color}, ${p.color}dd)`,
+                        boxShadow: `0 0 20px ${p.color}40`,
+                      }}>
+                      <motion.div
+                        animate={{ x: ['0%', '100%'] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        className="absolute inset-0 opacity-40"
+                        style={{
+                          background: `linear-gradient(90deg, transparent, white, transparent)`,
+                        }} />
+                    </motion.div>
                   </div>
                 </div>
               ))}
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="rounded-2xl p-6"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: 'spring' }}
+              className="rounded-2xl p-6 relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.02))',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 8px 32px rgba(255,92,0,0.08)',
+              }}
             >
-              <div className="text-sm font-bold text-foreground mb-4">Quick Actions</div>
-              <div className="space-y-3">
+              <div className="text-sm font-bold text-foreground mb-4 relative z-10">Quick Actions</div>
+              <div className="space-y-3 relative z-10">
                 {[
                   { label: 'Request Payout', icon: DollarSign, color: 'text-emerald-400', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', page: 'withdrawals' },
                   { label: 'View Analytics', icon: BarChart3, color: 'text-primary', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)', page: 'analytics' },
                   { label: 'Trading Journal', icon: Activity, color: 'text-accent', bg: 'rgba(204,255,0,0.08)', border: 'rgba(204,255,0,0.2)', page: 'journal' },
                   { label: 'Economic Calendar', icon: Target, color: 'text-blue-400', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', page: 'calendar' },
-                ].map((a) => {
+                ].map((a, idx) => {
                   const Icon = a.icon;
                   return (
-                    <button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:scale-[1.02]"
+                    <motion.button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.45 + idx * 0.05 }}
+                      whileHover={{ scale: 1.05, x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center gap-3 p-4 rounded-xl transition-all group"
                       style={{ background: a.bg, border: `1px solid ${a.border}` }}>
-                      <Icon className={`w-4 h-4 ${a.color}`} />
+                      <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
+                        <Icon className={`w-4 h-4 ${a.color}`} />
+                      </motion.div>
                       <span className="text-sm font-medium text-foreground">{a.label}</span>
-                      <Zap className="w-3 h-3 text-muted-foreground ml-auto" />
-                    </button>
+                      <motion.div className="w-3 h-3 text-muted-foreground ml-auto"
+                        whileHover={{ x: 4 }}>
+                        <Zap className="w-3 h-3" />
+                      </motion.div>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -198,18 +239,24 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
           {/* Equity Curve — real data or flat line if no trades */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="rounded-2xl p-6"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: 'spring' }}
+            className="rounded-2xl p-6 relative overflow-hidden group"
+            style={{
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(255,92,0,0.03))',
+              border: '1px solid rgba(16,185,129,0.2)',
+              boxShadow: `0 8px 32px ${totalPnl >= 0 ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'}`,
+            }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6 relative z-10">
               <div>
-                <div className="text-sm font-bold text-foreground">Portfolio Equity</div>
-                <div className="text-xs text-muted-foreground font-mono">Total across all accounts</div>
+                <div className="text-sm font-bold text-foreground">Portfolio Equity Curve</div>
+                <div className="text-xs text-muted-foreground font-mono">Real-time balance across all accounts</div>
               </div>
-              <span className={`text-lg font-black ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <motion.span className={`text-lg font-black ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}>
                 {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
+              </motion.span>
             </div>
             {totalPnl === 0 ? (
               <div className="flex items-center justify-center h-24 rounded-xl"

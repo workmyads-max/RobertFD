@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import FundingShowcase from './FundingShowcase';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -29,8 +30,14 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${statusCfg.color}25` }}
+      whileHover={{ scale: 1.02, y: -4 }}
+      transition={{ type: 'spring', stiffness: 100 }}
+      className="rounded-2xl overflow-hidden group relative"
+      style={{
+        background: `linear-gradient(135deg, ${statusCfg.color}08, rgba(255,255,255,0.03))`,
+        border: `1px solid ${statusCfg.color}30`,
+        boxShadow: `0 8px 32px ${statusCfg.color}12`,
+      }}
     >
       {/* Status bar */}
       <div className="h-1 w-full" style={{ background: statusCfg.color, opacity: 0.7 }} />
@@ -64,40 +71,65 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-5">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-5 relative z-10">
           {[
             { label: 'P&L', value: `${isPnlPos ? '+' : ''}$${(account.pnl || 0).toLocaleString()}`, color: isPnlPos ? 'text-emerald-400' : 'text-red-400' },
             { label: 'Win Rate', value: `${account.win_rate || 0}%`, color: 'text-foreground' },
             { label: 'Daily DD', value: `${account.daily_drawdown_used || 0}%`, color: 'text-foreground' },
             { label: 'Max DD', value: `${account.max_drawdown_used || 0}%`, color: (account.max_drawdown_used || 0) > 7 ? 'text-red-400' : 'text-foreground' },
             { label: 'Trades', value: account.total_trades || 0, color: 'text-foreground' },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl p-3 text-center"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="text-[10px] font-mono text-muted-foreground mb-1">{s.label}</div>
-              <div className={`text-sm font-bold ${s.color}`}>{s.value}</div>
-            </div>
+          ].map((s, idx) => (
+            <motion.div key={s.label}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              whileHover={{ scale: 1.08 }}
+              className="rounded-xl p-3 text-center group/stat cursor-pointer transition-all"
+              style={{
+                background: `linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,92,0,0.02))`,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+              <div className="text-[10px] font-mono text-muted-foreground/70 mb-1 uppercase tracking-widest">{s.label}</div>
+              <motion.div className={`text-sm font-black ${s.color}`}
+                whileHover={{ scale: 1.1 }}>
+                {s.value}
+              </motion.div>
+            </motion.div>
           ))}
         </div>
 
         {/* Progress bar */}
-        <div className="mb-5">
-          <div className="flex justify-between text-xs font-mono mb-1.5">
+        <div className="mb-5 relative z-10">
+          <div className="flex justify-between text-xs font-mono mb-2">
             <span className="text-muted-foreground">Profit Target Progress</span>
-            <span className="text-primary">{account.profit_target_progress?.toFixed(1) || 0}% / {profitTarget}%</span>
+            <motion.span className="text-primary font-bold"
+              key={account.profit_target_progress}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}>
+              {account.profit_target_progress?.toFixed(1) || 0}% / {profitTarget}%
+            </motion.span>
           </div>
-          <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+          <div className="h-3 rounded-full bg-white/5 overflow-hidden relative border border-white/10">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(((account.profit_target_progress || 0) / profitTarget) * 100, 100)}%` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full rounded-full bg-primary"
-            />
+              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full rounded-full relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)',
+                boxShadow: '0 0 20px rgba(255,92,0,0.4)',
+              }}>
+              <motion.div
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 opacity-30"
+                style={{ background: 'linear-gradient(90deg, transparent, white, transparent)' }} />
+            </motion.div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap relative z-10">
           <button onClick={() => onOpenTerminal && onOpenTerminal(account)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
             style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
@@ -180,6 +212,11 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
         <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-4">
+          {/* Funding showcase */}
+          {displayAccounts.filter(a => a.status === 'funded').map(fundedAcc => (
+            <FundingShowcase key={fundedAcc.id} account={fundedAcc} />
+          ))}
+
           {/* Pending approval orders */}
           {pendingOrders.map(o => (
             <motion.div key={o.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
