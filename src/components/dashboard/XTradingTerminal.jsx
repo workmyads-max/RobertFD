@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, List, Activity, Bell, ChevronUp, ChevronDown, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { X, List, Activity, Bell, ChevronUp, ChevronDown, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Clock, Monitor } from 'lucide-react';
 
 // ─── INSTRUMENT CONFIG ────────────────────────────────────────────────────────
 const INSTRUMENTS = [
@@ -296,8 +296,33 @@ function AccountRulesPanel({ rules, account }) {
   );
 }
 
+// ─── NO ACCOUNT GATE ─────────────────────────────────────────────────────────
+function NoAccountGate() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-8" style={{ background: '#040407' }}>
+      <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
+        <Monitor className="w-10 h-10 text-primary/40" />
+      </div>
+      <div className="text-2xl font-black text-foreground mb-3">XTrading Terminal Locked</div>
+      <div className="text-sm text-muted-foreground mb-2 max-w-md">
+        The trading terminal is only available for active challenge accounts.
+      </div>
+      <div className="text-xs font-mono text-muted-foreground/60 mb-8">
+        Purchase a challenge → Admin approves → Terminal activates automatically
+      </div>
+      <div className="flex flex-col gap-2 text-xs font-mono text-muted-foreground/40">
+        <span>✓ Real-time live prices (Binance, FX feeds)</span>
+        <span>✓ Market & pending orders (BUY/SELL/LIMIT/STOP)</span>
+        <span>✓ Full risk management (SL/TP/trailing)</span>
+        <span>✓ Challenge rule enforcement (DD limits)</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN TERMINAL ────────────────────────────────────────────────────────────
 export default function XTradingTerminal({ account }) {
+  const isActive = !!(account && (account.status === 'active' || account.status === 'funded' || account.status === 'passed'));
   const prices = useLivePrices();
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USD');
   const [timeframe, setTimeframe] = useState('60');
@@ -319,7 +344,7 @@ export default function XTradingTerminal({ account }) {
   const [accountBlocked, setAccountBlocked] = useState(false);
   const rules = getAccountRules(account);
 
-  const accountSize = account?.account_size || 100000;
+  const accountSize = account?.account_size || 0;
   const startBalance = account?.balance || accountSize;
   const [sessionBalance, setSessionBalance] = useState(startBalance);
 
@@ -463,6 +488,8 @@ export default function XTradingTerminal({ account }) {
     { val: 'sell_limit', label: 'Sell Limit' },
     { val: 'sell_stop', label: 'Sell Stop' },
   ];
+
+  if (!isActive) return <NoAccountGate />;
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 0px)', background: '#040407' }}>

@@ -26,6 +26,10 @@ import AdminAccounts from '../components/admin/AdminAccounts';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
+import AdminKYC from '../components/admin/AdminKYC';
+import AdminLiveChat from '../components/admin/AdminLiveChat';
+import KYC from '../components/dashboard/KYC';
+import LiveChat from '../components/dashboard/LiveChat';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -49,6 +53,14 @@ export default function Dashboard() {
   );
 
   const isAdmin = user?.role === 'admin';
+
+  const { data: allAccounts = [] } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    enabled: !!user,
+  });
+
+  const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);
@@ -75,8 +87,8 @@ export default function Dashboard() {
     switch (activePage) {
       case 'overview': return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
-      case 'terminal': return <XTradingTerminal account={activeAccount} />;
-      case 'analytics': return <Analytics />;
+      case 'terminal': return <XTradingTerminal account={activeAccount || primaryActiveAccount} />;
+      case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'calendar': return <EconomicCalendar />;
       case 'news': return <MarketNews />;
       case 'journal': return <TradingJournal user={user} />;
@@ -84,6 +96,7 @@ export default function Dashboard() {
       case 'withdrawals': return <Withdrawals user={user} />;
       case 'certificates': return <Certificates user={user} />;
       case 'affiliate': return <Affiliate user={user} />;
+      case 'kyc': return <KYC user={user} />;
       case 'support': return <Support />;
       case 'settings': return <DashboardSettings user={user} />;
       case 'notifications': return <NotificationCenter notifications={notifications} />;
@@ -95,6 +108,8 @@ export default function Dashboard() {
       case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-kyc': return isAdmin ? <AdminKYC /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
       default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
@@ -106,6 +121,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground font-inter flex flex-col">
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
+      <LiveChat user={user} />
 
       <div className="flex flex-1 overflow-hidden">
         <DashboardSidebar

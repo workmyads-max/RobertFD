@@ -1,0 +1,67 @@
+{
+  "name": "KYCVerification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "nationality": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_submitted",
+        "pending",
+        "approved",
+        "rejected",
+        "resubmit_required"
+      ],
+      "default": "not_submitted"
+    },
+    "id_type": {
+      "type": "string",
+      "enum": [
+        "passport",
+        "national_id",
+        "driving_license"
+      ]
+    },
+    "id_front_url": {
+      "type": "string"
+    },
+    "id_back_url": {
+      "type": "string"
+    },
+    "selfie_url": {
+      "type": "string"
+    },
+    "proof_of_address_url": {
+      "type": "string"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

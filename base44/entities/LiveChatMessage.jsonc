@@ -1,0 +1,38 @@
+{
+  "name": "LiveChatMessage",
+  "type": "object",
+  "properties": {
+    "ticket_id": {
+      "type": "string"
+    },
+    "sender_email": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin"
+      ],
+      "default": "user"
+    },
+    "message": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "attachment_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "message",
+    "sender_email"
+  ]
+}

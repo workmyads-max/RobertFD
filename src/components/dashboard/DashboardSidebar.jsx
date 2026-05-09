@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, BarChart2, Zap, LogOut
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -20,6 +20,7 @@ const navItems = [
   { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
   { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'affiliate', label: 'Affiliate', icon: Users },
+  { id: 'kyc', label: 'KYC Verification', icon: ShieldCheck },
   { id: 'support', label: 'Support', icon: HeadphonesIcon },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -53,7 +54,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-foreground truncate">{user.full_name || 'Trader'}</div>
-              <div className="text-[10px] text-muted-foreground font-mono truncate">{user.email}</div>
+              <div className="text-[10px] text-muted-foreground font-mono truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                Active
+              </div>
             </div>
           </div>
         </div>
@@ -116,6 +120,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-users', label: 'Users', icon: Users },
               { id: 'admin-notifications', label: 'Notifications', icon: Bell },
               { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet },
+              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },
+              { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
