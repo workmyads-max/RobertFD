@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, BarChart2
 } from 'lucide-react';
 
 const navItems = [
@@ -99,19 +99,34 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         {isAdmin && (
           <>
             <div className="pt-3 pb-1 px-3">
-              <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-widest">Admin</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-white/5" />
+                <span className="text-[9px] font-mono text-primary/60 uppercase tracking-widest px-1">Admin</span>
+                <div className="flex-1 h-px bg-white/5" />
+              </div>
             </div>
-            <button
-              onClick={() => handleNav('admin-notifications')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                activePage === 'admin-notifications'
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-              }`}
-            >
-              <Shield className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left">Manage Notifications</span>
-            </button>
+            {[
+              { id: 'admin-overview', label: 'Admin Overview', icon: Shield },
+              { id: 'admin-orders', label: 'Orders', icon: ShoppingBag },
+              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet },
+              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign },
+              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon },
+              { id: 'admin-users', label: 'Users', icon: Users },
+              { id: 'admin-notifications', label: 'Notifications', icon: Bell },
+            ].map(item => {
+              const Icon = item.icon;
+              const isActive = activePage === item.id;
+              return (
+                <button key={item.id} onClick={() => handleNav(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                    isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  }`}>
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {isActive && <ChevronRight className="w-3 h-3 text-primary/60" />}
+                </button>
+              );
+            })}
           </>
         )}
       </nav>
