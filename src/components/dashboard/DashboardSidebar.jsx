@@ -125,7 +125,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet },
               { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign },
               { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon },
-              { id: 'admin-users', label: 'Users', icon: Users },
+              { id: 'admin-users', label: 'User Management', icon: Users },
               { id: 'admin-notifications', label: 'Notifications', icon: Bell },
               { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet },
               { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },

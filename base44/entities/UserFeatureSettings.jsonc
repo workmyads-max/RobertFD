@@ -1,0 +1,53 @@
+{
+  "name": "UserFeatureSettings",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "can_trade": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_withdraw": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_access_terminal": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_access_analytics": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_access_journal": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_purchase_challenge": {
+      "type": "boolean",
+      "default": true
+    },
+    "require_kyc": {
+      "type": "boolean",
+      "default": false
+    },
+    "require_2fa": {
+      "type": "boolean",
+      "default": false
+    },
+    "ip_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

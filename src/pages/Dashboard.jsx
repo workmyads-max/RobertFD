@@ -28,6 +28,8 @@ import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminKYC from '../components/admin/AdminKYC';
 import AdminLiveChat from '../components/admin/AdminLiveChat';
+import AdminUserManagement from '../components/admin/AdminUserManagement';
+import DashboardPopupNotification from '../components/dashboard/DashboardPopupNotification';
 import KYC from '../components/dashboard/KYC';
 import LiveChat from '../components/dashboard/LiveChat';
 import AccountOverview from '../components/dashboard/AccountOverview';
@@ -54,6 +56,10 @@ export default function Dashboard() {
 
   const bannerNotification = notifications.find(n =>
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
+  );
+
+  const popupNotification = notifications.find(n =>
+    n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all')
   );
 
   const isAdmin = user?.role === 'admin';
@@ -118,6 +124,7 @@ export default function Dashboard() {
       case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-kyc': return isAdmin ? <AdminKYC /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
       default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
@@ -132,6 +139,7 @@ export default function Dashboard() {
       {!isTerminal && <TradingBackground />}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
+      {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
       <LiveChat user={user} />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
