@@ -3,15 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'accounts', label: 'My Accounts', icon: Wallet },
+  { id: 'account-overview', label: 'Account Overview', icon: BarChart3 },
   { id: 'marketplace', label: 'New Challenge', icon: Zap },
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
+  { id: 'xcopier', label: 'X-Copier', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'calendar', label: 'Economic Calendar', icon: CalendarDays },
   { id: 'news', label: 'Market News', icon: Newspaper },

@@ -30,6 +30,8 @@ import AdminKYC from '../components/admin/AdminKYC';
 import AdminLiveChat from '../components/admin/AdminLiveChat';
 import KYC from '../components/dashboard/KYC';
 import LiveChat from '../components/dashboard/LiveChat';
+import AccountOverview from '../components/dashboard/AccountOverview';
+import XCopier from '../components/dashboard/XCopier';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -87,7 +89,9 @@ export default function Dashboard() {
     switch (activePage) {
       case 'overview': return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'terminal': return <XTradingTerminal account={activeAccount || primaryActiveAccount} />;
+      case 'xcopier': return <XCopier />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'calendar': return <EconomicCalendar />;
       case 'news': return <MarketNews />;

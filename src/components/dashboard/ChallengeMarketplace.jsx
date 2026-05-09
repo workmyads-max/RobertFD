@@ -54,12 +54,20 @@ const PRICES = {
 export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [challengeType, setChallengeType] = useState('two-step');
   const [accountType, setAccountType] = useState('standard');
+  const [platform, setPlatform] = useState('xtrading');
   const [selected, setSelected] = useState(null);
+
+  const PLATFORMS = [
+    { id: 'xtrading', label: 'XTrading Terminal', desc: 'Built-in terminal — instant access', available: true, icon: '⚡' },
+    { id: 'tradelocker', label: 'TradeLocker', desc: 'Coming soon', available: false, icon: '🔒' },
+    { id: 'mt5', label: 'MetaTrader 5', desc: 'Coming soon', available: false, icon: '🔒' },
+  ];
 
   const plans = challengeType === 'two-step' ? TWO_STEP : INSTANT;
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
+    if (platform !== 'xtrading') return; // block non-available platforms
     setSelected(plan);
     const leverage = accountType === 'standard' ? plan.leverage100 : plan.leverage30;
     setTimeout(() => {
@@ -69,7 +77,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         account_size: plan.size,
         leverage,
         price: PRICES[challengeType]?.[plan.size] || plan.price,
-        platform: 'xtrading',
+        platform,
       });
     }, 250);
   };
@@ -100,6 +108,29 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 challengeType === t ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
               }`}>
               {t === 'two-step' ? '⚡ Two-Step Challenge' : '🚀 Instant Funding'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Platform selector */}
+      <div className="mb-6">
+        <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-wrap gap-3">
+          {PLATFORMS.map(p => (
+            <button key={p.id} onClick={() => p.available && setPlatform(p.id)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${!p.available ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+              style={{
+                background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
+              }}>
+              <span className="text-lg">{p.icon}</span>
+              <div className="text-left">
+                <div className={`text-xs font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'}`}>{p.label}</div>
+                <div className="text-[10px] font-mono text-muted-foreground">{p.desc}</div>
+              </div>
+              {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-1" />}
+              {!p.available && <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-mono" style={{ background: 'rgba(255,255,255,0.06)', color: '#888' }}>SOON</span>}
             </button>
           ))}
         </div>

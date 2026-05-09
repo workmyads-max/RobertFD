@@ -429,6 +429,8 @@ export default function XTradingTerminal({ account }) {
     setActivityLog(prev => [{ msg, time: new Date().toLocaleTimeString(), ok }, ...prev.slice(0, 49)]);
   }, []);
 
+  const tradingDaysRef = useRef(new Set()); // track unique trading dates this session
+
   const syncAccountToDB = useCallback((newBalance, newClosedTrades, allPositions, currentEquity) => {
     if (!account?.id) return;
     const trades = newClosedTrades;
@@ -439,6 +441,12 @@ export default function XTradingTerminal({ account }) {
     const dailyDDUsed = parseFloat((Math.max(0, (newBalance - currentEquity) / accountSize * 100)).toFixed(2));
     const maxDDUsed = parseFloat((Math.max(0, (accountSize - currentEquity) / accountSize * 100)).toFixed(2));
     const profitTargetProgress = parseFloat((Math.max(0, totalPnl / accountSize * 100)).toFixed(2));
+    // Track trading days: add today's date to the set
+    const today = new Date().toISOString().slice(0, 10);
+    tradingDaysRef.current.add(today);
+    const sessionTradingDays = tradingDaysRef.current.size;
+    const existingDays = account.trading_days || 0;
+    const tradingDays = Math.max(existingDays, sessionTradingDays);
     base44.entities.ChallengeAccount.update(account.id, {
       balance: newBalance,
       equity: currentEquity,
@@ -449,8 +457,9 @@ export default function XTradingTerminal({ account }) {
       daily_drawdown_used: dailyDDUsed,
       max_drawdown_used: maxDDUsed,
       profit_target_progress: profitTargetProgress,
+      trading_days: tradingDays,
     }).catch(() => {});
-  }, [account?.id, accountSize]);
+  }, [account?.id, account?.trading_days, accountSize]);
 
   const closePositionById = useCallback((id, closePrice, closePnl, reason = 'Manual') => {
     setPositions(prev => {

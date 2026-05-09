@@ -88,6 +88,11 @@
       "type": "number",
       "default": 0
     },
+    "trading_days": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of days the trader has placed at least one trade"
+    },
     "login_credentials": {
       "type": "string"
     },
