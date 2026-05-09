@@ -23,7 +23,7 @@ export default function WhyChooseUs() {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">Why AlphaFund</span>
+          <span className="text-xs font-mono text-primary uppercase tracking-widest">Why Robert Wealth</span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-6">
             Built for Elite Traders
           </h2>

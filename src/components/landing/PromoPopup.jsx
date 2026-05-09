@@ -84,7 +84,7 @@ export default function PromoPopup({ mascotImage }) {
                     <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/30 glow-orange-sm">
                       <img
                         src={mascotImage}
-                        alt="AlphaFund mascot"
+                        alt="Robert Wealth mascot"
                         className="w-full h-full object-cover object-top"
                       />
                     </div>

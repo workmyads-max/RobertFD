@@ -116,7 +116,7 @@ export default function DashboardPreview({ dashImage }) {
                 <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="text-xs font-mono text-muted-foreground">app.alphafund.com/dashboard</div>
+                <div className="text-xs font-mono text-muted-foreground">app.robertwealth.com/dashboard</div>
               </div>
               <RefreshCw className="w-3.5 h-3.5 text-muted-foreground/50" />
             </div>
@@ -125,10 +125,11 @@ export default function DashboardPreview({ dashImage }) {
               {/* Sidebar */}
               <div className="hidden md:flex flex-col w-44 border-r border-white/5 p-4">
                 <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
-                  <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                    <span className="text-white font-bold text-[10px]">A</span>
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center"
+                   style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
+                   <span className="text-primary font-black text-[8px]" style={{ fontFamily: 'Georgia, serif' }}>RW</span>
                   </div>
-                  <span className="text-xs font-bold text-foreground">AlphaFund</span>
+                  <span className="text-xs font-bold text-foreground">Robert Wealth</span>
                 </div>
                 {['Dashboard', 'Challenges', 'Open Trades', 'History', 'Payouts', 'Analytics', 'Settings'].map((item, i) => (
                   <div key={item} className={`text-xs py-2 px-2 rounded-lg mb-0.5 font-mono transition-colors ${

@@ -39,13 +39,19 @@ export default function Navbar() {
       >
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center glow-orange-sm">
-              <span className="text-white font-bold text-sm font-mono">A</span>
+          <a href="#" className="flex items-center gap-3 group">
+            {/* RW Monogram Logo */}
+            <div className="relative w-9 h-9 flex-shrink-0">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-orange-400 opacity-20 group-hover:opacity-30 transition-opacity" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center glow-orange-sm"
+                style={{ background: 'linear-gradient(135deg, #1a0e06 0%, #2a1506 100%)', border: '1px solid rgba(255,92,0,0.4)' }}>
+                <span className="text-primary font-black text-sm tracking-tight" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>RW</span>
+              </div>
             </div>
-            <span className="text-foreground font-bold text-xl tracking-tight">
-              ALPHA<span className="text-primary">FUND</span>
-            </span>
+            <div className="flex flex-col leading-none">
+              <span className="text-foreground font-bold text-base tracking-tight">Robert</span>
+              <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Wealth</span>
+            </div>
           </a>
 
           {/* Desktop Links */}

@@ -26,7 +26,7 @@ export default function AboutSection({ aboutImage }) {
             </div>
             <div className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs">
               <div className="text-xs font-mono text-primary mb-2">ESTABLISHED</div>
-              <div className="text-2xl font-black">Since 2022</div>
+              <div className="text-2xl font-black">Since 2026</div>
               <div className="text-sm text-muted-foreground mt-1">Singapore, Southeast Asia</div>
             </div>
           </motion.div>
@@ -37,7 +37,7 @@ export default function AboutSection({ aboutImage }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-xs font-mono text-primary uppercase tracking-widest">About AlphaFund</span>
+            <span className="text-xs font-mono text-primary uppercase tracking-widest">About Robert Wealth</span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mt-4 mb-6">
               The Future of Prop Trading
             </h2>

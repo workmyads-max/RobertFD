@@ -75,22 +75,21 @@ export default function HeroSection({ heroImage }) {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-8">
                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground tracking-wider uppercase">
-                  Singapore-Based Global Prop Firm
+                  Robert Wealth — Singapore
                 </span>
               </div>
 
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight mb-6">
-                Trade Without
+                Trade Bigger.
                 <br />
-                Limits.{' '}
-                <span className="gradient-text">Get Funded</span>
+                Scale Faster.{' '}
                 <br />
-                Instantly.
+                <span className="gradient-text">Powered by Robert Wealth.</span>
               </h1>
 
               <p className="text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">
-                Join the next-generation Singapore-based prop trading firm trusted by
-                ambitious traders worldwide. Access up to $200K in funded capital.
+                An institutional-grade Singapore-based proprietary trading firm built for
+                the next generation of global traders. Access up to $200K in funded capital.
               </p>
 
               <div className="flex flex-wrap gap-4 mb-12">
