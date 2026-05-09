@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, BarChart3, Award, Target, Activity, Zap, Plus, Clock, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useUserLocation } from '@/hooks/useUserLocation';
 
 function StatCard({ label, value, sub, color, icon: Icon, i }) {
   return (
@@ -39,6 +40,8 @@ function StatCard({ label, value, sub, color, icon: Icon, i }) {
 }
 
 export default function DashboardOverview({ user, onStartChallenge, onNavigate }) {
+  const location = useUserLocation();
+
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
@@ -87,7 +90,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
             Welcome back, <span className="text-primary">{user?.full_name || 'Trader'}</span>
           </h1>
           <div className="text-muted-foreground text-sm mt-2 font-mono space-y-1">
-            <div>📍 Company: <span className="text-primary">Robert Funds</span> • 🌍 IP: <span className="text-foreground">192.168.1.1</span> • 🇦🇪 UAE</div>
+            <div>📍 Company: <span className="text-primary">Robert Funds</span> • 🌍 IP: <span className="text-foreground">{location.loading ? 'Loading...' : location.ip}</span> • <span>{location.flag}</span> {location.loading ? 'Loading...' : location.country}</div>
             <div>📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • 🕐 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} GMT+4</div>
           </div>
         </div>
