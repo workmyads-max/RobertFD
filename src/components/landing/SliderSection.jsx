@@ -77,7 +77,7 @@ function DashboardSlide() {
   );
 }
 
-function PayoutSlide() {
+function TradingMetricsSlide() {
   return (
     <div className="glass rounded-2xl overflow-hidden relative">
       <div className="absolute top-0 right-0 w-48 h-48 bg-accent/8 rounded-full blur-3xl pointer-events-none" />
@@ -87,35 +87,57 @@ function PayoutSlide() {
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
         </div>
-        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Payout Dashboard</span>
+        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Live Trading Metrics</span>
       </div>
-      <div className="p-5 space-y-3">
+      <div className="p-5 space-y-4">
+        {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Available', value: '$4,280', color: 'text-emerald-400', bg: 'rgba(16,185,129,0.07)' },
-            { label: 'Total Paid', value: '$12,400', color: 'text-primary', bg: 'rgba(255,92,0,0.07)' },
+            { label: 'Win Rate', value: '74.6%', color: 'text-emerald-400', bg: 'rgba(16,185,129,0.07)' },
+            { label: 'Avg Risk/Reward', value: '1:2.3', color: 'text-primary', bg: 'rgba(255,92,0,0.07)' },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-4 text-center" style={{ background: item.bg, border: `1px solid ${item.bg.replace('0.07', '0.2')}` }}>
               <div className="text-[9px] font-mono text-muted-foreground mb-1">{item.label}</div>
-              <div className={`text-xl font-black ${item.color}`}>{item.value}</div>
+              <div className={`text-lg font-black ${item.color}`}>{item.value}</div>
             </div>
           ))}
         </div>
-        {[
-          { date: 'May 8', amount: '$4,280', status: 'Processing', statusColor: 'text-yellow-400' },
-          { date: 'Apr 30', amount: '$3,920', status: 'Paid', statusColor: 'text-emerald-400' },
-          { date: 'Apr 15', amount: '$4,200', status: 'Paid', statusColor: 'text-emerald-400' },
-        ].map((p) => (
-          <div key={p.date} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <span className="text-xs font-mono text-muted-foreground">{p.date}</span>
-            <span className="text-xs font-semibold text-foreground">{p.amount}</span>
-            <span className={`text-[10px] font-mono ${p.statusColor}`}>{p.status}</span>
+
+        {/* Active Positions */}
+        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="text-[10px] font-bold text-foreground mb-2">Open Positions</div>
+          {[
+            { symbol: 'EUR/USD', side: 'BUY', pnl: '+$324', color: 'text-emerald-400' },
+            { symbol: 'BTC/USD', side: 'SELL', pnl: '+$512', color: 'text-emerald-400' },
+            { symbol: 'GBP/USD', side: 'BUY', pnl: '-$128', color: 'text-red-400' },
+          ].map((p) => (
+            <div key={p.symbol} className="flex items-center justify-between text-[9px] py-1.5 px-0 border-t border-white/5 first:border-0">
+              <span className="font-mono text-foreground">{p.symbol}</span>
+              <span className="text-[9px] font-mono text-muted-foreground/70">{p.side}</span>
+              <span className={`font-bold ${p.color}`}>{p.pnl}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Performance Chart */}
+        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-foreground">Daily Performance</span>
+            <span className="text-[10px] font-mono text-emerald-400">+$2,840</span>
           </div>
-        ))}
-        <button className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }}>
-          <DollarSign className="w-4 h-4" /> Request Payout
-        </button>
+          <svg viewBox="0 0 300 40" className="w-full h-8">
+            <defs>
+              <linearGradient id="tradingGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <polyline fill="none" stroke="#10b981" strokeWidth="2"
+              points="0,28 15,24 30,20 45,18 60,16 75,12 90,10 105,8 120,14 135,6 150,4 165,8 180,10 195,6 210,12 225,8 240,6 255,10 270,8 285,6 300,4" />
+            <polygon fill="url(#tradingGrad)"
+              points="0,28 15,24 30,20 45,18 60,16 75,12 90,10 105,8 120,14 135,6 150,4 165,8 180,10 195,6 210,12 225,8 240,6 255,10 270,8 285,6 300,4 300,40 0,40" />
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -155,12 +177,12 @@ const slides = [
   },
   {
     id: 2,
-    tag: 'Instant Payouts',
-    title: 'Get Paid. Every Day. No Delays.',
-    subtitle: 'Request daily payouts with our lightning-fast withdrawal system. Processing within hours.',
-    icon: Zap,
-    features: ['Daily Payout Requests', 'Instant Processing', 'Zero Hidden Fees', 'Full Payout History'],
-    preview: 'payout',
+    tag: 'Live Trading Insights',
+    title: 'Real-Time Performance Tracking',
+    subtitle: 'Monitor all your open positions, win rates, and daily performance with institutional-grade analytics.',
+    icon: BarChart3,
+    features: ['Live Position Monitoring', 'Performance Metrics', 'Trade History & Analytics', 'Risk Management Tools'],
+    preview: 'trading',
   },
   {
     id: 3,
@@ -186,7 +208,7 @@ export default function SliderSection({ images }) {
 
   const renderPreview = () => {
     if (slide.preview === 'dashboard') return <DashboardSlide />;
-    if (slide.preview === 'payout') return <PayoutSlide />;
+    if (slide.preview === 'trading') return <TradingMetricsSlide />;
     return <PlatformSlide image={images[2]} />;
   };
 
