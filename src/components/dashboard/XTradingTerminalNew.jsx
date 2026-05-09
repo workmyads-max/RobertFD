@@ -468,10 +468,20 @@ export default function XTradingTerminalNew({ account }) {
       {/* Bottom Positions Panel */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="border-t h-48 flex flex-col"
-        style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(4,4,6,0.99)' }}>
+        style={{
+          borderColor: 'rgba(255,255,255,0.1)',
+          background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.02), rgba(255,92,0,0.04))',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+        }}>
         <div className="px-6 py-3 border-b flex items-center justify-between"
           style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Open Positions ({positions.length})</h4>
+          <div className="flex items-center gap-1">
+            {positions.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {positions.length === 0 ? (
@@ -483,28 +493,58 @@ export default function XTradingTerminalNew({ account }) {
               const p = prices[pos.symbol];
               const livePrice = p ? (pos.type === 'BUY' ? p.bid : p.ask) : pos.entry;
               const livePnl = p ? calcPnl(pos, livePrice) : 0;
+              const isProfit = livePnl >= 0;
               return (
                 <motion.div key={pos.id} onClick={() => setSelectedPos(pos.id)}
-                  whileHover={{ x: 4 }}
-                  className="p-3 rounded-lg flex items-center justify-between cursor-pointer"
+                  whileHover={{ scale: 1.02, x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 rounded-xl flex items-center justify-between cursor-pointer group transition-all"
                   style={{
-                    background: selectedPos === pos.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${selectedPos === pos.id ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    background: selectedPos === pos.id
+                      ? 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.08))'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                    border: `1px solid ${selectedPos === pos.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    boxShadow: selectedPos === pos.id ? '0 8px 24px rgba(255,92,0,0.15)' : '0 4px 12px rgba(0,0,0,0.2)',
                   }}>
                   <div className="flex-1 text-xs">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-foreground">{pos.symbol}</span>
-                      <span className={`font-bold ${pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}`}>{pos.type}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <motion.div whileHover={{ scale: 1.1 }}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white"
+                        style={{
+                          background: pos.type === 'BUY' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                          boxShadow: pos.type === 'BUY' ? '0 4px 12px rgba(16,185,129,0.3)' : '0 4px 12px rgba(239,68,68,0.3)',
+                        }}>
+                        {pos.type === 'BUY' ? '▲' : '▼'}
+                      </motion.div>
+                      <div>
+                        <span className="font-bold text-foreground">{pos.symbol}</span>
+                        <span className="text-muted-foreground/60 ml-2">•</span>
+                        <span className="text-muted-foreground/80 ml-2 font-mono">{pos.lots} lots</span>
+                      </div>
                     </div>
-                    <div className="text-muted-foreground/70 font-mono">{pos.lots} lots @ {typeof pos.entry === 'number' ? pos.entry.toFixed(selected.digits) : pos.entry}</div>
+                    <div className="text-muted-foreground/70 font-mono text-[9px] ml-8">
+                      Entry: {typeof pos.entry === 'number' ? pos.entry.toFixed(selected.digits) : pos.entry}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm font-black ${livePnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {livePnl >= 0 ? '+' : ''}${livePnl.toFixed(2)}
+                  <div className="text-right flex items-end gap-3">
+                    <div>
+                      <div className={`text-base font-black ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}
+                        style={{
+                          textShadow: `0 0 12px ${isProfit ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                        }}>
+                        {isProfit ? '+' : ''}${livePnl.toFixed(2)}
+                      </div>
+                      <div className={`text-[9px] font-mono ${isProfit ? 'text-emerald-400/60' : 'text-red-400/60'}`}>
+                        {((livePnl / sessionBalance) * 100).toFixed(2)}%
+                      </div>
                     </div>
-                    <motion.button whileHover={{ scale: 1.1 }} onClick={e => { e.stopPropagation(); closePositionById(pos.id, livePrice, livePnl); }}
-                      className="text-red-400/60 hover:text-red-400 transition-colors">
-                      <X className="w-3.5 h-3.5" />
+                    <motion.button whileHover={{ scale: 1.15, rotate: 90 }} whileTap={{ scale: 0.9 }}
+                      onClick={e => { e.stopPropagation(); closePositionById(pos.id, livePrice, livePnl); }}
+                      className="p-2 rounded-lg text-red-400/60 hover:text-red-400 transition-all group-hover:bg-red-500/10"
+                      style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <X className="w-4 h-4" />
                     </motion.button>
                   </div>
                 </motion.div>
