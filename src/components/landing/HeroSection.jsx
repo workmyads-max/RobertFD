@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
+import LivePriceTicker from './LivePriceTicker';
 
 const stats = [
   { label: 'Traders Worldwide', value: 14202, prefix: '', suffix: '+', icon: Users },
@@ -188,23 +189,7 @@ export default function HeroSection({ heroImage }) {
         </div>
       </div>
 
-      {/* Bottom Ticker */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border/30 py-3 overflow-hidden">
-        <div className="ticker-scroll flex items-center gap-12 whitespace-nowrap">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex items-center gap-12">
-              <span className="text-xs font-mono text-muted-foreground">BTC/USD <span className="text-accent">$67,842</span></span>
-              <span className="text-xs font-mono text-muted-foreground">ETH/USD <span className="text-accent">$3,421</span></span>
-              <span className="text-xs font-mono text-muted-foreground">EUR/USD <span className="text-primary">1.0847</span></span>
-              <span className="text-xs font-mono text-muted-foreground">GBP/USD <span className="text-primary">1.2634</span></span>
-              <span className="text-xs font-mono text-muted-foreground">XAU/USD <span className="text-accent">$2,342</span></span>
-              <span className="text-xs font-mono text-muted-foreground">SPX500 <span className="text-accent">5,218</span></span>
-              <span className="text-xs font-mono text-muted-foreground">NAS100 <span className="text-primary">18,421</span></span>
-              <span className="text-xs font-mono text-muted-foreground">US30 <span className="text-accent">39,102</span></span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <LivePriceTicker />
     </section>
   );
 }
