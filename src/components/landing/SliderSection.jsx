@@ -4,58 +4,102 @@ import { ChevronLeft, ChevronRight, TrendingUp, Zap, Monitor, DollarSign, Award,
 
 function DashboardSlide() {
   return (
-    <div className="glass rounded-2xl overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-48 h-48 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
-      {/* Window chrome */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/6">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-        </div>
-        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Robert Funds Dashboard</span>
+    <div className="glass rounded-2xl overflow-hidden relative h-full">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
       </div>
-      <div className="p-5">
+
+      <div className="relative z-10 p-5 h-full flex flex-col">
+        {/* Window chrome */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex gap-1.5">
+            <motion.div className="w-2.5 h-2.5 rounded-full bg-red-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }} />
+            <motion.div className="w-2.5 h-2.5 rounded-full bg-yellow-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.2 }} />
+            <motion.div className="w-2.5 h-2.5 rounded-full bg-emerald-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.4 }} />
+          </div>
+          <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Professional Dashboard</span>
+        </div>
+
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           {[
             { label: 'Balance', value: '$100,000', Icon: DollarSign, color: 'text-primary' },
             { label: 'Today P&L', value: '+$4,280', Icon: TrendingUp, color: 'text-emerald-400' },
             { label: 'Win Rate', value: '74.6%', Icon: Award, color: 'text-accent' },
-          ].map(({ label, value, Icon, color }) => (
-            <div key={label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          ].map(({ label, value, Icon, color }, idx) => (
+            <motion.div key={label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="rounded-xl p-2.5 group/stat hover:scale-105 transition-transform"
+              style={{
+                background: `linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,92,0,0.02))`,
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-mono text-muted-foreground uppercase">{label}</span>
-                <Icon className={`w-3 h-3 ${color}`} />
+                <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
+                  <Icon className={`w-3 h-3 ${color}`} />
+                </motion.div>
               </div>
-              <div className={`text-sm font-black ${color}`}>{value}</div>
-            </div>
+              <motion.div className={`text-xs font-black ${color}`}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, delay: idx * 0.2 }}>
+                {value}
+              </motion.div>
+            </motion.div>
           ))}
         </div>
+
         {/* Chart */}
-        <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <motion.div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-foreground">Equity Curve</span>
-            <span className="text-[10px] font-mono text-emerald-400">+4.28%</span>
+            <motion.span className="text-[10px] font-mono text-emerald-400"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}>
+              +4.28%
+            </motion.span>
           </div>
-          <svg viewBox="0 0 300 60" className="w-full h-12">
+          <svg viewBox="0 0 300 60" className="w-full h-10">
             <defs>
               <linearGradient id="dashGrad2" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.25" />
                 <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <polyline fill="none" stroke="#FF5C00" strokeWidth="1.5"
-              points="0,50 25,46 50,44 75,38 100,40 125,30 150,28 175,20 200,24 225,16 250,12 275,10 300,6" />
+            <motion.polyline fill="none" stroke="#FF5C00" strokeWidth="2"
+              points="0,50 25,46 50,44 75,38 100,40 125,30 150,28 175,20 200,24 225,16 250,12 275,10 300,6"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2, ease: 'easeInOut' }} />
             <polygon fill="url(#dashGrad2)"
               points="0,50 25,46 50,44 75,38 100,40 125,30 150,28 175,20 200,24 225,16 250,12 275,10 300,6 300,60 0,60" />
           </svg>
-        </div>
+        </motion.div>
+
         {/* Progress */}
-        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <motion.div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-foreground">Challenge Progress</span>
-            <span className="text-[10px] font-mono text-primary">Phase 1</span>
+            <motion.span className="text-[10px] font-mono text-primary"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}>
+              Phase 1
+            </motion.span>
           </div>
           {[
             { label: 'Profit Target', pct: 43, color: '#FF5C00' },
@@ -64,14 +108,26 @@ function DashboardSlide() {
             <div key={p.label} className="mb-2 last:mb-0">
               <div className="flex justify-between text-[9px] font-mono mb-1">
                 <span className="text-muted-foreground">{p.label}</span>
-                <span style={{ color: p.color }}>{p.pct}%</span>
+                <motion.span style={{ color: p.color }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}>
+                  {p.pct}%
+                </motion.span>
               </div>
-              <div className="h-1 rounded-full bg-white/5">
-                <div className="h-full rounded-full transition-all" style={{ width: `${p.pct}%`, background: p.color }} />
+              <div className="h-1.5 rounded-full bg-white/5 overflow-hidden border border-white/10">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${p.pct}%` }}
+                  transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
+                  className="h-full rounded-full"
+                  style={{
+                    background: p.color,
+                    boxShadow: `0 0 10px ${p.color}80`,
+                  }} />
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
