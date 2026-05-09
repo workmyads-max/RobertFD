@@ -59,9 +59,99 @@ export default function HeroSection({ heroImage }) {
       {/* Decorative large text */}
       <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none select-none">
         <span className="text-[15vw] font-black text-foreground/[0.02] leading-none tracking-tighter font-mono">
-          ALPHA
+          ROBERT WEALTH
         </span>
       </div>
+
+      {/* Rocket background decoration */}
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.4, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute right-[5%] top-[8%] pointer-events-none select-none hidden lg:block"
+        style={{ zIndex: 1 }}
+      >
+        <motion.div
+          animate={{ y: [0, -18, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <svg width="180" height="320" viewBox="0 0 180 320" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ filter: 'drop-shadow(0 0 24px rgba(255,92,0,0.35)) drop-shadow(0 0 60px rgba(255,92,0,0.12))' }}>
+            {/* Rocket body */}
+            <path d="M90 10 C60 10, 30 60, 28 160 L152 160 C150 60, 120 10, 90 10Z"
+              fill="url(#rocketBody)" opacity="0.9" />
+            {/* Rocket nose cone */}
+            <path d="M90 10 C75 10, 60 30, 55 60 L125 60 C120 30, 105 10, 90 10Z"
+              fill="url(#rocketNose)" opacity="0.95" />
+            {/* Window */}
+            <circle cx="90" cy="100" r="18" fill="none" stroke="rgba(255,92,0,0.6)" strokeWidth="2" />
+            <circle cx="90" cy="100" r="12" fill="rgba(255,92,0,0.12)" />
+            <circle cx="90" cy="100" r="6" fill="rgba(255,92,0,0.3)" />
+            {/* Left fin */}
+            <path d="M28 160 L5 220 L42 185Z" fill="url(#finGrad)" opacity="0.8" />
+            {/* Right fin */}
+            <path d="M152 160 L175 220 L138 185Z" fill="url(#finGrad)" opacity="0.8" />
+            {/* Engine nozzle */}
+            <rect x="72" y="158" width="36" height="18" rx="4" fill="rgba(20,12,4,0.9)" stroke="rgba(255,92,0,0.3)" strokeWidth="1" />
+            {/* Flame outer */}
+            <motion.path
+              d="M72 176 Q65 210, 90 230 Q115 210, 108 176Z"
+              fill="url(#flameOuter)"
+              style={{ transformOrigin: '90px 176px' }}
+              animate={{ scaleY: [1, 1.2, 0.85, 1.15, 1], scaleX: [1, 0.9, 1.1, 0.95, 1], opacity: [0.9, 1, 0.7, 1, 0.9] }}
+              transition={{ duration: 0.6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Flame inner */}
+            <motion.path
+              d="M80 176 Q76 205, 90 218 Q104 205, 100 176Z"
+              fill="url(#flameInner)"
+              style={{ transformOrigin: '90px 176px' }}
+              animate={{ scaleY: [1, 1.3, 0.8, 1.2, 1], opacity: [1, 0.8, 1, 0.85, 1] }}
+              transition={{ duration: 0.45, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Flame core */}
+            <motion.ellipse cx="90" cy="188" rx="6" ry="10"
+              fill="white" opacity="0.8"
+              animate={{ ry: [10, 14, 8, 12, 10], opacity: [0.8, 1, 0.6, 0.9, 0.8] }}
+              transition={{ duration: 0.35, repeat: Infinity }}
+            />
+            {/* Highlight stripe */}
+            <path d="M82 30 Q86 20, 90 18 L90 140 Q87 140, 82 135Z" fill="rgba(255,255,255,0.07)" />
+            {/* Body detail lines */}
+            <line x1="50" y1="120" x2="130" y2="120" stroke="rgba(255,92,0,0.15)" strokeWidth="1" />
+            <line x1="45" y1="140" x2="135" y2="140" stroke="rgba(255,92,0,0.1)" strokeWidth="1" />
+
+            <defs>
+              <linearGradient id="rocketBody" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#1a0a02" />
+                <stop offset="40%" stopColor="#2d1506" />
+                <stop offset="100%" stopColor="#0e0704" />
+              </linearGradient>
+              <linearGradient id="rocketNose" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FF8A3D" stopOpacity="0.4" />
+              </linearGradient>
+              <linearGradient id="finGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#1a0a02" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="flameOuter" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.95" />
+                <stop offset="60%" stopColor="#FF8A3D" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="flameInner" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFCC00" stopOpacity="0.9" />
+                <stop offset="60%" stopColor="#FF8A3D" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+        {/* Glow beneath rocket */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-24 h-8 rounded-full blur-xl"
+          style={{ background: 'rgba(255,92,0,0.25)' }} />
+      </motion.div>
 
       <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
