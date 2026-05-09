@@ -4,7 +4,7 @@ import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverviewAdvanced';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import MyAccounts from '../components/dashboard/MyAccounts';
-import XTradingTerminal from '../components/dashboard/XTradingTerminal';
+import XTradingTerminalNew from '../components/dashboard/XTradingTerminalNew';
 import Analytics from '../components/dashboard/Analytics';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
 import MarketNews from '../components/dashboard/MarketNews';
@@ -105,7 +105,7 @@ export default function Dashboard() {
       case 'overview': return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'terminal': return <XTradingTerminal account={activeAccount || primaryActiveAccount} />;
+      case 'terminal': return <XTradingTerminalNew account={activeAccount || primaryActiveAccount} />;
       case 'xcopier': return <XCopier />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
