@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
+import Register from './pages/Register';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -38,6 +39,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/challenges" element={<ChallengeSelect />} />

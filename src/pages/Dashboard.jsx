@@ -24,6 +24,7 @@ import DashboardCheckout from '../components/dashboard/DashboardCheckout';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import AdminOrders from '../components/admin/AdminOrders';
 import AdminAccounts from '../components/admin/AdminAccounts';
+import AdminPlatformSettings from '../components/admin/AdminPlatformSettings';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
@@ -126,6 +127,7 @@ export default function Dashboard() {
       case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-kyc': return isAdmin ? <AdminKYC /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;

@@ -1,0 +1,51 @@
+{
+  "name": "TradingPlatformProvider",
+  "type": "object",
+  "properties": {
+    "platform_name": {
+      "type": "string",
+      "enum": [
+        "mt5",
+        "tradelocker"
+      ],
+      "description": "Trading platform identifier"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "Platform API key"
+    },
+    "api_secret": {
+      "type": "string",
+      "description": "Platform API secret"
+    },
+    "server_url": {
+      "type": "string",
+      "description": "Platform server URL"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this provider is active"
+    },
+    "demo_api_key": {
+      "type": "string"
+    },
+    "demo_api_secret": {
+      "type": "string"
+    },
+    "demo_server_url": {
+      "type": "string"
+    },
+    "created_by_admin": {
+      "type": "string",
+      "description": "Admin email who created this"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "platform_name",
+    "api_key"
+  ]
+}
