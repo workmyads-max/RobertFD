@@ -4,6 +4,7 @@ import { TrendingUp, Target, Activity, Award, Zap, Plus, Clock, AlertCircle, Tro
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import PerformanceInsights from './PerformanceInsights';
 
 function CircularProgress({ value, max, size = 80, color = '#FF5C00' }) {
   const percentage = (value / max) * 100;
@@ -309,6 +310,11 @@ export default function DashboardOverviewAdvanced({ user, onStartChallenge, onNa
               </div>
             </motion.div>
           </div>
+
+          {/* Performance Insights */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+            <PerformanceInsights accounts={activeAccounts} />
+          </motion.div>
 
           {/* Bottom Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
