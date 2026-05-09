@@ -47,15 +47,27 @@ export default function Dashboard() {
 
   const isAdmin = user?.role === 'admin';
 
+  const [activeAccount, setActiveAccount] = useState(null);
+
   const goToChallenge = () => {
-    window.location.href = '/checkout';
+    window.location.href = '/challenges';
+  };
+
+  const openTerminalForAccount = (account) => {
+    setActiveAccount(account);
+    setActivePage('terminal');
+  };
+
+  const openAnalyticsForAccount = (account) => {
+    setActiveAccount(account);
+    setActivePage('analytics');
   };
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} />;
-      case 'terminal': return <XTradingTerminal />;
+      case 'overview': return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'terminal': return <XTradingTerminal account={activeAccount} />;
       case 'analytics': return <Analytics />;
       case 'calendar': return <EconomicCalendar />;
       case 'news': return <MarketNews />;

@@ -18,7 +18,7 @@ const DEMO_ACCOUNTS = [
   { id: 'demo2', account_id: 'RF-082341', challenge_type: 'instant', account_type: 'swing', account_size: 50000, platform: 'xtrading', leverage: '1:30', status: 'funded', phase: 'funded', balance: 52400, equity: 52400, pnl: 2400, daily_pnl: 180, daily_drawdown_used: 0.8, max_drawdown_used: 1.4, profit_target_progress: 100, win_rate: 68.2, total_trades: 31 },
 ];
 
-function AccountCard({ account, onStartChallenge }) {
+function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   const [expanded, setExpanded] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusCfg.icon;
@@ -98,11 +98,13 @@ function AccountCard({ account, onStartChallenge }) {
 
         {/* Actions */}
         <div className="flex gap-2 flex-wrap">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+          <button onClick={() => onOpenTerminal && onOpenTerminal(account)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
             <Monitor className="w-3.5 h-3.5" /> Open Terminal
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5"
+          <button onClick={() => onOpenAnalytics && onOpenAnalytics(account)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5"
             style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>
             <BarChart3 className="w-3.5 h-3.5" /> Analytics
           </button>
@@ -122,7 +124,7 @@ function AccountCard({ account, onStartChallenge }) {
   );
 }
 
-export default function MyAccounts({ onStartChallenge }) {
+export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
@@ -167,7 +169,7 @@ export default function MyAccounts({ onStartChallenge }) {
       ) : (
         <div className="space-y-4">
           {displayAccounts.map((acc) => (
-            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} />
+            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} />
           ))}
         </div>
       )}

@@ -184,14 +184,14 @@ export default function HeroSection({ heroImage }) {
 
               <div className="flex flex-wrap gap-4 mb-12">
                 <a
-                  href="/checkout"
+                  href="/challenges"
                   className="relative inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all group glow-orange"
                 >
                   Start Challenge
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </a>
                 <a
-                  href="/checkout?type=instant"
+                  href="/challenges?type=instant"
                   className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-foreground border border-border rounded-full hover:border-primary/50 transition-all"
                 >
                   Get Instant Funding

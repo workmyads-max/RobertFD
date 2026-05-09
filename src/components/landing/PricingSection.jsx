@@ -103,7 +103,7 @@ function PricingCard({ plan, index, isInstant }) {
           </span>
         </div>
         <a
-          href={`/checkout?type=${isInstant ? 'instant' : 'two-step'}&size=${plan.raw}`}
+          href={`/challenges?type=${isInstant ? 'instant' : 'two-step'}&size=${plan.raw}`}
           className={`w-full py-2.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 group-hover:gap-2 ${
             isBestValue
               ? 'text-white'

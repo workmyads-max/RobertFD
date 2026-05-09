@@ -31,7 +31,7 @@ function StatCard({ stat, i }) {
   );
 }
 
-export default function DashboardOverview({ user, onStartChallenge }) {
+export default function DashboardOverview({ user, onStartChallenge, onNavigate }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -98,14 +98,15 @@ export default function DashboardOverview({ user, onStartChallenge }) {
           <div className="text-sm font-bold text-foreground mb-4">Quick Actions</div>
           <div className="space-y-3">
             {[
-              { label: 'Request Payout', icon: DollarSign, color: 'text-emerald-400', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
-              { label: 'View Analytics', icon: BarChart3, color: 'text-primary', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)' },
-              { label: 'Trading Journal', icon: Activity, color: 'text-accent', bg: 'rgba(204,255,0,0.08)', border: 'rgba(204,255,0,0.2)' },
-              { label: 'Economic Calendar', icon: Target, color: 'text-blue-400', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
+              { label: 'Request Payout', icon: DollarSign, color: 'text-emerald-400', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', page: 'withdrawals' },
+              { label: 'View Analytics', icon: BarChart3, color: 'text-primary', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)', page: 'analytics' },
+              { label: 'Trading Journal', icon: Activity, color: 'text-accent', bg: 'rgba(204,255,0,0.08)', border: 'rgba(204,255,0,0.2)', page: 'journal' },
+              { label: 'Economic Calendar', icon: Target, color: 'text-blue-400', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', page: 'calendar' },
             ].map((a) => {
               const Icon = a.icon;
               return (
-                <button key={a.label} className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:scale-[1.02]"
+                <button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:scale-[1.02]"
                   style={{ background: a.bg, border: `1px solid ${a.border}` }}>
                   <Icon className={`w-4 h-4 ${a.color}`} />
                   <span className="text-sm font-medium text-foreground">{a.label}</span>

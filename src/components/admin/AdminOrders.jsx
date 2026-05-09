@@ -4,6 +4,49 @@ import { ShoppingBag, CheckCircle, XCircle, Clock, Search, Eye } from 'lucide-re
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
+async function confirmAndProvisionAccount(order) {
+  // 1. Update order status
+  await base44.entities.Order.update(order.id, { payment_status: 'confirmed' });
+
+  // 2. Create the challenge account automatically
+  const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
+  await base44.entities.ChallengeAccount.create({
+    account_id: accountId,
+    user_email: order.email,
+    challenge_type: order.challenge_type || 'two-step',
+    account_type: order.account_type || 'standard',
+    account_size: order.account_size,
+    platform: order.platform || 'xtrading',
+    leverage: order.leverage || '1:100',
+    status: 'active',
+    phase: 'phase1',
+    balance: order.account_size,
+    equity: order.account_size,
+    pnl: 0,
+    daily_pnl: 0,
+    daily_drawdown_used: 0,
+    max_drawdown_used: 0,
+    profit_target_progress: 0,
+    win_rate: 0,
+    total_trades: 0,
+    server: 'rf-live.robertfunds.com',
+    login_credentials: `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`,
+  });
+
+  // 3. Send notification
+  await base44.entities.Notification.create({
+    title: '🎉 Your Account is Ready!',
+    message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account for $${(order.account_size||0).toLocaleString()} has been activated. Account ID: ${accountId}. Log in to the dashboard to start trading.`,
+    type: 'payout',
+    priority: 'high',
+    display_mode: 'popup',
+    is_active: true,
+    target: 'all',
+  });
+
+  return accountId;
+}
+
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
 const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#60a5fa', confirmed: '#10b981', failed: '#ef4444' };
 
@@ -21,6 +64,17 @@ export default function AdminOrders() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-orders'] }); setSelected(null); },
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: (order) => confirmAndProvisionAccount(order),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      qc.invalidateQueries({ queryKey: ['admin-accounts'] });
+      qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      setSelected(null);
+    },
   });
 
   const filtered = orders.filter(o => {
@@ -143,11 +197,11 @@ export default function AdminOrders() {
                 ))}
               </div>
               <div className="px-5 pb-5 flex gap-3">
-                <button onClick={() => updateMutation.mutate({ id: selected.id, data: { payment_status: 'confirmed' } })}
-                  disabled={selected.payment_status === 'confirmed'}
+                <button onClick={() => confirmMutation.mutate(selected)}
+                  disabled={selected.payment_status === 'confirmed' || confirmMutation.isPending}
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
                   style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
-                  ✓ Confirm Payment
+                  {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
                 </button>
                 <button onClick={() => updateMutation.mutate({ id: selected.id, data: { payment_status: 'failed' } })}
                   disabled={selected.payment_status === 'failed'}
