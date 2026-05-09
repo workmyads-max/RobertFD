@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, Shield, AlertTriangle, MailCheck } from 'lucide-react';
+import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, AlertTriangle, MailCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
-const WALLETS = {
-  usdt_trc20: { address: 'TRobertFundsUSDT1234567890ABCDEFGH', network: 'TRC20', symbol: 'USDT', color: '#26A17B' },
-  bitcoin: { address: '1RobertFundsBTC1234567890XYZabcdef', network: 'Bitcoin', symbol: 'BTC', color: '#F7931A' },
+// Fallback wallets if none configured in admin
+const FALLBACK_WALLETS = {
+  usdt_trc20: { address: 'TConfigureInAdminWalletSettings', network: 'TRC20', symbol: 'USDT', color: '#26A17B' },
+  bitcoin: { address: '1ConfigureInAdminWalletSettings', network: 'Bitcoin', symbol: 'BTC', color: '#F7931A' },
 };
 
 const STATUS_FLOW = [
@@ -44,14 +45,37 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
   const [statusIdx, setStatusIdx] = useState(0);
   const [confirming, setConfirming] = useState(false);
 
-  const wallet = WALLETS[order.payment_method] || WALLETS.usdt_trc20;
+  // Load gateway wallets from admin config
+  const { data: gateways = [] } = useQuery({
+    queryKey: ['payment-gateways'],
+    queryFn: () => base44.entities.PaymentGateway.filter({ is_active: true }),
+  });
+
+  // Build wallet lookup from active gateway configs
+  const getWallet = () => {
+    const method = order.payment_method;
+    for (const gw of gateways) {
+      if (!gw.wallets?.length) continue;
+      if (method === 'usdt_trc20') {
+        const w = gw.wallets.find(w => w.network?.toUpperCase().includes('TRC') || w.currency?.toUpperCase() === 'USDT');
+        if (w) return { address: w.address, network: w.network || 'TRC20', symbol: 'USDT', color: '#26A17B' };
+      }
+      if (method === 'bitcoin') {
+        const w = gw.wallets.find(w => w.currency?.toUpperCase() === 'BTC' || w.network?.toUpperCase() === 'BITCOIN');
+        if (w) return { address: w.address, network: 'Bitcoin', symbol: 'BTC', color: '#F7931A' };
+      }
+    }
+    return FALLBACK_WALLETS[method] || FALLBACK_WALLETS.usdt_trc20;
+  };
+
+  const wallet = getWallet();
 
   const createOrderMutation = useMutation({
     mutationFn: () => base44.entities.Order.create({
       ...order,
       order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
       payment_address: wallet.address,
-      payment_status: 'pending',
+      payment_status: 'awaiting_confirmation',
     }),
     onSuccess: (data) => {
       updateOrder({ order_id: data.order_id });

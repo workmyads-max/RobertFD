@@ -5,11 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 async function confirmAndProvisionAccount(order) {
-  // 1. Update order status
+  // 1. Mark order as confirmed
   await base44.entities.Order.update(order.id, { payment_status: 'confirmed' });
 
-  // 2. Create the challenge account automatically
+  // 2. Create the funded challenge account — status ACTIVE only after admin approval
   const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
+  const credentials = `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
   await base44.entities.ChallengeAccount.create({
     account_id: accountId,
     user_email: order.email,
@@ -30,13 +31,13 @@ async function confirmAndProvisionAccount(order) {
     win_rate: 0,
     total_trades: 0,
     server: 'rf-live.robertfunds.com',
-    login_credentials: `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`,
+    login_credentials: credentials,
   });
 
-  // 3. Send notification
+  // 3. Notify user
   await base44.entities.Notification.create({
-    title: '🎉 Your Account is Ready!',
-    message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account for $${(order.account_size||0).toLocaleString()} has been activated. Account ID: ${accountId}. Log in to the dashboard to start trading.`,
+    title: '🎉 Account Activated!',
+    message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account ($${(order.account_size||0).toLocaleString()}) is now LIVE. Account ID: ${accountId}. Open the XTrading Terminal to start trading. Credentials: ${credentials}`,
     type: 'payout',
     priority: 'high',
     display_mode: 'popup',
@@ -48,7 +49,8 @@ async function confirmAndProvisionAccount(order) {
 }
 
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
-const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#60a5fa', confirmed: '#10b981', failed: '#ef4444' };
+const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#a78bfa', confirmed: '#10b981', failed: '#ef4444' };
+const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting Confirmation', confirmed: 'Confirmed', failed: 'Failed' };
 
 export default function AdminOrders() {
   const [search, setSearch] = useState('');

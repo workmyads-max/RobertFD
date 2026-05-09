@@ -1,0 +1,72 @@
+{
+  "name": "PaymentGateway",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name, e.g. NOWPayments"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "manual_crypto",
+        "nowpayments",
+        "coinpayments",
+        "coinbase_commerce",
+        "binance_pay",
+        "custom"
+      ],
+      "default": "manual_crypto"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "api_key": {
+      "type": "string"
+    },
+    "secret_key": {
+      "type": "string"
+    },
+    "webhook_secret": {
+      "type": "string"
+    },
+    "webhook_url": {
+      "type": "string"
+    },
+    "networks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supported networks e.g. TRC20, ERC20, BTC"
+    },
+    "wallets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "provider"
+  ]
+}

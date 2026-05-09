@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, TrendingUp, TrendingDown, Monitor, BarChart3, DollarSign, Eye, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -125,12 +125,24 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    refetchInterval: 15000,
   });
 
-  const displayAccounts = accounts.length > 0 ? accounts : DEMO_ACCOUNTS;
+  const { data: myOrders = [] } = useQuery({
+    queryKey: ['my-orders'],
+    queryFn: () => base44.entities.Order.filter({ email: user?.email }),
+    enabled: !!user?.email,
+  });
+
+  const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
+
+  // Only show real accounts, no demo fallback
+  const displayAccounts = accounts;
 
   return (
     <div>
@@ -168,9 +180,51 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
         <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-4">
+          {/* Pending approval orders */}
+          {pendingOrders.map(o => (
+            <motion.div key={o.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl p-5 flex items-start gap-4"
+              style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-sm font-bold text-foreground">{o.order_id || `Order #${o.id?.slice(0,8)}`}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-yellow-400"
+                    style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                    Pending Admin Approval
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">
+                  {o.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} · ${(o.account_size||0).toLocaleString()} · {o.account_type} · {o.leverage}
+                </div>
+                <div className="text-xs text-muted-foreground/60 mt-1">
+                  Your payment is being reviewed. Account will be activated within 1–24 hours.
+                </div>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Active accounts */}
           {displayAccounts.map((acc) => (
             <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} />
           ))}
+
+          {/* Empty state */}
+          {displayAccounts.length === 0 && pendingOrders.length === 0 && (
+            <div className="rounded-2xl p-12 text-center"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <div className="text-4xl mb-4">📊</div>
+              <div className="text-lg font-black text-foreground mb-2">No Accounts Yet</div>
+              <div className="text-sm text-muted-foreground mb-6">Purchase a challenge to get your funded trading account</div>
+              <button onClick={onStartChallenge}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white"
+                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                <Plus className="w-4 h-4" /> Start a Challenge
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

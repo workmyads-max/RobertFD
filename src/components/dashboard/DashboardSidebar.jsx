@@ -113,6 +113,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon },
               { id: 'admin-users', label: 'Users', icon: Users },
               { id: 'admin-notifications', label: 'Notifications', icon: Bell },
+              { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;

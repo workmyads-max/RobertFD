@@ -17,6 +17,7 @@ import DashboardSettings from '../components/dashboard/DashboardSettings';
 import NotificationCenter from '../components/dashboard/NotificationCenter';
 import NotificationBanner from '../components/dashboard/NotificationBanner';
 import AdminNotifications from '../components/dashboard/AdminNotifications';
+import AdminWalletSettings from '../components/admin/AdminWalletSettings';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import AdminOrders from '../components/admin/AdminOrders';
 import AdminAccounts from '../components/admin/AdminAccounts';
@@ -86,6 +87,7 @@ export default function Dashboard() {
       case 'admin-support': return isAdmin ? <AdminSupport /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
     }
   };
