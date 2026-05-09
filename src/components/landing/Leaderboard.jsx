@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, TrendingUp } from 'lucide-react';
+import MiniRocket from './MiniRocket';
 
 const traders = [
   { rank: 1, name: 'ALPHA_9', country: 'SG', pnl: '+$42,800', winRate: '78%', payouts: '$112,400' },
@@ -15,7 +16,9 @@ const traders = [
 
 export default function Leaderboard() {
   return (
-    <section className="relative py-32">
+    <section className="relative py-32 overflow-hidden">
+      <MiniRocket size={32} className="absolute right-6 top-16 opacity-20" rotate={-30} delay={0.1} />
+      <MiniRocket size={22} className="absolute left-10 bottom-16 opacity-15" rotate={20} delay={0.4} />
       <div className="max-w-[1400px] mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

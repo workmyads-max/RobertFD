@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Layers, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import MiniRocket from './MiniRocket';
 
 const challenges = [
   {
@@ -43,7 +44,9 @@ const challenges = [
 
 export default function ChallengeTypes() {
   return (
-    <section id="challenge" className="relative py-32">
+    <section id="challenge" className="relative py-32 overflow-hidden">
+      <MiniRocket size={30} className="absolute left-6 top-20 opacity-20" rotate={-25} delay={0} />
+      <MiniRocket size={22} className="absolute right-10 top-32 opacity-15" rotate={10} delay={0.5} />
       <div className="max-w-[1400px] mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

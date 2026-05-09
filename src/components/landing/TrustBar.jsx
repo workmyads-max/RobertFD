@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Globe, Shield, TrendingUp } from 'lucide-react';
+import MiniRocket from './MiniRocket';
 
 const pillars = [
   { icon: TrendingUp, label: 'Trusted by Global Traders', sub: '14,000+ active' },
@@ -21,6 +22,7 @@ export default function TrustBar() {
         className="absolute inset-0 pointer-events-none"
         style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.03), transparent)' }}
       />
+      <MiniRocket size={28} className="absolute right-8 top-1/2 -translate-y-1/2 opacity-30" rotate={-20} delay={0.2} />
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {pillars.map((p, i) => {

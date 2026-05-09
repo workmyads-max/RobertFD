@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Globe, Shield, BarChart3, HeadphonesIcon, Building, FileText, DollarSign } from 'lucide-react';
+import MiniRocket from './MiniRocket';
 
 const features = [
   { icon: Zap, title: 'Fast Payouts', description: 'Lightning-fast withdrawals processed within hours, not days.' },
@@ -15,7 +16,9 @@ const features = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="relative py-32">
+    <section className="relative py-32 overflow-hidden">
+      <MiniRocket size={36} className="absolute left-8 top-24 opacity-20" rotate={15} delay={0} />
+      <MiniRocket size={26} className="absolute right-12 bottom-24 opacity-20" rotate={-45} delay={0.3} />
       <div className="max-w-[1400px] mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

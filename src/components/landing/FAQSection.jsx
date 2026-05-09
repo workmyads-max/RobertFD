@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import MiniRocket from './MiniRocket';
 import {
   Accordion,
   AccordionContent,
@@ -36,7 +37,9 @@ const faqs = [
 
 export default function FAQSection() {
   return (
-    <section id="faq" className="relative py-32">
+    <section id="faq" className="relative py-32 overflow-hidden">
+      <MiniRocket size={28} className="absolute right-8 top-20 opacity-20" rotate={-15} delay={0.2} />
+      <MiniRocket size={20} className="absolute left-8 bottom-20 opacity-15" rotate={30} delay={0.5} />
       <div className="max-w-[1400px] mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

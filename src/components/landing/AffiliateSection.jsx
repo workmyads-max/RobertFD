@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, DollarSign, BarChart3, ArrowRight } from 'lucide-react';
+import MiniRocket from './MiniRocket';
 
 const perks = [
   { icon: DollarSign, title: 'Up to 15% Commission', description: 'Earn on every challenge purchase made through your referral link.' },
@@ -10,7 +11,9 @@ const perks = [
 
 export default function AffiliateSection() {
   return (
-    <section id="affiliate" className="relative py-32">
+    <section id="affiliate" className="relative py-32 overflow-hidden">
+      <MiniRocket size={32} className="absolute left-4 top-16 opacity-20" rotate={-10} delay={0.1} />
+      <MiniRocket size={24} className="absolute right-6 bottom-16 opacity-20" rotate={20} delay={0.4} />
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="glass rounded-3xl overflow-hidden">
           <div className="grid lg:grid-cols-2 gap-0">
