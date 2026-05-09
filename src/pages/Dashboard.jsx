@@ -18,6 +18,8 @@ import NotificationCenter from '../components/dashboard/NotificationCenter';
 import NotificationBanner from '../components/dashboard/NotificationBanner';
 import AdminNotifications from '../components/dashboard/AdminNotifications';
 import AdminWalletSettings from '../components/admin/AdminWalletSettings';
+import ChallengeMarketplace from '../components/dashboard/ChallengeMarketplace';
+import DashboardCheckout from '../components/dashboard/DashboardCheckout';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import AdminOrders from '../components/admin/AdminOrders';
 import AdminAccounts from '../components/admin/AdminAccounts';
@@ -49,9 +51,14 @@ export default function Dashboard() {
   const isAdmin = user?.role === 'admin';
 
   const [activeAccount, setActiveAccount] = useState(null);
+  const [checkoutOrder, setCheckoutOrder] = useState(null);
 
-  const goToChallenge = () => {
-    window.location.href = '/challenges';
+  // Navigate to in-dashboard marketplace instead of external page
+  const goToChallenge = () => setActivePage('marketplace');
+
+  const handleProceedToCheckout = (orderData) => {
+    setCheckoutOrder(orderData);
+    setActivePage('checkout');
   };
 
   const openTerminalForAccount = (account) => {
@@ -88,7 +95,9 @@ export default function Dashboard() {
       case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
+      case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
+      default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };
 

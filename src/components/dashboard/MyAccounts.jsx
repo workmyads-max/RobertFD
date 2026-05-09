@@ -219,9 +219,9 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
               <div className="text-lg font-black text-foreground mb-2">No Accounts Yet</div>
               <div className="text-sm text-muted-foreground mb-6">Purchase a challenge to get your funded trading account</div>
               <button onClick={onStartChallenge}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white"
-                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
-                <Plus className="w-4 h-4" /> Start a Challenge
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
+                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }}>
+                <Plus className="w-4 h-4" /> Browse Challenges
               </button>
             </div>
           )}

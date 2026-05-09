@@ -80,7 +80,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
         <button onClick={onStartChallenge}
           className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
-          <Plus className="w-4 h-4" /> New Challenge
+          <Plus className="w-4 h-4" /> New Challenge ↗
         </button>
       </div>
 
@@ -112,9 +112,9 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
             You don't have any active challenge accounts yet. Purchase a challenge to access the XTrading Terminal, analytics, and funded capital.
           </div>
           <button onClick={onStartChallenge}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold text-white"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
             style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
-            <Plus className="w-4 h-4" /> Purchase a Challenge
+            <Plus className="w-4 h-4" /> Browse Challenge Plans
           </button>
         </motion.div>
       )}

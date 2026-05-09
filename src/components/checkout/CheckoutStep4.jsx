@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, ArrowRight, Mail, Clock, Shield, LayoutDashboard } from 'lucide-react';
 
-export default function CheckoutStep4({ order }) {
+export default function CheckoutStep4({ order, onGoToDashboard }) {
   const [visible, setVisible] = useState(false);
   const txId = order.order_id || `RF-${Date.now().toString(36).toUpperCase()}`;
 
@@ -116,16 +116,19 @@ export default function CheckoutStep4({ order }) {
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
         className="flex flex-col sm:flex-row gap-3 justify-center"
       >
-        <a href="/dashboard"
-          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
-          style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 24px rgba(255,92,0,0.35)' }}>
-          <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
-        </a>
-        <a href="/"
-          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
-          style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-          Back to Home
-        </a>
+        {onGoToDashboard ? (
+          <button onClick={onGoToDashboard}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 24px rgba(255,92,0,0.35)' }}>
+            <LayoutDashboard className="w-4 h-4" /> Go to My Accounts
+          </button>
+        ) : (
+          <a href="/dashboard"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 24px rgba(255,92,0,0.35)' }}>
+            <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+          </a>
+        )}
       </motion.div>
     </div>
   );

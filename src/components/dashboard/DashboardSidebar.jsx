@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, BarChart2
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, BarChart2, Zap, LogOut
 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'accounts', label: 'My Accounts', icon: Wallet },
+  { id: 'marketplace', label: 'New Challenge', icon: Zap },
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'calendar', label: 'Economic Calendar', icon: CalendarDays },
@@ -132,11 +134,15 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         )}
       </nav>
 
-      {/* Back to site */}
-      <div className="px-3 pb-4">
-        <a href="/" className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors">
-          ← Back to robertfunds.com
+      {/* Bottom actions */}
+      <div className="px-3 pb-4 space-y-1">
+        <a href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors">
+          ← Back to site
         </a>
+        <button onClick={() => base44.auth.logout('/')}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-red-400 transition-colors">
+          <LogOut className="w-3.5 h-3.5" /> Sign Out
+        </button>
       </div>
     </div>
   );
