@@ -13,7 +13,7 @@ function DashboardSlide() {
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
         </div>
-        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Robert Wealth Dashboard</span>
+        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Robert Funds Dashboard</span>
       </div>
       <div className="p-5">
         {/* Stats */}

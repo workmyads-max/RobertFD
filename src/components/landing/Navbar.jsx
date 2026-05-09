@@ -50,7 +50,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-foreground font-bold text-base tracking-tight">Robert</span>
-              <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Wealth</span>
+              <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Funds</span>
             </div>
           </a>
 
@@ -70,12 +70,12 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <button className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/dashboard" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               Login
-            </button>
-            <button className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+            </a>
+            <a href="/dashboard" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
               Register
-            </button>
+            </a>
             <button
               onClick={() => scrollTo('#challenge')}
               className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring"

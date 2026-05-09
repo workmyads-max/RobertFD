@@ -37,7 +37,7 @@ export default function AboutSection({ aboutImage }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-xs font-mono text-primary uppercase tracking-widest">About Robert Wealth</span>
+            <span className="text-xs font-mono text-primary uppercase tracking-widest">About Robert Funds</span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mt-4 mb-6">
               The Future of Prop Trading
             </h2>

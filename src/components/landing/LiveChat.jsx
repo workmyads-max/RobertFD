@@ -18,7 +18,7 @@ export default function LiveChat() {
           >
             <div className="p-4 border-b border-border/30 flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-foreground">Robert Wealth Support</div>
+                <div className="text-sm font-semibold text-foreground">Robert Funds Support</div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   <span className="text-xs text-muted-foreground">Online — avg. 15min response</span>
@@ -32,7 +32,7 @@ export default function LiveChat() {
             <div className="p-4 h-56 flex flex-col justify-end">
               <div className="glass-light rounded-xl p-3 mb-3 max-w-[80%]">
                 <p className="text-sm text-foreground">
-                  👋 Welcome to Robert Wealth! How can we help you today?
+                  👋 Welcome to Robert Funds! How can we help you today?
                 </p>
                 <span className="text-[10px] text-muted-foreground mt-1 block">Just now</span>
               </div>

@@ -59,7 +59,7 @@ export default function HeroSection({ heroImage }) {
       {/* Decorative large text */}
       <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none select-none">
         <span className="text-[15vw] font-black text-foreground/[0.02] leading-none tracking-tighter font-mono">
-          ROBERT WEALTH
+          ROBERT FUNDS
         </span>
       </div>
 
@@ -165,7 +165,7 @@ export default function HeroSection({ heroImage }) {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-8">
                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground tracking-wider uppercase">
-                  Robert Wealth — Singapore
+                  Robert Funds — Singapore
                 </span>
               </div>
 
@@ -174,7 +174,7 @@ export default function HeroSection({ heroImage }) {
                 <br />
                 Scale Faster.{' '}
                 <br />
-                <span className="gradient-text">Powered by Robert Wealth.</span>
+                <span className="gradient-text">Powered by Robert Funds.</span>
               </h1>
 
               <p className="text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">

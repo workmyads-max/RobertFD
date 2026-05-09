@@ -1,0 +1,102 @@
+{
+  "name": "TradingJournalEntry",
+  "type": "object",
+  "properties": {
+    "entry_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "period_type": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default": "daily"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form journal notes"
+    },
+    "emotions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "confident",
+          "fearful",
+          "greedy",
+          "disciplined",
+          "frustrated",
+          "calm",
+          "overexcited",
+          "patient"
+        ]
+      }
+    },
+    "mistakes": {
+      "type": "string"
+    },
+    "strengths": {
+      "type": "string"
+    },
+    "strategy_notes": {
+      "type": "string"
+    },
+    "screenshot_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "total_trades": {
+      "type": "number",
+      "default": 0
+    },
+    "winning_trades": {
+      "type": "number",
+      "default": 0
+    },
+    "losing_trades": {
+      "type": "number",
+      "default": 0
+    },
+    "pnl": {
+      "type": "number",
+      "default": 0
+    },
+    "best_trade_pnl": {
+      "type": "number"
+    },
+    "worst_trade_pnl": {
+      "type": "number"
+    },
+    "win_rate": {
+      "type": "number"
+    },
+    "avg_rr": {
+      "type": "number"
+    },
+    "most_traded_symbol": {
+      "type": "string"
+    },
+    "discipline_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "consistency_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "AI-generated weekly/monthly summary"
+    }
+  },
+  "required": [
+    "entry_date"
+  ]
+}

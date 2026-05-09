@@ -1,0 +1,79 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Full notification message"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "announcement",
+        "maintenance",
+        "rule_update",
+        "promotion",
+        "payout",
+        "market_alert",
+        "system"
+      ],
+      "default": "announcement"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "display_mode": {
+      "type": "string",
+      "enum": [
+        "popup",
+        "banner",
+        "sidebar",
+        "all"
+      ],
+      "default": "sidebar"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "cta_label": {
+      "type": "string"
+    },
+    "cta_link": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "all",
+        "funded",
+        "challenge",
+        "admin"
+      ],
+      "default": "all"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ]
+}

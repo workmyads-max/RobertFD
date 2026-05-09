@@ -1,0 +1,166 @@
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
+  BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
+  Settings, Bell, X, Menu, ChevronRight, Shield
+} from 'lucide-react';
+
+const navItems = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'accounts', label: 'My Accounts', icon: Wallet },
+  { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'calendar', label: 'Economic Calendar', icon: CalendarDays },
+  { id: 'news', label: 'Market News', icon: Newspaper },
+  { id: 'journal', label: 'Trading Journal', icon: BookOpen },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
+  { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
+  { id: 'certificates', label: 'Certificates', icon: Award },
+  { id: 'affiliate', label: 'Affiliate', icon: Users },
+  { id: 'support', label: 'Support', icon: HeadphonesIcon },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
+
+export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount }) {
+  const handleNav = (id) => {
+    setActivePage(id);
+    setIsOpen(false);
+  };
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/5">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
+          <span className="text-primary font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
+        </div>
+        <div className="flex flex-col leading-none">
+          <span className="text-foreground font-bold text-sm">Robert</span>
+          <span className="text-primary font-black text-sm" style={{ letterSpacing: '-0.03em' }}>Funds</span>
+        </div>
+      </div>
+
+      {/* User info */}
+      {user && (
+        <div className="px-4 py-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+              {user.full_name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-foreground truncate">{user.full_name || 'Trader'}</div>
+              <div className="text-[10px] text-muted-foreground font-mono truncate">{user.email}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activePage === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                isActive
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              }`}
+            >
+              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+              <span className="flex-1 text-left">{item.label}</span>
+              {isActive && <ChevronRight className="w-3 h-3 text-primary/60" />}
+            </button>
+          );
+        })}
+
+        {/* Notifications */}
+        <button
+          onClick={() => handleNav('notifications')}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+            activePage === 'notifications'
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+          }`}
+        >
+          <Bell className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1 text-left">Notifications</span>
+          {unreadCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary text-white">{unreadCount}</span>
+          )}
+        </button>
+
+        {/* Admin only */}
+        {isAdmin && (
+          <>
+            <div className="pt-3 pb-1 px-3">
+              <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-widest">Admin</span>
+            </div>
+            <button
+              onClick={() => handleNav('admin-notifications')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                activePage === 'admin-notifications'
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              }`}
+            >
+              <Shield className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1 text-left">Manage Notifications</span>
+            </button>
+          </>
+        )}
+      </nav>
+
+      {/* Back to site */}
+      <div className="px-3 pb-4">
+        <a href="/" className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground transition-colors">
+          ← Back to robertfunds.com
+        </a>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 md:hidden w-10 h-10 rounded-xl glass flex items-center justify-center"
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex flex-col w-56 border-r border-white/5 h-screen sticky top-0"
+        style={{ background: 'rgba(8,8,10,0.98)' }}>
+        <SidebarContent />
+      </div>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/60 md:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 bottom-0 z-50 w-56 md:hidden border-r border-white/5"
+              style={{ background: 'rgba(8,8,10,0.99)' }}
+            >
+              <SidebarContent />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
