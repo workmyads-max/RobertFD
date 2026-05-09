@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, TrendingUp, Zap, Monitor, DollarSign, Award, BarChart3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, Zap, Monitor, DollarSign, Award, BarChart3, Shield, Lock, Flame, Zap as ZapIcon } from 'lucide-react';
 
 function DashboardSlide() {
   return (
@@ -77,66 +77,73 @@ function DashboardSlide() {
   );
 }
 
-function TradingMetricsSlide() {
+function RiskShieldSlide() {
   return (
-    <div className="glass rounded-2xl overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-48 h-48 bg-accent/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/6">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-        </div>
-        <span className="flex-1 text-center text-[10px] font-mono text-muted-foreground">Live Trading Metrics</span>
+    <div className="glass rounded-2xl overflow-hidden relative h-full">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       </div>
-      <div className="p-5 space-y-4">
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Win Rate', value: '74.6%', color: 'text-emerald-400', bg: 'rgba(16,185,129,0.07)' },
-            { label: 'Avg Risk/Reward', value: '1:2.3', color: 'text-primary', bg: 'rgba(255,92,0,0.07)' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl p-4 text-center" style={{ background: item.bg, border: `1px solid ${item.bg.replace('0.07', '0.2')}` }}>
-              <div className="text-[9px] font-mono text-muted-foreground mb-1">{item.label}</div>
-              <div className={`text-lg font-black ${item.color}`}>{item.value}</div>
-            </div>
-          ))}
-        </div>
 
-        {/* Active Positions */}
-        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="text-[10px] font-bold text-foreground mb-2">Open Positions</div>
-          {[
-            { symbol: 'EUR/USD', side: 'BUY', pnl: '+$324', color: 'text-emerald-400' },
-            { symbol: 'BTC/USD', side: 'SELL', pnl: '+$512', color: 'text-emerald-400' },
-            { symbol: 'GBP/USD', side: 'BUY', pnl: '-$128', color: 'text-red-400' },
-          ].map((p) => (
-            <div key={p.symbol} className="flex items-center justify-between text-[9px] py-1.5 px-0 border-t border-white/5 first:border-0">
-              <span className="font-mono text-foreground">{p.symbol}</span>
-              <span className="text-[9px] font-mono text-muted-foreground/70">{p.side}</span>
-              <span className={`font-bold ${p.color}`}>{p.pnl}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Performance Chart */}
-        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-foreground">Daily Performance</span>
-            <span className="text-[10px] font-mono text-emerald-400">+$2,840</span>
+      <div className="relative z-10 p-6 h-full flex flex-col">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
           </div>
-          <svg viewBox="0 0 300 40" className="w-full h-8">
-            <defs>
-              <linearGradient id="tradingGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <polyline fill="none" stroke="#10b981" strokeWidth="2"
-              points="0,28 15,24 30,20 45,18 60,16 75,12 90,10 105,8 120,14 135,6 150,4 165,8 180,10 195,6 210,12 225,8 240,6 255,10 270,8 285,6 300,4" />
-            <polygon fill="url(#tradingGrad)"
-              points="0,28 15,24 30,20 45,18 60,16 75,12 90,10 105,8 120,14 135,6 150,4 165,8 180,10 195,6 210,12 225,8 240,6 255,10 270,8 285,6 300,4 300,40 0,40" />
-          </svg>
+          <span className="text-[10px] font-mono text-muted-foreground">Risk Shield</span>
+        </div>
+
+        {/* Animated Shield */}
+        <div className="flex-1 flex items-center justify-center mb-4">
+          <motion.div className="relative w-32 h-32"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+            {/* Outer glow rings */}
+            <motion.div className="absolute inset-0 rounded-3xl border-2"
+              style={{ borderColor: 'rgba(16,185,129,0.3)' }}
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 3, repeat: Infinity }} />
+            <motion.div className="absolute inset-3 rounded-2xl border border-primary/30"
+              animate={{ scale: [1.1, 1, 1.1] }}
+              transition={{ duration: 3, repeat: Infinity, delay: 0.1 }} />
+
+            {/* Shield center */}
+            <div className="absolute inset-0 rounded-3xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(255,92,0,0.08))',
+                border: '2px solid rgba(16,185,129,0.4)',
+                boxShadow: '0 0 30px rgba(16,185,129,0.2), inset 0 0 30px rgba(16,185,129,0.1)',
+              }}>
+              <Shield className="w-14 h-14 text-emerald-400" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Protection Features */}
+        <div className="space-y-2">
+          {[
+            { icon: Lock, label: 'Account Protection', color: 'text-blue-400' },
+            { icon: Flame, label: 'Stop Loss Enforcement', color: 'text-red-400' },
+            { icon: ZapIcon, label: 'Auto Risk Limits', color: 'text-yellow-400' },
+          ].map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <motion.div key={item.label}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + i * 0.1 }}
+                className="flex items-center gap-3 p-2.5 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <Icon className={`w-4 h-4 ${item.color} flex-shrink-0`} />
+                <span className="text-xs font-medium text-foreground">{item.label}</span>
+                <motion.div className="w-1 h-1 rounded-full bg-emerald-400 ml-auto"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} />
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -177,12 +184,12 @@ const slides = [
   },
   {
     id: 2,
-    tag: 'Live Trading Insights',
-    title: 'Real-Time Performance Tracking',
-    subtitle: 'Monitor all your open positions, win rates, and daily performance with institutional-grade analytics.',
-    icon: BarChart3,
-    features: ['Live Position Monitoring', 'Performance Metrics', 'Trade History & Analytics', 'Risk Management Tools'],
-    preview: 'trading',
+    tag: 'Risk Management',
+    title: 'Capital Protection At Every Step',
+    subtitle: 'Advanced account protection with automatic stop-loss enforcement and AI-powered risk limits to safeguard your capital.',
+    icon: Shield,
+    features: ['Automatic Stop-Loss', 'AI Risk Detection', 'Account Safeguards', 'Real-Time Alerts'],
+    preview: 'risk',
   },
   {
     id: 3,
@@ -208,7 +215,7 @@ export default function SliderSection({ images }) {
 
   const renderPreview = () => {
     if (slide.preview === 'dashboard') return <DashboardSlide />;
-    if (slide.preview === 'trading') return <TradingMetricsSlide />;
+    if (slide.preview === 'risk') return <RiskShieldSlide />;
     return <PlatformSlide image={images[2]} />;
   };
 
