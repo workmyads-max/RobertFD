@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
+import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverviewAdvanced';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import MyAccounts from '../components/dashboard/MyAccounts';
 import XTradingTerminal from '../components/dashboard/XTradingTerminal';
@@ -101,7 +102,7 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'overview': return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'terminal': return <XTradingTerminal account={activeAccount || primaryActiveAccount} />;
@@ -134,10 +135,10 @@ export default function Dashboard() {
       case 'admin-challenges': return isAdmin ? <AdminChallenges /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-terminal': return isAdmin ? <AdminTerminalControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
-      default: return <DashboardOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };
 
