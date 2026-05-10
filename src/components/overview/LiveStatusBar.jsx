@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wifi, Server, Clock, Activity, Zap, Globe } from 'lucide-react';
-import { SESSIONS, getActiveSession } from '../terminal/terminalConfig.js';
+import { SESSIONS, getActiveSession } from '../terminal/terminalConfig';
 
 function PulseIndicator({ color = '#00f5a0', label, value, sublabel }) {
   return (

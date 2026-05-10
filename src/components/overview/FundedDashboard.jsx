@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RefreshCw, User, ChevronDown, Shield, Zap, Award, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { getAccountRules } from '../terminal/terminalConfig.js';
+import { getAccountRules } from '../terminal/terminalConfig';
 
 import ParticleBackground from './ParticleBackground.jsx';
 import AccountSwitcher    from './AccountSwitcher.jsx';
