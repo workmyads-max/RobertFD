@@ -9,7 +9,8 @@
       "type": "string",
       "enum": [
         "two-step",
-        "instant"
+        "instant",
+        "instant_light"
       ]
     },
     "account_type": {

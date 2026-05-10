@@ -9,7 +9,8 @@
       "type": "string",
       "enum": [
         "two-step",
-        "instant"
+        "instant",
+        "instant_light"
       ],
       "default": "two-step"
     },
@@ -76,6 +77,11 @@
       "type": "number",
       "default": 0
     },
+    "high_water_mark": {
+      "type": "number",
+      "default": 0,
+      "description": "Highest balance ever achieved \u2014 used for Instant Light trailing DD"
+    },
     "profit_target_progress": {
       "type": "number",
       "default": 0
@@ -92,6 +98,14 @@
       "type": "number",
       "default": 0,
       "description": "Number of days the trader has placed at least one trade"
+    },
+    "daily_reset_at": {
+      "type": "string",
+      "description": "UTC timestamp of last daily DD reset at 23:00 UTC (3:00 AM GMT+4)"
+    },
+    "phase_passed_at": {
+      "type": "string",
+      "description": "Timestamp when phase was passed \u2014 used for 48h activation countdown"
     },
     "login_credentials": {
       "type": "string"

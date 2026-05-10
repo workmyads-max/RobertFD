@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, Shield, TrendingUp, Calendar, Zap } from 'lucide-react';
+import DailyResetTimer from '../shared/DailyResetTimer';
+import { getDailyResetCountdown } from './terminalConfig';
 
 export default function ChallengeTracker({ account, rules, balance, equity, dailyOpenBalance }) {
   const accountSize = account?.account_size || 100000;
@@ -139,6 +141,13 @@ export default function ChallengeTracker({ account, rules, balance, equity, dail
         </div>
         <span className="font-mono font-bold text-primary text-[11px]">1:{rules?.leverage || 100}</span>
       </div>
+
+      {/* Daily DD Reset Timer */}
+      <DailyResetTimer
+        compact={false}
+        dailyDDUsed={items[1]?.current || 0}
+        dailyDDLimit={rules?.dailyDDLimit || 5}
+      />
     </div>
   );
 }

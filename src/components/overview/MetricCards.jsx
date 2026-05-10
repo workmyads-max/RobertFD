@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Activity, Target, Shield, Clock, DollarSign, BarChart2 } from 'lucide-react';
+import DailyResetTimer from '../shared/DailyResetTimer';
 
 function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
   return (
@@ -106,8 +107,15 @@ export default function MetricCards({ account, rules, stats }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-      {metrics.map((m, i) => <MetricCard key={m.label} {...m} i={i} />)}
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        {metrics.map((m, i) => <MetricCard key={m.label} {...m} i={i} />)}
+      </div>
+      {/* Live Daily DD Reset Timer */}
+      <DailyResetTimer
+        dailyDDUsed={dailyDDPct}
+        dailyDDLimit={ddLimit}
+      />
     </div>
   );
 }

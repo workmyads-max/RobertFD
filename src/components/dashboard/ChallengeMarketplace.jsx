@@ -19,6 +19,12 @@ const INSTANT = [
   { size: 200000, price: 4850, target: 8, maxDD: 8, dailyDD: 4, leverage100: '1:100', leverage30: '1:30', split: '80%' },
 ];
 
+const INSTANT_LIGHT = [
+  { size: 25000,  price: 304,  maxDD: 10, dailyDD: 5, leverage100: '1:100', leverage30: '1:30', split: '80%', trailing: true },
+  { size: 50000,  price: 675,  maxDD: 10, dailyDD: 5, leverage100: '1:100', leverage30: '1:30', split: '80%', popular: true, trailing: true },
+  { size: 100000, price: 1215, maxDD: 10, dailyDD: 5, leverage100: '1:100', leverage30: '1:30', split: '80%', trailing: true },
+];
+
 const ACCOUNT_TYPES = {
   standard: {
     label: 'Standard', leverage: '1:100',
@@ -47,8 +53,9 @@ function formatSize(n) {
 }
 
 const PRICES = {
-  'two-step': { 5000: 49, 10000: 89, 25000: 235, 50000: 349, 100000: 517, 200000: 1089 },
-  'instant': { 10000: 270, 25000: 607, 50000: 1350, 100000: 2430, 200000: 4850 },
+  'two-step':      { 5000: 49, 10000: 89, 25000: 235, 50000: 349, 100000: 517, 200000: 1089 },
+  'instant':       { 10000: 270, 25000: 607, 50000: 1350, 100000: 2430, 200000: 4850 },
+  'instant_light': { 25000: 304, 50000: 675, 100000: 1215 },
 };
 
 export default function ChallengeMarketplace({ onProceedToCheckout }) {
@@ -63,7 +70,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     { id: 'mt5', label: 'MetaTrader 5', desc: 'Coming soon', available: false, icon: '🔒' },
   ];
 
-  const plans = challengeType === 'two-step' ? TWO_STEP : INSTANT;
+  const plans = challengeType === 'two-step' ? TWO_STEP : challengeType === 'instant_light' ? INSTANT_LIGHT : INSTANT;
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
@@ -79,7 +86,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         price: PRICES[challengeType]?.[plan.size] || plan.price,
         platform,
       });
-    }, 250);
+    }, 200);
   };
 
   return (
@@ -100,17 +107,27 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Challenge type toggle */}
-      <div className="flex mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <div className="inline-flex rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          {['two-step', 'instant'].map(t => (
-            <button key={t} onClick={() => { setChallengeType(t); setSelected(null); }}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                challengeType === t ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
+          {[
+            { id: 'two-step', label: '⚡ Two-Step Challenge' },
+            { id: 'instant', label: '🚀 Instant Funding' },
+            { id: 'instant_light', label: '💡 Instant Light' },
+          ].map(t => (
+            <button key={t.id} onClick={() => { setChallengeType(t.id); setSelected(null); }}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                challengeType === t.id ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
               }`}>
-              {t === 'two-step' ? '⚡ Two-Step Challenge' : '🚀 Instant Funding'}
+              {t.label}
             </button>
           ))}
         </div>
+        {challengeType === 'instant_light' && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono"
+            style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.2)', color: '#CCFF00' }}>
+            ⬇ 50% cheaper · Trailing DD Protection
+          </div>
+        )}
       </div>
 
       {/* Platform selector */}
@@ -205,15 +222,17 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                   <div className="text-center mb-4">
                     <div className="text-xl font-black text-foreground mb-0.5">{formatSize(plan.size)}</div>
                     <div className="text-[10px] font-mono text-muted-foreground mb-2">
-                      {challengeType === 'two-step' ? 'Two-Step' : 'Instant'} · {accCfg.label}
+                      {challengeType === 'two-step' ? 'Two-Step' : challengeType === 'instant_light' ? 'Instant Light' : 'Instant'} · {accCfg.label}
                     </div>
                     <div className="text-lg font-black text-primary">${plan.price}</div>
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     {[
-                      { label: challengeType === 'two-step' ? 'P1 Target' : 'Target', value: challengeType === 'two-step' ? `${plan.phase1Target}%` : `${plan.target}%` },
+                      challengeType === 'two-step' && { label: 'P1 Target', value: `${plan.phase1Target}%` },
                       challengeType === 'two-step' && { label: 'P2 Target', value: `${plan.phase2Target}%` },
+                      (challengeType === 'instant' || challengeType === 'instant_light') && { label: 'No Target', value: '✓ Direct' },
+                      challengeType === 'instant_light' && { label: 'Trailing DD', value: '✓ Active' },
                       { label: 'Max DD', value: `${plan.maxDD}%` },
                       { label: 'Daily DD', value: `${plan.dailyDD}%` },
                       { label: 'Leverage', value: leverage },

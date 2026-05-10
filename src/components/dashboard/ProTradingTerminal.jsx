@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Lock, BarChart2, BookOpen, List, Menu, X, RefreshCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import DailyResetTimer from '../shared/DailyResetTimer';
+import PhaseTransitionModal from '../shared/PhaseTransitionModal';
 
 import useLivePrices            from '../terminal/useLivePrices';
 import MarketWatch               from '../terminal/MarketWatch';
@@ -11,7 +13,7 @@ import OrderPanel                from '../terminal/OrderPanel';
 import ChallengeTracker          from '../terminal/ChallengeTracker';
 import PositionsTable            from '../terminal/PositionsTable';
 import SessionBar                from '../terminal/SessionBar';
-import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason } from '../terminal/terminalConfig';
+import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason, calcTrailingDD } from '../terminal/terminalConfig';
 
 const TF_OPTS = [
   { label: '1m', val: '1' }, { label: '5m', val: '5' }, { label: '15m', val: '15' },
@@ -122,6 +124,8 @@ export default function ProTradingTerminal({ account }) {
   const [dailyOpenBalance, setDailyOpenBalance] = useState(account?.balance || account?.account_size || 100000);
   const [marketClosedMsg, setMarketClosedMsg] = useState('');
   const [tradesLoaded,   setTradesLoaded]   = useState(false);
+  const [phaseModal,     setPhaseModal]     = useState(null); // 'phase2' | 'funded'
+  const lastResetDate = useRef(null);
 
   // Mobile layout state
   const [mobilePanel, setMobilePanel] = useState('chart'); // chart | order | positions | watch | tracker
@@ -150,17 +154,26 @@ export default function ProTradingTerminal({ account }) {
     }
   }, [account?.balance]);
 
-  // ── Daily balance reset at midnight UTC ───────────────────────────────────
+  // ── Daily DD reset at 23:00 UTC (= 3:00 AM GMT+4) ────────────────────────
   useEffect(() => {
-    const checkMidnight = () => {
+    const checkReset = () => {
       const now = new Date();
-      if (now.getUTCHours() === 0 && now.getUTCMinutes() === 0) {
-        setDailyOpenBalance(sessionBalance);
+      const dateKey = `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}`;
+      if (now.getUTCHours() === 23 && now.getUTCMinutes() === 0) {
+        if (lastResetDate.current !== dateKey) {
+          lastResetDate.current = dateKey;
+          // Snapshot today's opening balance for tomorrow's DD reference
+          setDailyOpenBalance(sessionBalance);
+          // Reset daily_drawdown_used in DB
+          if (accountId) {
+            base44.entities.ChallengeAccount.update(accountId, { daily_pnl: 0, daily_drawdown_used: 0 }).catch(() => {});
+          }
+        }
       }
     };
-    const t = setInterval(checkMidnight, 60000);
+    const t = setInterval(checkReset, 30000);
     return () => clearInterval(t);
-  }, [sessionBalance]);
+  }, [sessionBalance, accountId]);
 
   // ── Live derived values ───────────────────────────────────────────────────
   const floatPnl = positions.reduce((s, pos) => {
@@ -211,6 +224,29 @@ export default function ProTradingTerminal({ account }) {
           daily_drawdown_used: parseFloat(Math.max(0, dailyDD).toFixed(2)),
           max_drawdown_used: parseFloat(Math.max(0, maxDD).toFixed(2)),
         }).catch(() => {});
+      }
+    }
+
+    // ── Phase transition check ─────────────────────────────────────────────
+    // Phase 1 passed: profit target hit AND min trading days met
+    const profitPct = ((sessionBalance - accountSize) / accountSize) * 100;
+    const tradingDays = account?.trading_days || 0;
+    const minDays = rules?.minTradingDays || 4;
+    const profitTarget = rules?.profitTarget || 10;
+
+    if (account?.phase === 'phase1' && account?.status === 'active' && !accountBlocked
+      && profitTarget > 0 && profitPct >= profitTarget && tradingDays >= minDays) {
+      setPhaseModal('phase2');
+      if (accountId) {
+        base44.entities.ChallengeAccount.update(accountId, { status: 'passed' }).catch(() => {});
+      }
+    }
+
+    if (account?.phase === 'phase2' && account?.status === 'active' && !accountBlocked
+      && profitTarget > 0 && profitPct >= profitTarget && tradingDays >= minDays) {
+      setPhaseModal('funded');
+      if (accountId) {
+        base44.entities.ChallengeAccount.update(accountId, { status: 'passed' }).catch(() => {});
       }
     }
   }, [equity, dailyOpenBalance, accountSize, marginLevel, positions.length, tradesLoaded, accountBlocked]);
@@ -294,16 +330,19 @@ export default function ProTradingTerminal({ account }) {
     const wins        = closedArr.filter(t => t.pnl > 0).length;
     const winRate     = totalTrades > 0 ? parseFloat(((wins / totalTrades) * 100).toFixed(1)) : 0;
     const totalPnl    = parseFloat((newBalance - accountSize).toFixed(2));
-    // Use dailyOpenBalance (today's start) for daily DD, accountSize for max DD
     const dailyDD     = parseFloat((Math.max(0, (dailyOpenBalance - currentEquity) / accountSize * 100)).toFixed(2));
     const maxDD       = parseFloat((Math.max(0, (accountSize - currentEquity) / accountSize * 100)).toFixed(2));
+    // Track high water mark for Instant Light trailing DD
+    const currentHWM  = account?.high_water_mark || accountSize;
+    const newHWM      = Math.max(currentHWM, newBalance);
     base44.entities.ChallengeAccount.update(accountId, {
       balance: newBalance, equity: currentEquity, pnl: totalPnl,
       win_rate: winRate, total_trades: totalTrades,
       daily_drawdown_used: dailyDD, max_drawdown_used: maxDD,
       profit_target_progress: parseFloat((Math.max(0, totalPnl / accountSize * 100)).toFixed(2)),
+      high_water_mark: newHWM,
     }).catch(() => {});
-  }, [accountId, accountSize, dailyOpenBalance]);
+  }, [accountId, accountSize, dailyOpenBalance, account?.high_water_mark]);
 
   const closePosition = useCallback((id, cp, pnl, reason = 'Manual') => {
     setPositions(prev => {
@@ -426,6 +465,17 @@ export default function ProTradingTerminal({ account }) {
 
   return (
     <div className="flex flex-col h-full font-mono" style={{ background: '#07070b' }}>
+
+      {/* Phase Transition Modal */}
+      <AnimatePresence>
+        {phaseModal && (
+          <PhaseTransitionModal
+            type={phaseModal}
+            account={account}
+            onClose={() => setPhaseModal(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Market Closed Toast */}
       <AnimatePresence>

@@ -100,29 +100,84 @@ export const SEED_PRICES = {
 };
 
 // ── Account Rules ─────────────────────────────────────────────────────────────
-export function getAccountRules(account, adminSettings = null) {
-  const isSwing   = account?.account_type === 'swing';
-  const isInstant = account?.challenge_type === 'instant';
-  const phase     = account?.phase || 'phase1';
+// GMT+4 = UTC+4. Daily DD resets at 3:00 AM GMT+4 = 23:00 UTC previous day
+export const DAILY_RESET_HOUR_UTC = 23; // 23:00 UTC = 3:00 AM GMT+4
 
-  // Parse leverage from account (e.g., "1:100" → 100)
-  const rawLev = account?.leverage || '1:100';
-  const leverage = parseInt(String(rawLev).replace('1:', '')) || 100;
+export function getAccountRules(account, adminSettings = null) {
+  const isSwing        = account?.account_type === 'swing';
+  const isInstant      = account?.challenge_type === 'instant';
+  const isInstantLight = account?.challenge_type === 'instant_light';
+  const phase          = account?.phase || 'phase1';
+
+  // Swing = 1:30, Standard = 1:100, override by stored account leverage if set
+  const rawLev = account?.leverage;
+  let leverage = 100;
+  if (rawLev) {
+    leverage = parseInt(String(rawLev).replace('1:', '')) || 100;
+  } else {
+    leverage = isSwing ? 30 : 100;
+  }
+
+  // Instant Light uses trailing overall DD
+  const trailingDD = isInstantLight;
 
   return {
     leverage,
-    dailyDDLimit:   isInstant ? 3 : 5,
-    maxDDLimit:     isInstant ? 8 : 10,
-    profitTarget:   isInstant ? 8 : phase === 'phase2' ? 5 : 10,
-    minTradingDays: isInstant ? 0 : phase === 'phase2' ? 5 : 4,
-    newsTrading:    isSwing,
+    // Daily DD: 5% for all types
+    dailyDDLimit:   5,
+    // Overall DD: 10% for all types
+    maxDDLimit:     10,
+    // Profit target
+    profitTarget:   (isInstant || isInstantLight) ? 0 : phase === 'phase2' ? 5 : 10,
+    // Min trading days: 4 for phase1/phase2, 0 for instant types
+    minTradingDays: (isInstant || isInstantLight) ? 0 : 4,
+    // Account type rules
+    newsTrading:      isSwing,
     overnightHolding: isSwing,
-    weekendHolding: isSwing,
-    maxLotsPerTrade: isSwing ? 5 : 20,
-    stopOutLevel:   50,
-    marginCallLevel: 100,
-    accountType:    isSwing ? 'Swing' : 'Standard',
+    weekendHolding:   isSwing,
+    maxLotsPerTrade:  isSwing ? 5 : 20,
+    stopOutLevel:     50,
+    marginCallLevel:  100,
+    accountType:      isSwing ? 'Swing' : 'Standard',
+    // Instant Light: trailing overall DD protection
+    trailingDD,
+    // Profit split
+    profitSplit: 80,
+    // Instant accounts: daily withdrawals allowed
+    dailyWithdrawals: isInstant || isInstantLight,
+    // Challenge type label
+    challengeLabel: isInstantLight ? 'Instant Light' : isInstant ? 'Instant Funding' : 'Two-Step Challenge',
   };
+}
+
+// ── Daily DD Reset Time Utilities ─────────────────────────────────────────────
+// Reset is at 23:00 UTC (= 3:00 AM GMT+4) every day
+export function getNextDailyReset() {
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setUTCHours(DAILY_RESET_HOUR_UTC, 0, 0, 0);
+  // If we're past today's reset, next is tomorrow
+  if (now >= reset) reset.setUTCDate(reset.getUTCDate() + 1);
+  return reset;
+}
+
+export function getDailyResetCountdown() {
+  const next = getNextDailyReset();
+  const diffMs = next - new Date();
+  const h = Math.floor(diffMs / 3600000);
+  const m = Math.floor((diffMs % 3600000) / 60000);
+  const s = Math.floor((diffMs % 60000) / 1000);
+  return { h, m, s, label: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` };
+}
+
+// ── Trailing DD for Instant Light ─────────────────────────────────────────────
+// Protected balance = highest balance ever achieved (only moves up)
+// If balance drops to (protectedBalance - 10%), account fails
+export function calcTrailingDD(currentBalance, highWaterMark, accountSize) {
+  const protected_ = Math.max(highWaterMark, accountSize);
+  const floor = protected_ - accountSize * 0.10; // 10% of original account size
+  const ddFromProtected = ((protected_ - currentBalance) / accountSize) * 100;
+  return { protectedBalance: protected_, floor, ddFromProtected, breached: currentBalance <= floor };
 }
 
 // ── Get leverage for specific instrument type ────────────────────────────────
