@@ -4,6 +4,7 @@ import CheckoutStep1 from '../components/checkout/CheckoutStep1';
 import CheckoutStep2 from '../components/checkout/CheckoutStep2';
 import CheckoutStep3 from '../components/checkout/CheckoutStep3';
 import CheckoutStep4 from '../components/checkout/CheckoutStep4';
+import TermsModal from '../components/checkout/TermsModal';
 import { ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -19,6 +20,8 @@ const STEPS_MEMBER = ['Payment Method', 'Payment', 'Confirmation'];
 export default function Checkout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [step, setStep] = useState(1);
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
@@ -66,6 +69,21 @@ export default function Checkout() {
   const componentStep = isLoggedIn ? step + 1 : step;
   const prevStep = () => setStep(s => Math.max(1, s - 1));
   const nextStep = () => setStep(s => s + 1);
+
+  // Show terms gate first if not yet accepted
+  if (authChecked && !termsAccepted) {
+    return (
+      <AnimatePresence>
+        {showTerms || true ? (
+          <TermsModal
+            order={order}
+            onAccept={() => { setTermsAccepted(true); setShowTerms(false); }}
+            onDecline={() => { window.location.href = '/'; }}
+          />
+        ) : null}
+      </AnimatePresence>
+    );
+  }
 
   if (!authChecked) {
     return (

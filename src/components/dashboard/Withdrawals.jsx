@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -145,16 +145,26 @@ function WithdrawalCard({ w, i }) {
 
 export default function Withdrawals({ user }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '' });
+  const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '', account_id: '' });
   const qc = useQueryClient();
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 10),
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 20),
   });
 
-  const fundedAccounts = accounts.filter(a => a.status === 'funded' || a.status === 'active');
+  // ONLY show funded live accounts (not challenge/phase accounts)
+  const fundedAccounts = accounts.filter(a => a.status === 'funded');
   const eligiblePnl = fundedAccounts.reduce((s, a) => s + Math.max(0, a.pnl || 0), 0);
+
+  // KYC check
+  const { data: kycList = [] } = useQuery({
+    queryKey: ['kyc', user?.email],
+    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+  });
+  const kyc = kycList[0] || null;
+  const kycApproved = kyc?.status === 'approved';
 
   const { data: withdrawals = [] } = useQuery({
     queryKey: ['withdrawals'],
@@ -163,6 +173,9 @@ export default function Withdrawals({ user }) {
 
   const createMutation = useMutation({
     mutationFn: (data) => {
+      if (!kycApproved) throw new Error('KYC not approved');
+      const selectedAcc = fundedAccounts.find(a => a.account_id === data.account_id) || fundedAccounts[0];
+      if (!selectedAcc) throw new Error('No funded account selected');
       const gross = parseFloat(data.amount);
       const traderShare = gross * 0.8;
       const companyShare = gross * 0.2;
@@ -170,7 +183,7 @@ export default function Withdrawals({ user }) {
       const finalAmount = Math.max(0, traderShare - affiliateReward - WITHDRAWAL_FEE);
       return base44.entities.WithdrawalRequest.create({
         ...data,
-        account_id: fundedAccounts[0]?.account_id || 'N/A',
+        account_id: selectedAcc.account_id,
         user_email: user?.email,
         status: 'pending',
         profit_split_pct: 80,
@@ -195,19 +208,84 @@ export default function Withdrawals({ user }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <DollarSign className="w-6 h-6 text-primary" /> Withdrawals
           </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Request and track your profit payouts</p>
+          <p className="text-sm text-muted-foreground font-mono mt-1">Profit payouts — Funded accounts only</p>
         </div>
         <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+          disabled={!kycApproved || fundedAccounts.length === 0}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
           <Plus className="w-4 h-4" /> Request Payout
         </button>
       </div>
+
+      {/* KYC Gate */}
+      {!kycApproved && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl mb-5"
+          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
+          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <div className="text-sm font-bold text-yellow-400 mb-1">KYC Verification Required</div>
+            <div className="text-xs text-muted-foreground">
+              {!kyc || kyc.status === 'not_submitted'
+                ? 'You must complete identity verification before requesting payouts. Go to KYC section to submit your documents.'
+                : kyc.status === 'pending'
+                ? 'Your KYC submission is under review (24-48 hours). You cannot request payouts until approved.'
+                : 'Your KYC was rejected. Please resubmit your documents with the correct information.'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No funded accounts warning */}
+      {fundedAccounts.length === 0 && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl mb-5"
+          style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
+          <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-bold text-blue-400 mb-1">No Funded Accounts</div>
+            <div className="text-xs text-muted-foreground">Withdrawals are only available for live funded accounts. Complete your challenge to unlock payouts.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Per-account funded breakdown */}
+      {fundedAccounts.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-4 mb-5">
+          {fundedAccounts.map(acc => {
+            const profit = Math.max(0, acc.pnl || 0);
+            const traderShare = profit * 0.8;
+            const firmShare = profit * 0.2;
+            return (
+              <div key={acc.id} className="rounded-2xl p-5"
+                style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-mono text-muted-foreground">Account</span>
+                  <span className="text-xs font-bold font-mono text-foreground">{acc.account_id}</span>
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-mono text-muted-foreground">Total Profit</span>
+                  <span className="text-sm font-black text-emerald-400">${profit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(16,185,129,0.08)' }}>
+                    <div className="text-xs font-bold text-emerald-400">${traderShare.toFixed(2)}</div>
+                    <div className="text-[9px] font-mono text-muted-foreground">Your 80%</div>
+                  </div>
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <div className="text-xs font-bold text-muted-foreground">${firmShare.toFixed(2)}</div>
+                    <div className="text-[9px] font-mono text-muted-foreground">Firm 20%</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Profit split info banner */}
       <div className="rounded-2xl p-5 mb-6 flex items-start gap-4"

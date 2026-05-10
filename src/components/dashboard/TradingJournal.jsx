@@ -7,18 +7,47 @@ import JournalEntryForm from './JournalEntryForm';
 import JournalAnalytics from './JournalAnalytics';
 
 async function generateAIJournalEntry(periodType, accounts) {
+  // Fetch real trade data from DB
   const acc = accounts?.[0];
-  const pnl = acc?.daily_pnl || (Math.random() > 0.5 ? Math.floor(Math.random() * 800 + 100) : -Math.floor(Math.random() * 300 + 50));
-  const trades = Math.floor(Math.random() * 8 + 2);
-  const wins = Math.floor(trades * (0.5 + Math.random() * 0.35));
-  const winRate = Math.round((wins / trades) * 100);
-  const discipline = Math.round(5 + Math.random() * 4);
-  const symbols = ['EUR/USD', 'BTC/USD', 'XAU/USD', 'NAS100', 'GBP/USD'];
-  const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+  let realTrades = [];
+  if (acc?.id) {
+    try {
+      realTrades = await base44.entities.TradeRecord.filter({ account_id: acc.id, status: 'closed' });
+    } catch {}
+  }
 
-  const prompt = `You are an AI trading coach analyzing a ${periodType} trading session.
-Data: ${trades} trades, ${wins} wins, ${winRate}% win rate, P&L: $${pnl}, most traded: ${symbol}, discipline score: ${discipline}/10.
-Write a concise, professional ${periodType} journal in 3-4 sentences covering performance, emotional behavior, key observations, and one actionable improvement for tomorrow. Tone: institutional, analytical, direct.`;
+  // Filter by period
+  const now = new Date();
+  let startDate = new Date();
+  if (periodType === 'daily') startDate.setDate(now.getDate() - 1);
+  else if (periodType === 'weekly') startDate.setDate(now.getDate() - 7);
+  else if (periodType === 'monthly') startDate.setDate(now.getDate() - 30);
+
+  const periodTrades = realTrades.filter(t => {
+    const d = new Date(t.close_time || t.updated_date || t.created_date);
+    return d >= startDate;
+  });
+
+  const trades = periodTrades.length;
+  const wins = periodTrades.filter(t => (t.pnl || 0) > 0).length;
+  const losses = trades - wins;
+  const pnl = parseFloat(periodTrades.reduce((s, t) => s + (t.pnl || 0), 0).toFixed(2));
+  const winRate = trades > 0 ? Math.round((wins / trades) * 100) : 0;
+  const best = trades > 0 ? Math.max(...periodTrades.map(t => t.pnl || 0)) : 0;
+  const worst = trades > 0 ? Math.min(...periodTrades.map(t => t.pnl || 0)) : 0;
+  const symbolCounts = {};
+  periodTrades.forEach(t => { symbolCounts[t.symbol] = (symbolCounts[t.symbol] || 0) + 1; });
+  const symbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'EUR/USD';
+
+  const discipline = trades >= 3 && winRate >= 50 ? Math.round(6 + Math.random() * 3) : Math.round(3 + Math.random() * 4);
+
+  const prompt = `You are an AI trading coach for Robert Funds, a professional prop firm. Analyze this real ${periodType} trading data:
+Account: $${(acc?.account_size || 100000).toLocaleString()} | Phase: ${acc?.phase || 'phase1'}
+Period: ${periodType} | Trades: ${trades} | Wins: ${wins} | Losses: ${losses} | Win Rate: ${winRate}%
+P&L: $${pnl} | Best Trade: $${best.toFixed(2)} | Worst Trade: $${worst.toFixed(2)} | Most Traded: ${symbol}
+Account Drawdown Used: Daily ${acc?.daily_drawdown_used || 0}% / Max ${acc?.max_drawdown_used || 0}%
+
+Write a 4-5 sentence professional ${periodType} trading journal entry. Cover: performance summary, risk management evaluation, emotional/psychological observations, what went well vs what needs improvement, and one specific actionable coaching point for next session. Tone: institutional, direct, coaching-oriented like a head trader reviewing a junior's book.`;
 
   const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'gpt_5_mini' });
   
@@ -28,18 +57,18 @@ Write a concise, professional ${periodType} journal in 3-4 sentences covering pe
     period_type: periodType,
     total_trades: trades,
     winning_trades: wins,
-    losing_trades: trades - wins,
+    losing_trades: losses,
     pnl,
-    best_trade_pnl: Math.floor(Math.random() * 400 + 100),
-    worst_trade_pnl: -Math.floor(Math.random() * 200 + 50),
+    best_trade_pnl: best,
+    worst_trade_pnl: worst,
     win_rate: winRate,
-    avg_rr: parseFloat((1.2 + Math.random() * 1.2).toFixed(2)),
+    avg_rr: wins > 0 && losses > 0 ? parseFloat((Math.abs(best) / Math.max(0.01, Math.abs(worst))).toFixed(2)) : 0,
     most_traded_symbol: symbol,
     discipline_score: discipline,
-    consistency_score: Math.round(4 + Math.random() * 5),
+    consistency_score: Math.round(discipline * 0.9),
     emotions: pnl > 0 ? ['confident', 'disciplined'] : ['frustrated', 'patient'],
     notes: typeof result === 'string' ? result : result?.choices?.[0]?.message?.content || result,
-    ai_summary: `Auto-generated ${periodType} analysis`,
+    ai_summary: `AI-generated from ${trades} real trades · Robert Funds Analytics`,
   };
 }
 

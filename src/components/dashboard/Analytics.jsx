@@ -51,34 +51,82 @@ export default function Analytics({ onStartChallenge }) {
     queryFn: () => base44.entities.TradingJournalEntry.list('-entry_date', 30),
   });
 
+  // Pull real trade records for the selected account
+  const { data: tradeRecords = [] } = useQuery({
+    queryKey: ['trade-records-analytics', activeAccounts[0]?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({
+      account_id: (activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0])?.id
+    }),
+    enabled: activeAccounts.length > 0,
+  });
+
   const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
 
   if (activeAccounts.length === 0) return <NoAccountGate onStartChallenge={onStartChallenge} />;
 
   const account = activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0];
 
-  // Build equity curve from journal entries or use account snapshots
-  const equityCurve = journalEntries.length > 0
-    ? journalEntries.slice().reverse().map((e, i) => ({
-        day: new Date(e.entry_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        equity: (account.account_size || 0) + (e.pnl || 0),
-      }))
-    : [{ day: 'Start', equity: account.account_size || 0 }, { day: 'Now', equity: (account.balance || account.account_size || 0) }];
+  // Build equity curve from real closed trades
+  const closedTrades = tradeRecords.filter(t => t.status === 'closed' && t.close_time);
+  const openTrades = tradeRecords.filter(t => t.status === 'open');
+  const accountSize = account.account_size || 100000;
 
-  const dailyPnl = journalEntries.length > 0
-    ? journalEntries.slice(0, 7).reverse().map(e => ({
-        day: new Date(e.entry_date).toLocaleDateString('en-US', { weekday: 'short' }),
-        pnl: e.pnl || 0,
-      }))
-    : [];
+  // Group closed trades by day for equity curve
+  const tradesByDay = {};
+  closedTrades.forEach(t => {
+    const day = t.close_time?.split(' ')[0] || t.updated_date?.split('T')[0] || 'Unknown';
+    if (!tradesByDay[day]) tradesByDay[day] = 0;
+    tradesByDay[day] += t.pnl || 0;
+  });
+
+  let runningEquity = accountSize;
+  const equityCurve = [{ day: 'Start', equity: accountSize }];
+  Object.entries(tradesByDay).sort().forEach(([day, pnl]) => {
+    runningEquity += pnl;
+    equityCurve.push({
+      day: new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      equity: parseFloat(runningEquity.toFixed(2)),
+    });
+  });
+  if (equityCurve.length === 1) {
+    equityCurve.push({ day: 'Now', equity: account.balance || accountSize });
+  }
+
+  // Daily P&L from real trades (last 10 days)
+  const dailyPnlMap = {};
+  closedTrades.forEach(t => {
+    const day = t.close_time?.split(' ')[0] || t.updated_date?.split('T')[0] || '';
+    if (!day) return;
+    if (!dailyPnlMap[day]) dailyPnlMap[day] = 0;
+    dailyPnlMap[day] += t.pnl || 0;
+  });
+  const dailyPnl = Object.entries(dailyPnlMap).sort().slice(-10).map(([day, pnl]) => ({
+    day: new Date(day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    pnl: parseFloat(pnl.toFixed(2)),
+  }));
+
+  // Advanced stats from trades
+  const winTrades = closedTrades.filter(t => (t.pnl || 0) > 0);
+  const lossTrades = closedTrades.filter(t => (t.pnl || 0) <= 0);
+  const realWinRate = closedTrades.length > 0 ? (winTrades.length / closedTrades.length * 100) : 0;
+  const avgWin = winTrades.length > 0 ? winTrades.reduce((s, t) => s + t.pnl, 0) / winTrades.length : 0;
+  const avgLoss = lossTrades.length > 0 ? Math.abs(lossTrades.reduce((s, t) => s + t.pnl, 0) / lossTrades.length) : 0;
+  const profitFactor = avgLoss > 0 ? (avgWin * winTrades.length) / (avgLoss * lossTrades.length) : 0;
+  const bestTrade = closedTrades.length > 0 ? Math.max(...closedTrades.map(t => t.pnl || 0)) : 0;
+  const worstTrade = closedTrades.length > 0 ? Math.min(...closedTrades.map(t => t.pnl || 0)) : 0;
+
+  // Symbol frequency
+  const symbolCount = {};
+  tradeRecords.forEach(t => { symbolCount[t.symbol] = (symbolCount[t.symbol] || 0) + 1; });
+  const mostTraded = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
   const totalPnl = account.pnl || 0;
-  const winRate = account.win_rate || 0;
-  const totalTrades = account.total_trades || 0;
+  const winRate = closedTrades.length > 0 ? realWinRate : (account.win_rate || 0);
+  const totalTrades = closedTrades.length || account.total_trades || 0;
   const dailyDD = account.daily_drawdown_used || 0;
   const maxDD = account.max_drawdown_used || 0;
-  const profitTarget = account.challenge_type === 'instant' ? 8 : (account.phase === 'phase2' ? 5 : 10);
-  const progress = account.profit_target_progress || 0;
+  const profitTarget = account.challenge_type === 'instant' ? 0 : (account.phase === 'phase2' ? 5 : 10);
+  const progress = account.profit_target_progress || Math.max(0, totalPnl / accountSize * 100);
   const dailyDDLimit = 5;
   const maxDDLimit = 10;
 
@@ -224,25 +272,52 @@ export default function Analytics({ onStartChallenge }) {
         </div>
       </div>
 
-      {/* Account Stats */}
-      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="text-sm font-bold text-foreground mb-4">Account Details</div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Balance', value: `$${(account.balance || account.account_size || 0).toLocaleString()}` },
-            { label: 'Equity', value: `$${(account.equity || account.balance || account.account_size || 0).toLocaleString()}` },
-            { label: 'Total Trades', value: account.total_trades || 0 },
-            { label: 'Challenge Type', value: account.challenge_type === 'two-step' ? 'Two-Step' : 'Instant' },
-            { label: 'Account Type', value: account.account_type || 'Standard' },
-            { label: 'Leverage', value: account.leverage || '1:100' },
-            { label: 'Platform', value: account.platform || 'XTrading' },
-            { label: 'Phase', value: account.phase?.replace('phase', 'Phase ') || 'Phase 1' },
-          ].map(s => (
-            <div key={s.label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div className="text-[10px] font-mono text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-sm font-bold text-foreground capitalize">{s.value}</div>
-            </div>
-          ))}
+      {/* Advanced Trade Stats from Real Records */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="text-sm font-bold text-foreground mb-4">Trade Performance (Real Trades)</div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Total Closed', value: closedTrades.length, color: 'text-foreground' },
+              { label: 'Open Positions', value: openTrades.length, color: 'text-primary' },
+              { label: 'Win Rate', value: `${realWinRate.toFixed(1)}%`, color: realWinRate >= 50 ? 'text-emerald-400' : 'text-yellow-400' },
+              { label: 'Profit Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', color: profitFactor >= 1.5 ? 'text-emerald-400' : 'text-yellow-400' },
+              { label: 'Avg Win', value: avgWin > 0 ? `+$${avgWin.toFixed(2)}` : '—', color: 'text-emerald-400' },
+              { label: 'Avg Loss', value: avgLoss > 0 ? `-$${avgLoss.toFixed(2)}` : '—', color: 'text-red-400' },
+              { label: 'Best Trade', value: bestTrade > 0 ? `+$${bestTrade.toFixed(2)}` : '—', color: 'text-emerald-400' },
+              { label: 'Worst Trade', value: worstTrade < 0 ? `-$${Math.abs(worstTrade).toFixed(2)}` : '—', color: 'text-red-400' },
+              { label: 'Most Traded', value: mostTraded, color: 'text-primary' },
+              { label: 'Win Trades', value: winTrades.length, color: 'text-emerald-400' },
+              { label: 'Loss Trades', value: lossTrades.length, color: 'text-red-400' },
+              { label: 'Avg R:R', value: avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : '—', color: 'text-foreground' },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="text-[10px] font-mono text-muted-foreground mb-1">{s.label}</div>
+                <div className={`text-sm font-bold ${s.color}`}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="text-sm font-bold text-foreground mb-4">Account Details</div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Balance', value: `$${(account.balance || accountSize).toLocaleString()}` },
+              { label: 'Challenge Type', value: account.challenge_type === 'two-step' ? 'Two-Step' : 'Instant' },
+              { label: 'Account Type', value: account.account_type || 'Standard' },
+              { label: 'Leverage', value: account.leverage || '1:100' },
+              { label: 'Platform', value: account.platform || 'XTrading' },
+              { label: 'Phase', value: account.phase?.replace('phase', 'Phase ') || 'Phase 1' },
+              { label: 'Status', value: account.status || 'active' },
+              { label: 'Account ID', value: account.account_id || '—' },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="text-[10px] font-mono text-muted-foreground mb-1">{s.label}</div>
+                <div className="text-sm font-bold text-foreground capitalize">{s.value}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
