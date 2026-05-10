@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Copy, ChevronRight, CheckCircle2, AlertTriangle, Play, Square, Settings, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -52,6 +52,15 @@ function AccountPicker({ label, accounts, value, onChange, exclude }) {
   );
 }
 
+const COPIER_KEY = 'xcopier_state';
+
+function loadCopierState() {
+  try { return JSON.parse(localStorage.getItem(COPIER_KEY) || '{}'); } catch { return {}; }
+}
+function saveCopierState(state) {
+  try { localStorage.setItem(COPIER_KEY, JSON.stringify(state)); } catch {}
+}
+
 export default function XCopier() {
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
@@ -60,13 +69,23 @@ export default function XCopier() {
 
   const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
 
-  const [master, setMaster] = useState(null);
-  const [slave, setSlave] = useState(null);
-  const [riskMode, setRiskMode] = useState('same_ratio');
-  const [multiplier, setMultiplier] = useState('1.0');
-  const [fixedLot, setFixedLot] = useState('0.10');
-  const [isRunning, setIsRunning] = useState(false);
-  const [log, setLog] = useState([]);
+  const saved = loadCopierState();
+  const [masterId,   setMasterId]  = useState(saved.masterId  || null);
+  const [slaveId,    setSlaveId]   = useState(saved.slaveId   || null);
+  const [riskMode,   setRiskMode]  = useState(saved.riskMode  || 'same_ratio');
+  const [multiplier, setMultiplier]= useState(saved.multiplier|| '1.0');
+  const [fixedLot,   setFixedLot]  = useState(saved.fixedLot  || '0.10');
+  const [isRunning,  setIsRunning] = useState(saved.isRunning || false);
+  const [log,        setLog]       = useState(saved.log?.slice(0, 30) || []);
+
+  // Resolve accounts from IDs
+  const master = activeAccounts.find(a => a.id === masterId) || null;
+  const slave  = activeAccounts.find(a => a.id === slaveId)  || null;
+
+  // Persist whenever state changes
+  useEffect(() => {
+    saveCopierState({ masterId, slaveId, riskMode, multiplier, fixedLot, isRunning, log: log.slice(0, 30) });
+  }, [masterId, slaveId, riskMode, multiplier, fixedLot, isRunning, log]);
 
   const canStart = master && slave && master.id !== slave.id;
 
@@ -85,6 +104,9 @@ export default function XCopier() {
       addLog(`Monitoring master account for new orders...`, true);
     }
   };
+
+  const handleSetMaster = (a) => setMasterId(a.id);
+  const handleSetSlave  = (a) => setSlaveId(a.id);
 
   // Compute effective lot based on mode
   const exampleLot = riskMode === 'fixed_lot' ? parseFloat(fixedLot) || 0.1
@@ -142,10 +164,10 @@ export default function XCopier() {
           <div className="lg:col-span-2 space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <AccountPicker label="Master Account (Source)" accounts={activeAccounts} value={master} onChange={setMaster} exclude={slave?.id} />
+                <AccountPicker label="Master Account (Source)" accounts={activeAccounts} value={master} onChange={handleSetMaster} exclude={slave?.id} />
               </div>
               <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <AccountPicker label="Slave Account (Copy Target)" accounts={activeAccounts} value={slave} onChange={setSlave} exclude={master?.id} />
+                <AccountPicker label="Slave Account (Copy Target)" accounts={activeAccounts} value={slave} onChange={handleSetSlave} exclude={master?.id} />
               </div>
             </div>
 

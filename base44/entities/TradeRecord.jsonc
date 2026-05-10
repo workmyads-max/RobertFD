@@ -1,0 +1,82 @@
+{
+  "name": "TradeRecord",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "trade_id": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "order_type": {
+      "type": "string",
+      "enum": [
+        "MARKET",
+        "BUY_LIMIT",
+        "SELL_LIMIT",
+        "BUY_STOP",
+        "SELL_STOP"
+      ]
+    },
+    "lots": {
+      "type": "number"
+    },
+    "entry": {
+      "type": "number"
+    },
+    "close": {
+      "type": "number"
+    },
+    "sl": {
+      "type": "number"
+    },
+    "tp": {
+      "type": "number"
+    },
+    "margin": {
+      "type": "number"
+    },
+    "pnl": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "pending",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "close_reason": {
+      "type": "string"
+    },
+    "open_time": {
+      "type": "string"
+    },
+    "close_time": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "account_id",
+    "symbol",
+    "type",
+    "lots",
+    "entry",
+    "status"
+  ]
+}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Star } from 'lucide-react';
-import { INSTRUMENTS } from './terminalConfig';
+import { INSTRUMENTS, isMarketOpen } from './terminalConfig';
 
 function PriceFlash({ value, digits }) {
   const [flash, setFlash] = useState(null);
@@ -74,7 +74,7 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
           const isUp = (p?.pct || 0) >= 0;
           const isActive = selectedSymbol === inst.symbol;
           const isFav = favorites.includes(inst.symbol);
-          const spread = p?.bid && p?.ask ? ((p.ask - p.bid) * 10000).toFixed(1) : '—';
+          const marketOpen = isMarketOpen(inst.symbol);
 
           return (
             <motion.button key={inst.symbol} onClick={() => onSelect(inst.symbol)}
@@ -85,7 +85,10 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
                   <Star className={`w-2.5 h-2.5 ${isFav ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
                 </button>
                 <div>
-                  <div className={`font-bold text-[10px] ${isActive ? 'text-primary' : 'text-foreground'}`}>{inst.symbol}</div>
+                  <div className="flex items-center gap-1">
+                    <span className={`font-bold text-[10px] ${isActive ? 'text-primary' : 'text-foreground'}`}>{inst.symbol}</span>
+                    {!marketOpen && <span className="text-[7px] text-yellow-400/70">🔒</span>}
+                  </div>
                   <div className={`text-[8px] ${isUp ? 'text-emerald-400/60' : 'text-red-400/60'}`}>{isUp ? '+' : ''}{(p?.pct || 0).toFixed(2)}%</div>
                 </div>
               </div>

@@ -107,3 +107,62 @@ export function getActiveSession() {
     return utcHour >= s.open || utcHour < s.close;
   }) || null;
 }
+
+// ── Market Hours Validation ───────────────────────────────────────────────────
+export function isMarketOpen(symbol) {
+  const inst = INSTRUMENTS.find(i => i.symbol === symbol);
+  if (!inst) return false;
+
+  // Crypto is always open
+  if (inst.type === 'crypto') return true;
+
+  const now = new Date();
+  const utcDay  = now.getUTCDay();  // 0=Sun, 6=Sat
+  const utcHour = now.getUTCHours();
+  const utcMin  = now.getUTCMinutes();
+  const utcTime = utcHour + utcMin / 60;
+
+  // Forex & metals: closed Sat after 22:00 UTC and all day Sun until 22:00 UTC
+  if (inst.type === 'fx' || inst.type === 'metal') {
+    if (utcDay === 6 && utcTime >= 22) return false; // Sat close
+    if (utcDay === 0 && utcTime < 22)  return false; // Sun closed
+    return true;
+  }
+
+  // Indices: session-based, weekdays only
+  if (inst.type === 'index') {
+    if (utcDay === 0 || utcDay === 6) return false;
+    // US indices: 13:30–20:00 UTC (NYSE/NASDAQ hours)
+    if (symbol === 'NAS100' || symbol === 'US30' || symbol === 'SPX500') {
+      return utcTime >= 13.5 && utcTime < 20;
+    }
+    return true;
+  }
+
+  return true;
+}
+
+export function getMarketClosedReason(symbol) {
+  const inst = INSTRUMENTS.find(i => i.symbol === symbol);
+  if (!inst) return 'Unknown instrument';
+  if (inst.type === 'crypto') return null;
+
+  const now = new Date();
+  const utcDay  = now.getUTCDay();
+  const utcHour = now.getUTCHours();
+  const utcMin  = now.getUTCMinutes();
+  const utcTime = utcHour + utcMin / 60;
+
+  if (inst.type === 'fx' || inst.type === 'metal') {
+    if (utcDay === 6 && utcTime >= 22) return 'Forex market closed — Weekend (reopens Sunday 22:00 UTC)';
+    if (utcDay === 0 && utcTime < 22)  return 'Forex market closed — Sunday (reopens 22:00 UTC)';
+  }
+  if (inst.type === 'index') {
+    if (utcDay === 0 || utcDay === 6)  return `${symbol} closed — Weekend`;
+    if (symbol === 'NAS100' || symbol === 'US30' || symbol === 'SPX500') {
+      if (utcTime < 13.5)  return `${symbol} pre-market — Opens 13:30 UTC`;
+      if (utcTime >= 20)   return `${symbol} after-hours — Closed at 20:00 UTC`;
+    }
+  }
+  return null;
+}

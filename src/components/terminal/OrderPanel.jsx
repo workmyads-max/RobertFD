@@ -10,7 +10,7 @@ const ORDER_TYPES = [
   { val: 'sell_stop',  label: 'Sell Stop'  },
 ];
 
-export default function OrderPanel({ symbol, prices, account, rules, equity, usedMargin, onPlaceOrder, accountBlocked }) {
+export default function OrderPanel({ symbol, prices, account, rules, equity, usedMargin, onPlaceOrder, accountBlocked, marketOpen = true }) {
   const [side,        setSide]        = useState('BUY');
   const [orderType,   setOrderType]   = useState('market');
   const [lots,        setLots]        = useState('0.10');
@@ -29,7 +29,7 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
   const freeMargin  = equity - usedMargin;
   const riskPercent = freeMargin > 0 ? (reqMargin / equity * 100).toFixed(2) : '0';
 
-  const canTrade = !accountBlocked && lotsNum > 0 && lotsNum <= rules?.maxLotsPerTrade && reqMargin <= freeMargin;
+  const canTrade = !accountBlocked && marketOpen && lotsNum > 0 && lotsNum <= rules?.maxLotsPerTrade && reqMargin <= freeMargin;
 
   const handleSubmit = () => {
     if (!canTrade) return;
@@ -169,6 +169,7 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
                 boxShadow: canTrade ? `0 4px 20px ${side === 'BUY' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}` : 'none',
               }}>
               {accountBlocked ? '🔒 TRADING DISABLED'
+                : !marketOpen ? '🔒 MARKET CLOSED'
                 : !canTrade && reqMargin > freeMargin ? '⚠ INSUFFICIENT MARGIN'
                 : `${side === 'BUY' ? '▲ BUY' : '▼ SELL'} ${lotsNum.toFixed(2)} ${symbol}`}
             </motion.button>
