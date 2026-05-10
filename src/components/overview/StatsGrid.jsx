@@ -23,14 +23,14 @@ export default function StatsGrid({ account, stats }) {
   const performanceRows = [
     { label: 'Profit Factor', value: isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞', accent: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
     { label: 'Expectancy', value: `$${expectancy.toFixed(2)}`, accent: expectancy >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Avg RR Ratio', value: `1:${rrr.toFixed(2)}`, accent: rrr >= 1.5 ? '#10b981' : '#3b82f6' },
+    { label: 'Avg RR Ratio', value: `1:${rrr.toFixed(2)}`, accent: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
     { label: 'Avg Win', value: `$${avgProfit.toFixed(2)}`, accent: '#10b981' },
     { label: 'Avg Loss', value: `$${avgLoss.toFixed(2)}`, accent: '#ef4444' },
     { label: 'Total Lots', value: lots.toFixed(2), accent: 'rgba(255,255,255,0.6)' },
     { label: 'Winning Trades', value: wins, accent: '#10b981' },
     { label: 'Losing Trades', value: losses, accent: '#ef4444' },
     { label: 'Total Trades', value: totalTrades, accent: 'rgba(255,255,255,0.6)' },
-    { label: 'Open Positions', value: openPositions, accent: '#3b82f6' },
+    { label: 'Open Positions', value: openPositions, accent: '#FF5C00' },
   ];
 
   const accountRows = [
@@ -41,7 +41,7 @@ export default function StatsGrid({ account, stats }) {
     { label: 'Leverage', value: account?.leverage || '1:100' },
     { label: 'Platform', value: account?.platform || 'xTrading' },
     { label: 'Server', value: account?.server || 'rf-live.com' },
-    { label: 'Account ID', value: account?.account_id || account?.id?.slice(0, 8) || 'N/A', accent: '#3b82f6' },
+    { label: 'Account ID', value: account?.account_id || account?.id?.slice(0, 8) || 'N/A', accent: '#FF5C00' },
     { label: 'Status', value: (account?.status || 'active').toUpperCase(), accent: account?.status === 'active' ? '#10b981' : '#f59e0b' },
     { label: 'Login', value: account?.login_credentials || '—' },
   ];

@@ -30,9 +30,9 @@ function EmptyState({ onStartChallenge }) {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
         style={{
-          background: 'linear-gradient(145deg, rgba(59,130,246,0.12), rgba(6,182,212,0.06))',
-          border: '1px solid rgba(59,130,246,0.2)',
-          boxShadow: '0 0 48px rgba(59,130,246,0.08)',
+          background: 'linear-gradient(145deg, rgba(255,92,0,0.12), rgba(255,140,60,0.06))',
+          border: '1px solid rgba(255,92,0,0.2)',
+          boxShadow: '0 0 48px rgba(255,92,0,0.08)',
         }}>
         <Shield className="w-9 h-9 text-blue-400/70" />
       </motion.div>
@@ -46,9 +46,9 @@ function EmptyState({ onStartChallenge }) {
         onClick={onStartChallenge}
         className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white"
         style={{
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.9), rgba(6,182,212,0.7))',
-          boxShadow: '0 8px 32px rgba(59,130,246,0.2)',
-          border: '1px solid rgba(59,130,246,0.3)',
+          background: 'linear-gradient(135deg, rgba(255,92,0,0.9), rgba(255,140,60,0.7))',
+          boxShadow: '0 8px 32px rgba(255,92,0,0.2)',
+          border: '1px solid rgba(255,92,0,0.3)',
         }}>
         <Plus className="w-4 h-4" /> Get Started
       </motion.button>
@@ -63,8 +63,8 @@ function Header({ user, totalAccounts, onStartChallenge }) {
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
           style={{
-            background: 'linear-gradient(145deg, rgba(59,130,246,0.2), rgba(6,182,212,0.1))',
-            border: '1px solid rgba(59,130,246,0.2)',
+            background: 'linear-gradient(145deg, rgba(255,92,0,0.15), rgba(255,140,60,0.08))',
+            border: '1px solid rgba(255,92,0,0.2)',
           }}>
           {user?.full_name?.charAt(0) || 'T'}
         </div>
@@ -85,8 +85,8 @@ function Header({ user, totalAccounts, onStartChallenge }) {
         onClick={onStartChallenge}
         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white"
         style={{
-          background: 'rgba(59,130,246,0.12)',
-          border: '1px solid rgba(59,130,246,0.25)',
+          background: 'rgba(255,92,0,0.1)',
+          border: '1px solid rgba(255,92,0,0.25)',
         }}>
         <Plus className="w-3.5 h-3.5" /> New Challenge
       </motion.button>
@@ -112,12 +112,12 @@ function AccountInfoStrip({ account }) {
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex overflow-x-auto rounded-xl border border-white/[0.04] divide-x divide-white/[0.04]"
-      style={{ background: 'rgba(8,14,28,0.7)', scrollbarWidth: 'none' }}
+      style={{ background: 'rgba(10,6,2,0.7)', scrollbarWidth: 'none' }}
     >
       {items.map(item => (
         <div key={item.label} className="flex-1 px-4 py-3 min-w-[90px] flex-shrink-0">
           <div className="text-[8px] font-mono uppercase text-white/20 tracking-widest mb-1">{item.label}</div>
-          <div className="text-[11px] font-semibold text-blue-400 whitespace-nowrap">{item.value}</div>
+          <div className="text-[11px] font-semibold text-orange-400 whitespace-nowrap">{item.value}</div>
         </div>
       ))}
     </motion.div>
@@ -127,10 +127,10 @@ function AccountInfoStrip({ account }) {
 // ─── Quick actions ────────────────────────────────────────────────────────────
 function QuickActions({ onNavigate }) {
   const actions = [
-    { label: 'Open Terminal', icon: Zap, color: '#3b82f6', page: 'terminal' },
+    { label: 'Open Terminal', icon: Zap, color: '#FF5C00', page: 'terminal' },
     { label: 'Analytics', icon: TrendingUp, color: '#10b981', page: 'analytics' },
     { label: 'Withdrawal', icon: Award, color: '#8b5cf6', page: 'withdrawals' },
-    { label: 'Trade Journal', icon: BookOpen, color: '#06b6d4', page: 'journal' },
+    { label: 'Trade Journal', icon: BookOpen, color: '#FF8A3D', page: 'journal' },
   ];
 
   return (

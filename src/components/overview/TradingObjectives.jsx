@@ -65,7 +65,7 @@ export default function TradingObjectives({ account, rules, stats }) {
       current: profitTargetPct,
       target: rules?.profitTarget || 10,
       limit: rules?.profitTarget || 10,
-      color: '#3b82f6',
+      color: '#FF5C00',
       inverse: false,
     },
     {
@@ -73,7 +73,7 @@ export default function TradingObjectives({ account, rules, stats }) {
       current: dailyDDPct,
       target: rules?.dailyDDLimit || 5,
       limit: rules?.dailyDDLimit || 5,
-      color: '#06b6d4',
+      color: '#FF8A3D',
       inverse: true,
     },
     {
@@ -112,8 +112,8 @@ export default function TradingObjectives({ account, rules, stats }) {
         <div className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold capitalize"
           style={{
             background: account?.status === 'active' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)',
-            color: account?.status === 'active' ? '#10b981' : '#3b82f6',
-            border: `1px solid ${account?.status === 'active' ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.2)'}`,
+            color: account?.status === 'active' ? '#10b981' : '#FF5C00',
+            border: `1px solid ${account?.status === 'active' ? 'rgba(16,185,129,0.2)' : 'rgba(255,92,0,0.2)'}`,
           }}>
           {account?.status || 'active'}
         </div>

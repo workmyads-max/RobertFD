@@ -58,18 +58,18 @@ export default function AccountTimeline({ account }) {
                   transition={{ delay: i * 0.08 }}
                   className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 relative"
                   style={{
-                    background: isDone ? 'rgba(16,185,129,0.12)' : isActive ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${isDone ? 'rgba(16,185,129,0.35)' : isActive ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.06)'}`,
+                    background: isDone ? 'rgba(16,185,129,0.12)' : isActive ? 'rgba(255,92,0,0.12)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isDone ? 'rgba(16,185,129,0.35)' : isActive ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.06)'}`,
                   }}>
                   {isActive && (
                     <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }} transition={{ duration: 2, repeat: Infinity }}
                       className="absolute inset-0 rounded-full"
-                      style={{ background: '#3b82f6', opacity: 0.2 }} />
+                      style={{ background: '#FF5C00', opacity: 0.2 }} />
                   )}
                   {isDone
                     ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     : isActive
-                      ? <Zap className="w-3.5 h-3.5 text-blue-400" />
+                      ? <Zap className="w-3.5 h-3.5 text-orange-400" />
                       : <Lock className="w-3 h-3 text-white/15" />}
                 </motion.div>
                 {i < STEPS.length - 1 && (
@@ -84,7 +84,7 @@ export default function AccountTimeline({ account }) {
               {/* Text */}
               <div className="pb-5 pt-0.5 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className={`text-[12px] font-medium ${isDone ? 'text-emerald-400' : isActive ? 'text-blue-400' : 'text-white/25'}`}>
+                  <span className={`text-[12px] font-medium ${isDone ? 'text-emerald-400' : isActive ? 'text-orange-400' : 'text-white/25'}`}>
                     {step.label}
                   </span>
                   {isActive && (
@@ -92,7 +92,7 @@ export default function AccountTimeline({ account }) {
                       animate={{ opacity: [0.6, 1, 0.6] }}
                       transition={{ duration: 1.8, repeat: Infinity }}
                       className="text-[8px] font-mono px-1.5 py-0.5 rounded-full"
-                      style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>
+                      style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
                       ACTIVE
                     </motion.span>
                   )}

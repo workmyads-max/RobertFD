@@ -20,16 +20,16 @@ function AccountCard({ account, isSelected, onSelect, i }) {
       style={{
         minWidth: '220px',
         background: isSelected
-          ? 'linear-gradient(145deg, rgba(15,25,55,0.98), rgba(12,22,48,0.95))'
+          ? 'linear-gradient(145deg, rgba(25,12,4,0.98), rgba(30,14,4,0.95))'
           : 'linear-gradient(145deg, rgba(8,14,28,0.95), rgba(10,18,38,0.9))',
-        border: `1px solid ${isSelected ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.05)'}`,
-        boxShadow: isSelected ? '0 0 30px rgba(59,130,246,0.08)' : 'none',
+        border: `1px solid ${isSelected ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.05)'}`,
+        boxShadow: isSelected ? '0 0 30px rgba(255,92,0,0.08)' : 'none',
       }}
     >
       {/* Top glow edge when selected */}
       {isSelected && (
         <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.7), transparent)' }} />
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.7), transparent)' }} />
       )}
 
       <div className="flex items-start justify-between mb-4">
@@ -59,7 +59,7 @@ function AccountCard({ account, isSelected, onSelect, i }) {
           <div className="h-full rounded-full transition-all"
             style={{
               width: `${Math.min(100, Math.max(0, progress))}%`,
-              background: 'linear-gradient(90deg, #3b82f680, #3b82f6)',
+              background: 'linear-gradient(90deg, #FF5C0060, #FF5C00)',
             }} />
         </div>
       </div>

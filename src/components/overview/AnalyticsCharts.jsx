@@ -81,16 +81,16 @@ export default function AnalyticsCharts({ account, stats }) {
           <AreaChart data={equityData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
             <defs>
               <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.18} />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="0%" stopColor="#FF5C00" stopOpacity={0.18} />
+                <stop offset="100%" stopColor="#FF5C00" stopOpacity={0} />
               </linearGradient>
             </defs>
             <ReferenceLine y={size} stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
             <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.2)', fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
             <YAxis hide domain={['auto', 'auto']} />
             <Tooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="equity" stroke="#3b82f6" strokeWidth={2}
-              fill="url(#equityFill)" dot={false} activeDot={{ r: 4, fill: '#3b82f6', stroke: 'rgba(59,130,246,0.3)', strokeWidth: 4 }} />
+            <Area type="monotone" dataKey="equity" stroke="#FF5C00" strokeWidth={2}
+              fill="url(#equityFill)" dot={false} activeDot={{ r: 4, fill: '#FF5C00', stroke: 'rgba(255,92,0,0.3)', strokeWidth: 4 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

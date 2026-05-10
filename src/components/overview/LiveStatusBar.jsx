@@ -48,7 +48,7 @@ export default function LiveStatusBar({ account }) {
       {/* UTC Time */}
       <div className="flex items-center gap-2 px-4 py-3 border-r border-white/[0.05]">
         <Clock className="w-3 h-3 text-white/25" />
-        <span className="text-[11px] font-mono text-white/50">{utcStr}</span>
+        <span className="text-[11px] font-mono text-orange-400/60">{utcStr}</span>
         <span className="text-[9px] font-mono text-white/20">UTC</span>
       </div>
 
@@ -95,7 +95,7 @@ export default function LiveStatusBar({ account }) {
         <div className="hidden lg:flex items-center gap-2">
           <Shield className="w-3 h-3 text-blue-400/50" />
           <span className="text-[10px] font-mono text-white/40">MT5</span>
-          <span className="text-[10px] font-mono text-blue-400">Live</span>
+          <span className="text-[10px] font-mono text-orange-400">Live</span>
         </div>
       </div>
     </motion.div>

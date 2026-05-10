@@ -39,7 +39,7 @@ export default function ParticleBackground() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(59, 130, 246, ${p.opacity})`;
+        ctx.fillStyle = `rgba(255, 92, 0, ${p.opacity})`;
         ctx.fill();
       });
       animId = requestAnimationFrame(animate);
