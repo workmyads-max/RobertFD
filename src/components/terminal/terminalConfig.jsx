@@ -1,95 +1,200 @@
-// ── Instruments ──────────────────────────────────────────────────────────────
+// ── Instruments (Full Broker Suite) ─────────────────────────────────────────
 export const INSTRUMENTS = [
-  // Forex Majors
-  { symbol: 'EUR/USD', digits: 5, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.00012, pipValue: 10 },
-  { symbol: 'GBP/USD', digits: 5, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.00015, pipValue: 10 },
-  { symbol: 'USD/JPY', digits: 3, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.015,   pipValue: 9  },
-  { symbol: 'AUD/USD', digits: 5, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.00020, pipValue: 10 },
-  { symbol: 'USD/CHF', digits: 5, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.00018, pipValue: 9  },
-  { symbol: 'USD/CAD', digits: 5, contractSize: 100000, type: 'fx',     category: 'Forex',   spreadPips: 0.00022, pipValue: 7  },
-  // Metals
-  { symbol: 'XAU/USD', digits: 2, contractSize: 100,    type: 'metal',  category: 'Metals',  spreadPips: 0.35,    pipValue: 1  },
-  { symbol: 'XAG/USD', digits: 3, contractSize: 5000,   type: 'metal',  category: 'Metals',  spreadPips: 0.025,   pipValue: 50 },
-  // Crypto
-  { symbol: 'BTC/USD', digits: 2, contractSize: 1,      type: 'crypto', category: 'Crypto',  spreadPips: 25,      pipValue: 1  },
-  { symbol: 'ETH/USD', digits: 2, contractSize: 1,      type: 'crypto', category: 'Crypto',  spreadPips: 1.5,     pipValue: 1  },
-  // Indices
-  { symbol: 'NAS100',  digits: 2, contractSize: 1,      type: 'index',  category: 'Indices', spreadPips: 1.2,     pipValue: 1  },
-  { symbol: 'US30',    digits: 2, contractSize: 1,      type: 'index',  category: 'Indices', spreadPips: 2.0,     pipValue: 1  },
-  { symbol: 'SPX500',  digits: 2, contractSize: 1,      type: 'index',  category: 'Indices', spreadPips: 0.8,     pipValue: 1  },
+  // ── Forex Majors ──────────────────────────────────────────────────────────
+  { symbol: 'EUR/USD', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00012, pipValue: 10, description: 'Euro vs US Dollar' },
+  { symbol: 'GBP/USD', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00015, pipValue: 10, description: 'British Pound vs US Dollar' },
+  { symbol: 'USD/JPY', digits: 3, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.015, pipValue: 9, description: 'US Dollar vs Japanese Yen' },
+  { symbol: 'AUD/USD', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00018, pipValue: 10, description: 'Australian Dollar vs US Dollar' },
+  { symbol: 'USD/CHF', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00018, pipValue: 9, description: 'US Dollar vs Swiss Franc' },
+  { symbol: 'USD/CAD', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00020, pipValue: 7, description: 'US Dollar vs Canadian Dollar' },
+  { symbol: 'NZD/USD', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00020, pipValue: 10, description: 'New Zealand Dollar vs US Dollar' },
+  { symbol: 'EUR/GBP', digits: 5, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.00014, pipValue: 12, description: 'Euro vs British Pound' },
+  { symbol: 'EUR/JPY', digits: 3, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.018, pipValue: 9, description: 'Euro vs Japanese Yen' },
+  { symbol: 'GBP/JPY', digits: 3, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.022, pipValue: 9, description: 'British Pound vs Japanese Yen' },
+  { symbol: 'AUD/JPY', digits: 3, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.020, pipValue: 9, description: 'Australian Dollar vs Japanese Yen' },
+  { symbol: 'USD/MXN', digits: 4, contractSize: 100000, type: 'fx', category: 'Forex', spreadPips: 0.0030, pipValue: 5, description: 'US Dollar vs Mexican Peso' },
+  // ── Metals ────────────────────────────────────────────────────────────────
+  { symbol: 'XAU/USD', digits: 2, contractSize: 100, type: 'metal', category: 'Metals', spreadPips: 0.35, pipValue: 1, description: 'Gold vs US Dollar' },
+  { symbol: 'XAG/USD', digits: 3, contractSize: 5000, type: 'metal', category: 'Metals', spreadPips: 0.025, pipValue: 50, description: 'Silver vs US Dollar' },
+  { symbol: 'XPT/USD', digits: 2, contractSize: 50, type: 'metal', category: 'Metals', spreadPips: 0.80, pipValue: 0.5, description: 'Platinum vs US Dollar' },
+  { symbol: 'XPD/USD', digits: 2, contractSize: 10, type: 'metal', category: 'Metals', spreadPips: 1.50, pipValue: 0.1, description: 'Palladium vs US Dollar' },
+  // ── Crypto ────────────────────────────────────────────────────────────────
+  { symbol: 'BTC/USD', digits: 2, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 25, pipValue: 1, description: 'Bitcoin vs US Dollar' },
+  { symbol: 'ETH/USD', digits: 2, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 1.5, pipValue: 1, description: 'Ethereum vs US Dollar' },
+  { symbol: 'BNB/USD', digits: 2, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.5, pipValue: 1, description: 'Binance Coin vs US Dollar' },
+  { symbol: 'SOL/USD', digits: 3, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.08, pipValue: 1, description: 'Solana vs US Dollar' },
+  { symbol: 'XRP/USD', digits: 5, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.0003, pipValue: 1, description: 'Ripple vs US Dollar' },
+  { symbol: 'ADA/USD', digits: 5, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.0002, pipValue: 1, description: 'Cardano vs US Dollar' },
+  { symbol: 'DOGE/USD', digits: 5, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.0001, pipValue: 1, description: 'Dogecoin vs US Dollar' },
+  { symbol: 'LTC/USD', digits: 3, contractSize: 1, type: 'crypto', category: 'Crypto', spreadPips: 0.05, pipValue: 1, description: 'Litecoin vs US Dollar' },
+  // ── US Indices ────────────────────────────────────────────────────────────
+  { symbol: 'NAS100', digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 1.2, pipValue: 1, description: 'NASDAQ 100 Index' },
+  { symbol: 'US30',   digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 2.0, pipValue: 1, description: 'Dow Jones 30 Index' },
+  { symbol: 'SPX500', digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 0.8, pipValue: 1, description: 'S&P 500 Index' },
+  { symbol: 'VIX',    digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 0.05, pipValue: 1, description: 'Volatility Index' },
+  // ── European Indices ──────────────────────────────────────────────────────
+  { symbol: 'GER40',  digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 1.5, pipValue: 1, description: 'Germany DAX 40' },
+  { symbol: 'UK100',  digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 1.0, pipValue: 1, description: 'UK FTSE 100' },
+  { symbol: 'FRA40',  digits: 2, contractSize: 1, type: 'index', category: 'Indices', spreadPips: 1.0, pipValue: 1, description: 'France CAC 40' },
+  // ── US Stocks ─────────────────────────────────────────────────────────────
+  { symbol: 'AAPL',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.10, pipValue: 1, description: 'Apple Inc.' },
+  { symbol: 'TSLA',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.15, pipValue: 1, description: 'Tesla Inc.' },
+  { symbol: 'AMZN',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.20, pipValue: 1, description: 'Amazon.com Inc.' },
+  { symbol: 'MSFT',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.12, pipValue: 1, description: 'Microsoft Corp.' },
+  { symbol: 'GOOGL',  digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.15, pipValue: 1, description: 'Alphabet Inc. (Google)' },
+  { symbol: 'META',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.15, pipValue: 1, description: 'Meta Platforms Inc.' },
+  { symbol: 'NFLX',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.20, pipValue: 1, description: 'Netflix Inc.' },
+  { symbol: 'NVDA',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.12, pipValue: 1, description: 'NVIDIA Corp.' },
+  { symbol: 'AMD',    digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.08, pipValue: 1, description: 'Advanced Micro Devices' },
+  { symbol: 'BABA',   digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.10, pipValue: 1, description: 'Alibaba Group' },
+  { symbol: 'DIS',    digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.08, pipValue: 1, description: 'Walt Disney Co.' },
+  { symbol: 'JPM',    digits: 2, contractSize: 1, type: 'stock', category: 'Stocks', spreadPips: 0.10, pipValue: 1, description: 'JPMorgan Chase' },
+  // ── Commodities ───────────────────────────────────────────────────────────
+  { symbol: 'OIL',    digits: 2, contractSize: 100, type: 'commodity', category: 'Commodities', spreadPips: 0.04, pipValue: 1, description: 'Crude Oil (WTI)' },
+  { symbol: 'BRENT',  digits: 2, contractSize: 100, type: 'commodity', category: 'Commodities', spreadPips: 0.05, pipValue: 1, description: 'Brent Crude Oil' },
+  { symbol: 'NGAS',   digits: 3, contractSize: 1000, type: 'commodity', category: 'Commodities', spreadPips: 0.005, pipValue: 1, description: 'Natural Gas' },
+  { symbol: 'WHEAT',  digits: 2, contractSize: 5000, type: 'commodity', category: 'Commodities', spreadPips: 0.50, pipValue: 1, description: 'Wheat Futures' },
 ];
 
+// ── Leverage by category ─────────────────────────────────────────────────────
+// Default leverage config — can be overridden by admin settings
+export const DEFAULT_LEVERAGE_CONFIG = {
+  fx:        { default: 100, options: [10, 20, 30, 50, 100, 200, 500] },
+  metal:     { default: 100, options: [10, 20, 50, 100, 200] },
+  crypto:    { default: 10,  options: [2, 5, 10, 20, 50] },
+  index:     { default: 100, options: [10, 20, 50, 100, 200] },
+  stock:     { default: 10,  options: [2, 5, 10, 20] },
+  commodity: { default: 50,  options: [5, 10, 20, 50, 100] },
+};
+
+// ── Commission config per category ───────────────────────────────────────────
+export const DEFAULT_COMMISSION_CONFIG = {
+  fx:        { type: 'spread', commissionPerLot: 0 },
+  metal:     { type: 'spread', commissionPerLot: 0 },
+  crypto:    { type: 'percentage', commissionPerLot: 0.1 },
+  index:     { type: 'spread', commissionPerLot: 0 },
+  stock:     { type: 'perLot', commissionPerLot: 2.5 },
+  commodity: { type: 'spread', commissionPerLot: 0 },
+};
+
 export const SEED_PRICES = {
-  'EUR/USD': 1.08215,
-  'GBP/USD': 1.27048,
-  'USD/JPY': 154.780,
-  'AUD/USD': 0.67234,
-  'USD/CHF': 0.89450,
-  'USD/CAD': 1.36210,
-  'XAU/USD': 2338.15,
-  'XAG/USD': 27.450,
-  'BTC/USD': 65420.00,
-  'ETH/USD': 3185.00,
-  'NAS100':  18254.00,
-  'US30':    39810.00,
-  'SPX500':  5210.00,
+  // Forex
+  'EUR/USD': 1.08215, 'GBP/USD': 1.27048, 'USD/JPY': 154.780,
+  'AUD/USD': 0.67234, 'USD/CHF': 0.89450, 'USD/CAD': 1.36210,
+  'NZD/USD': 0.60115, 'EUR/GBP': 0.85210, 'EUR/JPY': 167.120,
+  'GBP/JPY': 197.430, 'AUD/JPY': 104.120, 'USD/MXN': 17.2450,
+  // Metals
+  'XAU/USD': 2338.15, 'XAG/USD': 27.450, 'XPT/USD': 1010.50, 'XPD/USD': 1050.00,
+  // Crypto
+  'BTC/USD': 65420.00, 'ETH/USD': 3185.00, 'BNB/USD': 585.00, 'SOL/USD': 145.80,
+  'XRP/USD': 0.52100, 'ADA/USD': 0.45200, 'DOGE/USD': 0.15800, 'LTC/USD': 82.50,
+  // Indices
+  'NAS100': 18254.00, 'US30': 39810.00, 'SPX500': 5210.00, 'VIX': 14.20,
+  'GER40': 18580.00, 'UK100': 8320.00, 'FRA40': 8050.00,
+  // Stocks
+  'AAPL': 182.50, 'TSLA': 245.80, 'AMZN': 195.40, 'MSFT': 425.20,
+  'GOOGL': 172.30, 'META': 505.60, 'NFLX': 712.40, 'NVDA': 875.30,
+  'AMD': 172.80, 'BABA': 78.50, 'DIS': 112.40, 'JPM': 205.80,
+  // Commodities
+  'OIL': 78.45, 'BRENT': 82.30, 'NGAS': 2.185, 'WHEAT': 548.00,
 };
 
 // ── Account Rules ─────────────────────────────────────────────────────────────
-export function getAccountRules(account) {
+export function getAccountRules(account, adminSettings = null) {
   const isSwing   = account?.account_type === 'swing';
   const isInstant = account?.challenge_type === 'instant';
   const phase     = account?.phase || 'phase1';
-  const leverage  = isSwing ? 30 : 100;
+
+  // Parse leverage from account (e.g., "1:100" → 100)
+  const rawLev = account?.leverage || '1:100';
+  const leverage = parseInt(String(rawLev).replace('1:', '')) || 100;
 
   return {
     leverage,
-    dailyDDLimit:      isInstant ? 3 : 5,
-    maxDDLimit:        isInstant ? 8 : 10,
-    profitTarget:      isInstant ? 8 : phase === 'phase2' ? 5 : 10,
-    minTradingDays:    isInstant ? 0 : phase === 'phase2' ? 5 : 4,
-    newsTrading:       isSwing,
-    overnightHolding:  isSwing,
-    weekendHolding:    isSwing,
-    maxLotsPerTrade:   isSwing ? 5 : 20,
-    stopOutLevel:      50,    // % margin level → stop out
-    marginCallLevel:   100,   // % margin level → margin call
-    accountType:       isSwing ? 'Swing' : 'Standard',
+    dailyDDLimit:   isInstant ? 3 : 5,
+    maxDDLimit:     isInstant ? 8 : 10,
+    profitTarget:   isInstant ? 8 : phase === 'phase2' ? 5 : 10,
+    minTradingDays: isInstant ? 0 : phase === 'phase2' ? 5 : 4,
+    newsTrading:    isSwing,
+    overnightHolding: isSwing,
+    weekendHolding: isSwing,
+    maxLotsPerTrade: isSwing ? 5 : 20,
+    stopOutLevel:   50,
+    marginCallLevel: 100,
+    accountType:    isSwing ? 'Swing' : 'Standard',
   };
+}
+
+// ── Get leverage for specific instrument type ────────────────────────────────
+export function getLeverageForInstrument(symbol, accountLeverage = 100, adminLeverageConfig = null) {
+  const inst = INSTRUMENTS.find(i => i.symbol === symbol);
+  if (!inst) return accountLeverage;
+  
+  const config = adminLeverageConfig || DEFAULT_LEVERAGE_CONFIG;
+  const catConfig = config[inst.type];
+  if (!catConfig) return accountLeverage;
+  
+  // Use the lesser of account leverage and instrument max leverage
+  return Math.min(accountLeverage, catConfig.default);
 }
 
 // ── Margin Calculation (MT5-style) ────────────────────────────────────────────
 export function calcRequiredMargin(symbol, lots, leverage, currentPrice) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
-  if (!inst || !currentPrice) return 0;
+  if (!inst || !currentPrice || lots <= 0) return 0;
   const lev = leverage || 100;
 
-  if (inst.type === 'fx' || inst.type === 'metal') {
-    // Margin = (Lots × ContractSize × Price) / Leverage — normalised to USD
-    const isUsdBase    = symbol.startsWith('USD/');
-    const contractVal  = isUsdBase ? lots * inst.contractSize : lots * inst.contractSize * currentPrice;
+  if (inst.type === 'fx') {
+    const isUsdBase = symbol.startsWith('USD/');
+    const contractVal = isUsdBase
+      ? lots * inst.contractSize
+      : lots * inst.contractSize * currentPrice;
     return parseFloat((contractVal / lev).toFixed(2));
   }
-  if (inst.type === 'crypto' || inst.type === 'index') {
+  if (inst.type === 'metal') {
+    return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
+  }
+  if (inst.type === 'crypto' || inst.type === 'index' || inst.type === 'stock' || inst.type === 'commodity') {
     return parseFloat(((lots * currentPrice) / lev).toFixed(2));
   }
   return 0;
 }
 
-// ── P&L Calculation ───────────────────────────────────────────────────────────
+// ── P&L Calculation (Broker-accurate) ─────────────────────────────────────────
 export function calcPnl(pos, currentPrice) {
   const inst = INSTRUMENTS.find(i => i.symbol === pos.symbol);
   if (!inst || !currentPrice) return 0;
   const diff = pos.type === 'BUY' ? currentPrice - pos.entry : pos.entry - currentPrice;
   let pnl = 0;
+
   if (inst.type === 'fx') {
-    pnl = diff * pos.lots * inst.contractSize;
+    // Pip value calculation
+    const pipSize = inst.digits >= 4 ? 0.0001 : 0.01;
+    const pips = diff / pipSize;
+    pnl = pips * inst.pipValue * pos.lots;
   } else if (inst.type === 'metal') {
     pnl = diff * pos.lots * inst.contractSize;
   } else {
+    // crypto, index, stock, commodity
     pnl = diff * pos.lots;
   }
+
+  // Add commission
+  const commission = calcCommission(pos.symbol, pos.lots, pos.entry);
+  pnl = pnl - commission;
+
   return parseFloat(pnl.toFixed(2));
+}
+
+// ── Commission Calculation ───────────────────────────────────────────────────
+export function calcCommission(symbol, lots, price = 1) {
+  const inst = INSTRUMENTS.find(i => i.symbol === symbol);
+  if (!inst) return 0;
+  const config = DEFAULT_COMMISSION_CONFIG[inst.type];
+  if (!config || config.commissionPerLot === 0) return 0;
+  if (config.type === 'perLot') return lots * config.commissionPerLot * 2; // round-trip
+  if (config.type === 'percentage') return (lots * price * config.commissionPerLot) / 100;
+  return 0;
 }
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
@@ -108,34 +213,33 @@ export function getActiveSession() {
   }) || null;
 }
 
-// ── Market Hours Validation ───────────────────────────────────────────────────
+// ── Market Hours ──────────────────────────────────────────────────────────────
 export function isMarketOpen(symbol) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
   if (!inst) return false;
-
-  // Crypto is always open
   if (inst.type === 'crypto') return true;
 
   const now = new Date();
-  const utcDay  = now.getUTCDay();  // 0=Sun, 6=Sat
+  const utcDay  = now.getUTCDay();
   const utcHour = now.getUTCHours();
   const utcMin  = now.getUTCMinutes();
   const utcTime = utcHour + utcMin / 60;
 
-  // Forex & metals: closed Sat after 22:00 UTC and all day Sun until 22:00 UTC
   if (inst.type === 'fx' || inst.type === 'metal') {
-    if (utcDay === 6 && utcTime >= 22) return false; // Sat close
-    if (utcDay === 0 && utcTime < 22)  return false; // Sun closed
+    if (utcDay === 6 && utcTime >= 22) return false;
+    if (utcDay === 0 && utcTime < 22) return false;
     return true;
   }
 
-  // Indices: session-based, weekdays only
-  if (inst.type === 'index') {
+  if (inst.type === 'index' || inst.type === 'stock' || inst.type === 'commodity') {
     if (utcDay === 0 || utcDay === 6) return false;
-    // US indices: 13:30–20:00 UTC (NYSE/NASDAQ hours)
-    if (symbol === 'NAS100' || symbol === 'US30' || symbol === 'SPX500') {
+    if (['NAS100', 'US30', 'SPX500', 'VIX', 'AAPL', 'TSLA', 'AMZN', 'MSFT', 'GOOGL', 'META', 'NFLX', 'NVDA', 'AMD', 'BABA', 'DIS', 'JPM'].includes(symbol)) {
       return utcTime >= 13.5 && utcTime < 20;
     }
+    if (['GER40', 'FRA40'].includes(symbol)) return utcTime >= 7 && utcTime < 15.5;
+    if (symbol === 'UK100') return utcTime >= 8 && utcTime < 16.5;
+    if (['OIL', 'BRENT', 'NGAS'].includes(symbol)) return utcTime >= 1 && utcTime < 22;
+    if (symbol === 'WHEAT') return utcTime >= 13.5 && utcTime < 20;
     return true;
   }
 
@@ -154,15 +258,16 @@ export function getMarketClosedReason(symbol) {
   const utcTime = utcHour + utcMin / 60;
 
   if (inst.type === 'fx' || inst.type === 'metal') {
-    if (utcDay === 6 && utcTime >= 22) return 'Forex market closed — Weekend (reopens Sunday 22:00 UTC)';
-    if (utcDay === 0 && utcTime < 22)  return 'Forex market closed — Sunday (reopens 22:00 UTC)';
+    if (utcDay === 6 && utcTime >= 22) return 'Forex market closed — Weekend';
+    if (utcDay === 0 && utcTime < 22) return 'Forex market closed — Sunday (reopens 22:00 UTC)';
   }
-  if (inst.type === 'index') {
-    if (utcDay === 0 || utcDay === 6)  return `${symbol} closed — Weekend`;
-    if (symbol === 'NAS100' || symbol === 'US30' || symbol === 'SPX500') {
-      if (utcTime < 13.5)  return `${symbol} pre-market — Opens 13:30 UTC`;
-      if (utcTime >= 20)   return `${symbol} after-hours — Closed at 20:00 UTC`;
-    }
+
+  if (utcDay === 0 || utcDay === 6) return `${symbol} closed — Weekend`;
+
+  if (['AAPL','TSLA','AMZN','MSFT','GOOGL','META','NFLX','NVDA','AMD','BABA','DIS','JPM','NAS100','US30','SPX500','VIX'].includes(symbol)) {
+    if (utcTime < 13.5) return `${symbol} pre-market — Opens 13:30 UTC`;
+    if (utcTime >= 20)  return `${symbol} after-hours — Closed at 20:00 UTC`;
   }
+
   return null;
 }
