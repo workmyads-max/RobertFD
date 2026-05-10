@@ -118,6 +118,8 @@ export default function ProTradingTerminal({ account }) {
   const [accountBlocked, setAccountBlocked] = useState(account?.status === 'failed');
   const [breachReason,   setBreachReason]   = useState('');
   const [sessionBalance, setSessionBalance] = useState(account?.balance || account?.account_size || 100000);
+  // dailyOpenBalance is the balance at the START of the trading day — fixed reference for daily DD
+  const [dailyOpenBalance, setDailyOpenBalance] = useState(account?.balance || account?.account_size || 100000);
   const [marketClosedMsg, setMarketClosedMsg] = useState('');
   const [tradesLoaded,   setTradesLoaded]   = useState(false);
 
@@ -141,8 +143,24 @@ export default function ProTradingTerminal({ account }) {
 
   // ── Restore balance from account entity ──────────────────────────────────
   useEffect(() => {
-    if (account?.balance) setSessionBalance(account.balance);
+    if (account?.balance) {
+      setSessionBalance(account.balance);
+      // Only reset daily open balance if we haven't loaded trades yet (fresh mount)
+      setDailyOpenBalance(prev => tradesLoaded ? prev : (account.balance || account?.account_size || 100000));
+    }
   }, [account?.balance]);
+
+  // ── Daily balance reset at midnight UTC ───────────────────────────────────
+  useEffect(() => {
+    const checkMidnight = () => {
+      const now = new Date();
+      if (now.getUTCHours() === 0 && now.getUTCMinutes() === 0) {
+        setDailyOpenBalance(sessionBalance);
+      }
+    };
+    const t = setInterval(checkMidnight, 60000);
+    return () => clearInterval(t);
+  }, [sessionBalance]);
 
   // ── Live derived values ───────────────────────────────────────────────────
   const floatPnl = positions.reduce((s, pos) => {
@@ -155,29 +173,47 @@ export default function ProTradingTerminal({ account }) {
   const freeMargin  = equity - usedMargin;
   const marginLevel = usedMargin > 0 ? (equity / usedMargin) * 100 : Infinity;
 
-  // ── Breach engine ─────────────────────────────────────────────────────────
+  // ── Breach engine (FTMO-style) ────────────────────────────────────────────
+  // Daily DD = drop from today's OPENING balance (not the original account size)
+  // Max DD   = drop from original account size (absolute floor)
   useEffect(() => {
     if (accountBlocked || !tradesLoaded) return;
-    const dailyDD = Math.abs(((sessionBalance - equity) / accountSize) * 100);
-    const maxDD   = Math.abs(((accountSize - equity) / accountSize) * 100);
+
+    // FTMO definition:
+    // Daily DD % = (dailyOpenBalance - currentEquity) / accountSize * 100
+    // Max DD %   = (accountSize - currentEquity) / accountSize * 100
+    const dailyDD = ((dailyOpenBalance - equity) / accountSize) * 100;
+    const maxDD   = ((accountSize - equity) / accountSize) * 100;
+
+    // Only trigger if equity has actually dropped (positive values = loss)
+    if (dailyDD < 0 && maxDD < 0) return; // equity is higher than reference — no breach
+
     let breached = false, reason = '';
+
     if (dailyDD >= rules.dailyDDLimit) {
-      breached = true; reason = `DAILY DRAWDOWN LIMIT BREACHED: ${dailyDD.toFixed(2)}% ≥ ${rules.dailyDDLimit}% — Trading Disabled`;
+      breached = true;
+      reason = `DAILY DRAWDOWN LIMIT BREACHED: ${dailyDD.toFixed(2)}% ≥ ${rules.dailyDDLimit}% — Trading Disabled for today`;
     } else if (maxDD >= rules.maxDDLimit) {
-      breached = true; reason = `MAX DRAWDOWN LIMIT BREACHED: ${maxDD.toFixed(2)}% ≥ ${rules.maxDDLimit}% — Account Failed`;
+      breached = true;
+      reason = `MAX DRAWDOWN LIMIT BREACHED: ${maxDD.toFixed(2)}% ≥ ${rules.maxDDLimit}% — Account Failed`;
     } else if (marginLevel <= rules.stopOutLevel && positions.length > 0) {
-      breached = true; reason = `STOP OUT: Margin level ${marginLevel.toFixed(1)}% ≤ ${rules.stopOutLevel}%`;
+      breached = true;
+      reason = `STOP OUT: Margin level ${marginLevel.toFixed(1)}% ≤ ${rules.stopOutLevel}%`;
     }
+
     if (breached) {
-      setAccountBlocked(true); setBreachReason(reason);
+      setAccountBlocked(true);
+      setBreachReason(reason);
       if (accountId) {
         base44.entities.ChallengeAccount.update(accountId, {
           status: 'failed', equity, balance: sessionBalance,
-          pnl: equity - accountSize, daily_drawdown_used: dailyDD, max_drawdown_used: maxDD,
+          pnl: parseFloat((sessionBalance - accountSize).toFixed(2)),
+          daily_drawdown_used: parseFloat(Math.max(0, dailyDD).toFixed(2)),
+          max_drawdown_used: parseFloat(Math.max(0, maxDD).toFixed(2)),
         }).catch(() => {});
       }
     }
-  }, [equity, sessionBalance, accountSize, marginLevel, positions.length, tradesLoaded]);
+  }, [equity, dailyOpenBalance, accountSize, marginLevel, positions.length, tradesLoaded, accountBlocked]);
 
   // ── SL/TP auto-close ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -225,7 +261,8 @@ export default function ProTradingTerminal({ account }) {
     const wins        = closedArr.filter(t => t.pnl > 0).length;
     const winRate     = totalTrades > 0 ? parseFloat(((wins / totalTrades) * 100).toFixed(1)) : 0;
     const totalPnl    = parseFloat((newBalance - accountSize).toFixed(2));
-    const dailyDD     = parseFloat((Math.max(0, (sessionBalance - currentEquity) / accountSize * 100)).toFixed(2));
+    // Use dailyOpenBalance (today's start) for daily DD, accountSize for max DD
+    const dailyDD     = parseFloat((Math.max(0, (dailyOpenBalance - currentEquity) / accountSize * 100)).toFixed(2));
     const maxDD       = parseFloat((Math.max(0, (accountSize - currentEquity) / accountSize * 100)).toFixed(2));
     base44.entities.ChallengeAccount.update(accountId, {
       balance: newBalance, equity: currentEquity, pnl: totalPnl,
@@ -233,7 +270,7 @@ export default function ProTradingTerminal({ account }) {
       daily_drawdown_used: dailyDD, max_drawdown_used: maxDD,
       profit_target_progress: parseFloat((Math.max(0, totalPnl / accountSize * 100)).toFixed(2)),
     }).catch(() => {});
-  }, [accountId, accountSize, sessionBalance]);
+  }, [accountId, accountSize, dailyOpenBalance]);
 
   const closePosition = useCallback((id, cp, pnl, reason = 'Manual') => {
     setPositions(prev => {
@@ -451,7 +488,7 @@ export default function ProTradingTerminal({ account }) {
             />
           </div>
           <div className="overflow-y-auto flex-shrink-0" style={{ maxHeight: '260px', background: '#07070b', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} />
+            <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
           </div>
         </div>
       </div>
@@ -531,7 +568,7 @@ export default function ProTradingTerminal({ account }) {
 
           {mobilePanel === 'tracker' && (
             <div className="h-full overflow-y-auto">
-              <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} />
+              <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
             </div>
           )}
         </div>

@@ -2,12 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, Shield, TrendingUp, Calendar, Zap } from 'lucide-react';
 
-export default function ChallengeTracker({ account, rules, balance, equity }) {
+export default function ChallengeTracker({ account, rules, balance, equity, dailyOpenBalance }) {
   const accountSize = account?.account_size || 100000;
-  const pnl         = equity - accountSize;
+  const pnl         = balance - accountSize; // realized pnl (closed trades only)
   const profitPct   = (pnl / accountSize) * 100;
-  const dailyDD     = Math.max(0, ((balance - equity) / accountSize) * 100);
-  const maxDD       = Math.max(0, ((accountSize - equity) / accountSize) * 100);
+
+  // FTMO-style Daily DD: drop from today's opening balance, measured against account size
+  // dailyOpenBalance = balance at start of current day; fallback to balance prop
+  const dayStart = dailyOpenBalance || balance;
+  const dailyDD  = Math.max(0, ((dayStart - equity) / accountSize) * 100);
+
+  // Max DD: drop from original account size (absolute floor)
+  const maxDD = Math.max(0, ((accountSize - equity) / accountSize) * 100);
 
   const items = [
     {
