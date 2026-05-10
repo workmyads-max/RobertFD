@@ -1,87 +1,112 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target, Shield, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, Shield, Clock, DollarSign, BarChart2 } from 'lucide-react';
 
-function MetricCard({ label, value, sub, color, icon: Icon, i }) {
+function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.06 }}
-      className="rounded-xl p-4"
+      transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -3, scale: 1.01 }}
+      className="relative rounded-2xl p-5 overflow-hidden group cursor-default"
       style={{
-        background: `linear-gradient(135deg, ${color}10, ${color}04)`,
-        border: `1px solid ${color}20`,
+        background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
+        border: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(24px)',
       }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: `${color}80` }}>{label}</span>
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color}15` }}>
-          <Icon className="w-3.5 h-3.5" style={{ color }} />
+      {/* Accent glow top edge */}
+      <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}60, transparent)` }} />
+      {/* Hover glow */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
+        style={{ background: `radial-gradient(circle at top left, ${accent}08, transparent 60%)` }} />
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/30">{label}</span>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center relative"
+            style={{ background: `${accent}12`, border: `1px solid ${accent}20` }}>
+            {pulse && (
+              <motion.div
+                animate={{ scale: [1, 1.8, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-xl"
+                style={{ background: accent, opacity: 0.15 }}
+              />
+            )}
+            <Icon className="w-4 h-4 relative z-10" style={{ color: accent }} />
+          </div>
         </div>
+        <div className="text-2xl font-bold tracking-tight text-white mb-1.5" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {value}
+        </div>
+        {sub && <div className="text-[11px] text-white/30 font-mono">{sub}</div>}
       </div>
-      <div className="text-2xl font-black text-white mb-1">{value}</div>
-      {sub && <div className="text-[10px] text-white/30 font-mono">{sub}</div>}
     </motion.div>
   );
 }
 
-export default function MetricCards({ account, rules }) {
-  const pnl = account?.pnl || 0;
-  const balance = account?.balance || account?.account_size || 0;
-  const equity = account?.equity || balance;
-  const winRate = account?.win_rate || 0;
-  const dailyDD = account?.daily_drawdown_used || 0;
-  const maxDD = account?.max_drawdown_used || 0;
-  const trades = account?.total_trades || 0;
+export default function MetricCards({ account, rules, stats }) {
+  if (!stats) return null;
+
+  const { balance, equity, pnl, dailyPnl, floatingPnl, dailyDDPct, maxDDPct, winRate, totalTrades, tradingDays } = stats;
+  const ddLimit = rules?.dailyDDLimit || 5;
+  const maxDDLimit = rules?.maxDDLimit || 10;
+  const ddWarning = dailyDDPct > ddLimit * 0.7;
+  const maxDDWarning = maxDDPct > maxDDLimit * 0.7;
 
   const metrics = [
     {
-      label: 'Balance',
-      value: `$${balance.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-      sub: `Equity: $${equity.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-      color: '#0095ff',
-      icon: Activity,
+      label: 'Account Balance',
+      value: `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      sub: `Equity: $${equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      accent: '#3b82f6',
+      icon: DollarSign,
+      pulse: true,
     },
     {
-      label: 'P&L',
+      label: 'Total P&L',
       value: `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: pnl >= 0 ? 'In profit' : 'In loss',
-      color: pnl >= 0 ? '#00f5a0' : '#ef4444',
+      sub: `Float: ${floatingPnl >= 0 ? '+' : ''}$${floatingPnl.toFixed(2)}`,
+      accent: pnl >= 0 ? '#10b981' : '#ef4444',
       icon: pnl >= 0 ? TrendingUp : TrendingDown,
+    },
+    {
+      label: 'Daily P&L',
+      value: `${dailyPnl >= 0 ? '+' : ''}$${dailyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      sub: `DD Used: ${dailyDDPct.toFixed(2)}% / ${ddLimit}%`,
+      accent: ddWarning ? '#ef4444' : '#06b6d4',
+      icon: Activity,
+      pulse: ddWarning,
     },
     {
       label: 'Win Rate',
       value: `${winRate.toFixed(1)}%`,
-      sub: `${trades} total trades`,
-      color: '#a855f7',
+      sub: `${totalTrades} trades executed`,
+      accent: '#8b5cf6',
       icon: Target,
     },
     {
-      label: 'Daily DD',
-      value: `${dailyDD.toFixed(2)}%`,
-      sub: `Limit: ${rules?.dailyDDLimit || 5}%`,
-      color: dailyDD > (rules?.dailyDDLimit || 5) * 0.7 ? '#ef4444' : '#f59e0b',
+      label: 'Max Drawdown',
+      value: `${maxDDPct.toFixed(2)}%`,
+      sub: `Limit: ${maxDDLimit}% — ${maxDDLimit - maxDDPct > 0 ? (maxDDLimit - maxDDPct).toFixed(2) + '% remaining' : 'BREACHED'}`,
+      accent: maxDDWarning ? '#ef4444' : '#64748b',
       icon: Shield,
-    },
-    {
-      label: 'Max DD',
-      value: `${maxDD.toFixed(2)}%`,
-      sub: `Limit: ${rules?.maxDDLimit || 10}%`,
-      color: maxDD > (rules?.maxDDLimit || 10) * 0.7 ? '#ef4444' : '#60a5fa',
-      icon: Shield,
+      pulse: maxDDWarning,
     },
     {
       label: 'Trading Days',
-      value: account?.trading_days || 0,
-      sub: `Min: ${rules?.minTradingDays || 4} days`,
-      color: '#00f5a0',
+      value: tradingDays,
+      sub: `Min required: ${rules?.minTradingDays || 4} days`,
+      accent: '#10b981',
       icon: Clock,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
       {metrics.map((m, i) => <MetricCard key={m.label} {...m} i={i} />)}
     </div>
   );

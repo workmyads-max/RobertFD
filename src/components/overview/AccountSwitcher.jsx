@@ -1,59 +1,92 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
+import { CheckCircle2, TrendingUp, TrendingDown, Zap } from 'lucide-react';
 
-export default function AccountSwitcher({ accounts, selectedId, onSelect }) {
-  if (!accounts || accounts.length === 0) return null;
+function AccountCard({ account, isSelected, onSelect, i }) {
+  const pnl = account.pnl || 0;
+  const isProfit = pnl >= 0;
+  const size = account.account_size || 0;
+  const progress = account.profit_target_progress || (pnl / size * 100);
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1">
-      {accounts.map((account, i) => {
-        const isSelected = account.id === selectedId;
-        const pnl = account.pnl || 0;
-        const isProfit = pnl >= 0;
+    <motion.button
+      onClick={() => onSelect(account)}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex-shrink-0 p-5 rounded-2xl text-left transition-all relative overflow-hidden"
+      style={{
+        minWidth: '220px',
+        background: isSelected
+          ? 'linear-gradient(145deg, rgba(15,25,55,0.98), rgba(12,22,48,0.95))'
+          : 'linear-gradient(145deg, rgba(8,14,28,0.95), rgba(10,18,38,0.9))',
+        border: `1px solid ${isSelected ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.05)'}`,
+        boxShadow: isSelected ? '0 0 30px rgba(59,130,246,0.08)' : 'none',
+      }}
+    >
+      {/* Top glow edge when selected */}
+      {isSelected && (
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.7), transparent)' }} />
+      )}
 
-        return (
-          <motion.button
-            key={account.id}
-            onClick={() => onSelect(account)}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-shrink-0 p-4 rounded-xl text-left transition-all"
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="text-[9px] font-mono text-white/30 uppercase tracking-[0.15em] mb-1.5">
+            {account.challenge_type === 'instant' ? 'Instant' : '2-Step'} · {(account.phase || 'phase1').replace('phase', 'Ph ')}
+          </div>
+          <div className="text-[11px] font-mono font-semibold text-white/60">{account.account_id || account.id?.slice(0, 12)}</div>
+        </div>
+        {isSelected
+          ? <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+          : <Zap className="w-4 h-4 text-white/10 flex-shrink-0 mt-0.5" />}
+      </div>
+
+      <div className="mb-4">
+        <div className="text-xl font-bold text-white tracking-tight">${size.toLocaleString()}</div>
+        <div className="text-[10px] text-white/25 font-mono capitalize mt-0.5">{account.status}</div>
+      </div>
+
+      {/* Mini progress bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-[9px] font-mono text-white/25 mb-1">
+          <span>Profit Target</span>
+          <span>{Math.max(0, progress).toFixed(1)}%</span>
+        </div>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div className="h-full rounded-full transition-all"
             style={{
-              minWidth: '200px',
-              background: isSelected
-                ? 'linear-gradient(135deg, rgba(0,149,255,0.15), rgba(0,245,160,0.05))'
-                : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${isSelected ? 'rgba(0,149,255,0.4)' : 'rgba(255,255,255,0.06)'}`,
-              boxShadow: isSelected ? '0 0 20px rgba(0,149,255,0.1)' : 'none',
-            }}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <div className="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-1">
-                  {account.challenge_type === 'instant' ? 'Instant' : '2-Step'} · {(account.phase || 'phase1').replace('phase', 'Phase ')}
-                </div>
-                <div className="text-xs font-black text-white/80 font-mono">{account.account_id || account.id?.slice(0, 10)}</div>
-              </div>
-              {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />}
-            </div>
+              width: `${Math.min(100, Math.max(0, progress))}%`,
+              background: 'linear-gradient(90deg, #3b82f680, #3b82f6)',
+            }} />
+        </div>
+      </div>
 
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="text-lg font-black text-white">${(account.account_size || 0).toLocaleString()}</div>
-                <div className="text-[9px] text-white/30 font-mono capitalize">{account.status}</div>
-              </div>
-              <div className={`flex items-center gap-1 text-xs font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
-                {isProfit ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                {isProfit ? '+' : ''}${Math.abs(pnl).toFixed(2)}
-              </div>
-            </div>
-          </motion.button>
-        );
-      })}
+      <div className={`flex items-center gap-1 text-xs font-semibold ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
+        {isProfit ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+        {isProfit ? '+' : ''}${Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </div>
+    </motion.button>
+  );
+}
+
+export default function AccountSwitcher({ accounts, selectedId, onSelect }) {
+  if (!accounts?.length) return null;
+
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-2 -mb-2 scrollbar-hide"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      {accounts.map((account, i) => (
+        <AccountCard
+          key={account.id}
+          account={account}
+          isSelected={account.id === selectedId}
+          onSelect={onSelect}
+          i={i}
+        />
+      ))}
     </div>
   );
 }

@@ -1,93 +1,92 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, RefreshCw, User, ChevronDown, Shield, Zap, Award, TrendingUp } from 'lucide-react';
+import { Plus, RefreshCw, Shield, Zap, TrendingUp, Award, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { getAccountRules } from '../terminal/terminalConfig';
+import { useAccountStats } from './useAccountStats';
 
-import ParticleBackground from './ParticleBackground.jsx';
-import AccountSwitcher    from './AccountSwitcher.jsx';
-import MetricCards        from './MetricCards.jsx';
-import TradingObjectives  from './TradingObjectives.jsx';
-import AnalyticsCharts    from './AnalyticsCharts.jsx';
-import StatsGrid          from './StatsGrid.jsx';
-import LiveStatusBar      from './LiveStatusBar.jsx';
-import AccountTimeline    from './AccountTimeline.jsx';
-import AIInsightsPanel    from './AIInsightsPanel.jsx';
+import ParticleBackground   from './ParticleBackground.jsx';
+import AccountSwitcher      from './AccountSwitcher.jsx';
+import MetricCards          from './MetricCards.jsx';
+import TradingObjectives    from './TradingObjectives.jsx';
+import AnalyticsCharts      from './AnalyticsCharts.jsx';
+import StatsGrid            from './StatsGrid.jsx';
+import LiveStatusBar        from './LiveStatusBar.jsx';
+import AccountTimeline      from './AccountTimeline.jsx';
+import AIInsightsPanel      from './AIInsightsPanel.jsx';
+import LiveTickerBar        from './LiveTickerBar.jsx';
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-24 text-center"
+      className="flex flex-col items-center justify-center py-32 text-center"
     >
       <motion.div
-        animate={{ y: [-8, 8, -8], rotate: [0, 3, -3, 0] }}
+        animate={{ y: [-6, 6, -6] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+        className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
         style={{
-          background: 'linear-gradient(135deg, rgba(0,149,255,0.2), rgba(0,245,160,0.1))',
-          border: '1px solid rgba(0,149,255,0.3)',
-          boxShadow: '0 0 40px rgba(0,149,255,0.15)',
+          background: 'linear-gradient(145deg, rgba(59,130,246,0.12), rgba(6,182,212,0.06))',
+          border: '1px solid rgba(59,130,246,0.2)',
+          boxShadow: '0 0 48px rgba(59,130,246,0.08)',
         }}>
-        <Shield className="w-9 h-9 text-blue-400" />
+        <Shield className="w-9 h-9 text-blue-400/70" />
       </motion.div>
-      <h2 className="text-3xl font-black text-white mb-3">No Active Accounts</h2>
-      <p className="text-sm text-white/40 mb-8 max-w-sm">
-        Purchase a challenge to access your funded trader dashboard with full analytics and objectives tracking.
+      <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">No Active Accounts</h2>
+      <p className="text-[13px] text-white/35 mb-10 max-w-sm leading-relaxed font-light">
+        Purchase a challenge to access the full funded trader operating system — real-time analytics, live objectives, and institutional-grade tools.
       </p>
       <motion.button
-        whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,149,255,0.4)' }}
+        whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(59,130,246,0.25)' }}
         whileTap={{ scale: 0.97 }}
         onClick={onStartChallenge}
-        className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold text-white"
-        style={{ background: 'linear-gradient(135deg, #0095ff, #00c8ff)', boxShadow: '0 8px 24px rgba(0,149,255,0.3)' }}>
-        <Plus className="w-4 h-4" /> Get Funded Now
+        className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white"
+        style={{
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.9), rgba(6,182,212,0.7))',
+          boxShadow: '0 8px 32px rgba(59,130,246,0.2)',
+          border: '1px solid rgba(59,130,246,0.3)',
+        }}>
+        <Plus className="w-4 h-4" /> Get Started
       </motion.button>
     </motion.div>
   );
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
-function DashboardHeader({ user, totalAccounts, onStartChallenge }) {
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header({ user, totalAccounts, onStartChallenge }) {
   return (
-    <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+    <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.04] flex-wrap gap-4">
       <div className="flex items-center gap-4">
-        {/* Avatar */}
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-black text-white flex-shrink-0"
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
           style={{
-            background: 'linear-gradient(135deg, rgba(0,149,255,0.3), rgba(0,245,160,0.15))',
-            border: '1px solid rgba(0,149,255,0.4)',
-            boxShadow: '0 0 20px rgba(0,149,255,0.2)',
+            background: 'linear-gradient(145deg, rgba(59,130,246,0.2), rgba(6,182,212,0.1))',
+            border: '1px solid rgba(59,130,246,0.2)',
           }}>
           {user?.full_name?.charAt(0) || 'T'}
-        </motion.div>
+        </div>
         <div>
-          <h1 className="text-xl font-black text-white leading-tight">
-            {user?.full_name || 'Trader'}{' '}
-            <span className="text-blue-400/60 text-base font-normal">Dashboard</span>
+          <h1 className="text-lg font-semibold text-white tracking-tight leading-tight">
+            {user?.full_name || 'Trader'}
           </h1>
           <div className="text-[10px] font-mono text-white/25 flex items-center gap-2 mt-0.5">
             <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }}
               className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-            {totalAccounts} account{totalAccounts !== 1 ? 's' : ''} active
-            <span>•</span>
-            Robert Funds Platform
+            {totalAccounts} account{totalAccounts !== 1 ? 's' : ''} active · Robert Funds Platform
           </div>
         </div>
       </div>
       <motion.button
-        whileHover={{ scale: 1.04, boxShadow: '0 0 24px rgba(0,149,255,0.3)' }}
-        whileTap={{ scale: 0.97 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={onStartChallenge}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white"
         style={{
-          background: 'linear-gradient(135deg, rgba(0,149,255,0.25), rgba(0,200,255,0.15))',
-          border: '1px solid rgba(0,149,255,0.4)',
+          background: 'rgba(59,130,246,0.12)',
+          border: '1px solid rgba(59,130,246,0.25)',
         }}>
         <Plus className="w-3.5 h-3.5" /> New Challenge
       </motion.button>
@@ -95,48 +94,83 @@ function DashboardHeader({ user, totalAccounts, onStartChallenge }) {
   );
 }
 
-// ── Account info bar ──────────────────────────────────────────────────────────
-function AccountInfoBar({ account }) {
+// ─── Account info strip ───────────────────────────────────────────────────────
+function AccountInfoStrip({ account }) {
   if (!account) return null;
   const items = [
-    { label: 'Account Size', value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type', value: account.challenge_type === 'instant' ? 'Instant' : '2-Step' },
-    { label: 'Phase', value: (account.phase || 'phase1').replace('phase', 'Phase ') },
+    { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
+    { label: 'Type',     value: account.challenge_type === 'instant' ? 'Instant' : 'Two-Step' },
+    { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
+    { label: 'Phase',    value: (account.phase || 'phase1').replace('phase', 'Phase ') },
     { label: 'Leverage', value: account.leverage || '1:100' },
-    { label: 'Platform', value: 'xTrading' },
-    { label: 'Account ID', value: `#${account.account_id || account.id?.slice(0, 8) || 'N/A'}` },
+    { label: 'Platform', value: account.platform || 'xTrading' },
+    { label: 'ID',       value: `#${account.account_id || account.id?.slice(0, 8) || 'N/A'}` },
   ];
   return (
     <motion.div
       key={account.id}
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex gap-px overflow-x-auto rounded-xl overflow-hidden mb-5 flex-shrink-0"
-      style={{ background: 'rgba(0,149,255,0.05)', border: '1px solid rgba(0,149,255,0.1)' }}
+      className="flex overflow-x-auto rounded-xl border border-white/[0.04] divide-x divide-white/[0.04]"
+      style={{ background: 'rgba(8,14,28,0.7)', scrollbarWidth: 'none' }}
     >
-      {items.map((item, i) => (
-        <div key={i} className="flex-1 px-4 py-2.5 min-w-[100px]"
-          style={{ background: 'linear-gradient(135deg, rgba(8,12,24,0.95), rgba(12,18,35,0.95))' }}>
-          <div className="text-[8px] font-mono uppercase text-white/25 tracking-widest">{item.label}</div>
-          <div className="text-[11px] font-bold text-blue-400 mt-0.5 whitespace-nowrap">{item.value}</div>
+      {items.map(item => (
+        <div key={item.label} className="flex-1 px-4 py-3 min-w-[90px] flex-shrink-0">
+          <div className="text-[8px] font-mono uppercase text-white/20 tracking-widest mb-1">{item.label}</div>
+          <div className="text-[11px] font-semibold text-blue-400 whitespace-nowrap">{item.value}</div>
         </div>
       ))}
     </motion.div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ─── Quick actions ────────────────────────────────────────────────────────────
+function QuickActions({ onNavigate }) {
+  const actions = [
+    { label: 'Open Terminal', icon: Zap, color: '#3b82f6', page: 'terminal' },
+    { label: 'Analytics', icon: TrendingUp, color: '#10b981', page: 'analytics' },
+    { label: 'Withdrawal', icon: Award, color: '#8b5cf6', page: 'withdrawals' },
+    { label: 'Trade Journal', icon: BookOpen, color: '#06b6d4', page: 'journal' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {actions.map((a, i) => {
+        const Icon = a.icon;
+        return (
+          <motion.button key={a.label}
+            whileHover={{ y: -3 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onNavigate?.(a.page)}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 + i * 0.05 }}
+            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors"
+            style={{
+              background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
+              border: `1px solid rgba(255,255,255,0.06)`,
+            }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${a.color}12`, border: `1px solid ${a.color}20` }}>
+              <Icon className="w-4 h-4" style={{ color: a.color }} />
+            </div>
+            {a.label}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 30000,
+    refetchInterval: 20000,
   });
 
-  const activeAccounts = accounts.filter(a =>
-    ['active', 'funded', 'passed'].includes(a.status)
-  );
-
+  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
   // Auto-select first account
@@ -146,7 +180,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     }
   }, [activeAccounts.length]);
 
-  // Keep selected in sync
+  // Keep selected in sync with refetches
   useEffect(() => {
     if (selectedAccount) {
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
@@ -154,117 +188,104 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     }
   }, [accounts]);
 
+  // Load trade records for selected account (real stats)
+  const { data: trades = [] } = useQuery({
+    queryKey: ['trade-records', selectedAccount?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.account_id }),
+    enabled: !!selectedAccount?.account_id,
+    refetchInterval: 15000,
+  });
+
   const rules = getAccountRules(selectedAccount);
+  const stats = useAccountStats(selectedAccount, trades);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500" />
+      <div className="flex items-center justify-center h-64" style={{ background: '#030610' }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+          className="w-7 h-7 rounded-full border-2 border-blue-500/20 border-t-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'linear-gradient(135deg, #020408, #040812, #060a14)' }}>
-      {/* Particle background */}
+    <div className="relative min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #020609, #030a16, #040c1a)' }}>
+      {/* Particles */}
       <ParticleBackground />
 
-      {/* Content */}
-      <div className="relative z-10 p-4 md:p-6 max-w-[1400px] mx-auto space-y-5">
-        {/* Header */}
-        <DashboardHeader user={user} totalAccounts={activeAccounts.length} onStartChallenge={onStartChallenge} />
+      {/* Ticker bar */}
+      <div className="relative z-20">
+        <LiveTickerBar />
+      </div>
 
+      {/* Header */}
+      <div className="relative z-10">
+        <Header user={user} totalAccounts={activeAccounts.length} onStartChallenge={onStartChallenge} />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex-1 px-4 md:px-6 pb-8 max-w-[1440px] mx-auto w-full space-y-5 mt-5">
         {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
-            {/* Live Status */}
+            {/* Live status */}
             <LiveStatusBar account={selectedAccount} />
 
-            {/* Account Switcher */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[10px] font-mono uppercase tracking-widest text-blue-400/50">
-                  Select Account — {activeAccounts.length} Total
-                </h2>
+            {/* Account switcher */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/20">
+                  Accounts — {activeAccounts.length} Active
+                </span>
                 <button onClick={() => refetch()}
-                  className="flex items-center gap-1 text-[9px] font-mono text-white/20 hover:text-white/50 transition-colors">
-                  <RefreshCw className="w-3 h-3" /> Refresh
+                  className="flex items-center gap-1.5 text-[9px] font-mono text-white/20 hover:text-white/40 transition-colors">
+                  <RefreshCw className="w-3 h-3" /> Sync
                 </button>
               </div>
-              <AccountSwitcher
-                accounts={activeAccounts}
-                selectedId={selectedAccount?.id}
-                onSelect={setSelectedAccount}
-              />
+              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} />
             </div>
 
-            {/* Per-account content */}
+            {/* Per-account section */}
             <AnimatePresence mode="wait">
               {selectedAccount && (
                 <motion.div
                   key={selectedAccount.id}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   className="space-y-5"
                 >
-                  {/* Account info bar */}
-                  <AccountInfoBar account={selectedAccount} />
+                  {/* Info strip */}
+                  <AccountInfoStrip account={selectedAccount} />
 
-                  {/* Metric cards */}
-                  <MetricCards account={selectedAccount} rules={rules} />
+                  {/* 6 metric cards */}
+                  <MetricCards account={selectedAccount} rules={rules} stats={stats} />
 
                   {/* Objectives */}
-                  <TradingObjectives account={selectedAccount} rules={rules} />
+                  <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
 
-                  {/* Analytics + Timeline side-by-side */}
+                  {/* Charts + Timeline */}
                   <div className="grid lg:grid-cols-3 gap-5">
                     <div className="lg:col-span-2">
-                      <AnalyticsCharts account={selectedAccount} />
+                      <AnalyticsCharts account={selectedAccount} stats={stats} />
                     </div>
                     <AccountTimeline account={selectedAccount} />
                   </div>
 
-                  {/* Stats + AI */}
-                  <div className="grid lg:grid-cols-3 gap-5">
-                    <div className="lg:col-span-2">
-                      <StatsGrid account={selectedAccount} />
+                  {/* Stats + AI Insights */}
+                  <div className="grid lg:grid-cols-5 gap-5">
+                    <div className="lg:col-span-3">
+                      <StatsGrid account={selectedAccount} stats={stats} />
                     </div>
-                    <AIInsightsPanel account={selectedAccount} />
+                    <div className="lg:col-span-2">
+                      <AIInsightsPanel account={selectedAccount} />
+                    </div>
                   </div>
 
                   {/* Quick actions */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Open Terminal', icon: Zap, color: '#0095ff', page: 'terminal' },
-                      { label: 'View Analytics', icon: TrendingUp, color: '#00f5a0', page: 'analytics' },
-                      { label: 'Withdrawal', icon: Award, color: '#f59e0b', page: 'withdrawals' },
-                      { label: 'Trade Journal', icon: Shield, color: '#a855f7', page: 'journal' },
-                    ].map((a, i) => {
-                      const Icon = a.icon;
-                      return (
-                        <motion.button key={a.label}
-                          whileHover={{ y: -4, boxShadow: `0 0 20px ${a.color}30` }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => onNavigate?.(a.page)}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5 + i * 0.05 }}
-                          className="flex items-center gap-3 p-4 rounded-xl text-sm font-semibold transition-all"
-                          style={{
-                            background: `linear-gradient(135deg, ${a.color}10, ${a.color}05)`,
-                            border: `1px solid ${a.color}20`,
-                            color: 'rgba(255,255,255,0.8)',
-                          }}>
-                          <Icon className="w-4 h-4" style={{ color: a.color }} />
-                          {a.label}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
+                  <QuickActions onNavigate={onNavigate} />
                 </motion.div>
               )}
             </AnimatePresence>

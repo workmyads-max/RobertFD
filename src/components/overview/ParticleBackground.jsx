@@ -13,15 +13,17 @@ export default function ParticleBackground() {
       canvas.height = canvas.offsetHeight;
     };
     resize();
-    window.addEventListener('resize', resize);
 
-    const particles = Array.from({ length: 60 }, () => ({
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const particles = Array.from({ length: 55 }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      size: Math.random() * 1.5 + 0.3,
-      opacity: Math.random() * 0.4 + 0.05,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      size: Math.random() * 1.2 + 0.2,
+      opacity: Math.random() * 0.25 + 0.04,
     }));
 
     let animId;
@@ -37,7 +39,7 @@ export default function ParticleBackground() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 149, 255, ${p.opacity})`;
+        ctx.fillStyle = `rgba(59, 130, 246, ${p.opacity})`;
         ctx.fill();
       });
       animId = requestAnimationFrame(animate);
@@ -46,15 +48,12 @@ export default function ParticleBackground() {
 
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.6 }}
-    />
+    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.5 }} />
   );
 }

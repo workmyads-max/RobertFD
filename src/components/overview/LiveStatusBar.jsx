@@ -1,59 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, Server, Clock, Activity, Zap, Globe } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Wifi, Clock, Shield, Activity } from 'lucide-react';
 import { SESSIONS, getActiveSession } from '../terminal/terminalConfig';
 
-function PulseIndicator({ color = '#00f5a0', label, value, sublabel }) {
+function Dot({ color, pulse }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-      style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
-      <motion.div
-        animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.1, 0.8] }}
-        transition={{ duration: 1.8, repeat: Infinity }}
-        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
-      />
-      <div>
-        <div className="text-[9px] text-white/30 font-mono uppercase leading-none">{label}</div>
-        <div className="text-[10px] font-bold font-mono leading-tight" style={{ color }}>{value}</div>
-        {sublabel && <div className="text-[8px] text-white/20">{sublabel}</div>}
-      </div>
-    </div>
-  );
-}
-
-function SessionClock() {
-  const [now, setNow] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const activeSession = getActiveSession();
-  const utcHour = now.getUTCHours();
-
-  return (
-    <div className="flex items-center gap-2">
-      {SESSIONS.map(s => {
-        const isOpen = (() => {
-          if (s.open < s.close) return utcHour >= s.open && utcHour < s.close;
-          return utcHour >= s.open || utcHour < s.close;
-        })();
-        return (
-          <div key={s.name} className="flex items-center gap-1 px-2 py-1 rounded-md text-[8px] font-mono"
-            style={{
-              background: isOpen ? `${s.color}15` : 'rgba(255,255,255,0.02)',
-              color: isOpen ? s.color : 'rgba(255,255,255,0.2)',
-              border: `1px solid ${isOpen ? `${s.color}30` : 'rgba(255,255,255,0.04)'}`,
-            }}>
-            {isOpen && (
-              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}
-                className="w-1 h-1 rounded-full" style={{ background: s.color }} />
-            )}
-            {s.name.split(' ')[0]}
-          </div>
-        );
-      })}
+    <div className="relative flex-shrink-0">
+      <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {pulse && (
+        <motion.div
+          animate={{ scale: [1, 2.5, 1], opacity: [0.6, 0, 0.6] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 rounded-full"
+          style={{ background: color }}
+        />
+      )}
     </div>
   );
 }
@@ -64,46 +25,78 @@ export default function LiveStatusBar({ account }) {
 
   useEffect(() => {
     const t1 = setInterval(() => setTime(new Date()), 1000);
-    const t2 = setInterval(() => setLatency(8 + Math.floor(Math.random() * 20)), 3000);
+    const t2 = setInterval(() => setLatency(6 + Math.floor(Math.random() * 18)), 3000);
     return () => { clearInterval(t1); clearInterval(t2); };
   }, []);
 
   const utcStr = time.toUTCString().slice(17, 25);
+  const utcHour = time.getUTCHours();
+  const isActive = account?.status === 'active' || account?.status === 'funded';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap"
+      className="flex items-center gap-0 overflow-x-auto rounded-xl"
       style={{
-        background: 'linear-gradient(90deg, rgba(8,12,24,0.95), rgba(12,18,35,0.95))',
-        border: '1px solid rgba(0,149,255,0.08)',
-        backdropFilter: 'blur(20px)',
+        background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
+        border: '1px solid rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(24px)',
+        scrollbarWidth: 'none',
       }}>
 
-      {/* UTC Clock */}
-      <div className="flex items-center gap-1.5 text-[10px] font-mono text-blue-400/60">
-        <Clock className="w-3 h-3" />
-        <span>{utcStr} UTC</span>
+      {/* UTC Time */}
+      <div className="flex items-center gap-2 px-4 py-3 border-r border-white/[0.05]">
+        <Clock className="w-3 h-3 text-white/25" />
+        <span className="text-[11px] font-mono text-white/50">{utcStr}</span>
+        <span className="text-[9px] font-mono text-white/20">UTC</span>
       </div>
 
-      <div className="w-px h-4 bg-white/[0.06]" />
-
       {/* Sessions */}
-      <SessionClock />
-
-      <div className="w-px h-4 bg-white/[0.06]" />
+      <div className="flex items-center gap-1 px-4 py-3 border-r border-white/[0.05]">
+        {SESSIONS.map(s => {
+          const isOpen = s.open < s.close
+            ? utcHour >= s.open && utcHour < s.close
+            : utcHour >= s.open || utcHour < s.close;
+          return (
+            <div key={s.name} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-mono transition-all"
+              style={{
+                background: isOpen ? `${s.color}12` : 'transparent',
+                color: isOpen ? s.color : 'rgba(255,255,255,0.15)',
+                border: `1px solid ${isOpen ? `${s.color}25` : 'transparent'}`,
+              }}>
+              {isOpen && <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-1 h-1 rounded-full" style={{ background: s.color }} />}
+              {s.name.split(' ')[0]}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Status pills */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <PulseIndicator color="#00f5a0" label="Platform" value="Connected" />
-        <PulseIndicator color="#0095ff" label="Latency" value={`${latency}ms`} />
-        <PulseIndicator
-          color={account?.status === 'active' || account?.status === 'funded' ? '#00f5a0' : '#f59e0b'}
-          label="Account"
-          value={account?.status?.toUpperCase() || 'INACTIVE'}
-        />
-        <PulseIndicator color="#a855f7" label="MT5" value="Live" sublabel="v5.0" />
+      <div className="flex items-center gap-4 px-4 py-3 flex-1">
+        <div className="flex items-center gap-2">
+          <Dot color="#10b981" pulse />
+          <span className="text-[10px] font-mono text-white/40">Platform</span>
+          <span className="text-[10px] font-mono text-emerald-400">Connected</span>
+        </div>
+        <div className="hidden sm:flex items-center gap-2">
+          <Dot color={latency < 20 ? '#10b981' : '#f59e0b'} />
+          <span className="text-[10px] font-mono text-white/40">Latency</span>
+          <span className="text-[10px] font-mono text-white/60">{latency}ms</span>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <Dot color={isActive ? '#10b981' : '#f59e0b'} pulse={isActive} />
+          <span className="text-[10px] font-mono text-white/40">Account</span>
+          <span className="text-[10px] font-mono" style={{ color: isActive ? '#10b981' : '#f59e0b' }}>
+            {(account?.status || 'inactive').toUpperCase()}
+          </span>
+        </div>
+        <div className="hidden lg:flex items-center gap-2">
+          <Shield className="w-3 h-3 text-blue-400/50" />
+          <span className="text-[10px] font-mono text-white/40">MT5</span>
+          <span className="text-[10px] font-mono text-blue-400">Live</span>
+        </div>
       </div>
     </motion.div>
   );
