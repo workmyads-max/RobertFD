@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Lock, ChevronDown, ChevronUp, BarChart2, BookOpen, List, Menu, X, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Lock, BarChart2, BookOpen, List, Menu, X, RefreshCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -11,7 +11,7 @@ import OrderPanel                from '../terminal/OrderPanel';
 import ChallengeTracker          from '../terminal/ChallengeTracker';
 import PositionsTable            from '../terminal/PositionsTable';
 import SessionBar                from '../terminal/SessionBar';
-import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason } from '../terminal/terminalConfig';
+import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason, getLeverageForInstrument } from '../terminal/terminalConfig';
 
 const TF_OPTS = [
   { label: '1m', val: '1' }, { label: '5m', val: '5' }, { label: '15m', val: '15' },
@@ -21,23 +21,23 @@ const TF_OPTS = [
 // ── Account bar (scrollable on mobile) ───────────────────────────────────────
 function AccountBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked }) {
   const items = [
-    { label: 'Account',  val: account?.account_id || 'N/A',   color: 'text-primary font-black' },
-    { label: 'Balance',  val: `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: 'text-foreground' },
-    { label: 'Equity',   val: `$${equity.toFixed(2)}`,          color: equity >= balance ? 'text-emerald-400' : 'text-red-400' },
-    { label: 'Float P&L',val: `${floatPnl >= 0 ? '+' : ''}$${floatPnl.toFixed(2)}`, color: floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-    { label: 'Margin',   val: `$${usedMargin.toFixed(0)}`,      color: 'text-muted-foreground' },
-    { label: 'Free',     val: `$${freeMargin.toFixed(0)}`,      color: freeMargin < 500 ? 'text-red-400' : 'text-foreground' },
-    { label: 'Lvl',      val: `${isFinite(marginLevel) ? marginLevel.toFixed(0) : '∞'}%`, color: marginLevel > 200 || !isFinite(marginLevel) ? 'text-emerald-400' : marginLevel > 100 ? 'text-yellow-400' : 'text-red-400' },
-    { label: '1:',       val: `${rules?.leverage || 100}`,      color: 'text-primary' },
+    { label: 'Account',   val: account?.account_id || 'N/A',   color: 'text-primary font-black' },
+    { label: 'Balance',   val: `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: 'text-foreground' },
+    { label: 'Equity',    val: `$${equity.toFixed(2)}`,          color: equity >= balance ? 'text-emerald-400' : 'text-red-400' },
+    { label: 'Float P&L', val: `${floatPnl >= 0 ? '+' : ''}$${floatPnl.toFixed(2)}`, color: floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
+    { label: 'Margin',    val: `$${usedMargin.toFixed(0)}`,      color: 'text-muted-foreground' },
+    { label: 'Free Mgn',  val: `$${freeMargin.toFixed(0)}`,      color: freeMargin < 500 ? 'text-red-400' : 'text-foreground' },
+    { label: 'Mgn Lvl',   val: `${isFinite(marginLevel) ? marginLevel.toFixed(0) : '∞'}%`, color: marginLevel > 200 || !isFinite(marginLevel) ? 'text-emerald-400' : marginLevel > 100 ? 'text-yellow-400' : 'text-red-400' },
+    { label: 'Leverage',  val: `1:${rules?.leverage || 100}`,    color: 'text-primary' },
   ];
 
   return (
-    <div className="flex items-stretch border-b border-white/[0.06] overflow-x-auto flex-shrink-0 scrollbar-hide"
-      style={{ background: 'rgba(4,4,8,0.99)' }}>
+    <div className="flex items-stretch border-b border-white/[0.06] overflow-x-auto flex-shrink-0"
+      style={{ background: 'rgba(4,4,8,0.99)', scrollbarWidth: 'none' }}>
       {items.map(item => (
-        <div key={item.label} className="flex flex-col px-2 md:px-3 py-1.5 md:py-2 border-r border-white/[0.04] flex-shrink-0 min-w-[60px]">
-          <span className="text-[7px] md:text-[8px] font-mono text-muted-foreground/50 uppercase tracking-wider mb-0.5">{item.label}</span>
-          <span className={`text-[10px] md:text-[11px] font-mono font-semibold whitespace-nowrap ${item.color}`}>{item.val}</span>
+        <div key={item.label} className="flex flex-col px-2 md:px-3 py-2 md:py-2.5 border-r border-white/[0.04] flex-shrink-0 min-w-[64px]">
+          <span className="text-[8px] md:text-[9px] font-mono text-muted-foreground/40 uppercase tracking-wider mb-0.5">{item.label}</span>
+          <span className={`text-[11px] md:text-[12px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
         </div>
       ))}
       {accountBlocked && (
@@ -122,7 +122,7 @@ export default function ProTradingTerminal({ account }) {
   const [tradesLoaded,   setTradesLoaded]   = useState(false);
 
   // Mobile layout state
-  const [mobilePanel, setMobilePanel] = useState('chart'); // chart | order | positions | watch
+  const [mobilePanel, setMobilePanel] = useState('chart'); // chart | order | positions | watch | tracker
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const accountId   = account?.id;
@@ -351,6 +351,7 @@ export default function ProTradingTerminal({ account }) {
     { id: 'order',     icon: BookOpen,   label: 'Order'   },
     { id: 'positions', icon: List,       label: `Pos(${positions.length})` },
     { id: 'watch',     icon: Menu,       label: 'Watch'   },
+    { id: 'tracker',   icon: RefreshCw,  label: 'Goals'   },
   ];
 
   return (
@@ -525,6 +526,12 @@ export default function ProTradingTerminal({ account }) {
             <div className="h-full overflow-y-auto">
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol}
                 onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel('chart'); }} />
+            </div>
+          )}
+
+          {mobilePanel === 'tracker' && (
+            <div className="h-full overflow-y-auto">
+              <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} />
             </div>
           )}
         </div>

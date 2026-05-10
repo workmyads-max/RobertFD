@@ -1,53 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { SESSIONS, getActiveSession } from './terminalConfig';
-
-function useTime() {
-  const [now, setNow] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  return now;
-}
+import { motion } from 'framer-motion';
+import { SESSIONS } from './terminalConfig';
 
 export default function SessionBar() {
-  const now = useTime();
-  const utcHour   = now.getUTCHours();
-  const utcMin    = now.getUTCMinutes();
-  const utcSec    = now.getUTCSeconds();
-  const active    = getActiveSession();
+  const [time, setTime] = useState(new Date());
+  const [latency, setLatency] = useState(8);
 
-  const isSessionActive = (s) => {
-    if (s.open < s.close) return utcHour >= s.open && utcHour < s.close;
-    return utcHour >= s.open || utcHour < s.close;
-  };
+  useEffect(() => {
+    const t1 = setInterval(() => setTime(new Date()), 1000);
+    const t2 = setInterval(() => setLatency(4 + Math.floor(Math.random() * 20)), 4000);
+    return () => { clearInterval(t1); clearInterval(t2); };
+  }, []);
 
-  const utcStr = `${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')} UTC`;
+  const utcHour = time.getUTCHours();
+  const utcMin  = time.getUTCMinutes();
+  const utcSec  = time.getUTCSeconds();
+  const utcStr  = `${String(utcHour).padStart(2,'0')}:${String(utcMin).padStart(2,'0')}:${String(utcSec).padStart(2,'0')}`;
+  const utcTime = utcHour + utcMin / 60;
+
+  const isSessionOpen = (s) =>
+    s.open < s.close ? utcTime >= s.open && utcTime < s.close : utcTime >= s.open || utcTime < s.close;
 
   return (
-    <div className="flex items-center gap-px text-[10px] font-mono flex-shrink-0 overflow-x-auto"
-      style={{ background: 'rgba(5,5,9,0.98)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Clock */}
-      <div className="px-3 py-1.5 border-r border-white/[0.06] text-muted-foreground flex-shrink-0">
-        {utcStr}
+    <div className="flex items-center gap-0 overflow-x-auto flex-shrink-0 border-b border-white/[0.06]"
+      style={{ background: 'rgba(5,5,9,0.98)', scrollbarWidth: 'none', height: '28px' }}>
+
+      {/* UTC Clock */}
+      <div className="flex items-center gap-1.5 px-3 border-r border-white/[0.05] h-full flex-shrink-0">
+        <span className="text-[9px] font-mono text-white/25">UTC</span>
+        <span className="text-[10px] font-mono text-primary/70 font-bold">{utcStr}</span>
       </div>
+
       {/* Sessions */}
       {SESSIONS.map(s => {
-        const on = isSessionActive(s);
+        const isOpen = isSessionOpen(s);
         return (
-          <div key={s.name} className="flex items-center gap-1.5 px-3 py-1.5 border-r border-white/[0.06] flex-shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: on ? s.color : 'rgba(255,255,255,0.15)' }} />
-            <span style={{ color: on ? s.color : 'rgba(255,255,255,0.3)' }}>{s.name}</span>
-            {on && <span className="text-[8px] font-bold" style={{ color: s.color }}>OPEN</span>}
+          <div key={s.name}
+            className="flex items-center gap-1.5 px-3 h-full border-r border-white/[0.05] flex-shrink-0 transition-all"
+            style={{ background: isOpen ? `${s.color}08` : 'transparent' }}>
+            {isOpen && (
+              <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: s.color }} />
+            )}
+            <span className="text-[9px] font-mono font-bold" style={{ color: isOpen ? s.color : 'rgba(255,255,255,0.2)' }}>
+              {s.name.split(' ')[0]}
+            </span>
+            {isOpen && (
+              <span className="text-[8px] font-mono" style={{ color: `${s.color}90` }}>OPEN</span>
+            )}
           </div>
         );
       })}
-      {/* Active session label */}
-      {active && (
-        <div className="ml-auto px-3 flex-shrink-0" style={{ color: active.color }}>
-          {active.name} Session Active
+
+      {/* Platform status */}
+      <div className="flex items-center gap-3 px-3 ml-auto flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}
+            className="w-1 h-1 rounded-full bg-emerald-400" />
+          <span className="text-[8px] font-mono text-emerald-400/70">LIVE</span>
         </div>
-      )}
+        <span className="text-[8px] font-mono text-white/20">{latency}ms</span>
+      </div>
     </div>
   );
 }

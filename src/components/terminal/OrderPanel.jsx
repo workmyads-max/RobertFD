@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { INSTRUMENTS, calcRequiredMargin } from './terminalConfig';
+import { INSTRUMENTS, calcRequiredMargin, getLeverageForInstrument, DEFAULT_LEVERAGE_CONFIG } from './terminalConfig';
 
 const ORDER_TYPES = [
   { val: 'market',     label: 'Market'     },
@@ -21,7 +21,9 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
 
   const inst        = INSTRUMENTS.find(i => i.symbol === symbol);
   const p           = prices[symbol];
-  const lev         = rules?.leverage || 100;
+  // Apply per-instrument leverage cap (e.g. crypto max 10x regardless of account leverage)
+  const accountLev  = rules?.leverage || 100;
+  const lev         = getLeverageForInstrument(symbol, accountLev);
   const lotsNum     = parseFloat(lots) || 0;
   const currentBid  = p?.bid || 0;
   const entryPrice  = orderType === 'market' ? (side === 'BUY' ? p?.ask : p?.bid) : parseFloat(pendPrice) || 0;
@@ -141,7 +143,7 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
             { label: 'Required Margin', val: `$${reqMargin.toFixed(2)}` },
             { label: 'Free Margin',     val: `$${freeMargin.toFixed(2)}`, color: freeMargin < reqMargin ? 'text-red-400' : 'text-emerald-400' },
             { label: 'Risk %',          val: `${riskPercent}%`,           color: parseFloat(riskPercent) > 5 ? 'text-red-400' : 'text-emerald-400' },
-            { label: 'Leverage',        val: `1:${lev}` },
+            { label: 'Leverage',        val: `1:${lev}${lev !== accountLev ? ` (acct: 1:${accountLev})` : ''}` },
           ].map(item => (
             <div key={item.label} className="flex justify-between text-[10px] font-mono">
               <span className="text-muted-foreground">{item.label}</span>
