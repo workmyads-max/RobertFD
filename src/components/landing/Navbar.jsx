@@ -117,12 +117,12 @@ export default function Navbar() {
               ))}
             </div>
             <div className="mt-8 space-y-3">
-              <button className="w-full py-3 text-sm text-foreground border border-border rounded-full hover:border-primary/50">
+              <a href="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
                 Login
-              </button>
-              <button className="w-full py-3 text-sm text-foreground border border-border rounded-full hover:border-primary/50">
+              </a>
+              <a href="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
                 Register
-              </button>
+              </a>
               <button
                 onClick={() => scrollTo('#challenge')}
                 className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full"
