@@ -1,0 +1,180 @@
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { INSTRUMENTS, calcRequiredMargin } from './terminalConfig';
+
+const ORDER_TYPES = [
+  { val: 'market',     label: 'Market'     },
+  { val: 'buy_limit',  label: 'Buy Limit'  },
+  { val: 'sell_limit', label: 'Sell Limit' },
+  { val: 'buy_stop',   label: 'Buy Stop'   },
+  { val: 'sell_stop',  label: 'Sell Stop'  },
+];
+
+export default function OrderPanel({ symbol, prices, account, rules, equity, usedMargin, onPlaceOrder, accountBlocked }) {
+  const [side,        setSide]        = useState('BUY');
+  const [orderType,   setOrderType]   = useState('market');
+  const [lots,        setLots]        = useState('0.10');
+  const [sl,          setSl]          = useState('');
+  const [tp,          setTp]          = useState('');
+  const [pendPrice,   setPendPrice]   = useState('');
+  const [flash,       setFlash]       = useState(null);
+
+  const inst        = INSTRUMENTS.find(i => i.symbol === symbol);
+  const p           = prices[symbol];
+  const lev         = rules?.leverage || 100;
+  const lotsNum     = parseFloat(lots) || 0;
+  const currentBid  = p?.bid || 0;
+  const entryPrice  = orderType === 'market' ? (side === 'BUY' ? p?.ask : p?.bid) : parseFloat(pendPrice) || 0;
+  const reqMargin   = calcRequiredMargin(symbol, lotsNum, lev, entryPrice || currentBid);
+  const freeMargin  = equity - usedMargin;
+  const riskPercent = freeMargin > 0 ? (reqMargin / equity * 100).toFixed(2) : '0';
+
+  const canTrade = !accountBlocked && lotsNum > 0 && lotsNum <= rules?.maxLotsPerTrade && reqMargin <= freeMargin;
+
+  const handleSubmit = () => {
+    if (!canTrade) return;
+    const ep = orderType === 'market' ? entryPrice : parseFloat(pendPrice);
+    if (!ep) return;
+
+    onPlaceOrder({
+      symbol, type: side,
+      orderType: orderType === 'market' ? 'MARKET' : orderType.toUpperCase().replace('_', '_'),
+      lots: lotsNum,
+      entry: ep,
+      sl: sl ? parseFloat(sl) : null,
+      tp: tp ? parseFloat(tp) : null,
+      margin: reqMargin,
+      time: new Date().toLocaleTimeString(),
+    });
+
+    setFlash(side);
+    setTimeout(() => setFlash(null), 1500);
+    setSl(''); setTp(''); setPendPrice('');
+  };
+
+  return (
+    <div className="flex flex-col h-full text-xs" style={{ background: '#07070b' }}>
+      {/* Symbol Header */}
+      <div className="px-3 py-2 border-b border-white/[0.06]">
+        <div className="font-bold text-sm text-foreground">{symbol}</div>
+        <div className="font-mono text-[10px] text-muted-foreground">
+          Bid: <span className="text-red-400">{p?.bid?.toFixed(inst?.digits)}</span>
+          {' '} Ask: <span className="text-emerald-400">{p?.ask?.toFixed(inst?.digits)}</span>
+          {' '} Spread: <span className="text-primary">{p?.bid && p?.ask ? ((p.ask - p.bid) / (inst?.digits >= 4 ? 0.0001 : 0.01)).toFixed(1) : '—'}</span>
+        </div>
+      </div>
+
+      {/* Buy / Sell Tabs */}
+      <div className="grid grid-cols-2 border-b border-white/[0.06]">
+        {['BUY', 'SELL'].map(s => (
+          <button key={s} onClick={() => setSide(s)}
+            className={`py-2.5 font-black text-sm transition-all ${side === s
+              ? s === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border-b-2 border-emerald-500'
+                            : 'bg-red-500/20 text-red-400 border-b-2 border-red-500'
+              : 'text-muted-foreground hover:bg-white/5'}`}>
+            {s === 'BUY' ? '▲' : '▼'} {s}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* Order Type */}
+        <div>
+          <label className="text-[9px] text-muted-foreground uppercase tracking-widest block mb-1">Order Type</label>
+          <select value={orderType} onChange={e => setOrderType(e.target.value)}
+            className="w-full rounded px-2 py-1.5 font-mono text-[11px] text-foreground outline-none"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            {ORDER_TYPES.map(ot => <option key={ot.val} value={ot.val} style={{ background: '#07070b' }}>{ot.label}</option>)}
+          </select>
+        </div>
+
+        {/* Pending Price */}
+        {orderType !== 'market' && (
+          <div>
+            <label className="text-[9px] text-muted-foreground uppercase tracking-widest block mb-1">Order Price</label>
+            <input value={pendPrice} onChange={e => setPendPrice(e.target.value)} type="number"
+              placeholder={p?.bid?.toFixed(inst?.digits)}
+              className="w-full rounded px-2 py-1.5 font-mono text-[11px] text-foreground outline-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+          </div>
+        )}
+
+        {/* Lots */}
+        <div>
+          <div className="flex justify-between mb-1">
+            <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Volume (Lots)</label>
+            <span className="text-[9px] text-muted-foreground/50">Max {rules?.maxLotsPerTrade}</span>
+          </div>
+          <div className="flex gap-1 items-center">
+            <button onClick={() => setLots(l => Math.max(0.01, parseFloat(l) - 0.01).toFixed(2))}
+              className="w-7 h-7 rounded text-foreground font-bold hover:bg-white/10 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>−</button>
+            <input value={lots} onChange={e => setLots(e.target.value)} type="number" step="0.01"
+              className="flex-1 rounded px-2 py-1.5 font-mono text-[11px] text-foreground text-center outline-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <button onClick={() => setLots(l => (parseFloat(l) + 0.01).toFixed(2))}
+              className="w-7 h-7 rounded text-foreground font-bold hover:bg-white/10 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>+</button>
+          </div>
+          <div className="flex gap-1 mt-1">
+            {[0.01, 0.1, 0.5, 1].map(v => (
+              <button key={v} onClick={() => setLots(v.toFixed(2))}
+                className="flex-1 py-0.5 rounded text-[8px] font-mono text-muted-foreground hover:text-foreground transition"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>{v}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* SL / TP */}
+        <div className="grid grid-cols-2 gap-2">
+          {[{ label: 'Stop Loss', val: sl, set: setSl, color: 'text-red-400' }, { label: 'Take Profit', val: tp, set: setTp, color: 'text-emerald-400' }].map(({ label, val, set, color }) => (
+            <div key={label}>
+              <label className={`text-[9px] uppercase tracking-widest block mb-1 ${color}`}>{label}</label>
+              <input value={val} onChange={e => set(e.target.value)} type="number" placeholder="Optional"
+                className="w-full rounded px-2 py-1.5 font-mono text-[10px] text-foreground outline-none"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Margin Info */}
+        <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.18)' }}>
+          {[
+            { label: 'Required Margin', val: `$${reqMargin.toFixed(2)}` },
+            { label: 'Free Margin',     val: `$${freeMargin.toFixed(2)}`, color: freeMargin < reqMargin ? 'text-red-400' : 'text-emerald-400' },
+            { label: 'Risk %',          val: `${riskPercent}%`,           color: parseFloat(riskPercent) > 5 ? 'text-red-400' : 'text-emerald-400' },
+            { label: 'Leverage',        val: `1:${lev}` },
+          ].map(item => (
+            <div key={item.label} className="flex justify-between text-[10px] font-mono">
+              <span className="text-muted-foreground">{item.label}</span>
+              <span className={item.color || 'text-foreground font-bold'}>{item.val}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Execute */}
+        <AnimatePresence mode="wait">
+          {flash ? (
+            <motion.div key="ok" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full py-3 rounded-lg text-sm font-black text-white text-center"
+              style={{ background: flash === 'BUY' ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)' }}>
+              ✓ {flash === 'BUY' ? 'BUY' : 'SELL'} Order Executed
+            </motion.div>
+          ) : (
+            <motion.button key="btn" onClick={handleSubmit} disabled={!canTrade}
+              whileHover={canTrade ? { scale: 1.02 } : {}}
+              className="w-full py-3 rounded-lg text-sm font-black text-white transition-all disabled:opacity-40"
+              style={{
+                background: !canTrade ? '#222' : side === 'BUY'
+                  ? 'linear-gradient(135deg, #10b981, #059669)'
+                  : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                boxShadow: canTrade ? `0 4px 20px ${side === 'BUY' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}` : 'none',
+              }}>
+              {accountBlocked ? '🔒 TRADING DISABLED'
+                : !canTrade && reqMargin > freeMargin ? '⚠ INSUFFICIENT MARGIN'
+                : `${side === 'BUY' ? '▲ BUY' : '▼ SELL'} ${lotsNum.toFixed(2)} ${symbol}`}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
