@@ -127,7 +127,7 @@ export default function DashboardOverviewAdvanced({ user, onStartChallenge, onNa
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 Live Trading Session Active
               </div>
-              <div>📍 {location.flag} {location.loading ? 'Loading...' : location.country} • 🌐 {location.loading ? 'Loading...' : location.ip}</div>
+              <div>📍 {location.flag} {location.loading ? 'Loading...' : `${location.city}, ${location.country}`} • 🌐 {location.loading ? 'Loading...' : location.ip}</div>
             </motion.div>
           </div>
           <motion.button onClick={onStartChallenge}

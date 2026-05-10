@@ -30,6 +30,7 @@ export function useUserLocation() {
         setLocation({
           ip: data.ip || 'Unknown',
           country: data.country_name || 'Unknown',
+          city: data.city || 'Unknown',
           countryCode: countryCode,
           flag: flag,
           loading: false,
