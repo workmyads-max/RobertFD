@@ -11,7 +11,7 @@ import OrderPanel                from '../terminal/OrderPanel';
 import ChallengeTracker          from '../terminal/ChallengeTracker';
 import PositionsTable            from '../terminal/PositionsTable';
 import SessionBar                from '../terminal/SessionBar';
-import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason, getLeverageForInstrument } from '../terminal/terminalConfig';
+import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason } from '../terminal/terminalConfig';
 
 const TF_OPTS = [
   { label: '1m', val: '1' }, { label: '5m', val: '5' }, { label: '15m', val: '15' },
@@ -227,6 +227,39 @@ export default function ProTradingTerminal({ account }) {
       if (slHit || tpHit) closePosition(pos.id, cp, calcPnl(pos, cp), slHit ? 'SL' : 'TP');
     });
   }, [prices]);
+
+  // ── Overnight / Weekend rule enforcement (Standard account) ───────────────
+  useEffect(() => {
+    if (!rules || positions.length === 0) return;
+    const now = new Date();
+    const utcDay  = now.getUTCDay();
+    const utcHour = now.getUTCHours();
+    const utcMin  = now.getUTCMinutes();
+    const utcTime = utcHour + utcMin / 60;
+
+    // Weekend: Saturday or Sunday (non-crypto) — force-close all Standard account positions
+    const isWeekend = utcDay === 0 || utcDay === 6;
+    if (!rules.weekendHolding && isWeekend) {
+      positions.forEach(pos => {
+        const inst = INSTRUMENTS.find(i => i.symbol === pos.symbol);
+        if (inst?.type === 'crypto') return; // crypto 24/7, skip
+        const p = prices[pos.symbol];
+        const cp = p ? (pos.type === 'BUY' ? p.bid : p.ask) : pos.entry;
+        closePosition(pos.id, cp, calcPnl(pos, cp), 'Weekend Close (Rule)');
+      });
+    }
+
+    // Overnight: after 21:00 UTC, before 22:00 UTC — end of NY session
+    if (!rules.overnightHolding && utcTime >= 21 && utcTime < 22) {
+      positions.forEach(pos => {
+        const inst = INSTRUMENTS.find(i => i.symbol === pos.symbol);
+        if (inst?.type === 'crypto') return; // crypto exempt
+        const p = prices[pos.symbol];
+        const cp = p ? (pos.type === 'BUY' ? p.bid : p.ask) : pos.entry;
+        closePosition(pos.id, cp, calcPnl(pos, cp), 'Overnight Close (Rule)');
+      });
+    }
+  }, [rules?.overnightHolding, rules?.weekendHolding]);
 
   // ── Pending order trigger ─────────────────────────────────────────────────
   useEffect(() => {

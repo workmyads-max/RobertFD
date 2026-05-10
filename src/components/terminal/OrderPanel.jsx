@@ -1,6 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { INSTRUMENTS, calcRequiredMargin, getLeverageForInstrument, DEFAULT_LEVERAGE_CONFIG } from './terminalConfig';
+import { AlertTriangle } from 'lucide-react';
+import { INSTRUMENTS, calcRequiredMargin, getLeverageForInstrument } from './terminalConfig';
+
+// Check if current time is within a high-impact news window (±2 min around major releases)
+// Simplified: block during the first 2 minutes of each hour on weekdays (common news times)
+function isNewsTime() {
+  const now = new Date();
+  const utcMin = now.getUTCMinutes();
+  const utcDay = now.getUTCDay();
+  if (utcDay === 0 || utcDay === 6) return false;
+  // Block :58–:02 windows (common major news release times)
+  return utcMin <= 2 || utcMin >= 58;
+}
+
+function isWeekend() {
+  const utcDay = new Date().getUTCDay();
+  return utcDay === 0 || utcDay === 6;
+}
+
+function isAfterHours() {
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  const utcMin = now.getUTCMinutes();
+  const utcTime = utcHour + utcMin / 60;
+  // After NY session close (20:00 UTC) and before Asian open (22:00 UTC) — overnight window
+  return utcTime >= 20 || utcTime < 22;
+}
 
 const ORDER_TYPES = [
   { val: 'market',     label: 'Market'     },
@@ -31,7 +57,24 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
   const freeMargin  = equity - usedMargin;
   const riskPercent = freeMargin > 0 ? (reqMargin / equity * 100).toFixed(2) : '0';
 
-  const canTrade = !accountBlocked && marketOpen && lotsNum > 0 && lotsNum <= rules?.maxLotsPerTrade && reqMargin <= freeMargin;
+  // ── Challenge rule enforcement ───────────────────────────────────────────────
+  const newsBlocked     = !rules?.newsTrading && isNewsTime();
+  const weekendBlocked  = !rules?.weekendHolding && isWeekend();
+  const overnightBlock  = false; // overnight holding only affects closing time, not opening
+
+  const canTrade = !accountBlocked && marketOpen && lotsNum > 0
+    && lotsNum <= (rules?.maxLotsPerTrade || 20)
+    && reqMargin <= freeMargin
+    && !newsBlocked
+    && !weekendBlocked;
+
+  const blockReason = accountBlocked ? '🔒 TRADING DISABLED'
+    : !marketOpen ? '🔒 MARKET CLOSED'
+    : weekendBlocked ? '🔒 WEEKEND TRADING NOT ALLOWED'
+    : newsBlocked ? '⏸ NEWS BLACKOUT ACTIVE'
+    : reqMargin > freeMargin ? '⚠ INSUFFICIENT MARGIN'
+    : lotsNum > (rules?.maxLotsPerTrade || 20) ? `⚠ MAX ${rules?.maxLotsPerTrade} LOTS`
+    : null;
 
   const handleSubmit = () => {
     if (!canTrade) return;
@@ -137,6 +180,24 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
           ))}
         </div>
 
+        {/* Rule violations */}
+        {(newsBlocked || weekendBlocked) && (
+          <div className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
+            <AlertTriangle className="w-3 h-3 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <span className="text-[9px] text-yellow-400 leading-relaxed">
+              {weekendBlocked ? 'Standard accounts cannot open trades on weekends.' : 'Trading blocked during high-impact news window (±2 min). Swing accounts exempt.'}
+            </span>
+          </div>
+        )}
+
+        {/* Max lots warning */}
+        {lotsNum > (rules?.maxLotsPerTrade || 20) && (
+          <div className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0 mt-0.5" />
+            <span className="text-[9px] text-red-400">Max {rules?.maxLotsPerTrade} lots per trade for {rules?.accountType} account.</span>
+          </div>
+        )}
+
         {/* Margin Info */}
         <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.18)' }}>
           {[
@@ -170,10 +231,7 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
                   : 'linear-gradient(135deg, #ef4444, #dc2626)',
                 boxShadow: canTrade ? `0 4px 20px ${side === 'BUY' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}` : 'none',
               }}>
-              {accountBlocked ? '🔒 TRADING DISABLED'
-                : !marketOpen ? '🔒 MARKET CLOSED'
-                : !canTrade && reqMargin > freeMargin ? '⚠ INSUFFICIENT MARGIN'
-                : `${side === 'BUY' ? '▲ BUY' : '▼ SELL'} ${lotsNum.toFixed(2)} ${symbol}`}
+              {blockReason || `${side === 'BUY' ? '▲ BUY' : '▼ SELL'} ${lotsNum.toFixed(2)} ${symbol}`}
             </motion.button>
           )}
         </AnimatePresence>
