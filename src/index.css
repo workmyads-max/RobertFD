@@ -72,6 +72,11 @@
   }
 }
 
+/* Funded dashboard scrollbar override */
+.funded-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+.funded-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0); }
+.funded-scroll::-webkit-scrollbar-thumb { background: rgba(0,149,255,0.3); border-radius: 4px; }
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -108,6 +113,28 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Blue neon glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(0,149,255,0.3), 0 0 60px rgba(0,149,255,0.1);
+}
+.glow-blue-sm {
+  box-shadow: 0 0 10px rgba(0,149,255,0.2), 0 0 30px rgba(0,149,255,0.05);
+}
+.glow-teal {
+  box-shadow: 0 0 20px rgba(0,245,160,0.3), 0 0 60px rgba(0,245,160,0.1);
+}
+.text-glow-blue {
+  text-shadow: 0 0 20px rgba(0,149,255,0.6), 0 0 40px rgba(0,149,255,0.2);
+}
+.holographic {
+  background: linear-gradient(135deg, rgba(0,149,255,0.15), rgba(0,245,160,0.08), rgba(168,85,247,0.1));
+  border: 1px solid rgba(0,149,255,0.2);
+}
+.neon-border-blue {
+  border: 1px solid rgba(0,149,255,0.4);
+  box-shadow: 0 0 12px rgba(0,149,255,0.15), inset 0 0 12px rgba(0,149,255,0.05);
 }
 
 /* Pulse ring animation for CTA */

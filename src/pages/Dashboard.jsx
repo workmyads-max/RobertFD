@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverviewAdvanced';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
+import FundedDashboard from '../components/overview/FundedDashboard';
 import MyAccounts from '../components/dashboard/MyAccounts';
 import XTradingTerminalNew from '../components/dashboard/XTradingTerminalNew';
 import ProTradingTerminal from '../components/dashboard/ProTradingTerminal';
@@ -103,7 +104,7 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'terminal': return <ProTradingTerminal account={activeAccount || primaryActiveAccount} />;
@@ -143,12 +144,13 @@ export default function Dashboard() {
     }
   };
 
-  const isTerminal = activePage === 'terminal';
+  const isTerminal  = activePage === 'terminal';
+  const isOverview  = activePage === 'overview';
 
   return (
     <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
-      {/* Animated trading background */}
-      {!isTerminal && <TradingBackground />}
+      {/* Animated trading background — skip on overview & terminal (they have their own) */}
+      {!isTerminal && !isOverview && <TradingBackground />}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
@@ -168,7 +170,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : 'p-6 md:p-8 max-w-[1400px] mx-auto'}>
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-6 md:p-8 max-w-[1400px] mx-auto'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
