@@ -645,27 +645,6 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
           )}
         </div>
 
-        {/* SELL/BUY Price Row with Lots Control */}
-        <div className="flex-shrink-0 flex items-center h-12" style={{ background: 'rgba(6,8,16,0.98)' }}>
-          <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #0066ff, #0052cc)' }}>
-            <div className="text-[9px] font-mono text-white/80">SELL</div>
-            <div className="text-sm font-black text-white">{currentPrice?.bid?.toFixed(2) || '0.00'}</div>
-          </div>
-          <div className="flex flex-col items-center justify-center px-3 py-2 gap-1" style={{ background: '#000' }}>
-            <button onClick={() => setLots(Math.max(0.01, lots - 0.01))} className="text-white/60 hover:text-white">
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <span className="text-xs font-bold text-white w-8 text-center">{lots.toFixed(2)}</span>
-            <button onClick={() => setLots(lots + 0.01)} className="text-white/60 hover:text-white">
-              <ChevronDown className="w-3 h-3 rotate-180" />
-            </button>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #00b981, #059669)' }}>
-            <div className="text-[9px] font-mono text-white/80">BUY</div>
-            <div className="text-sm font-black text-white">{currentPrice?.ask?.toFixed(2) || '0.00'}</div>
-          </div>
-        </div>
-
         {/* Mobile Quick Trade Panel */}
         <div className="flex-shrink-0 p-3 border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
           <div className="grid grid-cols-3 gap-2 mb-2">

@@ -38,7 +38,7 @@ import AdminLiveChat from '../components/admin/AdminLiveChat';
 import AdminUserManagement from '../components/admin/AdminUserManagement';
 import DashboardPopupNotification from '../components/dashboard/DashboardPopupNotification';
 import KYC from '../components/dashboard/KYC';
-import LiveChat from '../components/dashboard/LiveChat';
+
 import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
@@ -158,7 +158,7 @@ export default function Dashboard() {
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
-      <LiveChat user={user} />
+
 
       <div className="flex flex-1 overflow-hidden relative z-10">
         <DashboardSidebar
