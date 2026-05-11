@@ -81,11 +81,30 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         )}
         {/* Collapse toggle button */}
         {!collapsed && (
-          <button onClick={() => setCollapsed?.(true)} title="Collapse"
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg flex items-center justify-center text-white/20 hover:text-white/60 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <PanelLeftClose className="w-3.5 h-3.5" />
-          </button>
+          <motion.button 
+            onClick={() => setCollapsed?.(true)} 
+            title="Collapse"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 group px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider transition-all"
+            style={{
+              background: 'rgba(255,92,0,0.08)',
+              border: '1px solid rgba(255,92,0,0.2)',
+              color: '#FF5C00',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(255,92,0,0.15)';
+              e.currentTarget.style.borderColor = 'rgba(255,92,0,0.35)';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(255,92,0,0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(255,92,0,0.08)';
+              e.currentTarget.style.borderColor = 'rgba(255,92,0,0.2)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+            <PanelLeftClose className="w-3 h-3" />
+            <span>Collapse</span>
+          </motion.button>
         )}
       </div>
 
