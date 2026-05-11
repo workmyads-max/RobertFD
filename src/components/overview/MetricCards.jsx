@@ -25,9 +25,10 @@ function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
       whileHover={{ y: -3, scale: 1.01 }}
       className="relative rounded-2xl p-5 overflow-hidden group cursor-default"
       style={{
-        background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'linear-gradient(145deg, rgba(15,25,52,0.97), rgba(18,30,60,0.95))',
+        border: '1px solid rgba(255,255,255,0.1)',
         backdropFilter: 'blur(24px)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
       }}
     >
       <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
@@ -36,7 +37,7 @@ function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
         style={{ background: `radial-gradient(circle at top left, ${accent}08, transparent 60%)` }} />
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/30">{label}</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/50">{label}</span>
           <div className="w-8 h-8 rounded-xl flex items-center justify-center relative"
             style={{ background: `${accent}12`, border: `1px solid ${accent}20` }}>
             {pulse && (
@@ -53,7 +54,7 @@ function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
         <div className="text-2xl font-bold tracking-tight text-white mb-1.5" style={{ fontVariantNumeric: 'tabular-nums' }}>
           {value}
         </div>
-        {sub && <div className="text-[11px] text-white/30 font-mono">{sub}</div>}
+        {sub && <div className="text-[11px] text-white/45 font-mono">{sub}</div>}
       </div>
     </motion.div>
   );
@@ -75,8 +76,8 @@ function TotalPnlCard({ pnl, floatingPnl, equity, balance, i }) {
       className="relative rounded-2xl overflow-hidden group cursor-default"
       style={{
         background: isLiveProfit
-          ? 'linear-gradient(145deg, rgba(2,22,14,0.99), rgba(3,28,18,0.97))'
-          : 'linear-gradient(145deg, rgba(30,5,5,0.99), rgba(20,5,5,0.97))',
+          ? 'linear-gradient(145deg, rgba(5,35,22,0.99), rgba(6,42,26,0.97))'
+          : 'linear-gradient(145deg, rgba(42,8,8,0.99), rgba(32,7,7,0.97))',
         border: `1px solid ${accent}40`,
         backdropFilter: 'blur(24px)',
         boxShadow: `0 0 30px ${accent}18`,
@@ -149,10 +150,10 @@ function DailyPnlCard({ dailyPnl, floatingPnl, dailyDDPct, ddLimit, accountSize,
       className="relative rounded-2xl overflow-hidden group cursor-default col-span-2 md:col-span-1"
       style={{
         background: ddBreached
-          ? 'linear-gradient(145deg, rgba(30,5,5,0.99), rgba(20,5,5,0.97))'
-          : ddWarning ? 'linear-gradient(145deg, rgba(25,12,3,0.99), rgba(18,10,3,0.97))'
-          : isNeg ? 'linear-gradient(145deg, rgba(20,12,2,0.99), rgba(15,10,2,0.97))'
-          : 'linear-gradient(145deg, rgba(2,22,14,0.99), rgba(3,28,18,0.97))',
+          ? 'linear-gradient(145deg, rgba(42,8,8,0.99), rgba(32,7,7,0.97))'
+          : ddWarning ? 'linear-gradient(145deg, rgba(38,18,4,0.99), rgba(28,14,4,0.97))'
+          : isNeg ? 'linear-gradient(145deg, rgba(30,18,4,0.99), rgba(22,14,4,0.97))'
+          : 'linear-gradient(145deg, rgba(5,35,22,0.99), rgba(6,42,26,0.97))',
         border: `1px solid ${accent}${isGreen ? '50' : '30'}`,
         backdropFilter: 'blur(24px)',
         boxShadow: ddBreached ? `0 0 30px ${accent}25` : isGreen ? `0 0 24px ${accent}18` : 'none',

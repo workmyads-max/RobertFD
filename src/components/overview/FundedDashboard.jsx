@@ -17,6 +17,7 @@ import AccountTimeline      from './AccountTimeline.jsx';
 import AIInsightsPanel      from './AIInsightsPanel.jsx';
 import LiveTickerBar        from './LiveTickerBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
+import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -56,10 +57,10 @@ function AccountInfoStrip({ account }) {
   return (
     <motion.div key={account.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
       className="flex overflow-x-auto rounded-xl border divide-x"
-      style={{ background: 'rgba(10,14,26,0.8)', borderColor: 'rgba(255,255,255,0.06)', divideColor: 'rgba(255,255,255,0.04)', scrollbarWidth: 'none' }}>
+      style={{ background: 'rgba(18,28,56,0.85)', borderColor: 'rgba(255,255,255,0.12)', scrollbarWidth: 'none', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
       {items.map(item => (
-        <div key={item.label} className="flex-1 px-4 py-3 min-w-[80px] flex-shrink-0 border-r border-white/[0.04]">
-          <div className="text-[8px] font-mono uppercase text-white/20 tracking-widest mb-1">{item.label}</div>
+        <div key={item.label} className="flex-1 px-4 py-3 min-w-[80px] flex-shrink-0 border-r border-white/[0.08]">
+          <div className="text-[8px] font-mono uppercase text-white/40 tracking-widest mb-1">{item.label}</div>
           <div className="text-[11px] font-semibold text-orange-400 whitespace-nowrap">{item.value}</div>
         </div>
       ))}
@@ -84,8 +85,8 @@ function QuickActions({ onNavigate }) {
             onClick={() => onNavigate?.(a.page)}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.04 }}
-            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-white/60 hover:text-white/90 transition-colors"
-            style={{ background: 'rgba(10,16,32,0.97)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors"
+            style={{ background: 'rgba(18,30,62,0.95)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: `${a.color}12`, border: `1px solid ${a.color}20` }}>
               <Icon className="w-4 h-4" style={{ color: a.color }} />
@@ -140,22 +141,45 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 5000,
   });
 
-  const rules = getAccountRules(selectedAccount);
   const stats = useAccountStats(selectedAccount, trades);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ background: 'linear-gradient(160deg,#030812,#040d1a)' }}>
+      <div className="flex items-center justify-center h-64" style={{ background: 'linear-gradient(160deg,#0c1628,#0f1e38)' }}>
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
           className="w-7 h-7 rounded-full border-2 border-primary/20 border-t-primary" />
       </div>
     );
   }
 
+  // Derive open trades for floating P&L widget
+  const openTrades = trades.filter(t => t.status === 'open');
+  const floatPnl = openTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const accountSize = selectedAccount?.account_size || 100000;
+  const balance = selectedAccount?.balance || accountSize;
+  const rules = getAccountRules(selectedAccount);
+
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #040810, #050d1c, #060f20)' }}>
+    <div className="relative min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #0c1628, #0f1e38, #111f3a)' }}>
       {/* Particles */}
       <ParticleBackground />
+
+      {/* Floating Daily P&L — shown when open positions exist */}
+      {selectedAccount && openTrades.length > 0 && (
+        <div className="fixed z-50" style={{ pointerEvents: 'none' }}>
+          <div style={{ pointerEvents: 'auto' }}>
+            <FloatingDailyPnL
+              floatPnl={floatPnl}
+              dailyClosedPnl={selectedAccount?.daily_pnl || 0}
+              accountSize={accountSize}
+              dailyDDLimit={rules?.dailyDDLimit || 5}
+              dailyOpenBalance={balance}
+              equity={balance + floatPnl}
+              visible={openTrades.length > 0}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Ticker */}
       <div className="relative z-20">
@@ -177,11 +201,11 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
             <div>
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-white/20">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-white/40">
                   {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
                 </span>
                 <button onClick={() => refetch()}
-                  className="flex items-center gap-1.5 text-[9px] font-mono text-white/20 hover:text-white/40 transition-colors">
+                  className="flex items-center gap-1.5 text-[9px] font-mono text-white/40 hover:text-white/60 transition-colors">
                   <RefreshCw className="w-3 h-3" /> Sync
                 </button>
               </div>
