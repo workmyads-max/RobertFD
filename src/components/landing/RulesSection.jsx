@@ -36,25 +36,25 @@ const rules = [
 ];
 
 export default function RulesSection() {
-  return (
-    <section className="relative py-32">
-      <div className="max-w-[1400px] mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-20"
-        >
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">Trading Rules</span>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-6">
-            Clear & Fair Rules
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+   return (
+     <section className="relative py-20 md:py-32">
+       <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+         <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true }}
+           className="text-center mb-14 md:mb-20"
+         >
+           <span className="text-xs font-mono text-primary uppercase tracking-widest">Trading Rules</span>
+           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-6">
+             Clear & Fair Rules
+           </h2>
+           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
             Transparent trading conditions designed for professional traders.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-w-6xl mx-auto">
           {rules.map((rule, i) => {
             const Icon = rule.icon;
             return (
@@ -64,13 +64,13 @@ export default function RulesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="glass rounded-2xl p-8 hover:-translate-y-1 transition-all duration-500 group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-                  <Icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                className="glass rounded-2xl p-5 sm:p-8 hover:-translate-y-1 transition-all duration-500 group"
+                >
+                <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-secondary flex items-center justify-center mb-4 sm:mb-6 group-hover:bg-primary/20 transition-colors">
+                  <Icon className="w-5 sm:w-6 h-5 sm:h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-                <h3 className="text-lg font-bold mb-3">{rule.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{rule.description}</p>
+                <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3">{rule.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{rule.description}</p>
               </motion.div>
             );
           })}

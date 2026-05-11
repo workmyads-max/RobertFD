@@ -76,18 +76,18 @@ export default function DashboardPreview({ dashImage }) {
           style={{ background: 'radial-gradient(ellipse, rgba(255,92,0,0.05) 0%, transparent 70%)' }} />
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">Dashboard Preview</span>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-6">
-            Your Command Center
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6">
+         <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true }}
+           className="text-center mb-12 md:mb-16"
+         >
+           <span className="text-xs font-mono text-primary uppercase tracking-widest">Dashboard Preview</span>
+           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-6">
+             Your Command Center
+           </h2>
+           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
             Institutional-grade analytics at your fingertips. Monitor challenges, track P&L, and request payouts in real time.
           </p>
         </motion.div>
@@ -167,7 +167,7 @@ export default function DashboardPreview({ dashImage }) {
                   {activeView === 'overview' && (
                     <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                       {/* Stats grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-5">
                         <StatCard label="Account Balance" value="$100,000" change="+4.28%" up icon={DollarSign} />
                         <StatCard label="Total P&L" value="$4,280" change="+4.28%" up icon={TrendingUp} />
                         <StatCard label="Daily Drawdown" value="1.2%" change="3.8% left" up icon={BarChart3} />

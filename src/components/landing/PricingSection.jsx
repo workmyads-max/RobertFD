@@ -126,8 +126,8 @@ export default function PricingSection() {
   const [activeTab, setActiveTab] = useState('two-step');
 
   return (
-    <section id="two-step-pricing" className="relative py-32">
-      <div className="max-w-[1400px] mx-auto px-6">
+    <section id="two-step-pricing" className="relative py-20 md:py-32">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -135,30 +135,30 @@ export default function PricingSection() {
           className="text-center mb-16"
         >
           <span className="text-xs font-mono text-primary uppercase tracking-widest">Transparent Pricing</span>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-4">
+           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4 mb-4">
             Choose Your Capital
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-10">
+           </h2>
+           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto mb-10">
             Industry-leading pricing with the best conditions for serious traders.
           </p>
 
           {/* Tab Switcher */}
-          <div className="inline-flex glass rounded-full p-1.5">
+          <div className="inline-flex glass rounded-full p-1 sm:p-1.5 flex-wrap justify-center gap-1">
             <button
               onClick={() => setActiveTab('two-step')}
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'two-step' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Two-Step Challenge
+              Two-Step
             </button>
             <button
               onClick={() => setActiveTab('instant')}
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'instant' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Instant Funding
+              Instant
             </button>
           </div>
         </motion.div>
@@ -170,7 +170,7 @@ export default function PricingSection() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex flex-wrap justify-center gap-3 mb-14"
+            className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10 sm:mb-14"
           >
             {(activeTab === 'two-step' ? twoStepFeatures : instantFeatures).map((f) => (
               <div key={f} className="flex items-center gap-2 px-4 py-2 glass-light rounded-full border border-border/30">
@@ -189,11 +189,11 @@ export default function PricingSection() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             id="instant-funding"
-            className={`grid gap-4 items-end ${
-              activeTab === 'two-step'
-                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
-                : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
-            } max-w-6xl mx-auto`}
+             className={`grid gap-2 sm:gap-4 items-end ${
+               activeTab === 'two-step'
+                 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+                 : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+             } max-w-6xl mx-auto`}
           >
             {(activeTab === 'two-step' ? twoStepPlans : instantPlans).map((plan, i) => (
               <PricingCard key={plan.capital} plan={plan} index={i} isInstant={activeTab === 'instant'} />

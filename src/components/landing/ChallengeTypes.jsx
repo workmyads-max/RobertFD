@@ -250,19 +250,19 @@ export default function ChallengeTypes() {
   ];
 
   return (
-    <section id="challenge" className="relative py-24 md:py-32 overflow-hidden">
-      {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
-        <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full blur-[120px] opacity-[0.05]"
-          style={{ background: 'radial-gradient(circle, #CCFF00, transparent)' }} />
-        {/* Grid lines */}
-        <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
-      </div>
+     <section id="challenge" className="relative py-20 md:py-32 overflow-hidden">
+       {/* Background glows */}
+       <div className="absolute inset-0 pointer-events-none overflow-hidden">
+         <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.06]"
+           style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
+         <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full blur-[120px] opacity-[0.05]"
+           style={{ background: 'radial-gradient(circle, #CCFF00, transparent)' }} />
+         {/* Grid lines */}
+         <div className="absolute inset-0 opacity-[0.025]"
+           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
+       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-6 relative z-10">
+       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 relative z-10">
 
         {/* Header */}
         <motion.div
@@ -277,19 +277,19 @@ export default function ChallengeTypes() {
             <Activity className="w-3 h-3" />
             Choose Your Capital
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mb-5 leading-[1.05]">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mb-5 leading-[1.05]">
             Three Paths to{' '}
             <span className="relative inline-block">
               <span className="gradient-text">Funded Trading</span>
             </span>
           </h2>
-          <p className="text-white/40 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-white/40 text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed">
             Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to 80% profit split.
           </p>
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-3 gap-5 mb-12">
+        <div className="grid md:grid-cols-3 gap-3 md:gap-5 mb-10 md:mb-12">
           {CHALLENGES.map((c, i) => (
             <ChallengeCard
               key={c.id}
@@ -361,7 +361,7 @@ export default function ChallengeTypes() {
         </motion.div>
 
         {/* Inline rules grid */}
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-3 gap-3 md:gap-5">
           {CHALLENGES.map((c, i) => {
             const Icon = c.icon;
             return (

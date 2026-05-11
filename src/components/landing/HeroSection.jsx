@@ -153,8 +153,8 @@ export default function HeroSection({ heroImage }) {
           style={{ background: 'rgba(255,92,0,0.25)' }} />
       </motion.div>
 
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left Content */}
           <div>
             <motion.div
@@ -169,7 +169,7 @@ export default function HeroSection({ heroImage }) {
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight mb-6">
                 Trade Bigger.
                 <br />
                 Scale Faster.{' '}
@@ -177,22 +177,22 @@ export default function HeroSection({ heroImage }) {
                 <span className="gradient-text">Powered by Robert Funds.</span>
               </h1>
 
-              <p className="text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">
                 An institutional-grade Singapore-based proprietary trading firm built for
                 the next generation of global traders. Access up to $200K in funded capital.
               </p>
 
-              <div className="flex flex-wrap gap-4 mb-12">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12">
                 <a
                   href="/challenges"
-                  className="relative inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all group glow-orange"
+                  className="relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all group glow-orange"
                 >
                   Start Challenge
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </a>
                 <a
                   href="/challenges?type=instant"
-                  className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-foreground border border-border rounded-full hover:border-primary/50 transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-foreground border border-border rounded-full hover:border-primary/50 transition-all"
                 >
                   Get Instant Funding
                 </a>
@@ -204,7 +204,7 @@ export default function HeroSection({ heroImage }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
             >
               {stats.map((stat, i) => (
                 <div key={stat.label} className="text-center lg:text-left">
