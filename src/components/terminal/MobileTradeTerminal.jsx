@@ -1,193 +1,131 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, Settings, TrendingUp, TrendingDown, Plus, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, Plus, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-// Mock data for demonstration
-const TOOLS = [
-  { id: 'crosshair', icon: '🎯' },
-  { id: 'measure', icon: '📏' },
-  { id: 'menu', icon: '☰' },
-  { id: 'back', icon: '↶' },
-  { id: 'tools', icon: '∿' },
-  { id: 'trend', icon: '📈' },
-  { id: 'text', icon: 'T' },
-  { id: 'emoji', icon: '😊' },
-  { id: 'magnet', icon: '🧲' },
-  { id: 'info', icon: 'ⓘ' },
-  { id: 'sound', icon: '🔊' },
-  { id: 'light', icon: '💡' },
-  { id: 'lock', icon: '🔒' },
-  { id: 'eye', icon: '👁' },
-];
+// Generate mock chart data
+const generateChartData = () => {
+  let price = 80800;
+  return Array.from({ length: 50 }).map((_, i) => {
+    price += (Math.random() - 0.48) * 50;
+    return { time: i, price: Math.round(price * 100) / 100, volume: Math.floor(Math.random() * 1000) + 500 };
+  });
+};
 
 export default function MobileTradeTerminal() {
   const [symbol, setSymbol] = useState('BTCUSD');
   const [lots, setLots] = useState(0.01);
   const [timeframe, setTimeframe] = useState('5m');
   const [showVolume, setShowVolume] = useState(false);
-  const [activeTab, setActiveTab] = useState('chart');
+  const [chartData] = useState(generateChartData());
+  const currentPrice = 80642.20;
+  const priceChange = -157.80;
+  const priceChangePercent = -0.19;
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white" style={{ fontFamily: "'Roboto', sans-serif" }}>
-      {/* Status Bar */}
-      <div className="px-4 py-2 flex justify-between items-center text-xs border-b" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a' }}>
-        <span>10:42</span>
-        <div className="flex gap-1">
-          <span>📶</span>
-          <span>📡</span>
-          <span className="text-green-400">30%</span>
-        </div>
-      </div>
-
-      {/* Symbol & Tabs Bar */}
-      <div className="px-3 py-2 border-b flex justify-between items-center" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0f0f0f' }}>
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold" style={{ background: 'rgba(100,150,255,0.1)', border: '1px solid rgba(100,150,255,0.3)' }}>
-          {symbol} <ChevronDown className="w-3 h-3" />
+    <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-2 border-b flex justify-between items-center" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a' }}>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold" style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>
+          {symbol} <ChevronDown className="w-3.5 h-3.5" />
         </button>
-        <div className="flex gap-1 text-[10px]">
-          <div className="px-2 py-1 text-center" style={{ color: '#888' }}>
-            <div>⊞</div>
-            <div>MARKETS</div>
-          </div>
-          <div className="px-2 py-1 text-center" style={{ color: '#888' }}>
-            <div>📊</div>
-            <div>TRADES</div>
-          </div>
-          <div className="px-2 py-1 text-center" style={{ color: '#888' }}>
-            <div>💼</div>
-            <div>P&L</div>
-            <div>$0.00</div>
-          </div>
-        </div>
-        <div className="text-[10px] text-center" style={{ color: '#888' }}>
-          <div>💰</div>
-          <div>$0.00</div>
-        </div>
+        <div className="text-[10px] font-mono" style={{ color: '#666' }}>Time</div>
       </div>
 
-      {/* Chart Tools Bar */}
-      <div className="px-3 py-2 flex justify-between items-center border-b" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a' }}>
-        <div className="flex gap-2 items-center text-xs">
-          <span className="font-bold">{timeframe}</span>
-          <button style={{ color: '#888' }}>☰</button>
-          <button style={{ color: '#888' }}>∞</button>
-          <button style={{ color: '#888' }}>↶</button>
-        </div>
-        <span className="text-xs" style={{ color: '#888' }}>unnamed</span>
-        <button className="w-6 h-6 flex items-center justify-center rounded" style={{ border: '1px solid #555' }}>
-          ⚙
-        </button>
-      </div>
-
-      {/* Main Content - Left Sidebar + Chart + Right Ladder */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar Tools */}
-        <div className="w-12 border-r flex flex-col items-center py-2 gap-2" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#070707' }}>
-          {TOOLS.map((tool) => (
-            <button key={tool.id} className="w-8 h-8 flex items-center justify-center rounded text-xs hover:opacity-70 transition-opacity" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              {tool.icon}
-            </button>
-          ))}
-        </div>
-
-        {/* Chart Area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-black">
-          {/* Price Display */}
-          <div className="px-3 py-2 flex justify-between items-center text-sm border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-            <div className="flex items-center gap-1">
-              <span className="text-green-400 text-lg">+</span>
-              <span className="text-green-400 font-bold text-lg">80,642.20</span>
-              <span className="text-xs ml-1">0.00 (0.00%)</span>
+      {/* Price Bar */}
+      <div className="px-4 py-2 border-b flex justify-between items-center" style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#050505' }}>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono">📈</span>
+          <div>
+            <div className={`text-lg font-black ${priceChange < 0 ? 'text-red-400' : 'text-green-400'}`}>
+              {currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <span className="text-xs" style={{ color: '#888' }}>82,800.00</span>
-          </div>
-
-          {/* Volume Control */}
-          {!showVolume && (
-            <div className="px-3 py-2 flex justify-between items-center border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-              <span className="text-xs">Volume</span>
-              <button onClick={() => setShowVolume(!showVolume)} className="text-xs">
-                ↑
-              </button>
+            <div className={`text-xs font-mono ${priceChange < 0 ? 'text-red-400' : 'text-green-400'}`}>
+              {priceChange > 0 ? '+' : ''}{priceChange.toFixed(2)} ({priceChangePercent}%)
             </div>
-          )}
-
-          {/* Chart Placeholder */}
-          <div className="flex-1 relative px-3 overflow-y-auto" style={{ borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="absolute inset-0 flex items-center justify-center text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
-              📊 Chart Area
-            </div>
-
-            {/* Price Ladder on Right */}
-            <div className="absolute right-0 top-0 bottom-0 w-24 flex flex-col justify-between text-right pr-2 py-2 text-[10px]" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.8), transparent)' }}>
-              {['82,800.00', '82,600.00', '82,400.00', '82,200.00', '82,000.00', '81,800.00', '81,600.00', '81,400.00', '81,200.00', '81,000.00', '80,800.00'].map((price, i) => (
-                <div key={i} style={{ color: '#666' }}>{price}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Volume Chart */}
-          {showVolume && (
-            <div className="h-20 border-t flex items-end justify-center gap-0.5 px-2 py-1" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a' }}>
-              {Array.from({ length: 20 }).map((_, i) => (
-                <div key={i} className="flex-1" style={{ background: i % 3 === 0 ? '#10b981' : '#ef4444', height: `${30 + Math.random() * 50}%` }} />
-              ))}
-              <div className="absolute bottom-1 left-2 text-[10px]">🅣</div>
-              <div className="absolute bottom-1 right-2 text-[10px]">03:00 — 05:00</div>
-            </div>
-          )}
-
-          {/* Bottom Controls */}
-          <div className="px-3 py-2 border-t flex justify-between items-center text-xs" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a', color: '#888' }}>
-            <button className="flex items-center gap-1">Date Range 📅</button>
-            <span>04:42:26 UTC+1</span>
-            <div className="flex gap-1">
-              <button>%</button>
-              <button>log</button>
-              <button>auto</button>
-            </div>
-          </div>
-
-          {/* Order Controls */}
-          <div className="px-3 py-2 border-t flex justify-between items-center text-[10px]" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#0a0a0a', color: '#888' }}>
-            <button>MARKET 📊</button>
-            <button>RISK</button>
-            <button>SL</button>
-            <button>TP</button>
-            <button>↑</button>
-          </div>
-
-          {/* Bottom Info */}
-          <div className="px-3 py-1 text-center text-xs" style={{ background: '#0a0a0a', color: '#888' }}>
-            Init. Margin: -$403.22 (0.40%)
           </div>
         </div>
       </div>
 
-      {/* Trading Controls Bottom */}
-      <div className="px-3 py-3 flex items-center justify-between gap-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#000' }}>
-        {/* SELL Button */}
-        <button className="flex-1 py-3 rounded-lg font-bold text-white flex flex-col items-center gap-0.5" style={{ background: '#ef4444' }}>
-          <TrendingDown className="w-4 h-4" />
-          <span>80,642.20</span>
-          <span className="text-xs">SELL</span>
-        </button>
-
-        {/* Lot Size Control */}
-        <div className="flex flex-col items-center gap-2">
-          <button className="flex items-center gap-2 px-2 py-1 rounded" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
-            <Minus className="w-3 h-3" />
-            <span className="text-sm font-bold">{lots}</span>
-            <Plus className="w-3 h-3" />
+      {/* Timeframe Selector */}
+      <div className="px-4 py-1.5 border-b flex gap-1 overflow-x-auto" style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#0a0a0a', scrollbarWidth: 'none' }}>
+        {['1m', '5m', '15m', '1h', '4h', '1D'].map((tf) => (
+          <button
+            key={tf}
+            onClick={() => {}}
+            className={`px-2.5 py-1 rounded text-xs font-mono whitespace-nowrap transition-all ${tf === timeframe ? 'font-bold' : ''}`}
+            style={{
+              background: tf === timeframe ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+              color: tf === timeframe ? '#3b82f6' : '#666',
+              border: `1px solid ${tf === timeframe ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`
+            }}>
+            {tf}
           </button>
-          <span className="text-[10px]" style={{ color: '#888' }}>Lots</span>
+        ))}
+      </div>
+
+      {/* Chart - Main Area */}
+      <div className="flex-1 px-3 py-3 overflow-hidden" style={{ background: '#0f0f0f' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+            <defs>
+              <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="time" stroke="#444" style={{ fontSize: '10px' }} />
+            <YAxis stroke="#444" style={{ fontSize: '10px' }} domain={['dataMin - 100', 'dataMax + 100']} />
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke="#3b82f6"
+              dot={false}
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorPrice)"
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Volume Chart */}
+      {showVolume && (
+        <div className="h-16 px-3 py-1.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#0a0a0a' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <Bar dataKey="volume" fill="#6b7280" radius={[2, 2, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Lot Size & Trading Controls */}
+      <div className="px-4 py-4 border-t flex items-center justify-between gap-3" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#000' }}>
+        {/* SELL */}
+        <button className="flex-1 py-3 rounded-lg font-bold text-white text-sm transition-all hover:opacity-90 active:scale-95" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>
+          <div className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>80,642.20</div>
+          SELL
+        </button>
+
+        {/* Lot Control */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
+            <button onClick={() => setLots(Math.max(0.01, lots - 0.01))} className="text-xs hover:opacity-70">
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-bold w-8 text-center">{lots.toFixed(2)}</span>
+            <button onClick={() => setLots(lots + 0.01)} className="text-xs hover:opacity-70">
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <span className="text-[9px]" style={{ color: '#666' }}>Lots</span>
         </div>
 
-        {/* BUY Button */}
-        <button className="flex-1 py-3 rounded-lg font-bold text-white flex flex-col items-center gap-0.5" style={{ background: '#10b981' }}>
-          <span className="text-xs">80,644.13</span>
-          <TrendingUp className="w-4 h-4" />
-          <span>BUY</span>
+        {/* BUY */}
+        <button className="flex-1 py-3 rounded-lg font-bold text-white text-sm transition-all hover:opacity-90 active:scale-95" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+          <div className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>80,644.13</div>
+          BUY
         </button>
       </div>
     </div>
