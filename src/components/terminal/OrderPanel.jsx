@@ -85,20 +85,19 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
         </div>
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="text-[7px] text-slate-600 uppercase tracking-widest">Bid</span>
-            <span className="text-[12px] font-bold text-red-400">{p?.bid?.toFixed(inst?.digits) || '—'}</span>
+            <span className="text-[7px] text-red-500/70 uppercase tracking-widest font-bold">SELL (Bid)</span>
+            <span className="text-[13px] font-black text-red-400">{p?.bid?.toFixed(inst?.digits) || '—'}</span>
           </div>
-          <div className="w-px h-8 bg-white/[0.06]" />
-          <div className="flex flex-col">
-            <span className="text-[7px] text-slate-600 uppercase tracking-widest">Ask</span>
-            <span className="text-[12px] font-bold text-emerald-400">{p?.ask?.toFixed(inst?.digits) || '—'}</span>
-          </div>
-          <div className="w-px h-8 bg-white/[0.06]" />
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center">
             <span className="text-[7px] text-slate-600 uppercase tracking-widest">Spread</span>
-            <span className="text-[12px] font-bold text-orange-400">
+            <span className="text-[11px] font-bold text-orange-400">
               {p?.bid && p?.ask ? ((p.ask - p.bid) / (inst?.digits >= 4 ? 0.0001 : 0.01)).toFixed(1) : '—'}
             </span>
+            <span className="text-[6px] text-slate-700">pips</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[7px] text-emerald-500/70 uppercase tracking-widest font-bold">BUY (Ask)</span>
+            <span className="text-[13px] font-black text-emerald-400">{p?.ask?.toFixed(inst?.digits) || '—'}</span>
           </div>
         </div>
       </div>

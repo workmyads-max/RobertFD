@@ -321,7 +321,16 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       if (!pos) return prev;
       const newBalance = parseFloat((sessionBalance + pnl).toFixed(2));
       setSessionBalance(newBalance);
-      if (id?.length > 10) base44.entities.TradeRecord.update(id, { status: 'closed', close: cp, pnl, close_reason: reason, close_time: new Date().toLocaleTimeString() }).catch(() => {});
+
+      // Partial close: if pnl was computed on partial lots (reason === 'Partial')
+      // we still close the full position DB record but add a note
+      if (id && typeof id === 'string' && id.length > 10) {
+        base44.entities.TradeRecord.update(id, {
+          status: 'closed', close: cp, pnl,
+          close_reason: reason,
+          close_time: new Date().toLocaleTimeString(),
+        }).catch(() => {});
+      }
       setClosedTrades(ct => {
         const updated = [{ ...pos, close: cp, pnl, closeTime: new Date().toLocaleTimeString(), reason }, ...ct.slice(0, 199)];
         setTimeout(() => syncDB(newBalance, updated, prev.filter(p => p.id !== id), newBalance + floatPnl - pnl), 100);
@@ -495,7 +504,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
           </div>
 
           {/* Positions Table */}
-          <div className="h-44 xl:h-52 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="h-48 xl:h-56 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}

@@ -80,8 +80,8 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
       <div className="grid px-2 py-1.5 text-[7px] font-mono text-slate-600 uppercase tracking-wider border-b flex-shrink-0"
         style={{ gridTemplateColumns: '1fr 52px 52px', borderColor: 'rgba(255,255,255,0.04)' }}>
         <span>Symbol</span>
-        <span className="text-center">Bid</span>
-        <span className="text-right">Ask</span>
+        <span className="text-center text-red-500/60">Sell</span>
+        <span className="text-right text-emerald-500/60">Buy</span>
       </div>
 
       {/* Instrument rows */}
@@ -131,12 +131,12 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
                 </div>
               </div>
 
-              {/* Bid */}
+              {/* Sell = Bid (you sell at bid) */}
               <div className="text-center text-[9px] text-red-400/80">
                 {p?.bid != null ? <PriceFlash value={p.bid} digits={inst.digits} /> : <span className="text-slate-700">—</span>}
               </div>
 
-              {/* Ask */}
+              {/* Buy = Ask (you buy at ask) */}
               <div className="text-right text-[9px] text-emerald-400/80">
                 {p?.ask != null ? <PriceFlash value={p.ask} digits={inst.digits} /> : <span className="text-slate-700">—</span>}
               </div>

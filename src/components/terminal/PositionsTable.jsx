@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Clock, CheckSquare, XSquare, Trash2, AlertTriangle } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Clock, Trash2, Scissors } from 'lucide-react';
 import { INSTRUMENTS, calcPnl } from './terminalConfig';
 
 function StatusBadge({ reason }) {
@@ -22,6 +22,8 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
   const [tab, setTab] = useState('positions');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  // Partial close state: { [posId]: lotString }
+  const [partialLots, setPartialLots] = useState({});
 
   const totalPnl = positions.reduce((s, pos) => {
     const p = prices[pos.symbol];
@@ -126,26 +128,26 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
                   onClick={closeSelected}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold text-red-400 transition-all"
                   style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
-                  <X className="w-3 h-3" /> Close {selectedIds.size}
+                  <X className="w-3 h-3" /> Close Selected ({selectedIds.size})
                 </motion.button>
               )}
               <button onClick={() => onBulkClose('profit')} disabled={profitPos.length === 0}
-                className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all disabled:opacity-30"
-                style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}
+                className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all disabled:opacity-25"
+                style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.35)' }}
                 title="Close all profitable positions">
-                ✓ Profit ({profitPos.length})
+                Close Profit ({profitPos.length})
               </button>
               <button onClick={() => onBulkClose('loss')} disabled={lossPos.length === 0}
-                className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all disabled:opacity-30"
-                style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}
+                className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all disabled:opacity-25"
+                style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)' }}
                 title="Close all losing positions">
-                ✗ Loss ({lossPos.length})
+                Close Loss ({lossPos.length})
               </button>
               <button onClick={() => onBulkClose('all')}
                 className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all"
-                style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.35)' }}
                 title="Close all positions">
-                Close All
+                Close All ({positions.length})
               </button>
             </>
           )}
@@ -181,7 +183,7 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
                   <input type="checkbox" checked={selectAll} onChange={handleSelectAll}
                     className="w-3 h-3 accent-primary cursor-pointer" />
                 </th>
-                {['Symbol','Type','Lots','Entry','Current','P&L $','Margin','SL','TP','Time',''].map(h => (
+                {['Symbol','Type','Lots','Entry','Current','P&L $','Margin','SL','TP','Time','Partial Close',''].map(h => (
                   <th key={h} className={TH}>{h}</th>
                 ))}
               </tr>
@@ -227,6 +229,41 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
                     <td className={`${TD} text-red-400/70`}>{pos.sl || <span className="text-slate-700">—</span>}</td>
                     <td className={`${TD} text-emerald-400/70`}>{pos.tp || <span className="text-slate-700">—</span>}</td>
                     <td className={`${TD} text-slate-600`}>{pos.time}</td>
+                    {/* Partial Close */}
+                    <td className={TD}>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          max={pos.lots}
+                          placeholder={String(pos.lots)}
+                          value={partialLots[pos.id] || ''}
+                          onChange={e => setPartialLots(prev => ({ ...prev, [pos.id]: e.target.value }))}
+                          onClick={e => e.stopPropagation()}
+                          className="w-14 rounded px-1.5 py-0.5 text-[9px] font-mono text-white outline-none"
+                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}
+                        />
+                        <button
+                          onClick={() => {
+                            const partLots = parseFloat(partialLots[pos.id]);
+                            if (!partLots || partLots <= 0 || partLots > pos.lots) return;
+                            const partPnl = calcPnl({ ...pos, lots: partLots }, cp);
+                            if (partLots >= pos.lots) {
+                              onClose(pos.id, cp, pnl, 'Manual');
+                            } else {
+                              // partial close: close original, reopen remainder
+                              onClose(pos.id, cp, partPnl, 'Partial');
+                            }
+                            setPartialLots(prev => { const n = { ...prev }; delete n[pos.id]; return n; });
+                          }}
+                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-bold text-orange-300"
+                          style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.35)' }}>
+                          <Scissors className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </td>
+                    {/* Full Close */}
                     <td className={TD}>
                       <button onClick={() => onClose(pos.id, cp, pnl)}
                         className="w-5 h-5 flex items-center justify-center rounded transition-all opacity-0 group-hover:opacity-100"
