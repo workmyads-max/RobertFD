@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
+import MobileTradeTerminal from './components/terminal/MobileTradeTerminal';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -43,6 +44,7 @@ const AuthenticatedApp = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/challenges" element={<ChallengeSelect />} />
+      <Route path="/terminal" element={<MobileTradeTerminal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
