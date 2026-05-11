@@ -595,8 +595,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                 </div>
               </div>
 
-              {/* Chart — expanded to match yellow line level */}
-              <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14' }}>
+              {/* Chart — height constrained to yellow line */}
+              <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14', maxHeight: '320px' }}>
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
