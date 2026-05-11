@@ -22,7 +22,10 @@ const TF_OPTS = [
 ];
 
 // ── Account bar (scrollable on mobile) ───────────────────────────────────────
-function AccountBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked }) {
+function AccountBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked, allAccounts, onAccountChange }) {
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const switchableAccounts = (allAccounts || []).filter(a => ['active','funded','passed'].includes(a.status) && a.id !== account?.id);
+
   const items = [
     { label: 'Account',   val: account?.account_id || 'N/A',   color: 'text-primary font-black' },
     { label: 'Balance',   val: `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: 'text-foreground' },
@@ -35,13 +38,35 @@ function AccountBar({ account, balance, equity, floatPnl, usedMargin, freeMargin
   ];
 
   return (
-    <div className="flex items-stretch border-b border-white/[0.08] overflow-x-auto flex-shrink-0"
+    <div className="flex items-stretch border-b border-white/[0.08] overflow-x-auto flex-shrink-0 relative"
       style={{ background: 'rgba(8,12,24,0.99)', scrollbarWidth: 'none' }}>
-      {items.map(item => (
-        <div key={item.label} className="flex flex-col px-2 md:px-3 py-2 md:py-2.5 border-r border-white/[0.04] flex-shrink-0 min-w-[64px]">
-          <span className="text-[8px] md:text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">{item.label}</span>
-          <span className={`text-[11px] md:text-[13px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
-        </div>
+      {items.map((item, idx) => (
+        item.label === 'Account' && switchableAccounts.length > 0 ? (
+          <div key={item.label} className="relative flex flex-col px-2 md:px-3 py-2 md:py-2.5 border-r border-white/[0.04] flex-shrink-0 min-w-[64px]">
+            <span className="text-[8px] md:text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">{item.label}</span>
+            <button onClick={() => setShowDropdown(v => !v)}
+              className="text-[11px] md:text-[13px] font-mono font-black text-primary whitespace-nowrap flex items-center gap-1 hover:text-orange-300 transition-colors">
+              {item.val} <span className="text-[9px]">▾</span>
+            </button>
+            {showDropdown && (
+              <div className="absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-xl overflow-hidden shadow-2xl"
+                style={{ background: 'rgba(8,12,24,0.99)', border: '1px solid rgba(255,92,0,0.3)' }}>
+                {switchableAccounts.map(a => (
+                  <button key={a.id} onClick={() => { onAccountChange(a); setShowDropdown(false); }}
+                    className="w-full text-left px-3 py-2 text-[11px] font-mono text-slate-300 hover:text-white hover:bg-primary/10 transition-colors border-b border-white/[0.04] last:border-0">
+                    <span className="font-bold text-primary">{a.account_id}</span>
+                    <span className="text-slate-500 ml-1">${(a.account_size||0).toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div key={item.label} className="flex flex-col px-2 md:px-3 py-2 md:py-2.5 border-r border-white/[0.04] flex-shrink-0 min-w-[64px]">
+            <span className="text-[8px] md:text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">{item.label}</span>
+            <span className={`text-[11px] md:text-[13px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
+          </div>
+        )
       ))}
       {accountBlocked && (
         <div className="ml-auto flex items-center px-3 bg-red-900/30 border-l border-red-500/30 flex-shrink-0">
@@ -108,7 +133,11 @@ async function loadTrades(accountId) {
   return { positions, pending, closed };
 }
 
-export default function ProTradingTerminal({ account }) {
+export default function ProTradingTerminal({ account: initialAccount, allAccounts = [] }) {
+  const [account, setAccount] = React.useState(initialAccount);
+
+  // Keep in sync if parent updates
+  React.useEffect(() => { if (initialAccount) setAccount(initialAccount); }, [initialAccount?.id]);
   const isActive = !!(account && ['active', 'funded', 'passed'].includes(account.status));
   const prices   = useLivePrices();
   const rules    = getAccountRules(account);
@@ -493,6 +522,15 @@ export default function ProTradingTerminal({ account }) {
         floatPnl={floatPnl} usedMargin={usedMargin} freeMargin={freeMargin}
         marginLevel={isFinite(marginLevel) ? marginLevel : 9999}
         rules={rules} accountBlocked={accountBlocked}
+        allAccounts={allAccounts}
+        onAccountChange={(newAcc) => {
+          setAccount(newAcc);
+          setPositions([]); setPendingOrders([]); setClosedTrades([]);
+          setSessionBalance(newAcc.balance || newAcc.account_size || 100000);
+          setTradesLoaded(false);
+          setAccountBlocked(newAcc.status === 'failed');
+          setBreachReason('');
+        }}
       />
 
       {/* Session Bar */}

@@ -56,6 +56,7 @@ function DailyPnlCard({ dailyPnl, dailyDDPct, ddLimit, accountSize, i }) {
   const remainingUsd = (remaining / 100) * accountSize;
 
   const accentColor = ddBreached ? '#ef4444' : ddWarning ? '#f97316' : isNeg ? '#f59e0b' : '#00f5a0';
+  const isGreen = !ddBreached && !ddWarning && !isNeg;
 
   return (
     <motion.div
@@ -69,25 +70,25 @@ function DailyPnlCard({ dailyPnl, dailyDDPct, ddLimit, accountSize, i }) {
           ? 'linear-gradient(145deg, rgba(30,5,5,0.99), rgba(20,5,5,0.97))'
           : ddWarning
           ? 'linear-gradient(145deg, rgba(25,12,3,0.99), rgba(18,10,3,0.97))'
-          : 'linear-gradient(145deg, rgba(0,14,12,0.99), rgba(5,18,15,0.97))',
-        border: `1px solid ${accentColor}30`,
+          : isNeg
+          ? 'linear-gradient(145deg, rgba(20,12,2,0.99), rgba(15,10,2,0.97))'
+          : 'linear-gradient(145deg, rgba(2,22,14,0.99), rgba(3,28,18,0.97))',
+        border: `1px solid ${accentColor}${isGreen ? '50' : '30'}`,
         backdropFilter: 'blur(24px)',
-        boxShadow: ddBreached ? `0 0 30px ${accentColor}20` : ddWarning ? `0 0 20px ${accentColor}15` : 'none',
+        boxShadow: ddBreached ? `0 0 30px ${accentColor}25` : ddWarning ? `0 0 20px ${accentColor}20` : isGreen ? `0 0 24px ${accentColor}18` : 'none',
       }}
     >
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-[2px]"
         style={{ background: `linear-gradient(90deg, transparent, ${accentColor}90, transparent)` }} />
 
-      {/* Animated background pulse when warning */}
-      {(ddWarning || ddBreached) && (
-        <motion.div
-          animate={{ opacity: [0.03, 0.08, 0.03] }}
-          transition={{ duration: 2.5, repeat: Infinity }}
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at center, ${accentColor}30, transparent 70%)` }}
-        />
-      )}
+      {/* Animated background pulse */}
+      <motion.div
+        animate={{ opacity: ddBreached || ddWarning ? [0.05, 0.12, 0.05] : isGreen ? [0.02, 0.06, 0.02] : [0, 0, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at center, ${accentColor}35, transparent 70%)` }}
+      />
 
       <div className="relative z-10 p-5">
         <div className="flex items-center justify-between mb-3">

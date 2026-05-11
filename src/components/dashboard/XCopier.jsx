@@ -80,6 +80,7 @@ export default function XCopier() {
   // Track which trade IDs we've already copied to avoid duplicates
   const copiedTradeIds = useRef(new Set(saved.copiedIds || []));
   const subscriptionRef = useRef(null);
+  const masterToSlaveMapRef = useRef({});
 
   const addLog = useCallback((msg, ok = true) => {
     setLog(prev => {
@@ -121,11 +122,34 @@ export default function XCopier() {
     addLog(`X-Copier active: ${master.account_id} → ${slave.account_id}`);
 
     const unsubscribe = base44.entities.TradeRecord.subscribe(async (event) => {
-      // Only react to new trades opened on master account
-      if (event.type !== 'create') return;
       if (!event.data) return;
       const trade = event.data;
-      if (trade.account_id !== master.id && trade.account_id !== master.account_id) return;
+      const isMasterAccount = trade.account_id === master.id || trade.account_id === master.account_id;
+
+      // ── CLOSE mirroring: when master trade is closed, close the slave copy ──
+      if (event.type === 'update' && isMasterAccount && trade.status === 'closed') {
+        const slaveCopyId = masterToSlaveMapRef.current[trade.id];
+        if (slaveCopyId) {
+          try {
+            await base44.entities.TradeRecord.update(slaveCopyId, {
+              status: 'closed',
+              close: trade.close,
+              pnl: trade.pnl || 0,
+              close_reason: trade.close_reason || 'Master Closed',
+              close_time: new Date().toLocaleTimeString(),
+            });
+            addLog(`⟵ CLOSED slave copy for ${trade.symbol} (reason: ${trade.close_reason || 'Master Closed'})`, true);
+            delete masterToSlaveMapRef.current[trade.id];
+          } catch (err) {
+            addLog(`✗ Close-mirror failed: ${err.message}`, false);
+          }
+        }
+        return;
+      }
+
+      // ── OPEN mirroring: new trade on master ──────────────────────────────
+      if (event.type !== 'create') return;
+      if (!isMasterAccount) return;
       if (trade.status !== 'open' && trade.status !== 'pending') return;
       if (trade.status === 'pending' && !copyPending) return;
       if (copiedTradeIds.current.has(trade.id)) return;
@@ -134,13 +158,12 @@ export default function XCopier() {
       copiedTradeIds.current.add(trade.id);
 
       const effectiveLots = calcEffectiveLots(trade.lots || 0.1);
-      const inst = INSTRUMENTS.find(i => i.symbol === trade.symbol);
       const lev = parseInt((slave.leverage || '1:100').replace('1:', '')) || 100;
       const margin = calcRequiredMargin(trade.symbol, effectiveLots, lev, trade.entry || 1);
 
       try {
         const user = await base44.auth.me().catch(() => null);
-        await base44.entities.TradeRecord.create({
+        const created = await base44.entities.TradeRecord.create({
           account_id: slave.id || slave.account_id,
           user_email: user?.email || '',
           trade_id: `COPY-${Date.now()}`,
@@ -155,6 +178,9 @@ export default function XCopier() {
           status: trade.status === 'pending' ? 'pending' : 'open',
           open_time: new Date().toLocaleTimeString(),
         });
+
+        // Map master trade ID → slave record ID for close mirroring
+        if (created?.id) masterToSlaveMapRef.current[trade.id] = created.id;
 
         setCopyCount(c => c + 1);
         setLiveStatus('copied');
