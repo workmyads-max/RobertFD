@@ -56,8 +56,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.08]"
-        style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.05), rgba(10,14,26,0))' }}>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.07]"
+        style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.06), transparent)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'linear-gradient(135deg, #FF5C00, #cc4900)', boxShadow: '0 4px 16px rgba(255,92,0,0.4)' }}>
           <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
@@ -225,7 +225,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
       {/* Desktop sidebar */}
       <div className="hidden md:flex flex-col w-56 border-r border-white/[0.08] h-screen sticky top-0"
-        style={{ background: 'rgba(10,14,26,0.98)', backdropFilter: 'blur(32px)' }}>
+        style={{ background: 'rgba(10,12,20,0.97)', backdropFilter: 'blur(40px)', borderColor: 'rgba(255,255,255,0.07)' }}>
         <SidebarContent />
       </div>
 
@@ -242,7 +242,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed left-0 top-0 bottom-0 z-50 w-56 md:hidden border-r border-white/5"
-              style={{ background: 'rgba(8,8,10,0.99)' }}
+              style={{ background: 'rgba(10,12,20,0.99)', backdropFilter: 'blur(40px)' }}
             >
               <SidebarContent />
             </motion.div>

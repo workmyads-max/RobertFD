@@ -29,8 +29,8 @@ function EmptyState({ onStartChallenge }) {
         style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' }}>
         <Shield className="w-9 h-9 text-primary/50" />
       </motion.div>
-      <h2 className="text-2xl font-bold text-white/90 mb-3 tracking-tight">No Active Accounts</h2>
-      <p className="text-[13px] text-white/30 mb-10 max-w-sm leading-relaxed font-light">
+      <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">No Active Accounts</h2>
+      <p className="text-[13px] text-muted-foreground mb-10 max-w-sm leading-relaxed font-light">
         Purchase a challenge to access the full funded trader platform — real-time analytics, live objectives, and institutional-grade tools.
       </p>
       <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onStartChallenge}
@@ -56,12 +56,12 @@ function AccountInfoStrip({ account }) {
   ];
   return (
     <motion.div key={account.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      className="flex overflow-x-auto rounded-xl border divide-x"
-      style={{ background: 'rgba(18,28,56,0.85)', borderColor: 'rgba(255,255,255,0.12)', scrollbarWidth: 'none', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+      className="flex overflow-x-auto rounded-xl border divide-x glass"
+      style={{ borderColor: 'rgba(255,255,255,0.1)', scrollbarWidth: 'none' }}>
       {items.map(item => (
-        <div key={item.label} className="flex-1 px-4 py-3 min-w-[80px] flex-shrink-0 border-r border-white/[0.08]">
-          <div className="text-[8px] font-mono uppercase text-white/40 tracking-widest mb-1">{item.label}</div>
-          <div className="text-[11px] font-semibold text-orange-400 whitespace-nowrap">{item.value}</div>
+        <div key={item.label} className="flex-1 px-4 py-3 min-w-[80px] flex-shrink-0 border-r border-white/[0.06]">
+          <div className="text-[8px] font-mono uppercase text-muted-foreground tracking-widest mb-1">{item.label}</div>
+          <div className="text-[11px] font-semibold text-primary whitespace-nowrap">{item.value}</div>
         </div>
       ))}
     </motion.div>
@@ -85,8 +85,7 @@ function QuickActions({ onNavigate }) {
             onClick={() => onNavigate?.(a.page)}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.04 }}
-            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors"
-            style={{ background: 'rgba(18,30,62,0.95)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>
+            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium glass-light hover:bg-white/[0.06] transition-all border border-white/[0.09] text-foreground/70 hover:text-foreground">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: `${a.color}12`, border: `1px solid ${a.color}20` }}>
               <Icon className="w-4 h-4" style={{ color: a.color }} />
@@ -145,7 +144,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64" style={{ background: 'linear-gradient(160deg,#0c1628,#0f1e38)' }}>
+      <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
           className="w-7 h-7 rounded-full border-2 border-primary/20 border-t-primary" />
       </div>
@@ -160,7 +159,14 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const rules = getAccountRules(selectedAccount);
 
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #0c1628, #0f1e38, #111f3a)' }}>
+    <div className="relative min-h-screen flex flex-col bg-background">
+      {/* Subtle radial glow like homepage */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full blur-[120px] opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[400px] rounded-full blur-[100px] opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #CCFF00, transparent)' }} />
+      </div>
       {/* Particles */}
       <ParticleBackground />
 
@@ -201,11 +207,11 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
             <div>
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-white/40">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
                   {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
                 </span>
                 <button onClick={() => refetch()}
-                  className="flex items-center gap-1.5 text-[9px] font-mono text-white/40 hover:text-white/60 transition-colors">
+                  className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
                   <RefreshCw className="w-3 h-3" /> Sync
                 </button>
               </div>

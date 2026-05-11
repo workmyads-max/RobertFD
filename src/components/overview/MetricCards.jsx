@@ -25,10 +25,10 @@ function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
       whileHover={{ y: -3, scale: 1.01 }}
       className="relative rounded-2xl p-5 overflow-hidden group cursor-default"
       style={{
-        background: 'linear-gradient(145deg, rgba(15,25,52,0.97), rgba(18,30,60,0.95))',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'rgba(14,18,30,0.85)',
+        border: '1px solid rgba(255,255,255,0.09)',
         backdropFilter: 'blur(24px)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
       }}
     >
       <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
@@ -76,8 +76,8 @@ function TotalPnlCard({ pnl, floatingPnl, equity, balance, i }) {
       className="relative rounded-2xl overflow-hidden group cursor-default"
       style={{
         background: isLiveProfit
-          ? 'linear-gradient(145deg, rgba(5,35,22,0.99), rgba(6,42,26,0.97))'
-          : 'linear-gradient(145deg, rgba(42,8,8,0.99), rgba(32,7,7,0.97))',
+          ? 'rgba(5,28,18,0.88)'
+          : 'rgba(36,7,7,0.88)',
         border: `1px solid ${accent}40`,
         backdropFilter: 'blur(24px)',
         boxShadow: `0 0 30px ${accent}18`,
@@ -150,10 +150,10 @@ function DailyPnlCard({ dailyPnl, floatingPnl, dailyDDPct, ddLimit, accountSize,
       className="relative rounded-2xl overflow-hidden group cursor-default col-span-2 md:col-span-1"
       style={{
         background: ddBreached
-          ? 'linear-gradient(145deg, rgba(42,8,8,0.99), rgba(32,7,7,0.97))'
-          : ddWarning ? 'linear-gradient(145deg, rgba(38,18,4,0.99), rgba(28,14,4,0.97))'
-          : isNeg ? 'linear-gradient(145deg, rgba(30,18,4,0.99), rgba(22,14,4,0.97))'
-          : 'linear-gradient(145deg, rgba(5,35,22,0.99), rgba(6,42,26,0.97))',
+          ? 'rgba(36,7,7,0.88)'
+          : ddWarning ? 'rgba(32,14,3,0.88)'
+          : isNeg ? 'rgba(26,14,3,0.88)'
+          : 'rgba(5,28,18,0.88)',
         border: `1px solid ${accent}${isGreen ? '50' : '30'}`,
         backdropFilter: 'blur(24px)',
         boxShadow: ddBreached ? `0 0 30px ${accent}25` : isGreen ? `0 0 24px ${accent}18` : 'none',
