@@ -31,6 +31,7 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
     most_traded_symbol: entry?.most_traded_symbol || '',
     discipline_score: entry?.discipline_score || '',
     consistency_score: entry?.consistency_score || '',
+    lot_size: entry?.lot_size || '0.01',
   });
 
   const saveMutation = useMutation({
@@ -87,16 +88,16 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
           {/* Basic info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Date</label>
+              <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase tracking-widest">Date</label>
               <input type="date" value={form.entry_date} onChange={e => setForm(f => ({ ...f, entry_date: e.target.value }))}
-                className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:border-primary/50"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} required />
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
+                style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.2)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} required />
             </div>
             <div>
-              <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Period</label>
+              <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase tracking-widest">Period</label>
               <select value={form.period_type} onChange={e => setForm(f => ({ ...f, period_type: e.target.value }))}
-                className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
+                style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.2)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -104,8 +105,29 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
             </div>
           </div>
 
-          {/* Trading stats */}
-          <div>
+          {/* Lot Size - Mobile Quick Access */}
+          <div className="md:hidden rounded-2xl p-4 backdrop-blur-xl"
+            style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(139,92,246,0.06))', border: '1px solid rgba(255,92,0,0.2)', boxShadow: '0 8px 32px rgba(255,92,0,0.1)' }}>
+            <label className="text-xs font-mono text-orange-400 mb-3 block uppercase tracking-widest">Lot Size Selection</label>
+            <div className="flex gap-2">
+              {['0.01', '0.1', '0.5', '1.0', '2.0'].map(size => (
+                <button key={size} type="button"
+                  onClick={() => setForm(f => ({ ...f, lot_size: size }))}
+                  className="flex-1 py-2.5 rounded-lg text-xs font-bold transition-all"
+                  style={{
+                    background: form.lot_size === size ? 'linear-gradient(135deg, rgba(255,92,0,0.8), rgba(255,140,60,0.8))' : 'rgba(255,255,255,0.06)',
+                    border: form.lot_size === size ? '1px solid rgba(255,92,0,0.6)' : '1px solid rgba(255,255,255,0.1)',
+                    color: form.lot_size === size ? '#fff' : 'rgba(255,255,255,0.4)',
+                    boxShadow: form.lot_size === size ? '0 4px 12px rgba(255,92,0,0.25)' : 'none'
+                  }}>
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Trading stats - Hide on mobile */}
+          <div className="hidden md:block">
             <label className="text-xs font-mono text-muted-foreground mb-3 block uppercase tracking-wider">Trading Statistics</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
@@ -123,15 +145,15 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
                   <label className="text-[10px] font-mono text-muted-foreground mb-1 block">{label}</label>
                   <input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                     placeholder="—"
-                    className="w-full rounded-xl px-3 py-2 text-sm text-foreground outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                    className="w-full rounded-xl px-3 py-2 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
+                    style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.15)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Scores */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Scores - Hide on mobile */}
+          <div className="hidden md:grid grid-cols-2 gap-4">
             {[
               { key: 'discipline_score', label: 'Discipline Score (0-10)' },
               { key: 'consistency_score', label: 'Consistency Score (0-10)' },
@@ -140,8 +162,8 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
                 <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">{label}</label>
                 <input type="number" min="0" max="10" step="0.1" value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                   placeholder="0-10"
-                  className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
+                  style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.2)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} />
               </div>
             ))}
           </div>
@@ -156,10 +178,10 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
                 const selected = form.emotions.includes(e);
                 return (
                   <button key={e} type="button" onClick={() => toggleEmotion(e)}
-                    className="px-3 py-1.5 rounded-full text-xs font-mono capitalize transition-all"
+                    className="px-3 py-1.5 rounded-full text-xs font-mono capitalize transition-all backdrop-blur-xl"
                     style={selected
-                      ? { background: `${emotionColors[e]}20`, color: emotionColors[e], border: `1px solid ${emotionColors[e]}50` }
-                      : { background: 'rgba(255,255,255,0.04)', color: '#666', border: '1px solid rgba(255,255,255,0.08)' }
+                      ? { background: `${emotionColors[e]}25`, color: emotionColors[e], border: `1px solid ${emotionColors[e]}60`, boxShadow: `0 4px 12px ${emotionColors[e]}20` }
+                      : { background: 'rgba(255,255,255,0.06)', color: '#666', border: '1px solid rgba(255,255,255,0.12)' }
                     }>
                     {e}
                   </button>
@@ -168,19 +190,19 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
             </div>
           </div>
 
-          {/* Text areas */}
+          {/* Text areas - Mobile only notes, hidden others */}
           {[
-            { key: 'notes', label: 'Journal Notes', placeholder: 'What happened today? How did you feel about your trading?' },
-            { key: 'mistakes', label: 'Mistakes Made', placeholder: 'What mistakes did you make? How to avoid them?' },
-            { key: 'strengths', label: 'Strengths Displayed', placeholder: 'What did you do well? What to replicate?' },
-            { key: 'strategy_notes', label: 'Strategy Notes', placeholder: 'Any strategy observations, setups, or ideas...' },
-          ].map(({ key, label, placeholder }) => (
-            <div key={key}>
-              <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">{label}</label>
+            { key: 'notes', label: 'Journal Notes', placeholder: 'What happened today? How did you feel about your trading?', showOnMobile: true },
+            { key: 'mistakes', label: 'Mistakes Made', placeholder: 'What mistakes did you make? How to avoid them?', showOnMobile: false },
+            { key: 'strengths', label: 'Strengths Displayed', placeholder: 'What did you do well? What to replicate?', showOnMobile: false },
+            { key: 'strategy_notes', label: 'Strategy Notes', placeholder: 'Any strategy observations, setups, or ideas...', showOnMobile: false },
+          ].map(({ key, label, placeholder, showOnMobile }) => (
+            <div key={key} className={showOnMobile ? 'md:block' : 'hidden md:block'}>
+              <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase tracking-widest">{label}</label>
               <textarea value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                 placeholder={placeholder} rows={3}
-                className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none resize-none leading-relaxed"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none resize-none leading-relaxed transition-all focus:ring-2 focus:ring-primary/50"
+                style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.15)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} />
             </div>
           ))}
 
