@@ -84,9 +84,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           <motion.button 
             onClick={() => setCollapsed?.(true)} 
             title="Collapse"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 group px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider transition-all"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg transition-all"
             style={{
               background: 'rgba(255,92,0,0.08)',
               border: '1px solid rgba(255,92,0,0.2)',
@@ -101,9 +99,12 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               e.currentTarget.style.background = 'rgba(255,92,0,0.08)';
               e.currentTarget.style.borderColor = 'rgba(255,92,0,0.2)';
               e.currentTarget.style.boxShadow = 'none';
-            }}>
-            <PanelLeftClose className="w-3 h-3" />
-            <span>Collapse</span>
+            }}
+            whileHover={{ x: -3 }}
+            whileTap={{ scale: 0.92 }}>
+            <motion.div animate={{ x: [0, -3, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
+              <span className="text-sm font-black">«</span>
+            </motion.div>
           </motion.button>
         )}
       </div>
