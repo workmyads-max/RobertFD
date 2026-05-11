@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
+import XTradingTerminalV2 from './components/dashboard/XTradingTerminalV2';
 // Add page imports here
 
 const AuthenticatedApp = () => {
