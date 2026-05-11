@@ -43,7 +43,6 @@ const AuthenticatedApp = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/challenges" element={<ChallengeSelect />} />
-      <Route path="/terminal" element={<MobileTradeTerminal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
