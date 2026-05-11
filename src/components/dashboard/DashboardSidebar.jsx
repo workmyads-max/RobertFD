@@ -84,7 +84,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           <motion.button 
             onClick={() => setCollapsed?.(true)} 
             title="Collapse"
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg transition-all"
             style={{
               background: 'rgba(255,92,0,0.08)',
               border: '1px solid rgba(255,92,0,0.2)',
@@ -100,11 +100,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               e.currentTarget.style.borderColor = 'rgba(255,92,0,0.2)';
               e.currentTarget.style.boxShadow = 'none';
             }}
-            whileHover={{ x: -3 }}
             whileTap={{ scale: 0.92 }}>
-            <motion.div animate={{ x: [0, -3, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
-              <span className="text-sm font-black">«</span>
-            </motion.div>
+            <span className="text-lg font-black">«</span>
           </motion.button>
         )}
       </div>
