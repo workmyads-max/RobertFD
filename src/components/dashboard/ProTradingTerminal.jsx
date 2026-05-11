@@ -612,7 +612,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
           </div>
 
           {/* Bottom row: Full-width Positions Table — spans entire width */}
-          <div className="flex-1 overflow-hidden" style={{ marginTop: 0 }}>
+          <div className="flex-1 overflow-hidden" style={{ marginTop: '-4px' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
