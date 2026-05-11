@@ -51,16 +51,16 @@ export default function Analytics({ onStartChallenge }) {
     queryFn: () => base44.entities.TradingJournalEntry.list('-entry_date', 30),
   });
 
+  const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
+
   // Pull real trade records for the selected account
   const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-analytics', activeAccounts[0]?.account_id],
+    queryKey: ['trade-records-analytics', selectedAccountId || activeAccounts[0]?.id],
     queryFn: () => base44.entities.TradeRecord.filter({
       account_id: (activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0])?.id
     }),
     enabled: activeAccounts.length > 0,
   });
-
-  const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
 
   if (activeAccounts.length === 0) return <NoAccountGate onStartChallenge={onStartChallenge} />;
 
