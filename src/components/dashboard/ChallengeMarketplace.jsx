@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, Zap, Shield, TrendingUp, Clock, BarChart2 } from 'lucide-react';
+import TermsModal from '../checkout/TermsModal';
 
 const TWO_STEP = [
   { size: 5000,   price: 49,   phase1Target: 10, phase2Target: 5, maxDD: 10, dailyDD: 5, leverage100: '1:100', leverage30: '1:30', split: '80%' },
@@ -63,6 +64,8 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [accountType, setAccountType] = useState('standard');
   const [platform, setPlatform] = useState('xtrading');
   const [selected, setSelected] = useState(null);
+  const [pendingOrder, setPendingOrder] = useState(null); // order waiting for terms acceptance
+  const [showTerms, setShowTerms] = useState(false);
 
   const PLATFORMS = [
     { id: 'xtrading', label: 'XTrading Terminal', desc: 'Built-in terminal — instant access', available: true, icon: '⚡' },
@@ -74,23 +77,48 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
-    if (platform !== 'xtrading') return; // block non-available platforms
+    if (platform !== 'xtrading') return;
     setSelected(plan);
     const leverage = accountType === 'standard' ? plan.leverage100 : plan.leverage30;
-    setTimeout(() => {
-      onProceedToCheckout({
-        challenge_type: challengeType,
-        account_type: accountType,
-        account_size: plan.size,
-        leverage,
-        price: PRICES[challengeType]?.[plan.size] || plan.price,
-        platform,
-      });
-    }, 200);
+    const order = {
+      challenge_type: challengeType,
+      account_type: accountType,
+      account_size: plan.size,
+      leverage,
+      price: PRICES[challengeType]?.[plan.size] || plan.price,
+      platform,
+    };
+    setPendingOrder(order);
+    setShowTerms(true);
+  };
+
+  const handleTermsAccept = () => {
+    setShowTerms(false);
+    if (pendingOrder) {
+      onProceedToCheckout(pendingOrder);
+      setPendingOrder(null);
+    }
+  };
+
+  const handleTermsDecline = () => {
+    setShowTerms(false);
+    setSelected(null);
+    setPendingOrder(null);
   };
 
   return (
     <div>
+      {/* Terms Modal */}
+      <AnimatePresence>
+        {showTerms && (
+          <TermsModal
+            order={pendingOrder}
+            onAccept={handleTermsAccept}
+            onDecline={handleTermsDecline}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"

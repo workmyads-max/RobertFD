@@ -6,7 +6,7 @@ import {
   Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Camera } from 'lucide-react';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -72,15 +72,35 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       {user && (
         <div className="px-4 py-3 border-b border-white/[0.07]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.4), rgba(255,92,0,0.2))', border: '1px solid rgba(255,92,0,0.3)' }}>
-              {user.full_name?.charAt(0)?.toUpperCase() || 'T'}
+            {/* Avatar */}
+            <div className="relative flex-shrink-0 group">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.4), rgba(255,92,0,0.2))', border: '1px solid rgba(255,92,0,0.3)' }}>
+                {user.avatar_url
+                  ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : <span>{user.full_name?.charAt(0)?.toUpperCase() || 'T'}</span>}
+              </div>
+              {/* Upload overlay */}
+              <label className="absolute inset-0 rounded-xl flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: 'rgba(0,0,0,0.6)' }}
+                title="Change avatar">
+                <span className="text-white text-[10px] font-bold">✎</span>
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                      await base44.auth.updateMe({ avatar_url: file_url });
+                    } catch {}
+                  }} />
+              </label>
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[13px] font-bold text-slate-100 truncate">{user.full_name || 'Trader'}</div>
-              <div className="text-[10px] text-slate-500 truncate flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                <span className="truncate">{user.email || 'Active'}</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
+                <span className="text-[9px] text-slate-500 font-mono">{user.role === 'admin' ? 'Admin' : 'Trader'}</span>
               </div>
             </div>
           </div>

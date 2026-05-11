@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Copy, ChevronRight, CheckCircle2, AlertTriangle, Play, Square, Settings, ArrowRight, RefreshCw } from 'lucide-react';
+import { Activity, Copy, CheckCircle2, AlertTriangle, Play, Square, Settings, ArrowRight, RefreshCw, Wifi, WifiOff, Signal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { calcRequiredMargin, INSTRUMENTS } from '../terminal/terminalConfig';
@@ -8,8 +8,17 @@ import { calcRequiredMargin, INSTRUMENTS } from '../terminal/terminalConfig';
 const RISK_MODES = [
   { id: 'balance_multiplier', label: 'Balance Multiplier', desc: 'Scale lots based on account balance ratio' },
   { id: 'fixed_lot',          label: 'Fixed Lot',          desc: 'Use a fixed lot size for all copied trades' },
+  { id: 'lot_multiplier',     label: 'Lot Multiplier',     desc: 'Multiply master lot by a fixed factor' },
   { id: 'same_ratio',         label: 'Same Ratio (1:1)',   desc: 'Copy exact lot size from master account' },
 ];
+
+const STATUS_LABELS = {
+  idle:     { label: 'Idle', color: 'text-muted-foreground',  dot: 'bg-muted-foreground/40' },
+  waiting:  { label: 'Waiting for Signal', color: 'text-blue-400', dot: 'bg-blue-400' },
+  copied:   { label: 'Trade Copied!', color: 'text-accent',   dot: 'bg-accent' },
+  syncing:  { label: 'Syncing…', color: 'text-yellow-400',    dot: 'bg-yellow-400' },
+  error:    { label: 'Connection Lost', color: 'text-red-400', dot: 'bg-red-400' },
+};
 
 const COPIER_KEY = 'xcopier_state_v2';
 function loadState() { try { return JSON.parse(localStorage.getItem(COPIER_KEY) || '{}'); } catch { return {}; } }
@@ -60,6 +69,10 @@ export default function XCopier() {
   const [log,        setLog]        = useState(saved.log?.slice(0, 50) || []);
   const [copyCount,  setCopyCount]  = useState(0);
   const [selectingFor, setSelectingFor] = useState(null); // 'master' | 'slave'
+  const [copySL, setCopySL]           = useState(saved.copySL !== undefined ? saved.copySL : true);
+  const [copyTP, setCopyTP]           = useState(saved.copyTP !== undefined ? saved.copyTP : true);
+  const [copyPending, setCopyPending] = useState(saved.copyPending !== undefined ? saved.copyPending : false);
+  const [liveStatus, setLiveStatus]   = useState('idle');
 
   const master = activeAccounts.find(a => a.id === masterId) || null;
   const slave  = activeAccounts.find(a => a.id === slaveId)  || null;
@@ -78,16 +91,22 @@ export default function XCopier() {
   // Persist state
   useEffect(() => {
     saveState({
-      masterId, slaveId, riskMode, multiplier, fixedLot, isRunning,
+      masterId, slaveId, riskMode, multiplier, fixedLot, isRunning, copySL, copyTP, copyPending,
       log: log.slice(0, 50),
       copiedIds: [...copiedTradeIds.current].slice(0, 500),
     });
-  }, [masterId, slaveId, riskMode, multiplier, fixedLot, isRunning, log]);
+  }, [masterId, slaveId, riskMode, multiplier, fixedLot, isRunning, copySL, copyTP, copyPending, log]);
 
   // Calculate effective lots
   const calcEffectiveLots = (masterLots) => {
     if (riskMode === 'fixed_lot') return parseFloat(fixedLot) || 0.1;
-    if (riskMode === 'balance_multiplier') return parseFloat((masterLots * parseFloat(multiplier || 1)).toFixed(2));
+    if (riskMode === 'lot_multiplier') return parseFloat((masterLots * parseFloat(multiplier || 1)).toFixed(2));
+    if (riskMode === 'balance_multiplier') {
+      const masterBal = master?.balance || master?.account_size || 1;
+      const slaveBal  = slave?.balance  || slave?.account_size  || 1;
+      const ratio = slaveBal / masterBal;
+      return parseFloat((masterLots * ratio).toFixed(2));
+    }
     return masterLots; // same_ratio
   };
 
@@ -107,8 +126,10 @@ export default function XCopier() {
       if (!event.data) return;
       const trade = event.data;
       if (trade.account_id !== master.id && trade.account_id !== master.account_id) return;
-      if (trade.status !== 'open') return;
+      if (trade.status !== 'open' && trade.status !== 'pending') return;
+      if (trade.status === 'pending' && !copyPending) return;
       if (copiedTradeIds.current.has(trade.id)) return;
+      setLiveStatus('syncing');
 
       copiedTradeIds.current.add(trade.id);
 
@@ -125,19 +146,23 @@ export default function XCopier() {
           trade_id: `COPY-${Date.now()}`,
           symbol: trade.symbol,
           type: trade.type,
-          order_type: 'MARKET',
+          order_type: trade.status === 'pending' ? (trade.order_type || 'MARKET') : 'MARKET',
           lots: effectiveLots,
           entry: trade.entry,
-          sl: trade.sl || null,
-          tp: trade.tp || null,
+          sl: copySL ? (trade.sl || null) : null,
+          tp: copyTP ? (trade.tp || null) : null,
           margin,
-          status: 'open',
+          status: trade.status === 'pending' ? 'pending' : 'open',
           open_time: new Date().toLocaleTimeString(),
         });
 
         setCopyCount(c => c + 1);
-        addLog(`✓ COPIED: ${trade.type} ${effectiveLots} ${trade.symbol} → ${slave.account_id} (from ${effectiveLots !== trade.lots ? `${trade.lots}→${effectiveLots} lots` : `${trade.lots} lots`})`, true);
+        setLiveStatus('copied');
+        setTimeout(() => setLiveStatus(isRunning ? 'waiting' : 'idle'), 3000);
+        addLog(`✓ COPIED: ${trade.type} ${effectiveLots}L ${trade.symbol} → ${slave.account_id}${copySL && trade.sl ? ` SL:${trade.sl}` : ''}${copyTP && trade.tp ? ` TP:${trade.tp}` : ''}`, true);
       } catch (err) {
+        setLiveStatus('error');
+        setTimeout(() => setLiveStatus('waiting'), 5000);
         addLog(`✗ Copy failed for ${trade.symbol}: ${err.message}`, false);
       }
     });
@@ -152,14 +177,18 @@ export default function XCopier() {
     if (!canStart) return;
     if (isRunning) {
       setIsRunning(false);
+      setLiveStatus('idle');
       subscriptionRef.current?.();
       subscriptionRef.current = null;
       addLog(`X-Copier stopped`, true);
     } else {
       setIsRunning(true);
-      addLog(`Starting X-Copier: ${master.account_id} → ${slave.account_id} | Mode: ${riskMode}`, true);
+      setLiveStatus('waiting');
+      addLog(`Starting X-Copier: ${master.account_id} → ${slave.account_id} | Mode: ${riskMode} | SL:${copySL} TP:${copyTP} Pending:${copyPending}`, true);
     }
   };
+
+  const statusInfo = STATUS_LABELS[liveStatus] || STATUS_LABELS.idle;
 
   const exampleLot = calcEffectiveLots(0.10);
 
@@ -197,19 +226,26 @@ export default function XCopier() {
         </div>
       </div>
 
-      {/* Status */}
-      {isRunning && master && slave && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-3 rounded-xl mb-6 flex-wrap"
-          style={{ background: 'rgba(204,255,0,0.06)', border: '1px solid rgba(204,255,0,0.2)' }}>
-          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span className="text-xs font-mono font-bold text-accent">COPIER ACTIVE — LIVE SYNC</span>
-          <span className="text-xs font-mono text-muted-foreground">
-            {master.account_id} <ArrowRight className="w-3 h-3 inline" /> {slave.account_id}
-          </span>
-          <span className="ml-auto text-xs font-mono text-muted-foreground">{RISK_MODES.find(r => r.id === riskMode)?.label}</span>
-        </motion.div>
-      )}
+      {/* Live Status Bar */}
+      <AnimatePresence>
+        {isRunning && master && slave && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-3 p-3 rounded-xl mb-6 flex-wrap"
+            style={{ background: 'rgba(204,255,0,0.05)', border: '1px solid rgba(204,255,0,0.18)' }}>
+            <div className={`w-2 h-2 rounded-full ${statusInfo.dot} animate-pulse flex-shrink-0`} />
+            <span className={`text-xs font-mono font-bold ${statusInfo.color}`}>{statusInfo.label}</span>
+            <span className="text-xs font-mono text-muted-foreground">
+              {master.account_id} <ArrowRight className="w-3 h-3 inline" /> {slave.account_id}
+            </span>
+            <div className="ml-auto flex items-center gap-3 text-[10px] font-mono text-muted-foreground">
+              {copySL && <span className="text-emerald-400/60">SL✓</span>}
+              {copyTP && <span className="text-emerald-400/60">TP✓</span>}
+              {copyPending && <span className="text-blue-400/60">Pending✓</span>}
+              <span>{RISK_MODES.find(r => r.id === riskMode)?.label}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {activeAccounts.length < 2 ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
@@ -327,13 +363,17 @@ export default function XCopier() {
             </div>
 
             <AnimatePresence mode="wait">
-              {riskMode === 'balance_multiplier' && (
+              {(riskMode === 'balance_multiplier' || riskMode === 'lot_multiplier') && (
                 <motion.div key="mult" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-4">
-                  <div className="text-[10px] font-mono text-muted-foreground mb-1.5">Balance Multiplier</div>
+                  <div className="text-[10px] font-mono text-muted-foreground mb-1.5">
+                    {riskMode === 'lot_multiplier' ? 'Lot Multiplier (×master lot)' : 'Balance Scale Factor'}
+                  </div>
                   <input value={multiplier} onChange={e => setMultiplier(e.target.value)} type="number" step="0.1" min="0.1"
                     className="w-full rounded-lg px-3 py-2 text-sm font-mono text-foreground outline-none"
                     style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
-                  <div className="text-[10px] font-mono text-muted-foreground/50 mt-1">e.g. 0.5 = half of master's lots</div>
+                  <div className="text-[10px] font-mono text-muted-foreground/50 mt-1">
+                    {riskMode === 'lot_multiplier' ? `e.g. 2.0 = double the master lots` : `e.g. 0.5 = 50% of balance ratio`}
+                  </div>
                 </motion.div>
               )}
               {riskMode === 'fixed_lot' && (
@@ -345,6 +385,25 @@ export default function XCopier() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Copy Options */}
+            <div className="mb-4 space-y-2">
+              <div className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-2">Copy Settings</div>
+              {[
+                { key: 'copySL', label: 'Copy Stop Loss', value: copySL, set: setCopySL },
+                { key: 'copyTP', label: 'Copy Take Profit', value: copyTP, set: setCopyTP },
+                { key: 'copyPending', label: 'Copy Pending Orders', value: copyPending, set: setCopyPending },
+              ].map(({ key, label, value, set }) => (
+                <div key={key} className="flex items-center justify-between p-2.5 rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="text-[11px] text-muted-foreground">{label}</span>
+                  <button onClick={() => set(!value)}
+                    className={`w-9 h-5 rounded-full transition-all relative flex-shrink-0 ${value ? 'bg-accent/70' : 'bg-white/10'}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${value ? 'left-4.5' : 'left-0.5'}`} style={{ left: value ? '17px' : '2px' }} />
+                  </button>
+                </div>
+              ))}
+            </div>
 
             <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-2">Summary</div>
