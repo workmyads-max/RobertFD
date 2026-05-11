@@ -625,31 +625,25 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       </div>
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {/* Top: Symbol header + TF selector */}
-        <div className="flex-shrink-0 px-3 py-2.5 border-b space-y-2" style={{ background: 'rgba(8,10,20,0.99)', borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Symbol</div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-sm font-black text-white">{selectedSymbol}</span>
-                  {currentPrice?.bid && <span className="text-xs font-bold text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
-                </div>
-              </div>
+      <div className="flex md:hidden flex-col flex-1 min-h-0 safe-top safe-bottom">
+        {/* Top: Symbol header + TF selector — minimal design */}
+        <div className="flex-shrink-0 px-2.5 py-2 border-b space-y-1.5" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)', backdropFilter: 'blur(20px)' }}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-black text-white">{selectedSymbol}</span>
+              {currentPrice?.bid && <span className="text-xs font-bold text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
             </div>
-            <div className="text-right">
-              <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Float P&L</div>
-              <div className={`text-sm font-bold mt-0.5 ${floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className="text-right flex-shrink-0">
+              <div className={`text-xs font-bold ${floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}
               </div>
             </div>
           </div>
-          <div className="flex gap-0.5 p-1 rounded-lg overflow-x-auto" style={{ background: 'rgba(255,255,255,0.03)', scrollbarWidth: 'none' }}>
+          <div className="flex gap-0.5 p-0.5 rounded-lg overflow-x-auto" style={{ background: 'rgba(255,92,0,0.08)', scrollbarWidth: 'none' }}>
             {TF_OPTS.map(tf => (
               <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                className={`px-2.5 py-1 rounded text-[8px] font-bold transition-all whitespace-nowrap flex-shrink-0 ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.25)', border: '1px solid rgba(255,92,0,0.3)' } : { background: 'rgba(255,255,255,0.04)' }}>
+                className={`px-2 py-0.5 rounded text-[7px] font-bold transition-colors whitespace-nowrap flex-shrink-0 ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.3)' } : {}}>
                 {tf.label}
               </button>
             ))}
@@ -662,52 +656,52 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         </div>
 
         {/* Bottom trading panel */}
-        <div className="flex-shrink-0 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(8,10,20,0.99)', maxHeight: '220px' }}>
+        <div className="flex-shrink-0 border-t" style={{ borderColor: 'rgba(255,92,0,0.15)', background: 'rgba(6,8,16,0.98)', backdropFilter: 'blur(20px)', maxHeight: '210px' }}>
           {/* Quick stats + trade buttons */}
-          <div className="px-3 py-2.5 border-b space-y-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            <div className="grid grid-cols-3 gap-2 text-center text-[8px]">
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Equity</div>
-                <div className="font-bold text-emerald-400 text-xs">${equity.toFixed(0)}</div>
+          <div className="px-2.5 py-2 border-b space-y-1.5" style={{ borderColor: 'rgba(255,92,0,0.1)' }}>
+            <div className="grid grid-cols-3 gap-1.5 text-center text-[7px]">
+              <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Equity</div>
+                <div className="font-bold text-emerald-400 text-[10px]">${equity.toFixed(0)}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Margin</div>
-                <div className="font-bold text-slate-300 text-xs">${usedMargin.toFixed(0)}</div>
+              <div style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(139,92,246,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Margin</div>
+                <div className="font-bold text-slate-300 text-[10px]">${usedMargin.toFixed(0)}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Positions</div>
-                <div className="font-bold text-orange-400 text-xs">{positions.length}</div>
+              <div style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(255,92,0,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(255,92,0,0.2)' }}>
+                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Positions</div>
+                <div className="font-bold text-orange-400 text-[10px]">{positions.length}</div>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'SELL', lots: 0.01, entry: prices[selectedSymbol]?.bid || 0, orderType: 'MARKET' })}
-                className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 2px 8px rgba(239,68,68,0.2)' }}>
+                className="flex-1 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.8), rgba(220,38,38,0.8))', boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }}>
                 SELL
               </button>
               <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'BUY', lots: 0.01, entry: prices[selectedSymbol]?.ask || 0, orderType: 'MARKET' })}
-                className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.2)' }}>
+                className="flex-1 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.8), rgba(5,150,105,0.8))', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
                 BUY
               </button>
             </div>
           </div>
 
           {/* Positions list */}
-          <div className="px-3 py-2 text-[8px] overflow-y-auto" style={{ maxHeight: '120px', scrollbarWidth: 'thin' }}>
-            <div className="text-slate-500 uppercase tracking-wider font-mono mb-1.5">
+          <div className="px-2.5 py-1.5 text-[7px] overflow-y-auto" style={{ maxHeight: '110px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,92,0,0.2) transparent' }}>
+            <div className="text-slate-400 uppercase tracking-wider font-mono mb-1 text-[6px]">
               Open ({positions.length})
             </div>
             {positions.length === 0 ? (
-              <div className="text-slate-600 text-center py-3">No open positions</div>
+              <div className="text-slate-600 text-center py-2 text-[7px]">No positions</div>
             ) : (
-              <div className="space-y-1">
-                {positions.slice(0, 4).map(pos => {
+              <div className="space-y-0.5">
+                {positions.slice(0, 3).map(pos => {
                   const p = prices[pos.symbol];
                   const pnl = calcPnl(pos, p?.bid || pos.entry);
                   return (
-                    <div key={pos.id} className="flex justify-between items-center px-2 py-1 rounded" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                      <span className="text-white font-bold">{pos.symbol} <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>{pos.type}</span></span>
+                    <div key={pos.id} className="flex justify-between items-center px-1.5 py-0.5 rounded text-[6px]" style={{ background: 'rgba(255,92,0,0.08)' }}>
+                      <span className="text-white font-bold">{pos.symbol} <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'} className="text-[6px]">{pos.type}</span></span>
                       <span className={`font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${pnl.toFixed(2)}</span>
                     </div>
                   );
@@ -718,8 +712,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         </div>
 
         {/* Mobile bottom tab bar */}
-        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(8,10,20,0.99)', borderColor: 'rgba(255,255,255,0.08)' }}>
-          <div className="flex">
+        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(6,8,16,0.99)', borderColor: 'rgba(255,92,0,0.15)', backdropFilter: 'blur(10px)' }}>
+          <div className="flex h-14 pointer-events-auto">
             {[
               { id: 'positions', icon: List, label: 'Positions' },
               { id: 'pending', icon: Clock, label: 'Orders' },
@@ -729,12 +723,23 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               const Icon = tab.icon;
               const active = mobilePanel === tab.id;
               return (
-                <button key={tab.id} onClick={(e) => { e.stopPropagation(); setMobilePanel(tab.id); }}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors active:opacity-70 ${active ? 'text-orange-400' : 'text-slate-500'}`}
-                  style={active ? { background: 'rgba(255,92,0,0.08)', borderTop: '2px solid #FF5C00' } : {}}>
+                <motion.button 
+                  key={tab.id} 
+                  onClick={() => setMobilePanel(tab.id)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all ${active ? 'text-orange-400' : 'text-slate-500 hover:text-slate-400'}`}
+                  style={active ? { background: 'linear-gradient(180deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))' } : {}}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}>
                   <Icon className="w-4 h-4" />
-                  <span className="text-[7px] font-mono leading-none">{tab.label}</span>
-                </button>
+                  <span className="text-[7px] font-mono font-bold leading-none whitespace-nowrap">{tab.label}</span>
+                  {active && (
+                    <motion.div 
+                      layoutId="underline" 
+                      className="h-1 w-6 rounded-full mt-1"
+                      style={{ background: '#FF5C00' }}
+                      transition={{ type: 'spring', damping: 30, stiffness: 300 }} />
+                  )}
+                </motion.button>
               );
             })}
           </div>

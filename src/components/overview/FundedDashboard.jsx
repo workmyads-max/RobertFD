@@ -159,13 +159,21 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const rules = getAccountRules(selectedAccount);
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-background">
-      {/* Subtle radial glow like homepage */}
+    <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
+      {/* Premium glassmorphism background with AI aesthetic */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full blur-[120px] opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
-        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[400px] rounded-full blur-[100px] opacity-[0.05]"
-          style={{ background: 'radial-gradient(circle, #CCFF00, transparent)' }} />
+        {/* Primary glow */}
+        <div className="absolute top-0 left-1/4 w-[700px] h-[500px] rounded-full blur-[140px] opacity-[0.12]"
+          style={{ background: 'radial-gradient(circle, #FF5C00, rgba(139,92,246,0.5), transparent)' }} />
+        {/* Secondary accent glow */}
+        <div className="absolute -top-20 -right-32 w-[600px] h-[600px] rounded-full blur-[150px] opacity-[0.08]"
+          style={{ background: 'radial-gradient(circle, #8B5CF6, #FF5C00, transparent)' }} />
+        {/* Tertiary blue glow */}
+        <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[400px] rounded-full blur-[120px] opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
+        {/* Accent green teal */}
+        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] rounded-full blur-[100px] opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #00f5a0, transparent)' }} />
       </div>
       {/* Particles */}
       <ParticleBackground />

@@ -15,43 +15,55 @@ function LiveNumber({ value, prefix = '', decimals = 2, className = '' }) {
   );
 }
 
-// ── Generic metric card ───────────────────────────────────────────────────────
+// ── Generic metric card with premium glassmorphism ───────────────────────────
 function MetricCard({ label, value, sub, accent, icon: Icon, i, pulse }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -3, scale: 1.01 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       className="relative rounded-2xl p-5 overflow-hidden group cursor-default"
       style={{
-        background: 'rgba(14,18,30,0.85)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        backdropFilter: 'blur(24px)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+        background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))',
+        border: `1px solid ${accent}20`,
+        backdropFilter: 'blur(32px)',
+        boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 20px ${accent}10`,
       }}
     >
+      {/* Animated top border accent */}
       <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}60, transparent)` }} />
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
-        style={{ background: `radial-gradient(circle at top left, ${accent}08, transparent 60%)` }} />
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}80, transparent)` }} />
+      
+      {/* Hover glow effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl pointer-events-none"
+        style={{ background: `radial-gradient(circle at top left, ${accent}12, transparent 60%)` }} />
+      
+      {/* Subtle animated background pulse */}
+      <motion.div
+        animate={{ opacity: [0.03, 0.06, 0.03] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute inset-0 pointer-events-none rounded-2xl"
+        style={{ background: `radial-gradient(ellipse at center, ${accent}15, transparent 70%)` }}
+      />
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/50">{label}</span>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center relative"
-            style={{ background: `${accent}12`, border: `1px solid ${accent}20` }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center relative backdrop-blur-md"
+            style={{ background: `${accent}15`, border: `1px solid ${accent}30`, boxShadow: `0 8px 24px ${accent}15` }}>
             {pulse && (
               <motion.div
-                animate={{ scale: [1, 1.8, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                animate={{ scale: [1, 2, 1], opacity: [0.6, 0, 0.6] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
                 className="absolute inset-0 rounded-xl"
-                style={{ background: accent, opacity: 0.15 }}
+                style={{ background: accent }}
               />
             )}
-            <Icon className="w-4 h-4 relative z-10" style={{ color: accent }} />
+            <Icon className="w-5 h-5 relative z-10" style={{ color: accent, filter: `drop-shadow(0 0 8px ${accent}40)` }} />
           </div>
         </div>
-        <div className="text-2xl font-bold tracking-tight text-white mb-1.5" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        <div className="text-2xl font-bold tracking-tight text-white mb-2" style={{ fontVariantNumeric: 'tabular-nums', textShadow: `0 2px 8px rgba(0,0,0,0.3)` }}>
           {value}
         </div>
         {sub && <div className="text-[11px] text-white/45 font-mono">{sub}</div>}
