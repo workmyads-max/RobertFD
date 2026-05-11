@@ -50,6 +50,7 @@ import { useQuery } from '@tanstack/react-query';
 export default function Dashboard() {
   const [activePage, setActivePage] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -166,6 +167,8 @@ export default function Dashboard() {
           setIsOpen={setSidebarOpen}
           unreadCount={notifications.filter(n => n.display_mode !== 'banner').length}
           trashCount={failedAccountsCount}
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
         />
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}

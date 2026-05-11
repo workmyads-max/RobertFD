@@ -137,7 +137,7 @@ export default function AnalyticsCharts({ account, stats, trades = [] }) {
       {/* Daily P&L */}
       <div className="rounded-2xl p-5"
         style={{
-          background: 'linear-gradient(145deg, rgba(10,16,32,0.97), rgba(12,20,40,0.95))',
+          background: 'rgba(10,14,24,0.96)',
           border: '1px solid rgba(255,255,255,0.07)',
           backdropFilter: 'blur(24px)',
         }}>
@@ -148,21 +148,33 @@ export default function AnalyticsCharts({ account, stats, trades = [] }) {
               {trades.length > 0 ? 'From live trade history' : 'Per-session profit & loss'}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-[9px] font-mono text-white/30">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-emerald-500 inline-block" /> Win</span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-red-500 inline-block" /> Loss</span>
+          <div className="flex items-center gap-3 text-[9px] font-mono">
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#10b981' }} />
+              <span style={{ color: '#10b981' }}>Win</span>
+            </span>
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#ef4444' }} />
+              <span style={{ color: '#ef4444' }}>Loss</span>
+            </span>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={100}>
-          <BarChart data={dailyData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="label" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.2)', fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
-            <YAxis hide />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="pnl" radius={[3, 3, 0, 0]} maxBarSize={24}>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={dailyData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+            <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" strokeDasharray="4 2" />
+            <XAxis dataKey="label" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.25)', fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
+            <YAxis hide domain={['auto', 'auto']} />
+            <Tooltip
+              cursor={{ fill: 'rgba(255,255,255,0.04)', radius: 4 }}
+              content={<CustomTooltip />}
+            />
+            <Bar dataKey="pnl" radius={[4, 4, 2, 2]} maxBarSize={28} isAnimationActive={true}>
               {dailyData.map((entry, i) => (
-                <Cell key={i} fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'}
-                  fillOpacity={0.7} />
+                <Cell
+                  key={i}
+                  fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'}
+                  opacity={0.85}
+                />
               ))}
             </Bar>
           </BarChart>

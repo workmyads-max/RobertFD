@@ -573,8 +573,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
           </div>
 
-          {/* Positions Table — taller to show bulk controls comfortably */}
-          <div className="h-56 xl:h-64 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          {/* Positions Table */}
+          <div className="h-48 xl:h-52 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
