@@ -58,7 +58,7 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
   };
 
   return (
-    <div className="flex flex-col h-full text-xs" style={{ background: '#07070b' }}>
+    <div className="flex flex-col h-full text-xs overflow-hidden" style={{ background: '#0d1117' }}>
       {/* Search */}
       <div className="p-2 border-b border-white/[0.06] flex-shrink-0">
         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg"
@@ -95,7 +95,7 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
       </div>
 
       {/* Rows */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,92,0,0.3) transparent' }}>
         {filtered.length === 0 && (
           <div className="flex items-center justify-center py-8 text-[10px] font-mono text-muted-foreground/30">
             No symbols found
