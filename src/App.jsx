@@ -10,7 +10,6 @@ import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
-import MobileTradeTerminal from './components/terminal/MobileTradeTerminal';
 // Add page imports here
 
 const AuthenticatedApp = () => {

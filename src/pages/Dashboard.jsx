@@ -5,9 +5,7 @@ import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverview
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import FundedDashboard from '../components/overview/FundedDashboard';
 import MyAccounts from '../components/dashboard/MyAccounts';
-import XTradingTerminalNew from '../components/dashboard/XTradingTerminalNew';
-import ProTradingTerminal from '../components/dashboard/ProTradingTerminal';
-import MobileTradeTerminal from '../components/terminal/MobileTradeTerminal';
+import XTradingTerminalV2 from '../components/dashboard/XTradingTerminalV2';
 import Analytics from '../components/dashboard/Analytics';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
 import MarketNews from '../components/dashboard/MarketNews';
@@ -113,16 +111,7 @@ export default function Dashboard() {
       case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'terminal': return (
-        <>
-          <div className="hidden md:block h-full">
-            <ProTradingTerminal account={activeAccount || primaryActiveAccount} allAccounts={allAccounts} onAccountChange={handleAccountSwitch} />
-          </div>
-          <div className="md:hidden h-full">
-            <MobileTradeTerminal />
-          </div>
-        </>
-      );
+      case 'terminal': return <XTradingTerminalV2 account={activeAccount || primaryActiveAccount} />;
       case 'xcopier': return <XCopier />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
