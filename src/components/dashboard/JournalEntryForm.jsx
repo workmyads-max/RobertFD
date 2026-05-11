@@ -108,8 +108,8 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
           {/* Lot Size - Mobile Quick Access */}
           <div className="md:hidden rounded-2xl p-4 backdrop-blur-xl"
             style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(139,92,246,0.06))', border: '1px solid rgba(255,92,0,0.2)', boxShadow: '0 8px 32px rgba(255,92,0,0.1)' }}>
-            <label className="text-xs font-mono text-orange-400 mb-3 block uppercase tracking-widest">Lot Size Selection</label>
-            <div className="flex gap-2">
+            <label className="text-xs font-mono text-orange-400 mb-3 block uppercase tracking-widest">Lot Size</label>
+            <div className="flex gap-2 mb-3">
               {['0.01', '0.1', '0.5', '1.0', '2.0'].map(size => (
                 <button key={size} type="button"
                   onClick={() => setForm(f => ({ ...f, lot_size: size }))}
@@ -124,6 +124,7 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
                 </button>
               ))}
             </div>
+            <div className="text-[10px] font-mono text-orange-400/70">Selected: {form.lot_size} lots</div>
           </div>
 
           {/* Trading stats - Hide on mobile */}
