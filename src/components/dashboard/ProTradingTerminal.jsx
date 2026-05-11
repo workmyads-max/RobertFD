@@ -612,48 +612,45 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
       <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {/* Unified chart + order panel layout */}
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          {/* Chart — top portion */}
-          <div className="flex-1 min-h-0 flex flex-col" style={{ flex: '1 1 50%' }}>
-            {/* Chart toolbar */}
-            <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-              style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
-                {currentPrice?.bid && (
-                  <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
-                )}
-                {currentPrice?.pct != null && (
-                  <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
-                  </span>
-                )}
-                {!isMarketOpen(selectedSymbol) && (
-                  <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
-                )}
-              </div>
-              <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                {TF_OPTS.map(tf => (
-                  <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                    style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
-                    {tf.label}
-                  </button>
-                ))}
-              </div>
+        {/* Chart dominates like TradeLocker */}
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col" style={{ flex: '1 1 75%' }}>
+          {/* Chart toolbar */}
+          <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
+            style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
+              {currentPrice?.bid && (
+                <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
+              )}
+              {currentPrice?.pct != null && (
+                <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
+                </span>
+              )}
+              {!isMarketOpen(selectedSymbol) && (
+                <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
+              )}
             </div>
-            {/* Chart */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+            <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              {TF_OPTS.map(tf => (
+                <button key={tf.val} onClick={() => setTimeframe(tf.val)}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                  style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
+                  {tf.label}
+                </button>
+              ))}
             </div>
           </div>
+          {/* Chart full size */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+          </div>
+        </div>
 
-          {/* Order Panel + Positions — bottom portion */}
-          <div className="border-t flex-1 min-h-0 overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.06)', flex: '0 1 50%' }}>
-            <div className="p-3 space-y-3">
-              <OrderPanel symbol={selectedSymbol} prices={prices} account={account} rules={rules} equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder} accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)} />
-            </div>
+        {/* Order Panel — compact at bottom */}
+        <div className="border-t flex-shrink-0 overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.06)', flex: '0 0 auto', maxHeight: '25%' }}>
+          <div className="p-3 space-y-2">
+            <OrderPanel symbol={selectedSymbol} prices={prices} account={account} rules={rules} equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder} accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)} />
           </div>
         </div>
 
