@@ -44,19 +44,19 @@ function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMar
         {/* Row 1: Account + Balance + Equity */}
         <div className="flex items-center gap-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1">
               <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Acct</span>
-              <button onClick={() => setShowDrop(v => !v)}
-                className="flex items-center gap-0.5 text-[11px] font-mono font-black text-orange-400">
+              <button onClick={(e) => { e.stopPropagation(); setShowDrop(v => !v); }}
+                className="flex items-center gap-0.5 text-[11px] font-mono font-black text-orange-400 text-left">
                 {account?.account_id || 'N/A'}
                 {switchable.length > 0 && <ChevronDown className="w-2.5 h-2.5" />}
               </button>
             </div>
             {showDrop && (
-              <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[160px]"
+              <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[180px]"
                 style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
                 {switchable.map(a => (
-                  <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
+                  <button key={a.id} onClick={(e) => { e.stopPropagation(); onAccountChange(a); setShowDrop(false); }}
                     className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
                     <span className="text-orange-400 font-bold">{a.account_id}</span>
                     <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
@@ -103,19 +103,19 @@ function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMar
       {/* Desktop: single row */}
       <div className="hidden md:flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1">
             <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
-            <button onClick={() => setShowDrop(v => !v)}
-              className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); setShowDrop(v => !v); }}
+              className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors text-left">
               {account?.account_id || 'N/A'}
               {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
             </button>
           </div>
           {showDrop && (
-            <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[160px]"
+            <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[180px]"
               style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
               {switchable.map(a => (
-                <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
+                <button key={a.id} onClick={(e) => { e.stopPropagation(); onAccountChange(a); setShowDrop(false); }}
                   className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
                   <span className="text-orange-400 font-bold">{a.account_id}</span>
                   <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
