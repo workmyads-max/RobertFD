@@ -273,6 +273,53 @@ export default function XCopier() {
         )}
       </AnimatePresence>
 
+      {/* ── Daily P&L cards for master + slave when copier is running ── */}
+      {isRunning && master && slave && (
+        <div className="grid md:grid-cols-2 gap-3 mb-6">
+          {[master, slave].map((acc, idx) => {
+            const pnl = acc.pnl || 0;
+            const dailyPnl = acc.daily_pnl || 0;
+            const accountSize = acc.account_size || 100000;
+            const ddPct = Math.max(0, ((accountSize - (acc.equity || accountSize)) / accountSize) * 100);
+            const ddLimit = 5;
+            const isPos = dailyPnl >= 0;
+            const accent = ddPct >= ddLimit * 0.8 ? '#ef4444' : isPos ? '#10b981' : '#ef4444';
+            return (
+              <motion.div key={acc.id}
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: isPos ? 'rgba(2,18,12,0.95)' : 'rgba(18,4,4,0.95)', border: `1px solid ${accent}35`, boxShadow: `0 0 20px ${accent}12` }}>
+                <div className="h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+                <div className="p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[8px] font-mono uppercase tracking-widest mb-0.5" style={{ color: `${accent}80` }}>
+                      {idx === 0 ? 'MASTER' : 'SLAVE'} · {acc.account_id}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent }} />
+                      <span className="text-[9px] font-mono font-black" style={{ color: accent }}>Daily P&L</span>
+                    </div>
+                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.03, 1] }}
+                    transition={{ duration: 2.5, repeat: Infinity }}
+                    className="text-2xl font-black"
+                    style={{ color: accent, textShadow: `0 0 14px ${accent}50`, fontVariantNumeric: 'tabular-nums' }}>
+                    {dailyPnl >= 0 ? '+' : ''}${Math.abs(dailyPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </motion.div>
+                  <div className="text-right">
+                    <div className="text-[9px] font-mono text-white/25 mb-0.5">Total P&L</div>
+                    <div className="text-sm font-black" style={{ color: pnl >= 0 ? '#10b981' : '#ef4444' }}>
+                      {pnl >= 0 ? '+' : ''}${pnl.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
       {activeAccounts.length < 2 ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
           <AlertTriangle className="w-10 h-10 text-yellow-400/60 mx-auto mb-4" />

@@ -13,6 +13,7 @@ import TradingViewChart          from '../terminal/TradingViewChart';
 import OrderPanel                from '../terminal/OrderPanel';
 import ChallengeTrackerDrawer    from '../terminal/ChallengeTrackerDrawer';
 import PositionsTable            from '../terminal/PositionsTable';
+import FloatingDailyPnL          from '../terminal/FloatingDailyPnL';
 import SessionBar                from '../terminal/SessionBar';
 import AccountStatusBanner       from '../terminal/AccountStatusBanner';
 import PhaseTransitionModal      from '../shared/PhaseTransitionModal';
@@ -443,10 +444,20 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       </AnimatePresence>
 
       {/* ═══ DESKTOP ═══════════════════════════════════════════════════════════ */}
-      <div className="hidden md:flex flex-1 overflow-hidden">
+      <div className="hidden md:flex flex-1 overflow-hidden relative">
+        {/* Floating Daily P&L box — visible when positions are open */}
+        <FloatingDailyPnL
+          floatPnl={floatPnl}
+          dailyClosedPnl={sessionBalance - (account?.balance || accountSize)}
+          accountSize={accountSize}
+          dailyDDLimit={rules?.dailyDDLimit || 5}
+          dailyOpenBalance={dailyOpenBalance}
+          equity={equity}
+          visible={positions.length > 0}
+        />
 
-        {/* Left: Market Watch */}
-        <div className="w-44 xl:w-52 flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {/* Left: Market Watch — wider for readability */}
+        <div className="w-52 xl:w-60 flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
         </div>
 
@@ -503,8 +514,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
           </div>
 
-          {/* Positions Table */}
-          <div className="h-48 xl:h-56 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          {/* Positions Table — taller to show bulk controls comfortably */}
+          <div className="h-56 xl:h-64 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
@@ -515,7 +526,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         </div>
 
         {/* Right: Order Panel */}
-        <div className="w-60 xl:w-72 flex-shrink-0 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="w-64 xl:w-72 flex-shrink-0 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <OrderPanel
             symbol={selectedSymbol} prices={prices} account={account} rules={rules}
             equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
