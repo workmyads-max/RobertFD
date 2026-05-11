@@ -595,8 +595,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                 </div>
               </div>
 
-              {/* Chart — compressed to 35% height */}
-              <div className="min-h-0 overflow-hidden" style={{ background: '#070b14', height: '35%', width: '120%' }}>
+              {/* Chart — compressed to 45% height */}
+              <div className="min-h-0 overflow-hidden" style={{ background: '#070b14', height: '45%', width: '120%' }}>
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
