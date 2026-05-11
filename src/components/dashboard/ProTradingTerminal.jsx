@@ -485,9 +485,19 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         rules={rules} accountBlocked={accountBlocked}
         allAccounts={allAccounts}
         onAccountChange={(a) => {
-          setAccount(a); setPositions([]); setPendingOrders([]); setClosedTrades([]);
-          setSessionBalance(a.balance || a.account_size || 100000); setTradesLoaded(false);
-          setAccountBlocked(a.status === 'failed'); setBreachReason('');
+          if (a.id !== account?.id) {
+            setAccount(a);
+            setPositions([]);
+            setPendingOrders([]);
+            setClosedTrades([]);
+            setSessionBalance(a.balance || a.account_size || 100000);
+            setDailyOpenBalance(a.balance || a.account_size || 100000);
+            setTradesLoaded(false);
+            setAccountBlocked(a.status === 'failed');
+            setBreachReason('');
+            setSelectedSymbol('EUR/USD');
+            setTimeframe('60');
+          }
         }}
       />
 
