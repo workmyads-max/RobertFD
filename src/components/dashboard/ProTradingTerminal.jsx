@@ -528,8 +528,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         {accountBlocked && breachReason && <BreachBanner reason={breachReason} />}
       </AnimatePresence>
 
-      {/* ═══ DESKTOP ═══════════════════════════════════════════════════════════ */}
-      <div className="hidden md:flex flex-col flex-1 overflow-hidden relative">
+      {/* ═══ DESKTOP & RESPONSIVE ═══════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col flex-1 overflow-hidden relative">
         {/* Floating Daily P&L box — visible when positions are open */}
         <FloatingDailyPnL
           floatPnl={floatPnl}
@@ -543,14 +543,14 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
         <div className="flex flex-1 overflow-hidden flex-col">
           {/* Top row: Market Watch | Chart Area + Order Panel — 25% height */}
-          <div className="flex min-h-0 overflow-hidden" style={{ height: '25%', borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex flex-col md:flex-row min-h-0 overflow-hidden" style={{ height: 'auto', md: { height: '25%' }, borderColor: 'rgba(255,255,255,0.06)' }}>
             {/* Left: Market Watch */}
-            <div className="border-r flex-shrink-0" style={{ width: '15%', borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="border-r flex-shrink-0 hidden md:block" style={{ width: '15%', borderColor: 'rgba(255,255,255,0.06)' }}>
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
             </div>
 
             {/* Center: Chart (toolbar + chart) — constrained height */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden max-h-full">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden max-h-full md:h-full" style={{ height: '300px' }}>
               {/* Chart toolbar — compact */}
               <div className="flex items-center gap-2 px-3 py-1.5 border-b flex-shrink-0"
                 style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
@@ -603,7 +603,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             </div>
 
             {/* Right: Order Panel */}
-            <div className="flex-shrink-0 border-l flex flex-col" style={{ width: '320px', borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="flex-shrink-0 border-l flex flex-col hidden md:flex" style={{ width: '320px', borderColor: 'rgba(255,255,255,0.06)' }}>
               <OrderPanel
                 symbol={selectedSymbol} prices={prices} account={account} rules={rules}
                 equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
@@ -613,7 +613,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
           </div>
 
           {/* Bottom row: Full-width Positions Table — 75% height */}
-          <div className="flex-1 overflow-hidden" style={{ marginTop: '-4px', height: '75%' }}>
+          <div className="flex-1 overflow-hidden hidden md:block" style={{ marginTop: '-4px', height: '75%' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
