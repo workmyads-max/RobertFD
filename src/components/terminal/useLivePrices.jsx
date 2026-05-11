@@ -36,10 +36,11 @@ const BINANCE_MAP = {
   'SOL/USD': 'solusdt', 'XRP/USD': 'xrpusdt', 'ADA/USD': 'adausdt',
   'DOGE/USD': 'dogeusdt', 'LTC/USD': 'ltcusdt',
 };
-const BINANCE_REVERSE = {};
-Object.entries(BINANCE_MAP).forEach(([sym, bSym]) => {
-  BINANCE_REVERSE[bSym.toUpperCase()] = sym;
-});
+// Reverse map: Binance sends s="BTCUSDT", map back to "BTC/USD"
+// BINANCE_MAP values are lowercase like "btcusdt", Binance s field is uppercase "BTCUSDT"
+const BINANCE_REVERSE = Object.fromEntries(
+  Object.entries(BINANCE_MAP).map(([sym, bSym]) => [bSym.toUpperCase(), sym])
+);
 
 export default function useLivePrices() {
   const [prices, setPrices] = useState(() => {
@@ -67,15 +68,8 @@ export default function useLivePrices() {
           const msg = JSON.parse(e.data);
           const d = msg.data;
           if (!d?.s) return;
-          const rawSym = d.s.replace('USDT', '').replace('USD', '');
-          const sym = BINANCE_REVERSE[d.s.replace('USDT', 'USDT')] || BINANCE_REVERSE[d.s];
-          if (!sym) {
-            // try direct match
-            const found = Object.entries(BINANCE_MAP).find(([, v]) => v.toUpperCase() === d.s.toLowerCase().replace('usdt', 'usdt').toUpperCase());
-            if (!found) return;
-          }
-          const matchedSym = Object.entries(BINANCE_MAP).find(([, v]) => v.toUpperCase() + '' === d.s.toLowerCase().replace('usdt', 'USDT').toUpperCase().replace('USDT', 'USDT') || v + '@ticker' === d.s.toLowerCase() + '@ticker');
-          const finalSym = sym || (matchedSym && matchedSym[0]);
+          // Direct reverse-lookup: d.s is like "BTCUSDT"
+          const finalSym = BINANCE_REVERSE[d.s];
           if (!finalSym) return;
           const inst = INSTRUMENTS.find(i => i.symbol === finalSym);
           if (!inst) return;

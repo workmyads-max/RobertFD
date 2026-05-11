@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Search, Star, TrendingUp, TrendingDown } from 'lucide-react';
 import { INSTRUMENTS, isMarketOpen } from './terminalConfig';
 
@@ -110,13 +109,17 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
           const catColor = CAT_COLORS[inst.category] || '#666';
 
           return (
-            <motion.button key={inst.symbol} onClick={() => onSelect(inst.symbol)}
-              className={`w-full grid grid-cols-4 items-center px-2 py-1.5 border-b border-white/[0.03] text-left transition-all group ${isActive ? '' : 'hover:bg-white/[0.03]'}`}
-              style={{ background: isActive ? `${catColor}12` : 'transparent' }}>
+            <div key={inst.symbol}
+              className={`w-full grid grid-cols-4 items-center px-2 py-1.5 border-b border-white/[0.03] text-left transition-all group cursor-pointer ${isActive ? '' : 'hover:bg-white/[0.03]'}`}
+              style={{ background: isActive ? `${catColor}12` : 'transparent' }}
+              onClick={() => onSelect(inst.symbol)}>
               <div className="col-span-2 flex items-center gap-1.5">
-                <button onClick={e => toggleFav(inst.symbol, e)} className="flex-shrink-0">
+                <span role="button" tabIndex={0}
+                  onClick={e => toggleFav(inst.symbol, e)}
+                  onKeyDown={e => e.key === 'Enter' && toggleFav(inst.symbol, e)}
+                  className="flex-shrink-0 cursor-pointer">
                   <Star className={`w-2.5 h-2.5 ${isFav ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
-                </button>
+                </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1">
                     <div className="w-1 h-3 rounded-sm flex-shrink-0" style={{ background: catColor, opacity: 0.6 }} />
@@ -135,7 +138,7 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
               <div className="text-right text-emerald-400/80 font-mono text-[9px]">
                 {p?.ask != null ? <PriceFlash value={p.ask} digits={inst.digits} /> : '—'}
               </div>
-            </motion.button>
+            </div>
           );
         })}
       </div>

@@ -211,6 +211,20 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
               <span className={item.color || 'text-foreground font-bold'}>{item.val}</span>
             </div>
           ))}
+          {/* Max tradable lots */}
+          {freeMargin > 0 && entryPrice > 0 && (
+            <div className="flex justify-between text-[10px] font-mono pt-1 border-t border-white/[0.06]">
+              <span className="text-muted-foreground">Max Lots</span>
+              <span className="text-primary font-black">
+                {(() => {
+                  const marginPer1Lot = calcRequiredMargin(symbol, 1, lev, entryPrice);
+                  if (!marginPer1Lot) return '∞';
+                  const maxL = Math.min(freeMargin / marginPer1Lot, rules?.maxLotsPerTrade || 20);
+                  return Math.max(0, maxL).toFixed(2);
+                })()}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Execute */}

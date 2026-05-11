@@ -7,6 +7,7 @@ import DailyResetTimer from '../shared/DailyResetTimer';
 import PhaseTransitionModal from '../shared/PhaseTransitionModal';
 
 import useLivePrices            from '../terminal/useLivePrices';
+import AccountStatusBanner       from '../terminal/AccountStatusBanner';
 import MarketWatch               from '../terminal/MarketWatch';
 import TradingViewChart          from '../terminal/TradingViewChart';
 import OrderPanel                from '../terminal/OrderPanel';
@@ -604,6 +605,9 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         <SessionBar />
       </div>
 
+      {/* Account Status Banner — account type + rule chips */}
+      <AccountStatusBanner account={account} rules={rules} />
+
       {/* Breach Banner */}
       <AnimatePresence>
         {accountBlocked && breachReason && <BreachBanner reason={breachReason} />}
@@ -612,7 +616,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       {/* ═══ DESKTOP LAYOUT (md+) ══════════════════════════════════════════ */}
       <div className="hidden md:flex flex-1 overflow-hidden">
         {/* Market Watch */}
-        <div className="w-40 lg:w-44 flex-shrink-0 border-r border-white/[0.06] overflow-hidden">
+        <div className="w-40 lg:w-48 xl:w-52 flex-shrink-0 border-r border-white/[0.06] overflow-hidden">
           <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
         </div>
 
@@ -667,7 +671,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         </div>
 
         {/* Right panel — Order Panel only */}
-        <div className="w-60 lg:w-68 flex-shrink-0 flex flex-col overflow-hidden border-l border-white/[0.06]">
+        <div className="w-60 lg:w-64 xl:w-72 flex-shrink-0 flex flex-col overflow-hidden border-l border-white/[0.06]">
           <div className="flex-1 overflow-hidden">
             <OrderPanel
               symbol={selectedSymbol} prices={prices} account={account} rules={rules}

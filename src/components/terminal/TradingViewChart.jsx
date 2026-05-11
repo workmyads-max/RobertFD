@@ -28,18 +28,26 @@ const TV_SYMBOLS = {
 };
 
 export default function TradingViewChart({ symbol, timeframe }) {
-  const containerRef = useRef(null);
+  const outerRef = useRef(null);
+  const innerRef = useRef(null);
   const tvSymbol = TV_SYMBOLS[symbol] || `OANDA:${symbol?.replace('/', '')}`;
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current.innerHTML = '';
+    if (!outerRef.current) return;
+
+    // Create a fresh inner div so TradingView owns its own subtree
+    // and can't crash when the parent is unmounted
+    const inner = document.createElement('div');
+    inner.style.height = '100%';
+    inner.style.width = '100%';
+    innerRef.current = inner;
+    outerRef.current.appendChild(inner);
 
     const widget = document.createElement('div');
     widget.className = 'tradingview-widget-container__widget';
     widget.style.height = '100%';
     widget.style.width = '100%';
-    containerRef.current.appendChild(widget);
+    inner.appendChild(widget);
 
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
@@ -68,18 +76,23 @@ export default function TradingViewChart({ symbol, timeframe }) {
       enable_publishing: false,
       show_popup_button: false,
     });
-    containerRef.current.appendChild(script);
+    inner.appendChild(script);
 
     return () => {
-      if (containerRef.current) containerRef.current.innerHTML = '';
+      // Detach the inner subtree safely — TV script owns it so don't clear innerHTML
+      try {
+        if (outerRef.current && inner.parentNode === outerRef.current) {
+          outerRef.current.removeChild(inner);
+        }
+      } catch {}
     };
   }, [tvSymbol, timeframe]);
 
   return (
     <div
-      ref={containerRef}
+      ref={outerRef}
       className="tradingview-widget-container"
-      style={{ height: '100%', width: '100%' }}
+      style={{ height: '100%', width: '100%', overflow: 'hidden' }}
     />
   );
 }
