@@ -181,41 +181,87 @@ export function calcTrailingDD(currentBalance, highWaterMark, accountSize) {
 }
 
 // ── Get leverage for specific instrument type ────────────────────────────────
-export function getLeverageForInstrument(symbol, accountLeverage = 100, adminLeverageConfig = null) {
+// Instrument-level leverage caps (regulatory/risk limits, regardless of account leverage)
+const INSTRUMENT_MAX_LEVERAGE = {
+  fx:        500,  // forex majors max 1:500
+  metal:     200,  // gold/silver max 1:200
+  crypto:     50,  // crypto max 1:50
+  index:     200,  // indices max 1:200
+  stock:      20,  // stock CFDs max 1:20
+  commodity: 100,  // commodities max 1:100
+};
+
+export function getLeverageForInstrument(symbol, accountLeverage = 100) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
   if (!inst) return accountLeverage;
-  
-  const config = adminLeverageConfig || DEFAULT_LEVERAGE_CONFIG;
-  const catConfig = config[inst.type];
-  if (!catConfig) return accountLeverage;
-  
-  // Use the lesser of account leverage and instrument max leverage
-  return Math.min(accountLeverage, catConfig.default);
+  const cap = INSTRUMENT_MAX_LEVERAGE[inst.type] ?? accountLeverage;
+  // Effective leverage = min(account leverage, instrument type cap)
+  return Math.min(accountLeverage, cap);
 }
 
-// ── Margin Calculation (MT5-style) ────────────────────────────────────────────
+// ── Margin Calculation (MT5 / Real Brokerage Style) ──────────────────────────
+// Formula: (Lots × ContractSize × MarketPrice) / Leverage
+// Forex special case: for USD-quoted pairs (e.g. EUR/USD) the notional IS in USD already.
+// For USD-base pairs (e.g. USD/JPY) the notional is in JPY, convert to USD via 1/price.
 export function calcRequiredMargin(symbol, lots, leverage, currentPrice) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
   if (!inst || !currentPrice || lots <= 0) return 0;
-  const lev = leverage || 100;
+
+  // Effective leverage — capped per instrument type
+  const lev = getLeverageForInstrument(symbol, leverage || 100);
 
   if (inst.type === 'fx') {
-    const isUsdBase = symbol.startsWith('USD/');
-    const contractVal = isUsdBase
-      ? lots * inst.contractSize
-      : lots * inst.contractSize * currentPrice;
-    return parseFloat((contractVal / lev).toFixed(2));
+    // Base currency of pair
+    const [base, quote] = symbol.split('/');
+    let notional;
+    if (quote === 'USD') {
+      // EUR/USD, GBP/USD, AUD/USD, NZD/USD — notional already in USD
+      notional = lots * inst.contractSize * currentPrice;
+    } else if (base === 'USD') {
+      // USD/JPY, USD/CHF, USD/CAD, USD/MXN — notional in quote ccy, convert to USD
+      notional = lots * inst.contractSize; // USD notional = lots * contractSize / 1 (base is USD)
+    } else {
+      // Cross pairs EUR/GBP, EUR/JPY, GBP/JPY etc. — approximate in USD via current price
+      notional = lots * inst.contractSize * currentPrice;
+    }
+    return parseFloat((notional / lev).toFixed(2));
   }
+
+  // Metals: (Lots × ContractSize × Price) / Leverage
+  // e.g. Gold: 1 lot × 100 oz × $3300 / 100 = $3300
   if (inst.type === 'metal') {
     return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
   }
-  if (inst.type === 'crypto' || inst.type === 'index' || inst.type === 'stock' || inst.type === 'commodity') {
-    return parseFloat(((lots * currentPrice) / lev).toFixed(2));
+
+  // Indices: (Lots × ContractSize × Price) / Leverage
+  // e.g. NAS100: 1 lot × 1 × 21000 / 100 = $210
+  if (inst.type === 'index') {
+    return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
   }
+
+  // Stock CFDs: (Lots × ContractSize × Price) / Leverage
+  // e.g. AAPL: 1 lot × 1 share × $200 / 5 = $40
+  if (inst.type === 'stock') {
+    return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
+  }
+
+  // Crypto: (Lots × ContractSize × Price) / Leverage
+  // e.g. BTC: 1 lot × 1 × $100,000 / 10 = $10,000
+  if (inst.type === 'crypto') {
+    return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
+  }
+
+  // Commodities: (Lots × ContractSize × Price) / Leverage
+  // e.g. Oil: 1 lot × 100 barrels × $78 / 50 = $156
+  if (inst.type === 'commodity') {
+    return parseFloat(((lots * inst.contractSize * currentPrice) / lev).toFixed(2));
+  }
+
   return 0;
 }
 
-// ── P&L Calculation (Broker-accurate) ─────────────────────────────────────────
+// ── P&L Calculation (MT5 / Real Brokerage Accurate) ──────────────────────────
+// Formula: diff × Lots × ContractSize  (result already in USD for USD-quoted instruments)
 export function calcPnl(pos, currentPrice) {
   const inst = INSTRUMENTS.find(i => i.symbol === pos.symbol);
   if (!inst || !currentPrice) return 0;
@@ -223,18 +269,27 @@ export function calcPnl(pos, currentPrice) {
   let pnl = 0;
 
   if (inst.type === 'fx') {
-    // Pip value calculation
-    const pipSize = inst.digits >= 4 ? 0.0001 : 0.01;
-    const pips = diff / pipSize;
-    pnl = pips * inst.pipValue * pos.lots;
-  } else if (inst.type === 'metal') {
+    const [base, quote] = pos.symbol.split('/');
+    if (quote === 'USD') {
+      // EUR/USD, GBP/USD etc: diff × lots × contractSize  (already in USD)
+      pnl = diff * pos.lots * inst.contractSize;
+    } else if (base === 'USD') {
+      // USD/JPY, USD/CHF etc: diff in quote ccy, convert to USD via close price
+      pnl = (diff / currentPrice) * pos.lots * inst.contractSize;
+    } else {
+      // Cross pairs — approximate: diff × lots × contractSize × currentPrice
+      pnl = diff * pos.lots * inst.contractSize;
+    }
+  } else if (inst.type === 'metal' || inst.type === 'commodity') {
+    // Gold: diff × lots × contractSize (100 oz/lot)
+    // Oil:  diff × lots × contractSize (100 bbl/lot)
     pnl = diff * pos.lots * inst.contractSize;
   } else {
-    // crypto, index, stock, commodity
-    pnl = diff * pos.lots;
+    // Indices, stocks, crypto — contractSize = 1 for most; formula still applies
+    pnl = diff * pos.lots * inst.contractSize;
   }
 
-  // Add commission
+  // Deduct round-trip commission at open (charged once on open, symmetric)
   const commission = calcCommission(pos.symbol, pos.lots, pos.entry);
   pnl = pnl - commission;
 
