@@ -596,13 +596,13 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               </div>
 
               {/* Chart — compressed to 48% height */}
-              <div className="min-h-0 overflow-hidden" style={{ background: '#070b14', height: '48%', width: '105%' }}>
+              <div className="min-h-0 overflow-hidden" style={{ background: '#070b14', height: '48%', width: '100%' }}>
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
 
             {/* Right: Order Panel */}
-            <div className="flex-shrink-0 border-l" style={{ width: '16%', borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="flex-shrink-0 border-l" style={{ width: '18%', borderColor: 'rgba(255,255,255,0.06)' }}>
               <OrderPanel
                 symbol={selectedSymbol} prices={prices} account={account} rules={rules}
                 equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
