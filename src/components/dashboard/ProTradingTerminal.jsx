@@ -626,169 +626,150 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
       <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {/* Top: Symbol header with account info */}
-        <div className="flex-shrink-0 px-3 py-2 border-b" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-white">{selectedSymbol}</span>
-              {currentPrice?.bid && <span className="text-sm font-black text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
+        {/* Top: Symbol header + TF selector */}
+        <div className="flex-shrink-0 px-3 py-2.5 border-b space-y-2" style={{ background: 'rgba(8,10,20,0.99)', borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div>
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Symbol</div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-sm font-black text-white">{selectedSymbol}</span>
+                  {currentPrice?.bid && <span className="text-xs font-bold text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
+                </div>
+              </div>
             </div>
-            <div className="text-[9px] font-mono text-slate-400">P&L: {floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}</div>
+            <div className="text-right">
+              <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Float P&L</div>
+              <div className={`text-sm font-bold mt-0.5 ${floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}
+              </div>
+            </div>
           </div>
-          <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+          <div className="flex gap-0.5 p-1 rounded-lg overflow-x-auto" style={{ background: 'rgba(255,255,255,0.03)', scrollbarWidth: 'none' }}>
             {TF_OPTS.map(tf => (
               <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
+                className={`px-2.5 py-1 rounded text-[8px] font-bold transition-all whitespace-nowrap flex-shrink-0 ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.25)', border: '1px solid rgba(255,92,0,0.3)' } : { background: 'rgba(255,255,255,0.04)' }}>
                 {tf.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Middle: Chart dominates (full height minus headers/footer) */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Chart — takes most space */}
+        <div className="flex-1 min-h-0 overflow-hidden" style={{ flex: '1 1 auto' }}>
           <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
         </div>
 
-        {/* Bottom: Compact position controls + order panel */}
-        <div className="border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(8,10,20,0.98)' }}>
-          {/* Quick position stats + buy/sell buttons */}
-          <div className="px-3 py-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className="grid grid-cols-3 gap-2 mb-2 text-center text-[9px]">
-              <div>
-                <div className="text-slate-500 uppercase tracking-wider">Equity</div>
-                <div className="font-bold text-emerald-400">${equity.toFixed(2)}</div>
+        {/* Bottom trading panel */}
+        <div className="flex-shrink-0 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(8,10,20,0.99)', maxHeight: '220px' }}>
+          {/* Quick stats + trade buttons */}
+          <div className="px-3 py-2.5 border-b space-y-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <div className="grid grid-cols-3 gap-2 text-center text-[8px]">
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
+                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Equity</div>
+                <div className="font-bold text-emerald-400 text-xs">${equity.toFixed(0)}</div>
               </div>
-              <div>
-                <div className="text-slate-500 uppercase tracking-wider">Margin</div>
-                <div className="font-bold text-slate-300">${usedMargin.toFixed(0)}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
+                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Margin</div>
+                <div className="font-bold text-slate-300 text-xs">${usedMargin.toFixed(0)}</div>
               </div>
-              <div>
-                <div className="text-slate-500 uppercase tracking-wider">Open</div>
-                <div className="font-bold text-orange-400">{positions.length}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
+                <div className="text-slate-500 uppercase tracking-wider mb-0.5">Positions</div>
+                <div className="font-bold text-orange-400 text-xs">{positions.length}</div>
               </div>
             </div>
             <div className="flex gap-2">
               <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'SELL', lots: 0.01, entry: prices[selectedSymbol]?.bid || 0, orderType: 'MARKET' })}
-                className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all"
-                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }}>
+                className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 2px 8px rgba(239,68,68,0.2)' }}>
                 SELL
               </button>
               <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'BUY', lots: 0.01, entry: prices[selectedSymbol]?.ask || 0, orderType: 'MARKET' })}
-                className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all"
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
+                className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.2)' }}>
                 BUY
               </button>
             </div>
           </div>
 
-          {/* Positions tab + order entry */}
-          <div className="max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-            <div className="px-3 py-2">
-              <div className="mb-2">
-                <div className="text-[9px] font-mono uppercase text-slate-500 tracking-widest mb-1.5">Open Positions ({positions.length})</div>
-                <div className="space-y-1 max-h-[80px] overflow-y-auto">
-                  {positions.length === 0 ? (
-                    <div className="text-[9px] text-slate-600 p-2 text-center">No open positions</div>
-                  ) : (
-                    positions.slice(0, 3).map(pos => {
-                      const p = prices[pos.symbol];
-                      const pnl = calcPnl(pos, p?.bid || pos.entry);
-                      return (
-                        <div key={pos.id} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                          <div className="flex items-center gap-1 text-[9px]">
-                            <span className="font-bold text-white">{pos.symbol}</span>
-                            <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>{pos.type}</span>
-                          </div>
-                          <span className={`font-bold text-[9px] ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                            {pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              {/* Quick order entry */}
-              <div className="text-[9px] font-mono uppercase text-slate-500 tracking-widest mb-1.5">Quick Trade</div>
-              <div className="flex gap-1">
-                <input type="number" placeholder="Lots" defaultValue="0.01" min="0.01" step="0.01"
-                  className="flex-1 px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-[9px] font-mono"
-                  style={{ outline: 'none' }} />
-                <button className="px-2 py-1 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[9px] font-bold hover:bg-orange-500/30 transition-colors">
-                  Set SL/TP
-                </button>
-              </div>
+          {/* Positions list */}
+          <div className="px-3 py-2 text-[8px] overflow-y-auto" style={{ maxHeight: '120px', scrollbarWidth: 'thin' }}>
+            <div className="text-slate-500 uppercase tracking-wider font-mono mb-1.5">
+              Open ({positions.length})
             </div>
+            {positions.length === 0 ? (
+              <div className="text-slate-600 text-center py-3">No open positions</div>
+            ) : (
+              <div className="space-y-1">
+                {positions.slice(0, 4).map(pos => {
+                  const p = prices[pos.symbol];
+                  const pnl = calcPnl(pos, p?.bid || pos.entry);
+                  return (
+                    <div key={pos.id} className="flex justify-between items-center px-2 py-1 rounded" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <span className="text-white font-bold">{pos.symbol} <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>{pos.type}</span></span>
+                      <span className={`font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${pnl.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Mobile tab bar */}
-        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.08)' }}>
+        {/* Mobile bottom tab bar */}
+        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(8,10,20,0.99)', borderColor: 'rgba(255,255,255,0.08)' }}>
           <div className="flex">
             {[
-              { id: 'positions', icon: List, label: `${positions.length} Open` },
-              { id: 'pending', icon: Clock, label: `${pendingOrders.length} Pending` },
-              { id: 'closed', icon: CheckCircle2, label: 'Closed' },
+              { id: 'positions', icon: List, label: 'Positions' },
+              { id: 'pending', icon: Clock, label: 'Orders' },
+              { id: 'closed', icon: CheckCircle2, label: 'History' },
               { id: 'watch', icon: Activity, label: 'Watch' },
             ].map(tab => {
               const Icon = tab.icon;
               const active = mobilePanel === tab.id;
               return (
-                <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-3 transition-all active:scale-95 ${active ? 'text-orange-400' : 'text-slate-600'}`}>
-                  <div className="relative">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-[7px] font-mono leading-none text-center">{tab.label}</span>
-                  {active && <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#FF5C00' }} />}
+                <button key={tab.id} onClick={(e) => { e.stopPropagation(); setMobilePanel(tab.id); }}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors active:opacity-70 ${active ? 'text-orange-400' : 'text-slate-500'}`}
+                  style={active ? { background: 'rgba(255,92,0,0.08)', borderTop: '2px solid #FF5C00' } : {}}>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-[7px] font-mono leading-none">{tab.label}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Hidden panel content for swipe/tab views */}
+        {/* Bottom sheet modals for panels */}
         <AnimatePresence>
-          {mobilePanel === 'positions' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
-              onClick={() => setMobilePanel(null)}>
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
-                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
-                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="sticky top-0 p-3 border-b flex items-center justify-between" style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-sm font-bold text-white">Open Positions ({positions.length})</span>
-                  <button onClick={() => setMobilePanel(null)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
+          {(mobilePanel === 'positions' || mobilePanel === 'pending' || mobilePanel === 'closed' || mobilePanel === 'watch') && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="fixed inset-0 z-40 bg-black/70 md:hidden"
+              onClick={() => setMobilePanel('chart')}
+              style={{ pointerEvents: 'auto' }}>
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+                onClick={e => e.stopPropagation()}
+                className="absolute bottom-0 inset-x-0 max-h-[85vh] rounded-t-3xl overflow-hidden flex flex-col"
+                style={{ background: 'rgba(10,13,24,0.99)', borderTop: '1px solid rgba(255,92,0,0.2)' }}>
+                {/* Header */}
+                <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <span className="text-sm font-bold text-white">
+                    {mobilePanel === 'positions' && `Open Positions (${positions.length})`}
+                    {mobilePanel === 'pending' && `Pending Orders (${pendingOrders.length})`}
+                    {mobilePanel === 'closed' && `Closed Trades (${closedTrades.length})`}
+                    {mobilePanel === 'watch' && 'Market Watch'}
+                  </span>
+                  <button onClick={() => setMobilePanel('chart')} className="p-1 text-white/50 hover:text-white transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <PositionsTable positions={positions} pendingOrders={[]} closedTrades={[]} prices={prices} onClose={closePosition}
-                  onCancelPending={() => {}} onBulkClose={handleBulkClose} />
-              </motion.div>
-            </motion.div>
-          )}
-          {mobilePanel === 'closed' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
-              onClick={() => setMobilePanel(null)}>
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
-                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
-                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="sticky top-0 p-3 border-b flex items-center justify-between" style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-sm font-bold text-white">Closed Trades ({closedTrades.length})</span>
-                  <button onClick={() => setMobilePanel(null)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  {mobilePanel === 'positions' && <PositionsTable positions={positions} pendingOrders={[]} closedTrades={[]} prices={prices} onClose={closePosition} onCancelPending={() => {}} onBulkClose={handleBulkClose} />}
+                  {mobilePanel === 'pending' && <PositionsTable positions={[]} pendingOrders={pendingOrders} closedTrades={[]} prices={prices} onClose={() => {}} onCancelPending={(id) => { setPendingOrders(prev => prev.filter(o => o.id !== id)); }} onBulkClose={() => {}} />}
+                  {mobilePanel === 'closed' && <PositionsTable positions={[]} pendingOrders={[]} closedTrades={closedTrades} prices={prices} onClose={() => {}} onCancelPending={() => {}} onBulkClose={() => {}} />}
+                  {mobilePanel === 'watch' && <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel('chart'); }} />}
                 </div>
-                <PositionsTable positions={[]} pendingOrders={[]} closedTrades={closedTrades} prices={prices} onClose={() => {}}
-                  onCancelPending={() => {}} onBulkClose={() => {}} />
-              </motion.div>
-            </motion.div>
-          )}
-          {mobilePanel === 'watch' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
-              onClick={() => setMobilePanel(null)}>
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
-                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
-                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel(null); }} />
               </motion.div>
             </motion.div>
           )}
