@@ -116,6 +116,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
   const account = selectedAccount || activeAccounts[0] || null;
 
+  const { data: tradeRecords = [] } = useQuery({
+    queryKey: ['trade-records-overview', account?.id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.id }),
+    enabled: !!account?.id,
+  });
+
   if (isLoading) {
     return <div className="flex items-center justify-center py-24"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -142,7 +148,16 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const balance = account.balance || accountSize;
   const equity = account.equity || balance;
   const pnl = account.pnl || 0;
-  const dailyPnl = account.daily_pnl || 0;
+  // Compute today's real P&L from closed trades
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayClosedTrades = tradeRecords.filter(t => {
+    if (t.status !== 'closed') return false;
+    const d = t.close_time || t.updated_date || '';
+    return d.startsWith(todayStr) || d.includes(new Date().toLocaleDateString());
+  });
+  const dailyPnl = todayClosedTrades.length > 0
+    ? todayClosedTrades.reduce((s, t) => s + (t.pnl || 0), 0)
+    : (account.daily_pnl || 0);
   const floatPnl = equity - balance;
   const winRate = account.win_rate || 0;
   const totalTrades = account.total_trades || 0;

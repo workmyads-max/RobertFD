@@ -304,6 +304,21 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       setPhaseModal('phase2');
       if (accountId) {
         base44.entities.ChallengeAccount.update(accountId, { status: 'passed' }).catch(() => {});
+        // Auto-generate Phase 1 certificate
+        base44.auth.me().then(user => {
+          base44.entities.Certificate.create({
+            certificate_id: `RF-P1-${Date.now()}`,
+            user_email: user?.email || account.user_email || '',
+            trader_name: user?.full_name || 'Trader',
+            type: 'phase1_passed',
+            title: 'Phase 1 Challenge Passed',
+            account_id: account.account_id,
+            account_size: account.account_size,
+            challenge_type: account.challenge_type,
+            issue_date: new Date().toISOString().split('T')[0],
+            is_verified: true,
+          }).catch(() => {});
+        }).catch(() => {});
       }
     }
 
@@ -312,6 +327,22 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       setPhaseModal('funded');
       if (accountId) {
         base44.entities.ChallengeAccount.update(accountId, { status: 'passed' }).catch(() => {});
+        // Auto-generate Phase 2 + Funded certificates
+        base44.auth.me().then(user => {
+          const base = {
+            user_email: user?.email || account.user_email || '',
+            trader_name: user?.full_name || 'Trader',
+            account_id: account.account_id,
+            account_size: account.account_size,
+            challenge_type: account.challenge_type,
+            issue_date: new Date().toISOString().split('T')[0],
+            is_verified: true,
+          };
+          base44.entities.Certificate.create({ ...base, certificate_id: `RF-P2-${Date.now()}`, type: 'phase2_passed', title: 'Phase 2 Challenge Passed' }).catch(() => {});
+          setTimeout(() => {
+            base44.entities.Certificate.create({ ...base, certificate_id: `RF-FND-${Date.now()}`, type: 'funded', title: 'Funded Trader Certificate' }).catch(() => {});
+          }, 500);
+        }).catch(() => {});
       }
     }
   }, [equity, dailyOpenBalance, accountSize, marginLevel, positions.length, tradesLoaded, accountBlocked]);

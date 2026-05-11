@@ -79,6 +79,7 @@ export default function TradingJournal({ user }) {
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: entries = [] } = useQuery({
@@ -97,9 +98,11 @@ export default function TradingJournal({ user }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['journal-entries'] }),
   });
 
+  const selectedAccount = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
+
   const handleAIGenerate = async (periodType) => {
     setGenerating(true);
-    const data = await generateAIJournalEntry(periodType, accounts);
+    const data = await generateAIJournalEntry(periodType, selectedAccount ? [selectedAccount] : accounts);
     await base44.entities.TradingJournalEntry.create(data);
     queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
     setGenerating(false);
@@ -116,7 +119,7 @@ export default function TradingJournal({ user }) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <BookOpen className="w-6 h-6 text-primary" />
@@ -145,6 +148,32 @@ export default function TradingJournal({ user }) {
           </div>
         )}
       </div>
+
+      {/* Account selector */}
+      {accounts.length > 0 && (
+        <div className="flex items-center gap-3 mb-5 p-3 rounded-xl flex-wrap"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Account:</span>
+          <div className="flex gap-2 flex-wrap">
+            {accounts.map(a => (
+              <button key={a.id} onClick={() => setSelectedAccountId(a.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${(selectedAccountId || accounts[0]?.id) === a.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                style={{
+                  background: (selectedAccountId || accounts[0]?.id) === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${(selectedAccountId || accounts[0]?.id) === a.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                <span className="font-bold">{a.account_id}</span>
+                <span className="ml-1 opacity-60">${(a.account_size || 0).toLocaleString()}</span>
+              </button>
+            ))}
+          </div>
+          {selectedAccount && (
+            <span className="ml-auto text-[10px] font-mono text-muted-foreground">
+              AI Generate will use <span className="text-primary">{selectedAccount.account_id}</span> trades
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

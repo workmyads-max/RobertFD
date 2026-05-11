@@ -21,8 +21,9 @@ export function useAccountStats(account, trades = []) {
     const tradingDays = account.trading_days || 0;
 
     // Derive from actual trades if available
-    const closedTrades = trades.filter(t => t.status === 'closed' && t.account_id === account.account_id);
-    const openTrades = trades.filter(t => t.status === 'open' && t.account_id === account.account_id);
+    // account_id field in TradeRecord stores account.id (the DB primary key)
+    const closedTrades = trades.filter(t => t.status === 'closed' && (t.account_id === account.id || t.account_id === account.account_id));
+    const openTrades = trades.filter(t => t.status === 'open' && (t.account_id === account.id || t.account_id === account.account_id));
 
     let computedWinRate = winRate;
     let wins = 0, losses = 0;
@@ -46,6 +47,16 @@ export function useAccountStats(account, trades = []) {
       lots += openTrades.reduce((s, t) => s + (t.lots || 0), 0);
     }
 
+    // Compute today's real P&L from closed trades (fallback to account.daily_pnl)
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTrades = closedTrades.filter(t => {
+      const d = t.close_time || t.updated_date || '';
+      return d.startsWith(todayStr) || d.includes(new Date().toLocaleDateString());
+    });
+    const realDailyPnl = todayTrades.length > 0
+      ? todayTrades.reduce((s, t) => s + (t.pnl || 0), 0)
+      : dailyPnl;
+
     const avgProfit = wins > 0 ? totalProfit / wins : 0;
     const avgLoss = losses > 0 ? totalLoss / losses : 0;
     const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0;
@@ -61,7 +72,7 @@ export function useAccountStats(account, trades = []) {
 
     return {
       // Core
-      size, balance, equity, pnl, dailyPnl, floatingPnl, closedPnl,
+      size, balance, equity, pnl, dailyPnl: realDailyPnl, floatingPnl, closedPnl,
       // Risk
       dailyDDPct, maxDDPct, profitTargetPct,
       // Performance
