@@ -602,7 +602,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             </div>
 
             {/* Right: Order Panel */}
-            <div className="w-64 xl:w-72 flex-shrink-0 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="flex-shrink-0 border-l" style={{ width: '50%', borderColor: 'rgba(255,255,255,0.06)' }}>
               <OrderPanel
                 symbol={selectedSymbol} prices={prices} account={account} rules={rules}
                 equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
