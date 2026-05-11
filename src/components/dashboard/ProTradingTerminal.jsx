@@ -11,6 +11,7 @@ import MarketWatch               from '../terminal/MarketWatch';
 import TradingViewChart          from '../terminal/TradingViewChart';
 import OrderPanel                from '../terminal/OrderPanel';
 import ChallengeTracker          from '../terminal/ChallengeTracker';
+import ChallengeTrackerDrawer    from '../terminal/ChallengeTrackerDrawer';
 import PositionsTable            from '../terminal/PositionsTable';
 import SessionBar                from '../terminal/SessionBar';
 import { INSTRUMENTS, getAccountRules, calcPnl, calcRequiredMargin, isMarketOpen, getMarketClosedReason, calcTrailingDD } from '../terminal/terminalConfig';
@@ -34,12 +35,12 @@ function AccountBar({ account, balance, equity, floatPnl, usedMargin, freeMargin
   ];
 
   return (
-    <div className="flex items-stretch border-b border-white/[0.06] overflow-x-auto flex-shrink-0"
-      style={{ background: 'rgba(4,4,8,0.99)', scrollbarWidth: 'none' }}>
+    <div className="flex items-stretch border-b border-white/[0.08] overflow-x-auto flex-shrink-0"
+      style={{ background: 'rgba(8,12,24,0.99)', scrollbarWidth: 'none' }}>
       {items.map(item => (
         <div key={item.label} className="flex flex-col px-2 md:px-3 py-2 md:py-2.5 border-r border-white/[0.04] flex-shrink-0 min-w-[64px]">
-          <span className="text-[8px] md:text-[9px] font-mono text-muted-foreground/40 uppercase tracking-wider mb-0.5">{item.label}</span>
-          <span className={`text-[11px] md:text-[12px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
+          <span className="text-[8px] md:text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">{item.label}</span>
+          <span className={`text-[11px] md:text-[13px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
         </div>
       ))}
       {accountBlocked && (
@@ -464,7 +465,7 @@ export default function ProTradingTerminal({ account }) {
   ];
 
   return (
-    <div className="flex flex-col h-full font-mono" style={{ background: '#07070b' }}>
+    <div className="flex flex-col h-full font-mono" style={{ background: '#0a0e1a' }}>
 
       {/* Phase Transition Modal */}
       <AnimatePresence>
@@ -514,8 +515,8 @@ export default function ProTradingTerminal({ account }) {
         {/* Chart column */}
         <div className="flex-1 flex flex-col overflow-hidden border-r border-white/[0.06]">
           {/* Chart toolbar */}
-          <div className="flex items-center gap-1 px-3 py-1.5 border-b border-white/[0.06] flex-shrink-0 overflow-x-auto"
-            style={{ background: 'rgba(5,5,9,0.98)' }}>
+          <div className="flex items-center gap-1 px-3 py-1.5 border-b border-white/[0.08] flex-shrink-0 overflow-x-auto"
+            style={{ background: 'rgba(10,14,26,0.98)' }}>
             <span className="text-[11px] font-black text-foreground mr-2">{selectedSymbol}</span>
             {currentPrice?.bid && (
               <>
@@ -548,7 +549,7 @@ export default function ProTradingTerminal({ account }) {
           </div>
 
           {/* Positions Table */}
-          <div className="h-36 lg:h-44 border-t border-white/[0.06] flex-shrink-0">
+          <div className="h-44 lg:h-52 border-t border-white/[0.06] flex-shrink-0">
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
@@ -561,19 +562,24 @@ export default function ProTradingTerminal({ account }) {
           </div>
         </div>
 
-        {/* Right panel */}
-        <div className="w-56 lg:w-64 flex-shrink-0 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden border-b border-white/[0.06]">
+        {/* Right panel — Order Panel only */}
+        <div className="w-60 lg:w-68 flex-shrink-0 flex flex-col overflow-hidden border-l border-white/[0.06]">
+          <div className="flex-1 overflow-hidden">
             <OrderPanel
               symbol={selectedSymbol} prices={prices} account={account} rules={rules}
               equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
               accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
             />
           </div>
-          <div className="overflow-y-auto flex-shrink-0" style={{ maxHeight: '260px', background: '#07070b', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
-          </div>
         </div>
+      </div>
+
+      {/* ── Challenge Tracker — animated bottom drawer ── */}
+      <div className="hidden md:block flex-shrink-0">
+        <ChallengeTrackerDrawer
+          account={account} rules={rules} balance={sessionBalance}
+          equity={equity} dailyOpenBalance={dailyOpenBalance}
+        />
       </div>
 
       {/* ═══ MOBILE LAYOUT ═════════════════════════════════════════════════ */}
@@ -651,14 +657,14 @@ export default function ProTradingTerminal({ account }) {
 
           {mobilePanel === 'tracker' && (
             <div className="h-full overflow-y-auto">
-              <ChallengeTracker account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
+              <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
             </div>
           )}
         </div>
 
         {/* Mobile bottom tab bar */}
-        <div className="flex-shrink-0 border-t border-white/[0.06] flex"
-          style={{ background: 'rgba(4,4,8,0.99)' }}>
+        <div className="flex-shrink-0 border-t border-white/[0.08] flex"
+          style={{ background: 'rgba(8,12,24,0.99)' }}>
           {mobileTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = mobilePanel === tab.id;

@@ -56,29 +56,31 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.06]" style={{ background: 'rgba(255,92,0,0.03)' }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
-          <span className="text-primary font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.08]"
+        style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.05), rgba(10,14,26,0))' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #FF5C00, #cc4900)', boxShadow: '0 4px 16px rgba(255,92,0,0.4)' }}>
+          <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-foreground font-bold text-sm">Robert</span>
-          <span className="text-primary font-black text-sm" style={{ letterSpacing: '-0.03em' }}>Funds</span>
+          <span className="text-slate-100 font-extrabold text-sm tracking-tight">Robert</span>
+          <span className="text-primary font-black text-sm tracking-tight">Funds</span>
         </div>
       </div>
 
       {/* User info */}
       {user && (
-        <div className="px-4 py-4 border-b border-white/5">
+        <div className="px-4 py-3 border-b border-white/[0.07]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-              {user.full_name?.charAt(0) || 'U'}
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.4), rgba(255,92,0,0.2))', border: '1px solid rgba(255,92,0,0.3)' }}>
+              {user.full_name?.charAt(0)?.toUpperCase() || 'T'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-foreground truncate">{user.full_name || 'Trader'}</div>
-              <div className="text-[10px] text-muted-foreground font-mono truncate flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                Active
+              <div className="text-[13px] font-bold text-slate-100 truncate">{user.full_name || 'Trader'}</div>
+              <div className="text-[10px] text-slate-500 truncate flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                <span className="truncate">{user.email || 'Active'}</span>
               </div>
             </div>
           </div>
@@ -86,7 +88,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       )}
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -94,20 +96,21 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             <button
               key={item.id}
               onClick={() => handleNav(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
                 isActive
-                  ? 'bg-primary/15 text-primary'
+                  ? 'text-white'
                   : item.id === 'trash'
-                    ? 'text-red-400/70 hover:text-red-400 hover:bg-red-500/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                    ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.05]'
               }`}
+              style={isActive ? { background: 'linear-gradient(90deg, rgba(255,92,0,0.18), rgba(255,92,0,0.06))', borderLeft: '2px solid #FF5C00' } : {}}
             >
-              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/70 group-hover:text-red-400' : 'text-muted-foreground group-hover:text-foreground'}`} />
-              <span className="flex-1 text-left">{item.label}</span>
+              <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+              <span className="flex-1 text-left font-medium">{item.label}</span>
               {item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white">{trashCount}</span>
               )}
-              {isActive && item.id !== 'trash' && <ChevronRight className="w-3 h-3 text-primary/60" />}
+              {isActive && item.id !== 'trash' && <ChevronRight className="w-3 h-3 text-primary/50" />}
             </button>
           );
         })}
@@ -158,12 +161,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               const isActive = activePage === item.id;
               return (
                 <button key={item.id} onClick={() => handleNav(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                    isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                  }`}>
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 group ${
+                    isActive ? 'text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04]'
+                  }`}
+                  style={isActive ? { background: 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))', borderLeft: '2px solid #FF5C00' } : {}}>
+                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-primary' : 'text-slate-600 group-hover:text-slate-400'}`} />
                   <span className="flex-1 text-left">{item.label}</span>
-                  {isActive && <ChevronRight className="w-3 h-3 text-primary/60" />}
+                  {isActive && <ChevronRight className="w-3 h-3 text-primary/50" />}
                 </button>
               );
             })}
@@ -200,8 +204,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </button>
 
       {/* Desktop sidebar */}
-      <div className="hidden md:flex flex-col w-56 border-r border-white/[0.06] h-screen sticky top-0"
-        style={{ background: 'rgba(5,5,7,0.97)', backdropFilter: 'blur(32px)' }}>
+      <div className="hidden md:flex flex-col w-56 border-r border-white/[0.08] h-screen sticky top-0"
+        style={{ background: 'rgba(10,14,26,0.98)', backdropFilter: 'blur(32px)' }}>
         <SidebarContent />
       </div>
 
