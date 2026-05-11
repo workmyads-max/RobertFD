@@ -666,6 +666,19 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
           </div>
         </div>
 
+        {/* Mobile Quick Trade Panel */}
+        <div className="flex-shrink-0 p-3 border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white' }}>▼ SELL</button>
+            <div className="flex flex-col items-center justify-center px-2 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="text-[8px] text-slate-500 mb-0.5">Lots</div>
+              <span className="text-xs font-bold text-white">{lots.toFixed(2)}</span>
+            </div>
+            <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>▲ BUY</button>
+          </div>
+          <input value={lots} onChange={(e) => setLots(parseFloat(e.target.value) || 0.01)} placeholder="Lot size" className="w-full px-3 py-2 rounded-lg text-white font-mono text-xs outline-none" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+        </div>
+
         {/* Mobile tabs */}
         <div className="flex-shrink-0 flex border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
           {mobileTabs.map(tab => {
@@ -692,21 +705,11 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             )}
             {mobilePanel === 'order' && (
               <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto p-4">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => {}} className="py-3 rounded-xl font-bold text-sm transition-all" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white' }}>▼ SELL</button>
-                    <button onClick={() => {}} className="py-3 rounded-xl font-bold text-sm transition-all" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>▲ BUY</button>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-400 mb-2 block">Lot Size</label>
-                    <input value={lots} onChange={(e) => setLots(parseFloat(e.target.value) || 0.01)} className="w-full px-4 py-3 rounded-xl text-white font-mono text-sm outline-none" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
-                  </div>
-                  <OrderPanel
-                    symbol={selectedSymbol} prices={prices} account={account} rules={rules}
-                    equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
-                    accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
-                  />
-                </div>
+                <OrderPanel
+                  symbol={selectedSymbol} prices={prices} account={account} rules={rules}
+                  equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
+                  accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
+                />
               </motion.div>
             )}
             {mobilePanel === 'positions' && (
