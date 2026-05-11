@@ -247,6 +247,41 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
     if (breached) {
       setAccountBlocked(true);
       setBreachReason(reason);
+
+      // ── Force-close ALL open positions at current market price ────────────
+      setPositions(prev => {
+        if (prev.length === 0) return prev;
+        let runningBalance = sessionBalance;
+        const newClosed = prev.map(pos => {
+          const p  = prices[pos.symbol];
+          const cp = p ? (pos.type === 'BUY' ? p.bid : p.ask) : pos.entry;
+          const pnl = calcPnl(pos, cp);
+          runningBalance = parseFloat((runningBalance + pnl).toFixed(2));
+          // Persist each close to DB
+          if (pos.id && typeof pos.id === 'string' && pos.id.length > 10) {
+            base44.entities.TradeRecord.update(pos.id, {
+              status: 'closed', close: cp, pnl,
+              close_reason: 'DD Breach — Force Close',
+              close_time: new Date().toLocaleTimeString(),
+            }).catch(() => {});
+          }
+          return { ...pos, close: cp, pnl, closeTime: new Date().toLocaleTimeString(), reason: 'DD Breach — Force Close' };
+        });
+        setSessionBalance(runningBalance);
+        setClosedTrades(ct => [...newClosed, ...ct.slice(0, 199 - newClosed.length)]);
+        return [];
+      });
+
+      // Also cancel all pending orders
+      setPendingOrders(prev => {
+        prev.forEach(o => {
+          if (o.id && typeof o.id === 'string' && o.id.length > 10) {
+            base44.entities.TradeRecord.update(o.id, { status: 'closed', close_reason: 'DD Breach — Cancelled' }).catch(() => {});
+          }
+        });
+        return [];
+      });
+
       if (accountId) {
         base44.entities.ChallengeAccount.update(accountId, {
           status: 'failed', equity, balance: sessionBalance,
