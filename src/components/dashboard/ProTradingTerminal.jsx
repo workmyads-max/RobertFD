@@ -548,10 +548,10 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
             </div>
 
-            {/* Center: Chart (toolbar + chart) */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              {/* Chart toolbar */}
-              <div className="flex items-center gap-2 px-4 py-2 border-b flex-shrink-0"
+            {/* Center: Chart (toolbar + chart) — constrained height */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden max-h-full">
+              {/* Chart toolbar — compact */}
+              <div className="flex items-center gap-2 px-3 py-1.5 border-b flex-shrink-0"
                 style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
                 
                 {/* Symbol info */}
@@ -595,8 +595,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                 </div>
               </div>
 
-              {/* Chart */}
-              <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14', borderColor: 'rgba(255,255,255,0.06)' }}>
+              {/* Chart — compressed height to match sidebar width */}
+              <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14', maxHeight: '220px' }}>
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
