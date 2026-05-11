@@ -210,7 +210,7 @@ async function loadTrades(accountId) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function ProTradingTerminal({ account: initialAccount, allAccounts = [] }) {
+export default function ProTradingTerminal({ account: initialAccount, allAccounts = [], onAccountChange }) {
   const [account, setAccount] = useState(initialAccount);
   useEffect(() => { if (initialAccount) setAccount(initialAccount); }, [initialAccount?.id]);
 
@@ -497,6 +497,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             setBreachReason('');
             setSelectedSymbol('EUR/USD');
             setTimeframe('60');
+            onAccountChange?.(a);
           }
         }}
       />

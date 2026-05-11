@@ -103,12 +103,16 @@ export default function Dashboard() {
     setActivePage('analytics');
   };
 
+  const handleAccountSwitch = (account) => {
+    setActiveAccount(account);
+  };
+
   const renderPage = () => {
     switch (activePage) {
       case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'terminal': return <ProTradingTerminal account={activeAccount || primaryActiveAccount} allAccounts={allAccounts} />;
+      case 'terminal': return <ProTradingTerminal account={activeAccount || primaryActiveAccount} allAccounts={allAccounts} onAccountChange={handleAccountSwitch} />;
       case 'xcopier': return <XCopier />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
