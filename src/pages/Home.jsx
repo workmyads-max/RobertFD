@@ -12,6 +12,7 @@ import MobileAppShowcase from '../components/landing/MobileAppShowcase';
 import WhyChooseUs from '../components/landing/WhyChooseUs';
 import LivePayouts from '../components/landing/LivePayouts';
 import Leaderboard from '../components/landing/Leaderboard';
+import HomeLeaderboard from '../components/landing/HomeLeaderboard';
 import AffiliateSection from '../components/landing/AffiliateSection';
 import FAQSection from '../components/landing/FAQSection';
 import AboutSection from '../components/landing/AboutSection';
@@ -45,7 +46,9 @@ export default function Home() {
       <MobileAppShowcase />
       <WhyChooseUs />
       <LivePayouts />
-      <Leaderboard />
+      <section className="max-w-[1400px] mx-auto px-6 py-20">
+        <HomeLeaderboard />
+      </section>
       <AffiliateSection />
       <FAQSection />
       <AboutSection aboutImage={IMAGES.singapore} />

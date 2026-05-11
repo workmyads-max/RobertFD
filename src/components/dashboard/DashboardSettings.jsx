@@ -197,10 +197,10 @@ export default function DashboardSettings({ user }) {
 
                   <Card title="Personal Information" subtitle="Update your public profile details">
                     <div className="space-y-4">
-                      <InputField label="Full Name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="Your full name" />
+                      <InputField label="Username" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="Your username" />
                       <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed — contact support if needed" />
                     </div>
-                    <button onClick={() => saveMutation.mutate({ full_name: profile.full_name })} disabled={saveMutation.isPending}
+                    <button onClick={() => { saveMutation.mutate({ full_name: profile.full_name }); }} disabled={saveMutation.isPending || !profile.full_name.trim()}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-40"
                       style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
                       <Save className="w-4 h-4" /> {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
