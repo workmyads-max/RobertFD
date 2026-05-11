@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, Lock, BarChart2, BookOpen, List, 
   Menu, X, RefreshCw, ChevronDown, Activity,
-  TrendingUp, TrendingDown, Clock, Zap, CheckCircle2
+  TrendingUp, TrendingDown, Clock, Zap, CheckCircle2, Settings
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -245,6 +245,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
   const [tradesLoaded,   setTradesLoaded]   = useState(false);
   const [phaseModal,     setPhaseModal]     = useState(null);
   const [mobilePanel,    setMobilePanel]    = useState('chart');
+  const [lots,           setLots]           = useState(0.01);
   const lastResetDate = useRef(null);
 
   const accountId   = account?.id;
@@ -630,99 +631,56 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
       <div className="flex md:hidden flex-col flex-1 min-h-0 safe-top safe-bottom">
-        {/* Top: Symbol header + TF selector — minimal design */}
-        <div className="flex-shrink-0 px-2.5 py-2 border-b space-y-1.5" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)', backdropFilter: 'blur(20px)' }}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-xs font-black text-white">{selectedSymbol}</span>
-              {currentPrice?.bid && <span className="text-xs font-bold text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className={`text-xs font-bold ${floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-0.5 p-0.5 rounded-lg overflow-x-auto" style={{ background: 'rgba(255,92,0,0.08)', scrollbarWidth: 'none' }}>
-            {TF_OPTS.map(tf => (
-              <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                className={`px-2 py-0.5 rounded text-[7px] font-bold transition-colors whitespace-nowrap flex-shrink-0 ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.3)' } : {}}>
-                {tf.label}
-              </button>
-            ))}
+        {/* Top: M1 symbol + controls */}
+        <div className="flex-shrink-0 px-3 py-2 border-b flex items-center justify-between" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
+          <span className="text-xs font-black text-white">{selectedSymbol}</span>
+          <div className="flex items-center gap-3 text-white/40">
+            <button className="text-sm">+</button>
+            <button className="text-sm">f</button>
+            <button className="text-sm">⊕</button>
           </div>
         </div>
 
-        {/* Chart — takes most space */}
-        <div className="flex-1 min-h-0 overflow-hidden" style={{ flex: '1 1 auto' }}>
+        {/* SELL/BUY Price Row with Lots Control */}
+        <div className="flex-shrink-0 flex items-center h-12" style={{ background: 'rgba(6,8,16,0.98)' }}>
+          {/* SELL */}
+          <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #0066ff, #0052cc)' }}>
+            <div className="text-[9px] font-mono text-white/80">SELL</div>
+            <div className="text-sm font-black text-white">{currentPrice?.bid?.toFixed(2) || '0.00'}</div>
+          </div>
+
+          {/* Lot Control Center */}
+          <div className="flex flex-col items-center justify-center px-3 py-2 gap-1" style={{ background: '#000' }}>
+            <button onClick={() => setLots(Math.max(0.01, lots - 0.01))} className="text-white/60 hover:text-white">
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            <span className="text-xs font-bold text-white w-8 text-center">{lots.toFixed(2)}</span>
+            <button onClick={() => setLots(lots + 0.01)} className="text-white/60 hover:text-white">
+              <ChevronDown className="w-3 h-3 rotate-180" />
+            </button>
+          </div>
+
+          {/* BUY */}
+          <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #00b981, #059669)' }}>
+            <div className="text-[9px] font-mono text-white/80">BUY</div>
+            <div className="text-sm font-black text-white">{currentPrice?.ask?.toFixed(2) || '0.00'}</div>
+          </div>
+        </div>
+
+        {/* Chart — full height */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
         </div>
 
-        {/* Bottom trading panel */}
-        <div className="flex-shrink-0 border-t" style={{ borderColor: 'rgba(255,92,0,0.15)', background: 'rgba(6,8,16,0.98)', backdropFilter: 'blur(20px)', maxHeight: '210px' }}>
-          {/* Quick stats + trade buttons */}
-          <div className="px-2.5 py-2 border-b space-y-1.5" style={{ borderColor: 'rgba(255,92,0,0.1)' }}>
-            <div className="grid grid-cols-3 gap-1.5 text-center text-[7px]">
-              <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Equity</div>
-                <div className="font-bold text-emerald-400 text-[10px]">${equity.toFixed(0)}</div>
-              </div>
-              <div style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(139,92,246,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(139,92,246,0.2)' }}>
-                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Margin</div>
-                <div className="font-bold text-slate-300 text-[10px]">${usedMargin.toFixed(0)}</div>
-              </div>
-              <div style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(255,92,0,0.04))', padding: '6px', borderRadius: '6px', border: '1px solid rgba(255,92,0,0.2)' }}>
-                <div className="text-slate-400 uppercase tracking-wider mb-0.5 font-mono">Positions</div>
-                <div className="font-bold text-orange-400 text-[10px]">{positions.length}</div>
-              </div>
-            </div>
-            <div className="flex gap-1.5">
-              <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'SELL', lots: 0.01, entry: prices[selectedSymbol]?.bid || 0, orderType: 'MARKET' })}
-                className="flex-1 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.8), rgba(220,38,38,0.8))', boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }}>
-                SELL
-              </button>
-              <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'BUY', lots: 0.01, entry: prices[selectedSymbol]?.ask || 0, orderType: 'MARKET' })}
-                className="flex-1 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.8), rgba(5,150,105,0.8))', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
-                BUY
-              </button>
-            </div>
-          </div>
-
-          {/* Positions list */}
-          <div className="px-2.5 py-1.5 text-[7px] overflow-y-auto" style={{ maxHeight: '110px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,92,0,0.2) transparent' }}>
-            <div className="text-slate-400 uppercase tracking-wider font-mono mb-1 text-[6px]">
-              Open ({positions.length})
-            </div>
-            {positions.length === 0 ? (
-              <div className="text-slate-600 text-center py-2 text-[7px]">No positions</div>
-            ) : (
-              <div className="space-y-0.5">
-                {positions.slice(0, 3).map(pos => {
-                  const p = prices[pos.symbol];
-                  const pnl = calcPnl(pos, p?.bid || pos.entry);
-                  return (
-                    <div key={pos.id} className="flex justify-between items-center px-1.5 py-0.5 rounded text-[6px]" style={{ background: 'rgba(255,92,0,0.08)' }}>
-                      <span className="text-white font-bold">{pos.symbol} <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'} className="text-[6px]">{pos.type}</span></span>
-                      <span className={`font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${pnl.toFixed(2)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Mobile bottom tab bar */}
-        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(6,8,16,0.99)', borderColor: 'rgba(255,92,0,0.15)', backdropFilter: 'blur(10px)' }}>
+        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(6,8,16,0.99)', borderColor: 'rgba(255,92,0,0.15)' }}>
           <div className="flex h-14 pointer-events-auto">
             {[
-              { id: 'positions', icon: List, label: 'Positions' },
-              { id: 'pending', icon: Clock, label: 'Orders' },
-              { id: 'closed', icon: CheckCircle2, label: 'History' },
-              { id: 'watch', icon: Activity, label: 'Watch' },
+              { id: 'quotes', icon: TrendingUp, label: 'Quotes' },
+              { id: 'chart', icon: BarChart2, label: 'Chart' },
+              { id: 'trade', icon: BookOpen, label: 'Trade' },
+              { id: 'history', icon: Clock, label: 'History' },
+              { id: 'settings', icon: Settings, label: 'Settings' },
             ].map(tab => {
               const Icon = tab.icon;
               const active = mobilePanel === tab.id;
@@ -730,59 +688,16 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                 <motion.button 
                   key={tab.id} 
                   onClick={() => setMobilePanel(tab.id)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all ${active ? 'text-orange-400' : 'text-slate-500 hover:text-slate-400'}`}
-                  style={active ? { background: 'linear-gradient(180deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))' } : {}}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${active ? 'text-blue-400' : 'text-slate-500'}`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}>
-                  <Icon className="w-4 h-4" />
-                  <span className="text-[7px] font-mono font-bold leading-none whitespace-nowrap">{tab.label}</span>
-                  {active && (
-                    <motion.div 
-                      layoutId="underline" 
-                      className="h-1 w-6 rounded-full mt-1"
-                      style={{ background: '#FF5C00' }}
-                      transition={{ type: 'spring', damping: 30, stiffness: 300 }} />
-                  )}
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px] font-bold leading-none whitespace-nowrap">{tab.label}</span>
                 </motion.button>
               );
             })}
           </div>
         </div>
-
-        {/* Bottom sheet modals for panels */}
-        <AnimatePresence>
-          {(mobilePanel === 'positions' || mobilePanel === 'pending' || mobilePanel === 'closed' || mobilePanel === 'watch') && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              className="fixed inset-0 z-40 bg-black/70 md:hidden"
-              onClick={() => setMobilePanel('chart')}
-              style={{ pointerEvents: 'auto' }}>
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
-                onClick={e => e.stopPropagation()}
-                className="absolute bottom-0 inset-x-0 max-h-[85vh] rounded-t-3xl overflow-hidden flex flex-col"
-                style={{ background: 'rgba(10,13,24,0.99)', borderTop: '1px solid rgba(255,92,0,0.2)' }}>
-                {/* Header */}
-                <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-sm font-bold text-white">
-                    {mobilePanel === 'positions' && `Open Positions (${positions.length})`}
-                    {mobilePanel === 'pending' && `Pending Orders (${pendingOrders.length})`}
-                    {mobilePanel === 'closed' && `Closed Trades (${closedTrades.length})`}
-                    {mobilePanel === 'watch' && 'Market Watch'}
-                  </span>
-                  <button onClick={() => setMobilePanel('chart')} className="p-1 text-white/50 hover:text-white transition-colors">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto min-h-0">
-                  {mobilePanel === 'positions' && <PositionsTable positions={positions} pendingOrders={[]} closedTrades={[]} prices={prices} onClose={closePosition} onCancelPending={() => {}} onBulkClose={handleBulkClose} />}
-                  {mobilePanel === 'pending' && <PositionsTable positions={[]} pendingOrders={pendingOrders} closedTrades={[]} prices={prices} onClose={() => {}} onCancelPending={(id) => { setPendingOrders(prev => prev.filter(o => o.id !== id)); }} onBulkClose={() => {}} />}
-                  {mobilePanel === 'closed' && <PositionsTable positions={[]} pendingOrders={[]} closedTrades={closedTrades} prices={prices} onClose={() => {}} onCancelPending={() => {}} onBulkClose={() => {}} />}
-                  {mobilePanel === 'watch' && <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel('chart'); }} />}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
