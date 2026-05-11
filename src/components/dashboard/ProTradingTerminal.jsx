@@ -568,13 +568,13 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="flex-1 overflow-hidden" style={{ background: '#070b14' }}>
+          {/* Chart — expanded */}
+          <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14', flex: '1 1 65%' }}>
             <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
           </div>
 
           {/* Positions Table */}
-          <div className="h-48 xl:h-52 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="h-40 border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)', flex: '0 0 auto' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
