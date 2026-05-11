@@ -6,7 +6,6 @@ import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
 import ChallengeTypes from '../components/landing/ChallengeTypes';
 import PricingSection from '../components/landing/PricingSection';
-import ChallengeRules from '../components/landing/ChallengeRules';
 import RulesSection from '../components/landing/RulesSection';
 import PlatformsSection from '../components/landing/PlatformsSection';
 import MobileAppShowcase from '../components/landing/MobileAppShowcase';
@@ -41,7 +40,6 @@ export default function Home() {
       <DashboardPreview dashImage={IMAGES.dashboard} />
       <ChallengeTypes />
       <PricingSection />
-      <ChallengeRules />
       <RulesSection />
       <PlatformsSection mobileImage={IMAGES.mobile} />
       <MobileAppShowcase />

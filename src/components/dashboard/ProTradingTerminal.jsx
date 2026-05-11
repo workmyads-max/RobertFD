@@ -35,57 +35,116 @@ const TF_OPTS = [
 function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked, allAccounts, onAccountChange }) {
   const [showDrop, setShowDrop] = useState(false);
   const switchable = (allAccounts || []).filter(a => ['active','funded','passed'].includes(a.status) && a.id !== account?.id);
+  const pnlColor = floatPnl >= 0 ? '#00f5a0' : '#ef4444';
 
   return (
-    <div className="flex items-center gap-0 border-b overflow-x-auto flex-shrink-0"
-      style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)', scrollbarWidth: 'none' }}>
-      
-      {/* Account selector */}
-      <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="flex flex-col">
-          <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
-          <button onClick={() => switchable.length > 0 && setShowDrop(v => !v)}
-            className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors">
-            {account?.account_id || 'N/A'}
-            {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
-          </button>
-        </div>
-        {showDrop && (
-          <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[160px]"
-            style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
-            {switchable.map(a => (
-              <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
-                className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
-                <span className="text-orange-400 font-bold">{a.account_id}</span>
-                <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
+    <div className="flex-shrink-0 border-b" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
+      {/* Mobile: 2-row compact layout */}
+      <div className="flex md:hidden flex-col">
+        {/* Row 1: Account + Balance + Equity */}
+        <div className="flex items-center gap-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="flex flex-col">
+              <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Acct</span>
+              <button onClick={() => switchable.length > 0 && setShowDrop(v => !v)}
+                className="flex items-center gap-0.5 text-[11px] font-mono font-black text-orange-400">
+                {account?.account_id || 'N/A'}
+                {switchable.length > 0 && <ChevronDown className="w-2.5 h-2.5" />}
               </button>
-            ))}
+            </div>
+            {showDrop && (
+              <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[160px]"
+                style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
+                {switchable.map(a => (
+                  <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
+                    className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
+                    <span className="text-orange-400 font-bold">{a.account_id}</span>
+                    <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Balance</span>
+            <span className="text-[11px] font-mono font-bold text-slate-200 whitespace-nowrap">${balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+          </div>
+          <div className="flex flex-col px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Equity</span>
+            <span className={`text-[11px] font-mono font-bold whitespace-nowrap ${equity >= balance ? 'text-emerald-400' : 'text-red-400'}`}>${equity.toFixed(2)}</span>
+          </div>
+          <div className="flex flex-col px-3 py-2 flex-shrink-0">
+            <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Float P&L</span>
+            <span className="text-[11px] font-mono font-bold whitespace-nowrap" style={{ color: pnlColor }}>{floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}</span>
+          </div>
+          {accountBlocked && (
+            <div className="ml-auto px-3 flex items-center gap-1.5 flex-shrink-0" style={{ background: 'rgba(239,68,68,0.12)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[8px] font-bold text-red-400 uppercase tracking-wider whitespace-nowrap">Suspended</span>
+            </div>
+          )}
+        </div>
+        {/* Row 2: Margin stats */}
+        <div className="flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {[
+            { label: 'Margin', val: `$${usedMargin.toFixed(0)}`, color: 'text-slate-400' },
+            { label: 'Free', val: `$${freeMargin.toFixed(0)}`, color: freeMargin < 500 ? 'text-red-400' : 'text-slate-300' },
+            { label: 'Lvl', val: `${isFinite(marginLevel) ? marginLevel.toFixed(0) : '∞'}%`, color: marginLevel > 200 || !isFinite(marginLevel) ? 'text-emerald-400' : marginLevel > 100 ? 'text-yellow-400' : 'text-red-400' },
+            { label: 'Lev', val: `1:${rules?.leverage || 100}`, color: 'text-orange-400' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-1.5 px-3 py-1.5 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <span className="text-[7px] font-mono text-slate-600 uppercase">{item.label}</span>
+              <span className={`text-[10px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: single row */}
+      <div className="hidden md:flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex flex-col">
+            <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
+            <button onClick={() => switchable.length > 0 && setShowDrop(v => !v)}
+              className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors">
+              {account?.account_id || 'N/A'}
+              {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+          {showDrop && (
+            <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[160px]"
+              style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
+              {switchable.map(a => (
+                <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
+                  className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
+                  <span className="text-orange-400 font-bold">{a.account_id}</span>
+                  <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {[
+          { label: 'Balance',   val: `$${balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: 'text-slate-200' },
+          { label: 'Equity',    val: `$${equity.toFixed(2)}`, color: equity >= balance ? 'text-emerald-400' : 'text-red-400' },
+          { label: 'Float P&L', val: `${floatPnl >= 0 ? '+' : ''}$${floatPnl.toFixed(2)}`, color: floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
+          { label: 'Margin',    val: `$${usedMargin.toFixed(0)}`, color: 'text-slate-400' },
+          { label: 'Free Margin', val: `$${freeMargin.toFixed(0)}`, color: freeMargin < 500 ? 'text-red-400' : 'text-slate-200' },
+          { label: 'Margin Lvl', val: `${isFinite(marginLevel) ? marginLevel.toFixed(0) : '∞'}%`, color: marginLevel > 200 || !isFinite(marginLevel) ? 'text-emerald-400' : marginLevel > 100 ? 'text-yellow-400' : 'text-red-400' },
+          { label: 'Leverage',  val: `1:${rules?.leverage || 100}`, color: 'text-orange-400' },
+        ].map(item => (
+          <div key={item.label} className="flex flex-col px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest mb-0.5">{item.label}</span>
+            <span className={`text-[12px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
+          </div>
+        ))}
+        {accountBlocked && (
+          <div className="ml-auto px-4 flex items-center gap-2 flex-shrink-0" style={{ background: 'rgba(239,68,68,0.12)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider whitespace-nowrap">Account Suspended</span>
           </div>
         )}
       </div>
-
-      {/* Metrics */}
-      {[
-        { label: 'Balance',   val: `$${balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: 'text-slate-200' },
-        { label: 'Equity',    val: `$${equity.toFixed(2)}`, color: equity >= balance ? 'text-emerald-400' : 'text-red-400' },
-        { label: 'Float P&L', val: `${floatPnl >= 0 ? '+' : ''}$${floatPnl.toFixed(2)}`, color: floatPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-        { label: 'Margin',    val: `$${usedMargin.toFixed(0)}`, color: 'text-slate-400' },
-        { label: 'Free Margin', val: `$${freeMargin.toFixed(0)}`, color: freeMargin < 500 ? 'text-red-400' : 'text-slate-200' },
-        { label: 'Margin Lvl', val: `${isFinite(marginLevel) ? marginLevel.toFixed(0) : '∞'}%`, color: marginLevel > 200 || !isFinite(marginLevel) ? 'text-emerald-400' : marginLevel > 100 ? 'text-yellow-400' : 'text-red-400' },
-        { label: 'Leverage',  val: `1:${rules?.leverage || 100}`, color: 'text-orange-400' },
-      ].map(item => (
-        <div key={item.label} className="flex flex-col px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest mb-0.5">{item.label}</span>
-          <span className={`text-[12px] font-mono font-bold whitespace-nowrap ${item.color}`}>{item.val}</span>
-        </div>
-      ))}
-
-      {accountBlocked && (
-        <div className="ml-auto px-4 flex items-center gap-2 flex-shrink-0" style={{ background: 'rgba(239,68,68,0.12)' }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider whitespace-nowrap">Account Suspended</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -402,7 +461,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
   ];
 
   return (
-    <div className="flex flex-col h-full" style={{ background: '#080b15', fontFamily: "'JetBrains Mono', monospace" }}>
+    <div className="flex flex-col h-full min-h-0" style={{ background: '#080b15', fontFamily: "'JetBrains Mono', monospace" }}>
 
       {/* Phase Modal */}
       <AnimatePresence>
@@ -541,69 +600,90 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       </div>
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col flex-1 overflow-hidden">
-        <div className="flex-1 overflow-hidden relative">
+      <div className="flex md:hidden flex-col flex-1 min-h-0">
+        {/* Panel content — fills ALL remaining space above tab bar */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
           {mobilePanel === 'chart' && (
-            <div className="flex flex-col h-full">
+            <div className="absolute inset-0 flex flex-col">
+              {/* Chart toolbar */}
               <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-                style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-white">{selectedSymbol}</span>
+                style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
                   {currentPrice?.bid && (
-                    <span className="text-sm font-black text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>
+                    <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
                   )}
-                  {!isMarketOpen(selectedSymbol) && <span className="text-[8px] text-yellow-400">🔒</span>}
+                  {currentPrice?.pct != null && (
+                    <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
+                    </span>
+                  )}
+                  {!isMarketOpen(selectedSymbol) && (
+                    <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
+                  )}
                 </div>
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
                   {TF_OPTS.map(tf => (
                     <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${timeframe === tf.val ? 'bg-orange-500/20 text-orange-400' : 'text-slate-500'}`}>
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                      style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
                       {tf.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="flex-1 overflow-hidden">
+              {/* Chart fills remaining space */}
+              <div className="flex-1 min-h-0">
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
           )}
           {mobilePanel === 'order' && (
-            <div className="h-full overflow-y-auto">
+            <div className="absolute inset-0 overflow-y-auto">
               <OrderPanel symbol={selectedSymbol} prices={prices} account={account} rules={rules} equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder} accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)} />
             </div>
           )}
           {mobilePanel === 'positions' && (
-            <div className="h-full">
-              <PositionsTable positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades} prices={prices} onClose={closePosition} onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }} onBulkClose={handleBulkClose} />
+            <div className="absolute inset-0 overflow-hidden">
+              <PositionsTable positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades} prices={prices} onClose={closePosition}
+                onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }}
+                onBulkClose={handleBulkClose} />
             </div>
           )}
           {mobilePanel === 'watch' && (
-            <div className="h-full overflow-y-auto">
+            <div className="absolute inset-0 overflow-y-auto">
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel('chart'); }} />
             </div>
           )}
           {mobilePanel === 'tracker' && (
-            <div className="h-full overflow-y-auto">
+            <div className="absolute inset-0 overflow-y-auto">
               <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
             </div>
           )}
         </div>
 
-        {/* Mobile tab bar */}
-        <div className="flex-shrink-0 border-t flex" style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.08)' }}>
-          {mobileTabs.map(tab => {
-            const Icon = tab.icon;
-            const active = mobilePanel === tab.id;
-            return (
-              <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${active ? 'text-orange-400' : 'text-slate-600 hover:text-slate-400'}`}>
-                <Icon className="w-4 h-4" />
-                <span className="text-[7px] font-mono">{tab.label}</span>
-                {active && <div className="w-4 h-0.5 rounded-full bg-orange-400" />}
-              </button>
-            );
-          })}
+        {/* Mobile tab bar — always pinned at bottom */}
+        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div className="flex">
+            {mobileTabs.map(tab => {
+              const Icon = tab.icon;
+              const active = mobilePanel === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-3 transition-all active:scale-95 ${active ? 'text-orange-400' : 'text-slate-600'}`}>
+                  <div className="relative">
+                    <Icon className="w-4 h-4" />
+                    {tab.id === 'positions' && positions.length > 0 && (
+                      <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full text-[7px] font-black flex items-center justify-center"
+                        style={{ background: '#FF5C00', color: '#fff' }}>{positions.length}</span>
+                    )}
+                  </div>
+                  <span className="text-[7px] font-mono leading-none">{tab.label}</span>
+                  {active && <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#FF5C00' }} />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
