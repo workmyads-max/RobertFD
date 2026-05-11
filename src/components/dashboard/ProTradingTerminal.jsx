@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, Lock, BarChart2, BookOpen, List, 
   Menu, X, RefreshCw, ChevronDown, Activity,
-  TrendingUp, TrendingDown, Clock, Zap
+  TrendingUp, TrendingDown, Clock, Zap, CheckCircle2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -34,7 +34,7 @@ const TF_OPTS = [
 // ── Equity/Balance bar at the top ─────────────────────────────────────────────
 function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked, allAccounts, onAccountChange }) {
   const [showDrop, setShowDrop] = useState(false);
-  const switchable = (allAccounts || []).filter(a => ['active','funded','passed'].includes(a.status) && a.id !== account?.id);
+  const switchable = (allAccounts || []).filter(a => ['active','funded','passed'].includes(a.status));
   const pnlColor = floatPnl >= 0 ? '#00f5a0' : '#ef4444';
 
   return (
@@ -46,7 +46,7 @@ function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMar
           <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
             <div className="flex flex-col">
               <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">Acct</span>
-              <button onClick={() => switchable.length > 0 && setShowDrop(v => !v)}
+              <button onClick={() => setShowDrop(v => !v)}
                 className="flex items-center gap-0.5 text-[11px] font-mono font-black text-orange-400">
                 {account?.account_id || 'N/A'}
                 {switchable.length > 0 && <ChevronDown className="w-2.5 h-2.5" />}
@@ -105,7 +105,7 @@ function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMar
         <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="flex flex-col">
             <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
-            <button onClick={() => switchable.length > 0 && setShowDrop(v => !v)}
+            <button onClick={() => setShowDrop(v => !v)}
               className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors">
               {account?.account_id || 'N/A'}
               {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
@@ -601,71 +601,60 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
       <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {/* Panel content — fills ALL remaining space above tab bar */}
-        <div className="flex-1 min-h-0 relative overflow-hidden">
-          {mobilePanel === 'chart' && (
-            <div className="absolute inset-0 flex flex-col">
-              {/* Chart toolbar */}
-              <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-                style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
-                  {currentPrice?.bid && (
-                    <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
-                  )}
-                  {currentPrice?.pct != null && (
-                    <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
-                    </span>
-                  )}
-                  {!isMarketOpen(selectedSymbol) && (
-                    <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
-                  )}
-                </div>
-                <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                  {TF_OPTS.map(tf => (
-                    <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                      style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
-                      {tf.label}
-                    </button>
-                  ))}
-                </div>
+        {/* Unified chart + order panel layout */}
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          {/* Chart — top portion */}
+          <div className="flex-1 min-h-0 flex flex-col" style={{ flex: '1 1 50%' }}>
+            {/* Chart toolbar */}
+            <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
+              style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
+                {currentPrice?.bid && (
+                  <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
+                )}
+                {currentPrice?.pct != null && (
+                  <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
+                  </span>
+                )}
+                {!isMarketOpen(selectedSymbol) && (
+                  <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
+                )}
               </div>
-              {/* Chart fills remaining space */}
-              <div className="flex-1 min-h-0">
-                <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+              <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                {TF_OPTS.map(tf => (
+                  <button key={tf.val} onClick={() => setTimeframe(tf.val)}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                    style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
+                    {tf.label}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-          {mobilePanel === 'order' && (
-            <div className="absolute inset-0 overflow-y-auto">
+            {/* Chart */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+            </div>
+          </div>
+
+          {/* Order Panel + Positions — bottom portion */}
+          <div className="border-t flex-1 min-h-0 overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.06)', flex: '0 1 50%' }}>
+            <div className="p-3 space-y-3">
               <OrderPanel symbol={selectedSymbol} prices={prices} account={account} rules={rules} equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder} accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)} />
             </div>
-          )}
-          {mobilePanel === 'positions' && (
-            <div className="absolute inset-0 overflow-hidden">
-              <PositionsTable positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades} prices={prices} onClose={closePosition}
-                onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }}
-                onBulkClose={handleBulkClose} />
-            </div>
-          )}
-          {mobilePanel === 'watch' && (
-            <div className="absolute inset-0 overflow-y-auto">
-              <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel('chart'); }} />
-            </div>
-          )}
-          {mobilePanel === 'tracker' && (
-            <div className="absolute inset-0 overflow-y-auto">
-              <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Mobile tab bar — always pinned at bottom */}
+        {/* Mobile tab bar */}
         <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.08)' }}>
           <div className="flex">
-            {mobileTabs.map(tab => {
+            {[
+              { id: 'positions', icon: List, label: `${positions.length} Open` },
+              { id: 'pending', icon: Clock, label: `${pendingOrders.length} Pending` },
+              { id: 'closed', icon: CheckCircle2, label: 'Closed' },
+              { id: 'watch', icon: Activity, label: 'Watch' },
+            ].map(tab => {
               const Icon = tab.icon;
               const active = mobilePanel === tab.id;
               return (
@@ -673,18 +662,58 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                   className={`flex-1 flex flex-col items-center gap-0.5 py-3 transition-all active:scale-95 ${active ? 'text-orange-400' : 'text-slate-600'}`}>
                   <div className="relative">
                     <Icon className="w-4 h-4" />
-                    {tab.id === 'positions' && positions.length > 0 && (
-                      <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full text-[7px] font-black flex items-center justify-center"
-                        style={{ background: '#FF5C00', color: '#fff' }}>{positions.length}</span>
-                    )}
                   </div>
-                  <span className="text-[7px] font-mono leading-none">{tab.label}</span>
+                  <span className="text-[7px] font-mono leading-none text-center">{tab.label}</span>
                   {active && <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#FF5C00' }} />}
                 </button>
               );
             })}
           </div>
         </div>
+
+        {/* Hidden panel content for swipe/tab views */}
+        <AnimatePresence>
+          {mobilePanel === 'positions' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
+              onClick={() => setMobilePanel(null)}>
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
+                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
+                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="sticky top-0 p-3 border-b flex items-center justify-between" style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <span className="text-sm font-bold text-white">Open Positions ({positions.length})</span>
+                  <button onClick={() => setMobilePanel(null)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
+                </div>
+                <PositionsTable positions={positions} pendingOrders={[]} closedTrades={[]} prices={prices} onClose={closePosition}
+                  onCancelPending={() => {}} onBulkClose={handleBulkClose} />
+              </motion.div>
+            </motion.div>
+          )}
+          {mobilePanel === 'closed' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
+              onClick={() => setMobilePanel(null)}>
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
+                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
+                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="sticky top-0 p-3 border-b flex items-center justify-between" style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <span className="text-sm font-bold text-white">Closed Trades ({closedTrades.length})</span>
+                  <button onClick={() => setMobilePanel(null)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
+                </div>
+                <PositionsTable positions={[]} pendingOrders={[]} closedTrades={closedTrades} prices={prices} onClose={() => {}}
+                  onCancelPending={() => {}} onBulkClose={() => {}} />
+              </motion.div>
+            </motion.div>
+          )}
+          {mobilePanel === 'watch' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/80 md:hidden"
+              onClick={() => setMobilePanel(null)}>
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={e => e.stopPropagation()}
+                className="absolute bottom-0 inset-x-0 max-h-[80vh] rounded-t-2xl overflow-y-auto"
+                style={{ background: '#0a0d18', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={(sym) => { setSelectedSymbol(sym); setMobilePanel(null); }} />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
