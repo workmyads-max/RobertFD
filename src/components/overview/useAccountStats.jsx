@@ -47,6 +47,11 @@ export function useAccountStats(account, trades = []) {
       lots += openTrades.reduce((s, t) => s + (t.lots || 0), 0);
     }
 
+    // Fallback: if no open trade pnl stored in DB, derive from equity - balance
+    if (floatingPnl === 0 && account.equity && account.balance && account.equity !== account.balance) {
+      floatingPnl = (account.equity || 0) - (account.balance || 0);
+    }
+
     // Compute today's real P&L from closed trades (fallback to account.daily_pnl)
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTrades = closedTrades.filter(t => {

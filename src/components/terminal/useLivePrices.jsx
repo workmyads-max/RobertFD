@@ -1,14 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { INSTRUMENTS, SEED_PRICES } from './terminalConfig';
 
-// Kept for backward compatibility with AdminTerminalControl
+// Legacy exports kept for AdminTerminalControl compatibility
 const TWELVE_DATA_KEY_STORAGE = 'twelvedata_api_key';
-export function getTwelveDataKey() {
-  try { return localStorage.getItem(TWELVE_DATA_KEY_STORAGE) || ''; } catch { return ''; }
-}
-export function setTwelveDataKey(key) {
-  try { localStorage.setItem(TWELVE_DATA_KEY_STORAGE, key); } catch {}
-}
+export function getTwelveDataKey() { try { return localStorage.getItem(TWELVE_DATA_KEY_STORAGE) || ''; } catch { return ''; } }
+export function setTwelveDataKey(key) { try { localStorage.setItem(TWELVE_DATA_KEY_STORAGE, key); } catch {} }
 
 // ── Binance WebSocket for all crypto (free, no key) ───────────────────────────
 const BINANCE_MAP = {

@@ -103,7 +103,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 20000,
+    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
 
   // Load KYC for welcome header
@@ -132,12 +132,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     }
   }, [accounts]);
 
-  // Load REAL trade records
+  // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
     queryKey: ['trade-records', selectedAccount?.id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
     enabled: !!selectedAccount?.id,
-    refetchInterval: 10000,
+    refetchInterval: 5000,
   });
 
   const rules = getAccountRules(selectedAccount);
