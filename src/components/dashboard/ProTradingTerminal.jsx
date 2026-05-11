@@ -528,7 +528,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         {accountBlocked && breachReason && <BreachBanner reason={breachReason} />}
       </AnimatePresence>
 
-      {/* ═══ DESKTOP & RESPONSIVE ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ UNIFIED RESPONSIVE LAYOUT ═══════════════════════════════════════════════════════════ */}
       <div className="flex flex-col flex-1 overflow-hidden relative">
         {/* Floating Daily P&L box — visible when positions are open */}
         <FloatingDailyPnL
@@ -542,21 +542,21 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         />
 
         <div className="flex flex-1 overflow-hidden flex-col">
-          {/* Top row: Market Watch | Chart Area + Order Panel — 25% height */}
-          <div className="flex flex-col md:flex-row min-h-0 overflow-hidden" style={{ height: 'auto', md: { height: '25%' }, borderColor: 'rgba(255,255,255,0.06)' }}>
-            {/* Left: Market Watch */}
-            <div className="border-r flex-shrink-0 hidden md:block" style={{ width: '15%', borderColor: 'rgba(255,255,255,0.06)' }}>
+          {/* Top row: Market Watch | Chart Area + Order Panel */}
+          <div className="flex flex-col lg:flex-row min-h-0 overflow-hidden lg:h-1/4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            {/* Left: Market Watch (desktop only) */}
+            <div className="border-r flex-shrink-0 hidden lg:block" style={{ width: '15%', borderColor: 'rgba(255,255,255,0.06)' }}>
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
             </div>
 
-            {/* Center: Chart (toolbar + chart) — constrained height */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden max-h-full md:h-full" style={{ height: '300px' }}>
-              {/* Chart toolbar — compact */}
-              <div className="flex items-center gap-2 px-3 py-1.5 border-b flex-shrink-0"
+            {/* Center: Chart (toolbar + chart) */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ height: 'auto', minHeight: '200px' }}>
+              {/* Chart toolbar */}
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-2 px-3 py-1.5 border-b flex-shrink-0"
                 style={{ background: '#0a0d18', borderColor: 'rgba(255,255,255,0.06)' }}>
                 
                 {/* Symbol info */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full md:w-auto">
                   <div className="flex flex-col">
                     <span className="text-[13px] font-black text-white">{selectedSymbol}</span>
                     <span className="text-[8px] text-slate-500 uppercase tracking-wider">{selected?.description}</span>
@@ -564,23 +564,12 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                   {currentPrice?.bid && (
                     <div className="flex items-center gap-2">
                       <span className="text-[15px] font-black text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>
-                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${isUp ? 'text-emerald-400' : 'text-red-400'}`}
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${isUp ? 'text-emerald-400' : 'text-red-400'}`}
                         style={{ background: isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)' }}>
                         {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                         {isUp ? '+' : ''}{(currentPrice.pct || 0).toFixed(2)}%
                       </div>
-                      <div className="text-[10px] font-mono text-slate-500">
-                        <span className="text-red-400/80">{currentPrice.bid?.toFixed(selected?.digits)}</span>
-                        {' / '}
-                        <span className="text-emerald-400/80">{currentPrice.ask?.toFixed(selected?.digits)}</span>
-                      </div>
                     </div>
-                  )}
-                  {!isMarketOpen(selectedSymbol) && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold text-yellow-400"
-                      style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}>
-                      <Clock className="w-2.5 h-2.5" /> Closed
-                    </span>
                   )}
                 </div>
 
@@ -596,14 +585,14 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
                 </div>
               </div>
 
-              {/* Chart — compressed to 48% height */}
-              <div className="min-h-0 overflow-hidden" style={{ background: '#070b14', height: '48%', width: '100%' }}>
+              {/* Chart */}
+              <div className="flex-1 min-h-0 overflow-hidden" style={{ background: '#070b14' }}>
                 <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
               </div>
             </div>
 
-            {/* Right: Order Panel */}
-            <div className="flex-shrink-0 border-l flex flex-col hidden md:flex" style={{ width: '320px', borderColor: 'rgba(255,255,255,0.06)' }}>
+            {/* Right: Order Panel (desktop only) */}
+            <div className="flex-shrink-0 border-l flex flex-col hidden lg:flex" style={{ width: '320px', borderColor: 'rgba(255,255,255,0.06)' }}>
               <OrderPanel
                 symbol={selectedSymbol} prices={prices} account={account} rules={rules}
                 equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
@@ -612,8 +601,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             </div>
           </div>
 
-          {/* Bottom row: Full-width Positions Table — 75% height */}
-          <div className="flex-1 overflow-hidden hidden md:block" style={{ marginTop: '-4px', height: '75%' }}>
+          {/* Bottom row: Full-width Positions Table (desktop) / Tabs (mobile) */}
+          <div className="flex-1 overflow-hidden hidden lg:block">
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
@@ -621,99 +610,100 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               onBulkClose={handleBulkClose}
             />
           </div>
+
+          {/* Mobile Bottom Tabs Section */}
+          <div className="flex lg:hidden flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Mobile tabs */}
+            <div className="flex-shrink-0 flex border-t" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
+              {mobileTabs.map(tab => {
+                const Icon = tab.icon;
+                const active = mobilePanel === tab.id;
+                return (
+                  <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
+                    className={`flex-1 px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-all border-b-2 ${
+                      active ? 'text-orange-400 border-orange-400' : 'text-slate-500 border-transparent'
+                    }`}>
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Mobile Content area */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {mobilePanel === 'chart' && (
+                  <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                    <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+                  </motion.div>
+                )}
+                {mobilePanel === 'order' && (
+                  <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto p-4">
+                    <OrderPanel
+                      symbol={selectedSymbol} prices={prices} account={account} rules={rules}
+                      equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
+                      accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
+                    />
+                  </motion.div>
+                )}
+                {mobilePanel === 'positions' && (
+                  <motion.div key="positions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                    <PositionsTable
+                      positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
+                      prices={prices} onClose={closePosition}
+                      onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }}
+                      onBulkClose={handleBulkClose}
+                    />
+                  </motion.div>
+                )}
+                {mobilePanel === 'watch' && (
+                  <motion.div key="watch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                    <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
+                  </motion.div>
+                )}
+                {mobilePanel === 'tracker' && (
+                  <motion.div key="tracker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                    <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Challenge Tracker (desktop) ── */}
-      <div className="hidden md:block flex-shrink-0">
+      {/* Challenge Tracker (desktop only) */}
+      <div className="hidden lg:block flex-shrink-0">
         <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
       </div>
-
-      {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col flex-1 min-h-0 safe-top safe-bottom overflow-hidden">
-        {/* Top: Symbol info */}
-        <div className="flex-shrink-0 px-3 py-2 border-b flex items-center justify-between" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
-          <div>
-            <div className="text-[10px] font-mono text-slate-500 uppercase">Symbol</div>
-            <span className="text-sm font-black text-white">{selectedSymbol}</span>
-          </div>
-          {currentPrice?.bid && (
-            <div className="text-right">
-              <div className="text-xs font-black text-orange-400">{currentPrice.bid.toFixed(2)}</div>
-              <div className={`text-[10px] font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>{isUp ? '+' : ''}{(currentPrice.pct || 0).toFixed(2)}%</div>
+        {/* Top: Symbol info + Quick Trade Panel */}
+        <div className="flex-shrink-0 lg:hidden flex flex-col border-b" style={{ borderColor: 'rgba(255,92,0,0.15)', background: 'rgba(6,8,16,0.98)' }}>
+          <div className="px-3 py-2 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,92,0,0.15)' }}>
+            <div>
+              <div className="text-[10px] font-mono text-slate-500 uppercase">Symbol</div>
+              <span className="text-sm font-black text-white">{selectedSymbol}</span>
             </div>
-          )}
-        </div>
-
-        {/* Mobile Quick Trade Panel */}
-        <div className="flex-shrink-0 p-3 border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white' }}>▼ SELL</button>
-            <div className="flex flex-col items-center justify-center px-2 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div className="text-[8px] text-slate-500 mb-0.5">Lots</div>
-              <span className="text-xs font-bold text-white">{lots.toFixed(2)}</span>
-            </div>
-            <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>▲ BUY</button>
+            {currentPrice?.bid && (
+              <div className="text-right">
+                <div className="text-xs font-black text-orange-400">{currentPrice.bid.toFixed(2)}</div>
+                <div className={`text-[10px] font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>{isUp ? '+' : ''}{(currentPrice.pct || 0).toFixed(2)}%</div>
+              </div>
+            )}
           </div>
-          <input value={lots} onChange={(e) => setLots(parseFloat(e.target.value) || 0.01)} placeholder="Lot size" className="w-full px-3 py-2 rounded-lg text-white font-mono text-xs outline-none" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
-        </div>
 
-        {/* Mobile tabs */}
-        <div className="flex-shrink-0 flex border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
-          {mobileTabs.map(tab => {
-            const Icon = tab.icon;
-            const active = mobilePanel === tab.id;
-            return (
-              <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
-                className={`flex-1 px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-all border-b-2 ${
-                  active ? 'text-orange-400 border-orange-400' : 'text-slate-500 border-transparent'
-                }`}>
-                {tab.label}
-              </button>
-            );
-          })}
+          {/* Mobile Quick Trade Panel */}
+          <div className="p-3">
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white' }}>▼ SELL</button>
+              <div className="flex flex-col items-center justify-center px-2 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="text-[8px] text-slate-500 mb-0.5">Lots</div>
+                <span className="text-xs font-bold text-white">{lots.toFixed(2)}</span>
+              </div>
+              <button onClick={() => {}} className="py-2 rounded-lg font-bold text-xs transition-all" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>▲ BUY</button>
+            </div>
+            <input value={lots} onChange={(e) => setLots(parseFloat(e.target.value) || 0.01)} placeholder="Lot size" className="w-full px-3 py-2 rounded-lg text-white font-mono text-xs outline-none" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+          </div>
         </div>
-
-        {/* Content area */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <AnimatePresence mode="wait">
-            {mobilePanel === 'chart' && (
-              <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-                <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
-              </motion.div>
-            )}
-            {mobilePanel === 'order' && (
-              <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto p-4">
-                <OrderPanel
-                  symbol={selectedSymbol} prices={prices} account={account} rules={rules}
-                  equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
-                  accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
-                />
-              </motion.div>
-            )}
-            {mobilePanel === 'positions' && (
-              <motion.div key="positions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
-                <PositionsTable
-                  positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
-                  prices={prices} onClose={closePosition}
-                  onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }}
-                  onBulkClose={handleBulkClose}
-                />
-              </motion.div>
-            )}
-            {mobilePanel === 'watch' && (
-              <motion.div key="watch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
-                <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
-              </motion.div>
-            )}
-            {mobilePanel === 'tracker' && (
-              <motion.div key="tracker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
-                <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
     </div>
   );
 }
