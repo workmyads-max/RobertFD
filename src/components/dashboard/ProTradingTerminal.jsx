@@ -34,8 +34,22 @@ const TF_OPTS = [
 // ── Equity/Balance bar at the top ─────────────────────────────────────────────
 function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMargin, marginLevel, rules, accountBlocked, allAccounts, onAccountChange }) {
   const [showDrop, setShowDrop] = useState(false);
+  const dropdownRef = useRef(null);
   const switchable = (allAccounts || []).filter(a => ['active','funded','passed'].includes(a.status));
   const pnlColor = floatPnl >= 0 ? '#00f5a0' : '#ef4444';
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDrop(false);
+      }
+    };
+    if (showDrop) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDrop]);
 
   return (
     <div className="flex-shrink-0 border-b" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
@@ -102,28 +116,28 @@ function TopMetricsBar({ account, balance, equity, floatPnl, usedMargin, freeMar
 
       {/* Desktop: single row */}
       <div className="hidden md:flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="flex flex-col flex-1">
-            <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
-            <button onClick={(e) => { e.stopPropagation(); setShowDrop(v => !v); }}
-              className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors text-left">
-              {account?.account_id || 'N/A'}
-              {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
-            </button>
-          </div>
-          {showDrop && (
-            <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[180px]"
-              style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
-              {switchable.map(a => (
-                <button key={a.id} onClick={(e) => { e.stopPropagation(); onAccountChange(a); setShowDrop(false); }}
-                  className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
-                  <span className="text-orange-400 font-bold">{a.account_id}</span>
-                  <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <div className="relative flex items-center px-3 py-2 border-r flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }} ref={dropdownRef}>
+           <div className="flex flex-col flex-1">
+             <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">Account</span>
+             <button onClick={() => setShowDrop(v => !v)}
+               className="flex items-center gap-1 text-[12px] font-mono font-black text-orange-400 hover:text-orange-300 transition-colors text-left">
+               {account?.account_id || 'N/A'}
+               {switchable.length > 0 && <ChevronDown className="w-3 h-3" />}
+             </button>
+           </div>
+           {showDrop && (
+             <div className="absolute top-full left-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl min-w-[180px]"
+               style={{ background: '#0d1117', border: '1px solid rgba(255,92,0,0.3)' }}>
+               {switchable.map(a => (
+                 <button key={a.id} onClick={() => { onAccountChange(a); setShowDrop(false); }}
+                   className="w-full text-left px-3 py-2 text-[11px] font-mono hover:bg-orange-500/10 transition-colors border-b border-white/[0.04] last:border-0">
+                   <span className="text-orange-400 font-bold">{a.account_id}</span>
+                   <span className="text-slate-500 ml-2">${(a.account_size||0).toLocaleString()}</span>
+                 </button>
+               ))}
+             </div>
+           )}
+         </div>
         {[
           { label: 'Balance',   val: `$${balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: 'text-slate-200' },
           { label: 'Equity',    val: `$${equity.toFixed(2)}`, color: equity >= balance ? 'text-emerald-400' : 'text-red-400' },
@@ -612,45 +626,102 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
       <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {/* Chart dominates like TradeLocker */}
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col" style={{ flex: '1 1 75%' }}>
-          {/* Chart toolbar */}
-          <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-            style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-xs font-black text-white truncate">{selectedSymbol}</span>
-              {currentPrice?.bid && (
-                <span className="text-sm font-black text-orange-400 flex-shrink-0">{currentPrice.bid.toFixed(selected?.digits)}</span>
-              )}
-              {currentPrice?.pct != null && (
-                <span className={`text-[9px] font-bold flex-shrink-0 ${(currentPrice.pct||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {(currentPrice.pct||0) >= 0 ? '+' : ''}{(currentPrice.pct||0).toFixed(2)}%
-                </span>
-              )}
-              {!isMarketOpen(selectedSymbol) && (
-                <span className="text-[8px] text-yellow-400 flex-shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.12)' }}>CLOSED</span>
-              )}
+        {/* Top: Symbol header with account info */}
+        <div className="flex-shrink-0 px-3 py-2 border-b" style={{ background: 'rgba(8,10,20,0.98)', borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-white">{selectedSymbol}</span>
+              {currentPrice?.bid && <span className="text-sm font-black text-orange-400">{currentPrice.bid.toFixed(selected?.digits)}</span>}
             </div>
-            <div className="flex gap-0.5 flex-shrink-0 ml-2 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              {TF_OPTS.map(tf => (
-                <button key={tf.val} onClick={() => setTimeframe(tf.val)}
-                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
-                  style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
-                  {tf.label}
-                </button>
-              ))}
-            </div>
+            <div className="text-[9px] font-mono text-slate-400">P&L: {floatPnl >= 0 ? '+' : ''}${floatPnl.toFixed(2)}</div>
           </div>
-          {/* Chart full size */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+          <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            {TF_OPTS.map(tf => (
+              <button key={tf.val} onClick={() => setTimeframe(tf.val)}
+                className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${timeframe === tf.val ? 'text-orange-400' : 'text-slate-500'}`}
+                style={timeframe === tf.val ? { background: 'rgba(255,92,0,0.2)' } : {}}>
+                {tf.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Order Panel — compact at bottom */}
-        <div className="border-t flex-shrink-0 overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.06)', flex: '0 0 auto', maxHeight: '25%' }}>
-          <div className="p-3 space-y-2">
-            <OrderPanel symbol={selectedSymbol} prices={prices} account={account} rules={rules} equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder} accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)} />
+        {/* Middle: Chart dominates (full height minus headers/footer) */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+        </div>
+
+        {/* Bottom: Compact position controls + order panel */}
+        <div className="border-t flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(8,10,20,0.98)' }}>
+          {/* Quick position stats + buy/sell buttons */}
+          <div className="px-3 py-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="grid grid-cols-3 gap-2 mb-2 text-center text-[9px]">
+              <div>
+                <div className="text-slate-500 uppercase tracking-wider">Equity</div>
+                <div className="font-bold text-emerald-400">${equity.toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-slate-500 uppercase tracking-wider">Margin</div>
+                <div className="font-bold text-slate-300">${usedMargin.toFixed(0)}</div>
+              </div>
+              <div>
+                <div className="text-slate-500 uppercase tracking-wider">Open</div>
+                <div className="font-bold text-orange-400">{positions.length}</div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'SELL', lots: 0.01, entry: prices[selectedSymbol]?.bid || 0, orderType: 'MARKET' })}
+                className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }}>
+                SELL
+              </button>
+              <button onClick={() => handlePlaceOrder({ symbol: selectedSymbol, type: 'BUY', lots: 0.01, entry: prices[selectedSymbol]?.ask || 0, orderType: 'MARKET' })}
+                className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
+                BUY
+              </button>
+            </div>
+          </div>
+
+          {/* Positions tab + order entry */}
+          <div className="max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+            <div className="px-3 py-2">
+              <div className="mb-2">
+                <div className="text-[9px] font-mono uppercase text-slate-500 tracking-widest mb-1.5">Open Positions ({positions.length})</div>
+                <div className="space-y-1 max-h-[80px] overflow-y-auto">
+                  {positions.length === 0 ? (
+                    <div className="text-[9px] text-slate-600 p-2 text-center">No open positions</div>
+                  ) : (
+                    positions.slice(0, 3).map(pos => {
+                      const p = prices[pos.symbol];
+                      const pnl = calcPnl(pos, p?.bid || pos.entry);
+                      return (
+                        <div key={pos.id} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <div className="flex items-center gap-1 text-[9px]">
+                            <span className="font-bold text-white">{pos.symbol}</span>
+                            <span className={pos.type === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>{pos.type}</span>
+                          </div>
+                          <span className={`font-bold text-[9px] ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Quick order entry */}
+              <div className="text-[9px] font-mono uppercase text-slate-500 tracking-widest mb-1.5">Quick Trade</div>
+              <div className="flex gap-1">
+                <input type="number" placeholder="Lots" defaultValue="0.01" min="0.01" step="0.01"
+                  className="flex-1 px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-[9px] font-mono"
+                  style={{ outline: 'none' }} />
+                <button className="px-2 py-1 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[9px] font-bold hover:bg-orange-500/30 transition-colors">
+                  Set SL/TP
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
