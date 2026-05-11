@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Moon, Sun } from 'lucide-react';
+import { useFeatureVisibility } from '../../hooks/useFeatureVisibility';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -31,6 +32,7 @@ const navItems = [
 ];
 
 export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount = 0, collapsed = false, setCollapsed }) {
+  const { isEnabled } = useFeatureVisibility();
   const [isDarkMode, setIsDarkMode] = React.useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') !== 'light';
@@ -53,6 +55,30 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     setIsOpen(false);
   };
 
+  const filterNavItems = () => {
+    const visibilityMap = {
+      'terminal': 'trading_terminal',
+      'xcopier': 'x_copier',
+      'analytics': 'analytics',
+      'news': 'market_news',
+      'calendar': 'economic_calendar',
+      'journal': 'trading_journal',
+      'affiliate': 'affiliate',
+      'certificates': 'certificates',
+      'withdrawals': 'withdrawals',
+      'billing': 'billing',
+      'leaderboard': 'leaderboard',
+      'support': 'support',
+      'notifications': 'notifications',
+      'kyc': 'kyc',
+    };
+
+    return navItems.filter(item => {
+      const featureKey = visibilityMap[item.id];
+      return !featureKey || isEnabled(featureKey);
+    });
+  };
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full circuit-bg">
       {/* Logo */}
@@ -65,13 +91,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           onClick={() => setCollapsed?.(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{ background: 'linear-gradient(135deg, #FF5C00, #cc4900)', boxShadow: '0 4px 20px rgba(255,92,0,0.45)' }}>
-          <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>RF</span>
+          <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>FC</span>
         </div>
         {!collapsed && (
           <>
             <div className="flex flex-col leading-none relative z-10">
-              <span className="text-white font-extrabold text-sm tracking-tight">Robert</span>
-              <span className="font-black text-sm tracking-tight" style={{ color: '#FF5C00' }}>Funds</span>
+              <span className="text-white font-extrabold text-sm tracking-tight">Funded</span>
+              <span className="font-black text-sm tracking-tight" style={{ color: '#FF5C00' }}>Firms</span>
             </div>
             <div className="ml-auto flex items-center gap-1 flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00f5a0' }} />
@@ -138,7 +164,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
       {/* Nav */}
       <nav className={`flex-1 py-3 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none' }}>
-        {navItems.map((item) => {
+        {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
           return (
@@ -215,6 +241,26 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               </div>
             )}
             {collapsed && <div className="my-2 mx-2 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />}
+            {[{ id: 'admin-visibility', label: 'Platform Visibility', icon: Zap }].map(item => {
+              const Icon = item.icon;
+              const isActive = activePage === item.id;
+              return (
+                <button key={item.id} onClick={() => handleNav(item.id)}
+                  title={collapsed ? item.label : undefined}
+                  className={`w-full flex items-center rounded-xl text-[12px] font-medium transition-all duration-150 group ${
+                    collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2'
+                  } ${
+                    isActive ? 'text-white' : 'text-white/25 hover:text-white/70 hover:bg-white/[0.04]'
+                  }`}
+                  style={isActive ? {
+                    background: collapsed ? 'rgba(255,92,0,0.18)' : 'linear-gradient(90deg, rgba(255,92,0,0.12), rgba(139,92,246,0.05))',
+                    borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
+                  } : {}}>
+                  <Icon className={`flex-shrink-0 ${collapsed ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
+                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                </button>
+              );
+            })}
             {[
               { id: 'admin-overview', label: 'Admin Overview', icon: Shield },
               { id: 'admin-orders', label: 'Orders', icon: ShoppingBag },
@@ -280,7 +326,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             </a>
             <button onClick={() => base44.auth.logout('/')}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/30 hover:text-red-400 transition-colors">
-              <LogOut className="w-3.5 h-3.5" /> Sign Out
+              <LogOut className="w-3.5 h-3.5" /> Logout
             </button>
           </>
         )}
