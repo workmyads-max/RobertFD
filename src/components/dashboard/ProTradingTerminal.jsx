@@ -630,26 +630,27 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
       </div>
 
       {/* ═══ MOBILE ════════════════════════════════════════════════════════════ */}
-      <div className="flex md:hidden flex-col flex-1 min-h-0 safe-top safe-bottom">
-        {/* Top: M1 symbol + controls */}
+      <div className="flex md:hidden flex-col flex-1 min-h-0 safe-top safe-bottom overflow-hidden">
+        {/* Top: Symbol info */}
         <div className="flex-shrink-0 px-3 py-2 border-b flex items-center justify-between" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
-          <span className="text-xs font-black text-white">{selectedSymbol}</span>
-          <div className="flex items-center gap-3 text-white/40">
-            <button className="text-sm">+</button>
-            <button className="text-sm">f</button>
-            <button className="text-sm">⊕</button>
+          <div>
+            <div className="text-[10px] font-mono text-slate-500 uppercase">Symbol</div>
+            <span className="text-sm font-black text-white">{selectedSymbol}</span>
           </div>
+          {currentPrice?.bid && (
+            <div className="text-right">
+              <div className="text-xs font-black text-orange-400">{currentPrice.bid.toFixed(2)}</div>
+              <div className={`text-[10px] font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>{isUp ? '+' : ''}{(currentPrice.pct || 0).toFixed(2)}%</div>
+            </div>
+          )}
         </div>
 
         {/* SELL/BUY Price Row with Lots Control */}
         <div className="flex-shrink-0 flex items-center h-12" style={{ background: 'rgba(6,8,16,0.98)' }}>
-          {/* SELL */}
           <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #0066ff, #0052cc)' }}>
             <div className="text-[9px] font-mono text-white/80">SELL</div>
             <div className="text-sm font-black text-white">{currentPrice?.bid?.toFixed(2) || '0.00'}</div>
           </div>
-
-          {/* Lot Control Center */}
           <div className="flex flex-col items-center justify-center px-3 py-2 gap-1" style={{ background: '#000' }}>
             <button onClick={() => setLots(Math.max(0.01, lots - 0.01))} className="text-white/60 hover:text-white">
               <ChevronDown className="w-3 h-3" />
@@ -659,44 +660,66 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               <ChevronDown className="w-3 h-3 rotate-180" />
             </button>
           </div>
-
-          {/* BUY */}
           <div className="flex-1 flex flex-col items-center justify-center h-full py-1" style={{ background: 'linear-gradient(135deg, #00b981, #059669)' }}>
             <div className="text-[9px] font-mono text-white/80">BUY</div>
             <div className="text-sm font-black text-white">{currentPrice?.ask?.toFixed(2) || '0.00'}</div>
           </div>
         </div>
 
-        {/* Chart — full height */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+        {/* Mobile tabs */}
+        <div className="flex-shrink-0 flex border-b" style={{ background: 'rgba(6,8,16,0.98)', borderColor: 'rgba(255,92,0,0.15)' }}>
+          {mobileTabs.map(tab => {
+            const Icon = tab.icon;
+            const active = mobilePanel === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setMobilePanel(tab.id)}
+                className={`flex-1 px-2 py-2 text-[10px] font-mono uppercase tracking-wider transition-all border-b-2 ${
+                  active ? 'text-orange-400 border-orange-400' : 'text-slate-500 border-transparent'
+                }`}>
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Mobile bottom tab bar */}
-        <div className="flex-shrink-0 border-t safe-bottom" style={{ background: 'rgba(6,8,16,0.99)', borderColor: 'rgba(255,92,0,0.15)' }}>
-          <div className="flex h-14 pointer-events-auto">
-            {[
-              { id: 'quotes', icon: TrendingUp, label: 'Quotes' },
-              { id: 'chart', icon: BarChart2, label: 'Chart' },
-              { id: 'trade', icon: BookOpen, label: 'Trade' },
-              { id: 'history', icon: Clock, label: 'History' },
-              { id: 'settings', icon: Settings, label: 'Settings' },
-            ].map(tab => {
-              const Icon = tab.icon;
-              const active = mobilePanel === tab.id;
-              return (
-                <motion.button 
-                  key={tab.id} 
-                  onClick={() => setMobilePanel(tab.id)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${active ? 'text-blue-400' : 'text-slate-500'}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}>
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-bold leading-none whitespace-nowrap">{tab.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+        {/* Content area */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {mobilePanel === 'chart' && (
+              <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <TradingViewChart symbol={selectedSymbol} timeframe={timeframe} />
+              </motion.div>
+            )}
+            {mobilePanel === 'order' && (
+              <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                <OrderPanel
+                  symbol={selectedSymbol} prices={prices} account={account} rules={rules}
+                  equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
+                  accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
+                />
+              </motion.div>
+            )}
+            {mobilePanel === 'positions' && (
+              <motion.div key="positions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                <PositionsTable
+                  positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
+                  prices={prices} onClose={closePosition}
+                  onCancelPending={(id) => { base44.entities.TradeRecord.update(id, { status: 'closed', close_reason: 'Cancelled' }).catch(() => {}); setPendingOrders(prev => prev.filter(o => o.id !== id)); }}
+                  onBulkClose={handleBulkClose}
+                />
+              </motion.div>
+            )}
+            {mobilePanel === 'watch' && (
+              <motion.div key="watch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
+              </motion.div>
+            )}
+            {mobilePanel === 'tracker' && (
+              <motion.div key="tracker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
+                <ChallengeTrackerDrawer account={account} rules={rules} balance={sessionBalance} equity={equity} dailyOpenBalance={dailyOpenBalance} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
