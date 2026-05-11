@@ -691,12 +691,22 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
               </motion.div>
             )}
             {mobilePanel === 'order' && (
-              <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto">
-                <OrderPanel
-                  symbol={selectedSymbol} prices={prices} account={account} rules={rules}
-                  equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
-                  accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
-                />
+              <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full overflow-y-auto p-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => {}} className="py-3 rounded-xl font-bold text-sm transition-all" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white' }}>▼ SELL</button>
+                    <button onClick={() => {}} className="py-3 rounded-xl font-bold text-sm transition-all" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>▲ BUY</button>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 mb-2 block">Lot Size</label>
+                    <input value={lots} onChange={(e) => setLots(parseFloat(e.target.value) || 0.01)} className="w-full px-4 py-3 rounded-xl text-white font-mono text-sm outline-none" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  </div>
+                  <OrderPanel
+                    symbol={selectedSymbol} prices={prices} account={account} rules={rules}
+                    equity={equity} usedMargin={usedMargin} onPlaceOrder={handlePlaceOrder}
+                    accountBlocked={accountBlocked} marketOpen={isMarketOpen(selectedSymbol)}
+                  />
+                </div>
               </motion.div>
             )}
             {mobilePanel === 'positions' && (
