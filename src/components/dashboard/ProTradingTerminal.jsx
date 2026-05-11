@@ -542,8 +542,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         />
 
         <div className="flex flex-1 overflow-hidden flex-col">
-          {/* Top row: Market Watch | Chart Area + Order Panel — all same height */}
-          <div className="flex flex-1 min-h-0 overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          {/* Top row: Market Watch | Chart Area + Order Panel — 48% height */}
+          <div className="flex min-h-0 overflow-hidden" style={{ height: '48%', borderColor: 'rgba(255,255,255,0.06)' }}>
             {/* Left: Market Watch */}
             <div className="w-40 flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
               <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
@@ -612,8 +612,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
             </div>
           </div>
 
-          {/* Bottom row: Full-width Positions Table — spans entire width */}
-          <div className="flex-1 overflow-hidden" style={{ marginTop: '-4px' }}>
+          {/* Bottom row: Full-width Positions Table — 52% height */}
+          <div className="flex-1 overflow-hidden" style={{ marginTop: '-4px', height: '52%' }}>
             <PositionsTable
               positions={positions} pendingOrders={pendingOrders} closedTrades={closedTrades}
               prices={prices} onClose={closePosition}
