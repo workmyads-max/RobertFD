@@ -541,8 +541,8 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
         />
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: Market Watch — wider for readability */}
-          <div className="w-52 xl:w-60 flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          {/* Left: Market Watch — narrower to give more space to chart */}
+          <div className="w-40 flex-shrink-0 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <MarketWatch prices={prices} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
           </div>
 
