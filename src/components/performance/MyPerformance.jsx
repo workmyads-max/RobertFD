@@ -16,6 +16,7 @@ import TradeQualityPanel from './TradeQualityPanel';
 import ViolationAppealModal from './ViolationAppealModal';
 import LiveRiskNotifications from './LiveRiskNotifications';
 import NewsRiskFilter from './NewsRiskFilter';
+import MyAppeals from './MyAppeals';
 
 const TAB_CONFIG = [
   { id: 'overview', label: 'Overview', icon: Activity },
@@ -25,6 +26,7 @@ const TAB_CONFIG = [
   { id: 'heatmap', label: 'Heatmap', icon: Flame },
   { id: 'quality', label: 'Trade Quality', icon: Target },
   { id: 'news', label: 'News Filter', icon: AlertCircle },
+  { id: 'appeals', label: 'My Appeals', icon: Shield },
 ];
 
 export default function MyPerformance({ user }) {
@@ -250,6 +252,7 @@ export default function MyPerformance({ user }) {
           {activeTab === 'heatmap' && <RiskHeatmap trades={closedTrades} account={selectedAccount} />}
           {activeTab === 'quality' && <TradeQualityPanel trades={closedTrades} />}
           {activeTab === 'news' && <NewsRiskFilter account={selectedAccount} />}
+          {activeTab === 'appeals' && <MyAppeals user={user} accounts={accounts} />}
         </motion.div>
       </AnimatePresence>
 
