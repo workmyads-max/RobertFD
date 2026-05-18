@@ -160,9 +160,10 @@ function CertificateDocument({ cert, forCapture = false }) {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '4px' }}>AUTHORIZED SIGNATURE</div>
-          <div style={{ width: '80px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color})`, marginLeft: 'auto' }} />
-          <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: '7px', marginTop: '2px' }}>CEO & RISK DIRECTOR</div>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '4px' }}>AUTHORIZED SIGNATURE</div>
+          <div style={{ color: cfg.color, fontSize: '14px', fontWeight: 800, fontStyle: 'italic', letterSpacing: '0.03em', marginBottom: '3px', textShadow: `0 0 10px ${cfg.glow}` }}>Diego Reyes</div>
+          <div style={{ width: '90px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color})`, marginLeft: 'auto', marginBottom: '2px' }} />
+          <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: '7px' }}>Chief Executive Officer</div>
         </div>
       </div>
 
@@ -279,7 +280,7 @@ function CertCard({ cert, index, onPreview }) {
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
           style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
           <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-          <span className="text-[10px] font-mono text-emerald-400/70">Verified by {FIRM.name}</span>
+          <span className="text-[10px] font-mono text-emerald-400/70">Verified by Team Manager</span>
           <span className="text-[9px] font-mono text-white/15 ml-auto">{FIRM.verifyUrl}</span>
         </div>
 
