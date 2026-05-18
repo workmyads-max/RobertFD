@@ -18,6 +18,34 @@
       "type": "number",
       "default": 1
     },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "silver",
+        "gold",
+        "platinum",
+        "custom"
+      ],
+      "default": "standard",
+      "description": "Affiliate tier for scaling rewards"
+    },
+    "custom_l1_rate": {
+      "type": "number",
+      "description": "Override L1 commission %. Null = use global"
+    },
+    "custom_l2_rate": {
+      "type": "number",
+      "description": "Override L2 commission %. Null = use global"
+    },
+    "custom_l3_rate": {
+      "type": "number",
+      "description": "Override L3 commission %. Null = use global"
+    },
+    "custom_payout_rate": {
+      "type": "number",
+      "description": "Override payout reward %. Null = use dynamic scaling"
+    },
     "total_earned": {
       "type": "number",
       "default": 0
@@ -30,6 +58,14 @@
       "type": "number",
       "default": 0
     },
+    "total_purchase_commissions": {
+      "type": "number",
+      "default": 0
+    },
+    "total_payout_commissions": {
+      "type": "number",
+      "default": 0
+    },
     "referral_clicks": {
       "type": "number",
       "default": 0
@@ -38,9 +74,25 @@
       "type": "number",
       "default": 0
     },
+    "active_funded_traders": {
+      "type": "number",
+      "default": 0
+    },
     "conversions": {
       "type": "number",
       "default": 0
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_frozen": {
+      "type": "boolean",
+      "default": false,
+      "description": "Freeze all pending commissions"
+    },
+    "admin_notes": {
+      "type": "string"
     }
   },
   "required": [

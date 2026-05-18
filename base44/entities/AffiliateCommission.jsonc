@@ -12,7 +12,8 @@
       "type": "string",
       "enum": [
         "challenge_purchase",
-        "payout_reward"
+        "payout_reward",
+        "account_upgrade"
       ],
       "default": "challenge_purchase"
     },
@@ -35,16 +36,27 @@
     "withdrawal_id": {
       "type": "string"
     },
+    "account_id": {
+      "type": "string"
+    },
     "status": {
       "type": "string",
       "enum": [
         "pending",
         "approved",
-        "paid"
+        "paid",
+        "rejected"
       ],
       "default": "pending"
     },
     "notes": {
+      "type": "string"
+    },
+    "paid_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by": {
       "type": "string"
     }
   },

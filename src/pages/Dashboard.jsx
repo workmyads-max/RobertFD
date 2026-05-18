@@ -43,6 +43,7 @@ import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
 import AdminCoupons from '../components/admin/AdminCoupons';
 import AdminAppeals from '../components/admin/AdminAppeals';
+import AdminAffiliate from '../components/admin/AdminAffiliate';
 import MarketsHub from '../components/dashboard/MarketsHub';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
@@ -158,6 +159,7 @@ export default function Dashboard() {
       case 'performance': return <MyPerformance user={user} />;
       case 'admin-coupons': return isAdmin ? <AdminCoupons /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-appeals': return isAdmin ? <AdminAppeals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-affiliate': return isAdmin ? <AdminAffiliate /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };

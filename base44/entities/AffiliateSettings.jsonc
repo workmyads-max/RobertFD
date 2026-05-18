@@ -1,0 +1,60 @@
+{
+  "name": "AffiliateSettings",
+  "type": "object",
+  "properties": {
+    "setting_key": {
+      "type": "string",
+      "description": "Unique key e.g. global_config"
+    },
+    "l1_rate": {
+      "type": "number",
+      "default": 8,
+      "description": "Level 1 direct commission %"
+    },
+    "l2_rate": {
+      "type": "number",
+      "default": 2,
+      "description": "Level 2 commission %"
+    },
+    "l3_rate": {
+      "type": "number",
+      "default": 1,
+      "description": "Level 3 commission %"
+    },
+    "payout_tier_0_rate": {
+      "type": "number",
+      "default": 7,
+      "description": "Payout reward % for 0-9 live traders"
+    },
+    "payout_tier_10_rate": {
+      "type": "number",
+      "default": 11,
+      "description": "Payout reward % for 10+ live traders"
+    },
+    "payout_tier_25_rate": {
+      "type": "number",
+      "default": 17,
+      "description": "Payout reward % for 25+ live traders"
+    },
+    "payout_tier_50_rate": {
+      "type": "number",
+      "default": 25,
+      "description": "Payout reward % for 50+ live traders"
+    },
+    "min_withdrawal": {
+      "type": "number",
+      "default": 50
+    },
+    "withdrawal_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "is_program_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "setting_key"
+  ]
+}

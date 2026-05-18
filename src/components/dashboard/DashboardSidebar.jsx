@@ -278,6 +278,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle },
               { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag },
               { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield },
+              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
