@@ -1,0 +1,35 @@
+import { base44 } from "@/api/base44Client";
+import { useMutation } from "@tanstack/react-query";
+
+export function useCheckoutPayment() {
+  const createPaymentMutation = useMutation({
+    mutationFn: async ({ amount, currency, order_id, email }) => {
+      const response = await base44.functions.invoke('createCheckoutPayment', {
+        amount,
+        currency,
+        order_id,
+        email,
+      });
+      return response.data;
+    },
+  });
+
+  return { createPaymentMutation };
+}
+
+export function useConfirmoPayment() {
+  const createInvoiceMutation = useMutation({
+    mutationFn: async ({ amount, currency, order_id, email, crypto_currency }) => {
+      const response = await base44.functions.invoke('createConfirmoInvoice', {
+        amount,
+        currency,
+        order_id,
+        email,
+        crypto_currency,
+      });
+      return response.data;
+    },
+  });
+
+  return { createInvoiceMutation };
+}

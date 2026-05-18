@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, AlertCircle, MapPin, Wifi, Zap } from 'lucide-react';
+import { ShieldCheck, AlertCircle, MapPin, Wifi, Zap, Globe, MessageCircle, Send } from 'lucide-react';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
@@ -10,6 +12,12 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
   const firstName = displayName.split(' ')[0];
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+  const { data: socialSettings = [] } = useQuery({
+    queryKey: ['social-media-settings'],
+    queryFn: () => base44.entities.SocialMediaSettings.filter({ setting_key: 'global' }),
+  });
+  const social = socialSettings[0] || {};
 
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -118,8 +126,8 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Right: Location + session info */}
-        <div className="flex flex-col gap-2 md:text-right">
+        {/* Right: Location + session info + Social Media */}
+        <div className="flex flex-col gap-3 md:text-right">
           {!location.loading && (
             <>
               <div className="flex items-center gap-2 text-[11px] font-mono text-white/40 md:justify-end">
@@ -137,7 +145,38 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             <div className="text-[10px] font-mono text-white/20 animate-pulse">Identifying session...</div>
           )}
 
-
+          {/* Social Media Links - Top Bar */}
+          <div className="flex items-center gap-2 md:justify-end pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <span className="text-[9px] font-mono text-white/30 uppercase tracking-wider">Connect:</span>
+            {social.discord_enabled && social.discord_url && (
+              <a href={social.discord_url} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                style={{ background: 'rgba(88,101,242,0.15)', border: '1px solid rgba(88,101,242,0.3)' }}>
+                <MessageCircle className="w-3.5 h-3.5" style={{ color: '#5865F2' }} />
+              </a>
+            )}
+            {social.twitter_enabled && social.twitter_url && (
+              <a href={social.twitter_url} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                style={{ background: 'rgba(29,155,240,0.15)', border: '1px solid rgba(29,155,240,0.3)' }}>
+                <Globe className="w-3.5 h-3.5" style={{ color: '#1D9BF0' }} />
+              </a>
+            )}
+            {social.instagram_enabled && social.instagram_url && (
+              <a href={social.instagram_url} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                style={{ background: 'rgba(225,48,108,0.15)', border: '1px solid rgba(225,48,108,0.3)' }}>
+                <Send className="w-3.5 h-3.5" style={{ color: '#E1306C' }} />
+              </a>
+            )}
+            {social.youtube_enabled && social.youtube_url && (
+              <a href={social.youtube_url} target="_blank" rel="noopener noreferrer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                style={{ background: 'rgba(255,0,0,0.15)', border: '1px solid rgba(255,0,0,0.3)' }}>
+                <Globe className="w-3.5 h-3.5" style={{ color: '#FF0000' }} />
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

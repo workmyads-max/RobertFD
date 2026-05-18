@@ -20,7 +20,7 @@ import DashboardSettings from '../components/dashboard/DashboardSettings';
 import NotificationCenter from '../components/dashboard/NotificationCenter';
 import NotificationBanner from '../components/dashboard/NotificationBanner';
 import AdminNotifications from '../components/dashboard/AdminNotifications';
-import AdminWalletSettings from '../components/admin/AdminWalletSettings';
+import AdminPaymentControl from '../components/admin/AdminPaymentControl';
 import ChallengeMarketplace from '../components/dashboard/ChallengeMarketplace';
 import DashboardCheckout from '../components/dashboard/DashboardCheckout';
 import AdminDashboard from '../components/admin/AdminDashboard';
@@ -145,7 +145,7 @@ export default function Dashboard() {
       case 'admin-support': return isAdmin ? <AdminSupport /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-wallets': return isAdmin ? <AdminWalletSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-wallets': return isAdmin ? <AdminPaymentControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-kyc': return isAdmin ? <AdminKYC /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;

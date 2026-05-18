@@ -1,0 +1,92 @@
+{
+  "name": "PaymentLog",
+  "type": "object",
+  "properties": {
+    "gateway": {
+      "type": "string",
+      "enum": [
+        "checkout_com",
+        "confirmo",
+        "manual_crypto",
+        "nowpayments",
+        "coinpayments",
+        "coinbase_commerce",
+        "binance_pay"
+      ],
+      "description": "Payment gateway provider"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Webhook event type"
+    },
+    "event_data": {
+      "type": "object",
+      "description": "Full webhook payload"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "Associated order ID"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "Gateway transaction ID"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "authorized",
+        "paid",
+        "confirming",
+        "failed",
+        "expired",
+        "cancelled",
+        "refunded",
+        "chargeback"
+      ],
+      "default": "pending"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Payment amount"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "crypto_currency": {
+      "type": "string",
+      "description": "Cryptocurrency used (for crypto payments)"
+    },
+    "network": {
+      "type": "string",
+      "description": "Blockchain network (e.g., TRC20, ERC20)"
+    },
+    "confirmations": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of blockchain confirmations"
+    },
+    "customer_email": {
+      "type": "string",
+      "description": "Customer email"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error details if failed"
+    },
+    "processed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this event has been processed"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes"
+    }
+  },
+  "required": [
+    "gateway",
+    "event_type"
+  ]
+}

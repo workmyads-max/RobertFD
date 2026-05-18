@@ -36,8 +36,23 @@
       "type": "string",
       "enum": [
         "usdt_trc20",
-        "bitcoin"
+        "bitcoin",
+        "checkout_com_card",
+        "checkout_com_apple_pay",
+        "checkout_com_google_pay",
+        "confirmo_crypto",
+        "nowpayments",
+        "coinpayments"
       ]
+    },
+    "payment_gateway": {
+      "type": "string",
+      "enum": [
+        "checkout_com",
+        "confirmo",
+        "manual"
+      ],
+      "default": "manual"
     },
     "payment_address": {
       "type": "string"
@@ -47,8 +62,15 @@
       "enum": [
         "pending",
         "awaiting_confirmation",
+        "authorized",
+        "confirming",
         "confirmed",
-        "failed"
+        "paid",
+        "failed",
+        "expired",
+        "cancelled",
+        "refunded",
+        "chargeback"
       ],
       "default": "pending"
     },
@@ -80,6 +102,16 @@
       "type": "string"
     },
     "account_id": {
+      "type": "string"
+    },
+    "coupon_code": {
+      "type": "string"
+    },
+    "discount_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "affiliate_code": {
       "type": "string"
     }
   },

@@ -1,195 +1,203 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Shield, Zap, Clock, CheckCircle2, CreditCard } from 'lucide-react';
-import CouponInput from './CouponInput';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CreditCard, Smartphone, Wallet, CheckCircle, ArrowRight } from 'lucide-react';
 
-const METHODS = [
+const PAYMENT_METHODS = [
+  {
+    id: 'checkout_com',
+    label: 'Credit/Debit Card',
+    icon: CreditCard,
+    color: '#635BFF',
+    methods: ['Visa', 'Mastercard', 'American Express'],
+    features: ['Instant confirmation', 'Secure checkout', 'Apple & Google Pay'],
+  },
+  {
+    id: 'confirmo',
+    label: 'Cryptocurrency',
+    icon: Wallet,
+    color: '#F7931A',
+    methods: ['Bitcoin', 'Ethereum', 'USDT', 'USDC'],
+    features: ['Lower fees', 'Global access', 'Blockchain secured'],
+  },
   {
     id: 'usdt_trc20',
     label: 'USDT TRC20',
-    network: 'Tron Network (TRC20)',
-    speed: '~2–5 minutes',
-    fee: 'Low network fee',
-    icon: '₮',
+    icon: Smartphone,
     color: '#26A17B',
-    note: 'Stable, fast, and widely supported.',
+    methods: ['Tether TRC20'],
+    features: ['Fast transfers', 'Low network fees'],
   },
   {
     id: 'bitcoin',
     label: 'Bitcoin',
-    network: 'Bitcoin Mainnet (BTC)',
-    speed: '~20–40 minutes',
-    fee: 'Variable BTC fee',
-    icon: '₿',
+    icon: Wallet,
     color: '#F7931A',
-    note: 'World\'s most trusted cryptocurrency.',
+    methods: ['Bitcoin (BTC)'],
+    features: ['Decentralized', 'No intermediaries'],
   },
 ];
 
 export default function CheckoutStep2({ order, updateOrder, onNext, onBack }) {
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const canContinue = !!order.payment_method;
+  const [selectedMethod, setSelectedMethod] = useState(null);
 
-  const handleApplyCoupon = (coupon) => {
-    setAppliedCoupon(coupon);
-    updateOrder({ discount_amount: coupon.discountAmount, coupon_code: coupon.code, price: order.original_price ? order.original_price - coupon.discountAmount : order.price - coupon.discountAmount, original_price: order.original_price || order.price });
+  const handleSelect = (method) => {
+    setSelectedMethod(method);
+    updateOrder({ 
+      payment_method: method,
+      payment_gateway: method === 'checkout_com' ? 'checkout_com' : method === 'confirmo' ? 'confirmo' : 'manual'
+    });
   };
 
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    updateOrder({ discount_amount: 0, coupon_code: null, price: order.original_price || order.price });
+  const handleContinue = () => {
+    if (selectedMethod) {
+      onNext();
+    }
   };
 
   return (
-    <div className="grid lg:grid-cols-5 gap-8">
-      {/* LEFT — Methods */}
-      <div className="lg:col-span-3 space-y-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.15)' }}>
-              <CreditCard className="w-4 h-4 text-primary" />
-            </div>
-            <h2 className="text-xl font-black text-foreground">Payment Method</h2>
-          </div>
-          <p className="text-sm text-muted-foreground ml-11">Select your preferred crypto network for payment.</p>
-        </div>
-
-        <div className="space-y-4">
-          {METHODS.map((m, i) => {
-            const selected = order.payment_method === m.id;
-            return (
-              <motion.button
-                key={m.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={() => updateOrder({ payment_method: m.id })}
-                className="w-full rounded-2xl p-5 text-left transition-all"
-                style={{
-                  background: selected ? `rgba(${m.id === 'usdt_trc20' ? '38,161,123' : '247,147,26'},0.08)` : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${selected ? m.color + '70' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: selected ? `0 0 32px ${m.color}18, 0 0 0 1px ${m.color}30` : 'none',
-                }}
-              >
-                <div className="flex items-start gap-5">
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-black"
-                    style={{ background: `${m.color}18`, border: `1px solid ${m.color}35`, color: m.color }}>
-                    {m.icon}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="text-base font-bold text-foreground">{m.label}</span>
-                      {selected && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-                          style={{ background: m.color }}>
-                          <CheckCircle2 className="w-2.5 h-2.5" /> Selected
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">{m.note}</p>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div className="text-[9px] font-mono text-muted-foreground mb-0.5 uppercase">Network</div>
-                        <div className="text-[11px] font-semibold text-foreground leading-tight">{m.network}</div>
-                      </div>
-                      <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div className="text-[9px] font-mono text-muted-foreground mb-0.5 uppercase">Speed</div>
-                        <div className="text-[11px] font-semibold text-foreground leading-tight">{m.speed}</div>
-                      </div>
-                      <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div className="text-[9px] font-mono text-muted-foreground mb-0.5 uppercase">Fee</div>
-                        <div className="text-[11px] font-semibold text-foreground leading-tight">{m.fee}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
-
-        {/* Coupon Code */}
-        <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-2">Redeem Coupon Code</div>
-          <CouponInput order={order} onApply={handleApplyCoupon} appliedCoupon={appliedCoupon} onRemove={handleRemoveCoupon} />
-        </div>
-
-        {/* Security note */}
-        <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
-          <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground">
-            Payments are non-refundable once confirmed. Your funded account credentials will be delivered within <strong className="text-foreground">1–24 hours</strong> after blockchain confirmation.
-          </p>
-        </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-2xl font-black text-foreground mb-2">Choose Payment Method</h2>
+        <p className="text-sm text-muted-foreground">Select your preferred payment method for instant processing</p>
       </div>
 
-      {/* RIGHT — Summary + CTAs */}
-      <div className="lg:col-span-2">
-        <div className="sticky top-6 space-y-4">
-          {/* Order summary */}
-          <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div className="px-5 py-3.5 border-b border-white/5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Order Summary</span>
-            </div>
-            <div className="p-5 space-y-3">
-              {[
-                { label: 'Challenge', value: order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding' },
-                { label: 'Account Size', value: `$${order.account_size?.toLocaleString()}`, highlight: true },
-                { label: 'Model', value: order.account_type === 'swing' ? 'Swing' : 'Standard' },
-                { label: 'Platform', value: 'RF XTrading' },
-                { label: 'Profit Split', value: '80% to Trader' },
-                { label: 'Name', value: order.full_name || '—' },
-              ].map(({ label, value, highlight }) => (
-                <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                  <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</span>
+      <div className="grid md:grid-cols-2 gap-4 mb-8">
+        {PAYMENT_METHODS.map((method, index) => {
+          const Icon = method.icon;
+          const isSelected = selectedMethod === method.id;
+          
+          return (
+            <motion.button
+              key={method.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => handleSelect(method.id)}
+              className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${
+                isSelected
+                  ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+                  : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-background'
+              }`}
+              style={{
+                background: isSelected 
+                  ? `${method.color}10` 
+                  : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${isSelected ? method.color + '40' : 'rgba(255,255,255,0.08)'}`,
+              }}
+            >
+              <div className="flex items-start gap-4 mb-4">
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ 
+                    background: `${method.color}15`,
+                    border: `1px solid ${method.color}30`
+                  }}
+                >
+                  <Icon className="w-6 h-6" style={{ color: method.color }} />
                 </div>
-              ))}
-              {appliedCoupon && (
-                <div className="flex justify-between items-center text-emerald-400">
-                  <span className="text-xs font-mono">Coupon ({appliedCoupon.code})</span>
-                  <span className="text-xs font-bold">-${appliedCoupon.discountAmount}</span>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-foreground mb-1">{method.label}</h3>
+                  <p className="text-xs text-muted-foreground">{method.methods.join(' • ')}</p>
                 </div>
-              )}
-              <div className="border-t border-white/10 pt-3 mt-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold">Total</span>
-                  <span className="text-3xl font-black text-primary">${order.price}</span>
-                </div>
+                {isSelected && (
+                  <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />
+                )}
               </div>
-            </div>
-          </div>
 
-          {/* Buttons */}
-          <motion.button
-            onClick={onNext}
-            disabled={!canContinue}
-            whileHover={{ scale: canContinue ? 1.02 : 1 }}
-            whileTap={{ scale: canContinue ? 0.98 : 1 }}
-            className="w-full py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+              <div className="flex flex-wrap gap-2">
+                {method.features.map((feature, i) => (
+                  <span 
+                    key={i}
+                    className="text-[10px] font-mono px-2 py-1 rounded-md"
+                    style={{
+                      background: `${method.color}08`,
+                      color: method.color,
+                      border: `1px solid ${method.color}20`
+                    }}
+                  >
+                    ✓ {feature}
+                  </span>
+                ))}
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Payment method details */}
+      <AnimatePresence>
+        {selectedMethod && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="rounded-2xl p-6 mb-6"
             style={{
-              background: canContinue ? 'linear-gradient(90deg, #FF5C00, #FF7A2F)' : 'rgba(255,255,255,0.07)',
-              boxShadow: canContinue ? '0 4px 24px rgba(255,92,0,0.35)' : 'none',
-              color: canContinue ? 'white' : 'rgba(255,255,255,0.3)',
-              cursor: canContinue ? 'pointer' : 'not-allowed',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.09)',
             }}
           >
-            Proceed to Payment <ArrowRight className="w-4 h-4" />
-          </motion.button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
+                <CheckCircle className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-bold text-foreground">
+                {selectedMethod === 'checkout_com' && 'Card Payment via Checkout.com'}
+                {selectedMethod === 'confirmo' && 'Crypto Payment via Confirmo'}
+                {selectedMethod === 'usdt_trc20' && 'Manual USDT TRC20 Transfer'}
+                {selectedMethod === 'bitcoin' && 'Manual Bitcoin Transfer'}
+              </h3>
+            </div>
 
-          <button onClick={onBack}
-            className="w-full py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-            <ArrowLeft className="w-4 h-4" /> Back to Details
-          </button>
-        </div>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              {selectedMethod === 'checkout_com' && (
+                <>
+                  <p>• Secure card processing with SSL encryption</p>
+                  <p>• Supports Visa, Mastercard, American Express</p>
+                  <p>• Apple Pay and Google Pay available</p>
+                  <p>• Instant payment confirmation</p>
+                </>
+              )}
+              {selectedMethod === 'confirmo' && (
+                <>
+                  <p>• Multi-cryptocurrency support (BTC, ETH, USDT, USDC)</p>
+                  <p>• Automatic blockchain confirmation tracking</p>
+                  <p>• QR code provided for easy payment</p>
+                  <p>• Typically confirms within 10-30 minutes</p>
+                </>
+              )}
+              {(selectedMethod === 'usdt_trc20' || selectedMethod === 'bitcoin') && (
+                <>
+                  <p>• Manual wallet address will be provided</p>
+                  <p>• Send exact amount to the displayed address</p>
+                  <p>• Payment confirmation within 1-24 hours</p>
+                  <p>• Make sure to use the correct network</p>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <button onClick={onBack}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+          ← Back
+        </button>
+        <button 
+          onClick={handleContinue}
+          disabled={!selectedMethod}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ 
+            background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
+            boxShadow: selectedMethod ? '0 4px 20px rgba(255,92,0,0.3)' : 'none'
+          }}
+        >
+          Continue to Payment <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

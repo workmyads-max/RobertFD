@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const PROVIDER_LABELS = {
+  checkout_com: 'Checkout.com (Cards)',
+  confirmo: 'Confirmo (Crypto)',
   manual_crypto: 'Manual Crypto',
   nowpayments: 'NOWPayments',
   coinpayments: 'CoinPayments',
@@ -18,6 +20,9 @@ const BLANK_GW = {
   name: '', provider: 'manual_crypto', is_active: true,
   api_key: '', secret_key: '', webhook_secret: '', webhook_url: '',
   networks: [], wallets: [], notes: '',
+  sandbox_mode: false,
+  supported_cards: ['visa', 'mastercard', 'amex'],
+  supported_crypto: ['BTC', 'ETH', 'USDT', 'USDC'],
 };
 
 function Field({ label, value, onChange, type = 'text', placeholder = '' }) {
@@ -196,10 +201,99 @@ export default function AdminWalletSettings() {
                     <div className="col-span-2 text-[10px] font-mono text-primary uppercase tracking-widest flex items-center gap-2">
                       <Shield className="w-3 h-3" /> API Credentials
                     </div>
+                    
+                    {/* Sandbox/Live Toggle */}
+                    {(form.provider === 'checkout_com' || form.provider === 'confirmo') && (
+                      <div className="col-span-2 flex items-center gap-3 p-3 rounded-lg"
+                        style={{ background: 'rgba(255,92,0,0.05)', border: '1px solid rgba(255,92,0,0.2)' }}>
+                        <label className="text-xs font-semibold text-foreground">Sandbox Mode</label>
+                        <button onClick={() => setForm(f => ({ ...f, sandbox_mode: !f.sandbox_mode }))}
+                          className={`w-10 h-5 rounded-full transition-all relative ${form.sandbox_mode ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                          <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${form.sandbox_mode ? 'left-0.5' : 'left-5'}`} />
+                        </button>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {form.sandbox_mode ? 'Testing (Sandbox)' : 'Live Production'}
+                        </span>
+                      </div>
+                    )}
+
                     <Field label="API Key" value={form.api_key} onChange={set('api_key')} placeholder="Your API key" />
                     <Field label="Secret Key" value={form.secret_key} onChange={set('secret_key')} type="password" placeholder="Your secret key" />
                     <Field label="Webhook Secret" value={form.webhook_secret} onChange={set('webhook_secret')} placeholder="Webhook signing secret" />
-                    <Field label="Webhook URL" value={form.webhook_url} onChange={set('webhook_url')} placeholder="https://..." />
+                    <div className="col-span-2">
+                      <Field label="Webhook URL" value={form.webhook_url} onChange={set('webhook_url')} placeholder="https://your-domain.com/functions/..." />
+                      {form.provider === 'checkout_com' && (
+                        <p className="text-[9px] font-mono text-muted-foreground mt-1">
+                          Use: https://your-domain.com/functions/checkoutWebhook
+                        </p>
+                      )}
+                      {form.provider === 'confirmo' && (
+                        <p className="text-[9px] font-mono text-muted-foreground mt-1">
+                          Use: https://your-domain.com/functions/confirmoWebhook
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Provider-specific options */}
+                    {form.provider === 'checkout_com' && (
+                      <>
+                        <div className="col-span-2 text-[10px] font-mono text-primary uppercase tracking-widest mt-2">
+                          Supported Payment Methods
+                        </div>
+                        <div className="col-span-2 flex gap-2 flex-wrap">
+                          {['visa', 'mastercard', 'amex', 'apple_pay', 'google_pay'].map(card => (
+                            <button
+                              key={card}
+                              onClick={() => {
+                                const cards = form.supported_cards || [];
+                                const has = cards.includes(card);
+                                setForm(f => ({
+                                  ...f,
+                                  supported_cards: has ? cards.filter(c => c !== card) : [...cards, card]
+                                }));
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                (form.supported_cards || []).includes(card)
+                                  ? 'bg-primary text-white'
+                                  : 'bg-white/5 text-muted-foreground border border-white/10'
+                              }`}
+                            >
+                              {card.replace('_', ' ').toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {form.provider === 'confirmo' && (
+                      <>
+                        <div className="col-span-2 text-[10px] font-mono text-primary uppercase tracking-widest mt-2">
+                          Supported Cryptocurrencies
+                        </div>
+                        <div className="col-span-2 flex gap-2 flex-wrap">
+                          {['BTC', 'ETH', 'USDT', 'USDC', 'TRX', 'BNB'].map(crypto => (
+                            <button
+                              key={crypto}
+                              onClick={() => {
+                                const cryptoList = form.supported_crypto || [];
+                                const has = cryptoList.includes(crypto);
+                                setForm(f => ({
+                                  ...f,
+                                  supported_crypto: has ? cryptoList.filter(c => c !== crypto) : [...cryptoList, crypto]
+                                }));
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                (form.supported_crypto || []).includes(crypto)
+                                  ? 'bg-primary text-white'
+                                  : 'bg-white/5 text-muted-foreground border border-white/10'
+                              }`}
+                            >
+                              {crypto}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
