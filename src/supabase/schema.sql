@@ -841,8 +841,8 @@ CREATE POLICY "Admins can view all tickets" ON public.support_tickets FOR SELECT
 CREATE POLICY "Admins can update all tickets" ON public.support_tickets FOR UPDATE USING (public.is_admin());
 
 -- SUPPORT MESSAGES RLS
-CREATE POLICY "Users can view own ticket messages" ON public.support_messages FOR SELECT USING (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = (auth.jwt() ->> 'email')::TEXT));
-CREATE POLICY "Users can create ticket messages" ON public.support_messages FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = (auth.jwt() ->> 'email')::TEXT));
+CREATE POLICY "Users can view own ticket messages" ON public.support_messages FOR SELECT USING (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND (user_email)::TEXT = (auth.jwt() ->> 'email')::TEXT));
+CREATE POLICY "Users can create ticket messages" ON public.support_messages FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND (user_email)::TEXT = (auth.jwt() ->> 'email')::TEXT));
 CREATE POLICY "Admins can view all messages" ON public.support_messages FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can create messages" ON public.support_messages FOR INSERT WITH CHECK (public.is_admin());
 
