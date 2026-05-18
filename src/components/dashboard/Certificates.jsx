@@ -161,14 +161,35 @@ function CertificateDocument({ cert, forCapture = false }) {
 
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '6px' }}>AUTHORIZED SIGNATURE</div>
-          {/* SVG cursive signature for Diego Reyes */}
-          <svg width="110" height="36" viewBox="0 0 110 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', marginLeft: 'auto', marginBottom: '4px' }}>
-            <path d="M4 26 C8 10, 14 8, 18 14 C22 20, 20 28, 24 22 C28 16, 30 10, 34 12 C38 14, 36 24, 40 20 C44 16, 46 10, 52 12 C56 14, 54 22, 58 18 C62 14, 66 8, 72 10 C76 12, 74 24, 78 20 C82 16, 86 10, 92 12 C97 14, 96 22, 100 20 C104 18, 106 14, 108 12"
-              stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
-            <path d="M14 28 C22 30, 32 31, 42 30 C52 29, 62 30, 72 29 C82 28, 94 29, 104 28"
-              stroke={cfg.color} strokeWidth="0.8" strokeLinecap="round" opacity="0.35"/>
-            <path d="M58 18 C60 22, 62 28, 60 30" stroke={cfg.color} strokeWidth="1.4" strokeLinecap="round" opacity="0.7"/>
-            <path d="M72 10 C74 6, 78 4, 80 8" stroke={cfg.color} strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+          {/* SVG hand-drawn signature — Diego Reyes */}
+          <svg width="130" height="48" viewBox="0 0 200 70" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', marginLeft: 'auto', marginBottom: '4px' }}>
+            {/* D - large looping capital */}
+            <path d="M10 48 C10 20, 14 12, 20 12 C28 12, 34 18, 34 30 C34 42, 28 50, 18 50 C14 50, 10 48, 10 48" stroke={cfg.color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            {/* i */}
+            <path d="M38 34 C39 30, 41 26, 43 24 C44 32, 44 40, 43 48" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            <circle cx="42" cy="20" r="1.5" fill={cfg.color} opacity="0.9"/>
+            {/* e */}
+            <path d="M46 38 C48 32, 53 28, 57 30 C60 32, 59 38, 56 42 C53 46, 48 46, 46 42 C45 38, 47 32, 52 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            {/* g */}
+            <path d="M62 30 C66 24, 72 24, 74 30 C76 36, 72 44, 68 46 C64 48, 60 46, 60 40 C60 34, 64 30, 68 30" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            <path d="M74 30 C76 38, 76 50, 72 58 C70 62, 66 64, 62 62" stroke={cfg.color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85"/>
+            {/* o */}
+            <path d="M80 34 C82 26, 90 24, 94 30 C98 36, 96 46, 90 48 C84 50, 79 44, 80 36" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            {/* space + R (capital) */}
+            <path d="M102 14 C102 14, 102 34, 102 50" stroke={cfg.color} strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.95"/>
+            <path d="M102 14 C110 14, 116 16, 116 22 C116 28, 110 30, 102 30" stroke={cfg.color} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.95"/>
+            <path d="M104 30 C110 34, 118 44, 122 50" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.95"/>
+            {/* e */}
+            <path d="M126 38 C128 30, 134 28, 138 32 C141 35, 139 42, 135 45 C131 48, 126 46, 126 40 C126 34, 130 32, 135 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            {/* y */}
+            <path d="M143 26 C145 32, 148 40, 150 46" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.95"/>
+            <path d="M158 26 C155 32, 150 46, 146 54 C143 60, 140 64, 136 66" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.85"/>
+            {/* e */}
+            <path d="M162 36 C164 28, 172 26, 175 32 C178 37, 175 44, 170 47 C165 50, 160 46, 161 39 C162 32, 167 30, 172 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+            {/* s - trailing flourish */}
+            <path d="M178 32 C182 28, 188 30, 186 36 C184 40, 178 40, 178 44 C178 48, 184 50, 190 48 C194 46, 196 42, 195 40" stroke={cfg.color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9"/>
+            {/* underline flourish */}
+            <path d="M8 56 C40 60, 90 58, 140 56 C160 55, 180 56, 195 54" stroke={cfg.color} strokeWidth="1" strokeLinecap="round" opacity="0.3"/>
           </svg>
           <div style={{ width: '110px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color}80, ${cfg.color})`, marginLeft: 'auto', marginBottom: '3px' }} />
           <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '8px', fontWeight: 700 }}>Diego Reyes</div>
@@ -295,13 +316,24 @@ function CertCard({ cert, index, onPreview }) {
             <div className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>Chief Executive Officer</div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            {/* SVG cursive signature */}
-            <svg width="80" height="28" viewBox="0 0 110 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 26 C8 10, 14 8, 18 14 C22 20, 20 28, 24 22 C28 16, 30 10, 34 12 C38 14, 36 24, 40 20 C44 16, 46 10, 52 12 C56 14, 54 22, 58 18 C62 14, 66 8, 72 10 C76 12, 74 24, 78 20 C82 16, 86 10, 92 12 C97 14, 96 22, 100 20 C104 18, 106 14, 108 12"
-                stroke={cfg.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
-              <path d="M14 28 C22 30, 32 31, 42 30 C52 29, 62 30, 72 29 C82 28, 94 29, 104 28"
-                stroke={cfg.color} strokeWidth="0.8" strokeLinecap="round" opacity="0.3"/>
-              <path d="M58 18 C60 22, 62 28, 60 30" stroke={cfg.color} strokeWidth="1.4" strokeLinecap="round" opacity="0.7"/>
+            {/* SVG hand-drawn signature — Diego Reyes */}
+            <svg width="90" height="34" viewBox="0 0 200 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 48 C10 20, 14 12, 20 12 C28 12, 34 18, 34 30 C34 42, 28 50, 18 50 C14 50, 10 48, 10 48" stroke={cfg.color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M38 34 C39 30, 41 26, 43 24 C44 32, 44 40, 43 48" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <circle cx="42" cy="20" r="1.5" fill={cfg.color} opacity="0.9"/>
+              <path d="M46 38 C48 32, 53 28, 57 30 C60 32, 59 38, 56 42 C53 46, 48 46, 46 42 C45 38, 47 32, 52 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M62 30 C66 24, 72 24, 74 30 C76 36, 72 44, 68 46 C64 48, 60 46, 60 40 C60 34, 64 30, 68 30" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M74 30 C76 38, 76 50, 72 58 C70 62, 66 64, 62 62" stroke={cfg.color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85"/>
+              <path d="M80 34 C82 26, 90 24, 94 30 C98 36, 96 46, 90 48 C84 50, 79 44, 80 36" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M102 14 C102 14, 102 34, 102 50" stroke={cfg.color} strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.95"/>
+              <path d="M102 14 C110 14, 116 16, 116 22 C116 28, 110 30, 102 30" stroke={cfg.color} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.95"/>
+              <path d="M104 30 C110 34, 118 44, 122 50" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.95"/>
+              <path d="M126 38 C128 30, 134 28, 138 32 C141 35, 139 42, 135 45 C131 48, 126 46, 126 40 C126 34, 130 32, 135 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M143 26 C145 32, 148 40, 150 46" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.95"/>
+              <path d="M158 26 C155 32, 150 46, 146 54 C143 60, 140 64, 136 66" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.85"/>
+              <path d="M162 36 C164 28, 172 26, 175 32 C178 37, 175 44, 170 47 C165 50, 160 46, 161 39 C162 32, 167 30, 172 32" stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.95"/>
+              <path d="M178 32 C182 28, 188 30, 186 36 C184 40, 178 40, 178 44 C178 48, 184 50, 190 48 C194 46, 196 42, 195 40" stroke={cfg.color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9"/>
+              <path d="M8 56 C40 60, 90 58, 140 56 C160 55, 180 56, 195 54" stroke={cfg.color} strokeWidth="1" strokeLinecap="round" opacity="0.3"/>
             </svg>
             <div className="w-16 h-px" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color})` }} />
           </div>
