@@ -31,6 +31,24 @@ Deno.serve(async (req) => {
     // Sync each order to Supabase
     for (const order of orders) {
       try {
+        // First create/update user profile
+        if (order.email) {
+          const { error: profileError } = await supabase.from('profiles').upsert({
+            email: order.email,
+            full_name: order.full_name,
+            phone: order.phone,
+            country: order.country,
+            city: order.city,
+            address: order.address,
+            postal_code: order.postal_code,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'email' });
+          
+          if (profileError) {
+            console.error(`Failed to create profile for ${order.email}:`, profileError);
+          }
+        }
+        
         // Check if order already exists in Supabase
         const { data: existing } = await supabase
           .from('orders')

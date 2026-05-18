@@ -59,20 +59,17 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
       const base44Order = await base44.entities.Order.create(orderData);
       
       // Sync to Supabase
-      try {
-        await base44.functions.invoke('createManualOrderInSupabase', {
-          order_id: base44Order.order_id,
-          email: order.email,
-          orderData: {
-            ...order,
-            payment_address: wallet?.address || '',
-            payment_status: 'pending',
-          },
-        });
-      } catch (err) {
-        console.error('Failed to sync to Supabase:', err);
-        // Don't fail the checkout, just log the error
-      }
+      const syncResponse = await base44.functions.invoke('createManualOrderInSupabase', {
+        order_id: base44Order.order_id,
+        email: order.email,
+        orderData: {
+          ...order,
+          payment_address: wallet?.address || '',
+          payment_status: 'pending',
+        },
+      });
+      
+      console.log('Supabase sync result:', syncResponse.data);
       
       return base44Order;
     },
