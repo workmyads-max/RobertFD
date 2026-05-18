@@ -1,0 +1,45 @@
+{
+  "name": "SocialMediaSettings",
+  "type": "object",
+  "properties": {
+    "setting_key": {
+      "type": "string",
+      "description": "Unique key, e.g. global"
+    },
+    "discord_url": {
+      "type": "string",
+      "default": ""
+    },
+    "discord_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "instagram_url": {
+      "type": "string",
+      "default": ""
+    },
+    "instagram_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "twitter_url": {
+      "type": "string",
+      "default": ""
+    },
+    "twitter_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "youtube_url": {
+      "type": "string",
+      "default": ""
+    },
+    "youtube_enabled": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "setting_key"
+  ]
+}

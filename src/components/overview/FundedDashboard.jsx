@@ -18,6 +18,7 @@ import AIInsightsPanel      from './AIInsightsPanel.jsx';
 import LiveTickerBar        from './LiveTickerBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
+import SocialMediaWidget    from './SocialMediaWidget.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -263,6 +264,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Quick actions */}
                   <QuickActions onNavigate={onNavigate} />
+
+                  {/* Social Media Community Widget */}
+                  <SocialMediaWidget />
                 </motion.div>
               )}
             </AnimatePresence>

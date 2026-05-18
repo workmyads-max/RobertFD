@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Moon, Sun } from 'lucide-react';
@@ -279,6 +279,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag },
               { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield },
               { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users },
+              { id: 'admin-social', label: 'Social Media', icon: Share2 },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
@@ -349,7 +350,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
       {/* Desktop sidebar */}
       <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[60px]' : 'w-56'}`}
-        style={{ background: 'rgba(7,8,14,0.99)', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+        style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
         <SidebarContent />
       </div>
 
@@ -366,7 +367,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed left-0 top-0 bottom-0 z-50 w-56 md:hidden border-r border-white/5"
-              style={{ background: 'rgba(7,8,14,0.99)', backdropFilter: 'blur(60px)' }}
+              style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)' }}
             >
               <SidebarContent />
             </motion.div>
