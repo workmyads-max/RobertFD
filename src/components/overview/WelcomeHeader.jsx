@@ -66,16 +66,12 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             <motion.div
               animate={{ boxShadow: ['0 0 0px rgba(255,92,0,0)', '0 0 24px rgba(255,92,0,0.4)', '0 0 0px rgba(255,92,0,0)'] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white overflow-hidden"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
                 border: '2px solid rgba(255,92,0,0.5)',
               }}>
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                initials
-              )}
+              {initials}
             </motion.div>
             {/* KYC dot */}
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
