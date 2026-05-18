@@ -337,10 +337,20 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
                 <span className={`text-xs font-semibold text-right ml-4 ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</span>
               </div>
             ))}
-            <div className="border-t border-white/10 pt-3">
-              <div className="flex justify-between items-center">
+            <div className="border-t border-white/10 pt-3 space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
+              </div>
+              {order.discount_amount > 0 && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-emerald-400">Discount</span>
+                  <span className="text-emerald-400 font-mono">-${order.discount_amount.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-white/10">
                 <span className="text-sm font-bold">Total Due</span>
-                <span className="text-2xl font-black text-primary">${order.price}</span>
+                <span className="text-2xl font-black text-primary">${(order.final_price || order.price).toLocaleString()}</span>
               </div>
             </div>
           </div>

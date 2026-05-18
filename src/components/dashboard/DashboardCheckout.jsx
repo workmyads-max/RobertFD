@@ -6,11 +6,13 @@ import CheckoutStep2 from '../checkout/CheckoutStep2';
 import CheckoutStep3 from '../checkout/CheckoutStep3';
 import CheckoutStep4 from '../checkout/CheckoutStep4';
 import PlatformSelectStep from '../checkout/PlatformSelectStep';
+import CouponInput from '../checkout/CouponInput';
 
 const STEPS = ['Platform', 'Personal Info', 'Payment Method', 'Payment', 'Confirmation'];
 
 export default function DashboardCheckout({ initialOrder, onBack, onComplete }) {
   const [step, setStep] = useState(1);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
     account_type: 'standard',
@@ -18,6 +20,8 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
     platform: 'match_trader',
     leverage: '1:100',
     price: 517,
+    discount_amount: 0,
+    final_price: 517,
     payment_method: '',
     full_name: '', username: '', email: '', phone: '',
     country: '', city: '', address: '', postal_code: '',
@@ -26,8 +30,27 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
 
+  const handleApplyCoupon = (coupon) => {
+    setAppliedCoupon(coupon);
+    const discount = coupon.discountAmount || 0;
+    setOrder(o => ({ ...o, discount_amount: discount, final_price: Math.max(1, o.price - discount), coupon_code: coupon.code }));
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setOrder(o => ({ ...o, discount_amount: 0, final_price: o.price, coupon_code: undefined }));
+  };
+
   return (
     <div>
+      {/* Coupon Input - Step 2 & 3 */}
+      {(step === 2 || step === 3) && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-2">Discount Code</div>
+          <CouponInput order={order} appliedCoupon={appliedCoupon} onApply={handleApplyCoupon} onRemove={handleRemoveCoupon} />
+        </motion.div>
+      )}
+
       {/* Back button + progress */}
       <div className="flex items-center gap-4 mb-8">
         {step === 1 && (
@@ -72,8 +95,8 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
           {step === 1 && <PlatformSelectStep order={order} updateOrder={updateOrder} onNext={() => setStep(2)} />}
           {step === 2 && <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={() => setStep(3)} />}
-          {step === 3 && <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
-          {step === 4 && <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
+          {step === 3 && <CheckoutStep2 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
+          {step === 4 && <CheckoutStep3 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
           {step === 5 && <CheckoutStep4 order={order} onGoToDashboard={onComplete || onBack} />}
         </motion.div>
       </AnimatePresence>
