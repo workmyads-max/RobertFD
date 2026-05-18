@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, AlertTriangle, MailCheck, CreditCard, Wallet, QrCode } from 'lucide-react';
+import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, AlertTriangle, MailCheck, CreditCard, Wallet, QrCode, Tag } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import CouponInput from './CouponInput';
 
 const FALLBACK_WALLETS = {
   usdt_trc20: { address: 'TConfigureInAdminWalletSettings', network: 'TRC20', symbol: 'USDT', color: '#26A17B' },
@@ -16,7 +17,7 @@ const STATUS_FLOW = [
   { id: 3, label: 'Account Delivery Pending', sub: 'Preparing your funded account credentials' },
 ];
 
-export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
+export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLoggedIn }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [statusIdx, setStatusIdx] = useState(0);
@@ -294,7 +295,12 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
 
         <div className="rounded-2xl p-5" style={{ background: `${wallet?.color}0a`, border: `1px solid ${wallet?.color}30` }}>
           <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Send Exactly</div>
-          <div className="text-5xl font-black mb-1" style={{ color: wallet?.color }}>${order.price}</div>
+          <div className="text-5xl font-black mb-1" style={{ color: wallet?.color }}>${order.final_price || order.price}</div>
+          {order.discount_amount > 0 && (
+            <div className="text-xs font-mono text-emerald-400 mb-2">
+              Discount applied: -${order.discount_amount}
+            </div>
+          )}
           <div className="text-sm font-mono text-muted-foreground">
             Payable in <strong style={{ color: wallet?.color }}>{wallet?.symbol}</strong> via <strong className="text-foreground">{wallet?.network}</strong> network
           </div>
@@ -337,6 +343,16 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
             {processing ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : "I've Sent the Payment"}
           </button>
         </div>
+
+        {/* Coupon Code Section - Only for logged-in users */}
+        {isLoggedIn && (
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <CouponInput 
+              order={order} 
+              updateOrder={updateOrder} 
+            />
+          </div>
+        )}
       </div>
 
       <div className="lg:col-span-2">
@@ -363,13 +379,13 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
               </div>
               {order.discount_amount > 0 && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-emerald-400">Discount</span>
+                  <span className="text-emerald-400">Discount ({order.coupon_code})</span>
                   <span className="text-emerald-400 font-mono">-${order.discount_amount.toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-2 border-t border-white/10">
                 <span className="text-sm font-bold">Total Due</span>
-                <span className="text-2xl font-black text-primary">${(order.final_price || order.price).toLocaleString()}</span>
+                <span className="text-2xl font-black text-primary">${order.final_price?.toLocaleString()}</span>
               </div>
             </div>
           </div>

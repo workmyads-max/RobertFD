@@ -37,7 +37,7 @@ const PAYMENT_METHODS = [
   },
 ];
 
-export default function CheckoutStep2({ order, updateOrder, onNext, onBack }) {
+export default function CheckoutStep2({ order, updateOrder, onNext, onBack, isLoggedIn }) {
   const [selectedMethod, setSelectedMethod] = useState(null);
 
   const handleSelect = (method) => {

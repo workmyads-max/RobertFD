@@ -449,15 +449,21 @@ export default function DashboardSettings({ user }) {
                     )}
                   </AnimatePresence>
 
-                  <Card title="Personal Information" subtitle="Update your public profile details">
-                    <div className="space-y-4">
-                      <InputField label="Username" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="Your username" />
-                      <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed — contact support if needed" />
+                  <Card title="Personal Information" subtitle="Update your profile and contact details">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <InputField label="Full Name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="John Doe" />
+                      <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed" />
+                      <InputField label="Phone" value={profile.phone || user?.phone || ''} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+1234567890" />
+                      <InputField label="Username" value={profile.username || ''} onChange={e => setProfile(p => ({ ...p, username: e.target.value }))} placeholder="trader_john" />
+                      <InputField label="Country" value={profile.country || user?.country || ''} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} placeholder="United States" />
+                      <InputField label="City" value={profile.city || user?.city || ''} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} placeholder="New York" />
+                      <InputField label="Address" value={profile.address || user?.address || ''} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder="123 Main St" />
+                      <InputField label="Postal Code" value={profile.postal_code || user?.postal_code || ''} onChange={e => setProfile(p => ({ ...p, postal_code: e.target.value }))} placeholder="10001" />
                     </div>
-                    <button onClick={() => { saveMutation.mutate({ full_name: profile.full_name }); }} disabled={saveMutation.isPending || !profile.full_name.trim()}
+                    <button onClick={() => { saveMutation.mutate(profile); }} disabled={saveMutation.isPending}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-40"
                       style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
-                      <Save className="w-4 h-4" /> {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+                      <Save className="w-4 h-4" /> {saveMutation.isPending ? 'Saving…' : 'Save All Changes'}
                     </button>
                   </Card>
                 </>

@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tag, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function CouponInput({ order, onApply, appliedCoupon, onRemove }) {
-  const [code, setCode] = useState('');
+export default function CouponInput({ order, updateOrder }) {
+  const [code, setCode] = useState(order.coupon_code || '');
   const [status, setStatus] = useState(null); // null | 'loading' | 'valid' | 'invalid'
   const [message, setMessage] = useState('');
+  const [applied, setApplied] = useState(!!order.coupon_code && order.discount_amount > 0);
 
   const handleApply = async () => {
     if (!code.trim()) return;
@@ -47,10 +48,29 @@ export default function CouponInput({ order, onApply, appliedCoupon, onRemove })
 
     setStatus('valid');
     setMessage(`✓ ${coupon.discount_type === 'percentage' ? `${coupon.discount_value}% OFF` : `$${coupon.discount_value} OFF`} applied`);
-    onApply({ ...coupon, discountAmount: discount });
+    setApplied(true);
+    
+    // Update order with coupon data
+    updateOrder({
+      coupon_code: coupon.code,
+      discount_amount: discount,
+      final_price: order.price - discount,
+    });
   };
 
-  if (appliedCoupon) {
+  const handleRemove = () => {
+    setCode('');
+    setStatus(null);
+    setMessage('');
+    setApplied(false);
+    updateOrder({
+      coupon_code: '',
+      discount_amount: 0,
+      final_price: order.price,
+    });
+  };
+
+  if (applied) {
     return (
       <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between rounded-xl px-4 py-3"
@@ -58,17 +78,21 @@ export default function CouponInput({ order, onApply, appliedCoupon, onRemove })
         <div className="flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-400" />
           <div>
-            <span className="text-xs font-black text-emerald-400 font-mono">{appliedCoupon.code}</span>
-            <span className="text-xs text-muted-foreground ml-2">— save ${appliedCoupon.discountAmount}</span>
+            <span className="text-xs font-black text-emerald-400 font-mono">{code}</span>
+            <span className="text-xs text-muted-foreground ml-2">— save ${order.discount_amount}</span>
           </div>
         </div>
-        <button onClick={onRemove} className="text-muted-foreground hover:text-red-400 transition-colors text-xs font-mono">Remove</button>
+        <button onClick={handleRemove} className="text-muted-foreground hover:text-red-400 transition-colors text-xs font-mono">Remove</button>
       </motion.div>
     );
   }
 
   return (
-    <div>
+    <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <Tag className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-bold text-foreground">Have a Coupon Code?</h3>
+      </div>
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />

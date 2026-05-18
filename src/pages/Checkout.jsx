@@ -30,9 +30,12 @@ export default function Checkout() {
     platform: 'xtrading',
     leverage: '1:100',
     price: 517,
+    discount_amount: 0,
+    final_price: 517,
     payment_method: '',
     full_name: '', username: '', email: '', phone: '',
     country: '', city: '', address: '', postal_code: '',
+    coupon_code: '',
   });
 
   useEffect(() => {
@@ -41,23 +44,41 @@ export default function Checkout() {
     const type = params.get('type') || 'two-step';
     const size = parseInt(params.get('size') || '100000');
     const acctType = params.get('account_type') || 'standard';
-    const price = PRICES[type]?.[size] || 517;
+    const basePrice = PRICES[type]?.[size] || 517;
     const leverage = acctType === 'swing' ? '1:30' : '1:100';
-    setOrder(o => ({ ...o, challenge_type: type, account_size: size, price, account_type: acctType, leverage }));
-
+    
     // Check auth status and pre-fill if logged in
     base44.auth.me().then(user => {
       if (user?.email) {
         setIsLoggedIn(true);
-        setOrder(o => ({
-          ...o,
-          full_name: user.full_name || o.full_name,
-          email: user.email || o.email,
-          username: user.full_name?.toLowerCase().replace(/\s+/g, '_') || o.username,
-        }));
+        setOrder({
+          challenge_type: type,
+          account_type: acctType,
+          account_size: size,
+          platform: 'xtrading',
+          leverage,
+          price: basePrice,
+          discount_amount: 0,
+          final_price: basePrice,
+          payment_method: '',
+          full_name: user.full_name || '',
+          email: user.email || '',
+          username: user.full_name?.toLowerCase().replace(/\s+/g, '_') || '',
+          phone: user.phone || '',
+          country: user.country || '',
+          city: user.city || '',
+          address: user.address || '',
+          postal_code: user.postal_code || '',
+          coupon_code: '',
+        });
+      } else {
+        setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage }));
       }
       setAuthChecked(true);
-    }).catch(() => setAuthChecked(true));
+    }).catch(() => {
+      setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage }));
+      setAuthChecked(true);
+    });
   }, []);
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
@@ -163,15 +184,16 @@ export default function Checkout() {
             {!isLoggedIn && componentStep === 1 && (
               <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={nextStep} prices={PRICES} />
             )}
-            {/* Payment method */}
-            {componentStep === 2 && (
-              <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} />
+            {/* Payment method (logged-in users start here) */}
+            {componentStep === (isLoggedIn ? 1 : 2) && (
+              <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={isLoggedIn} />
             )}
-            {/* Payment/confirmation */}
-            {componentStep === 3 && (
-              <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} />
+            {/* Payment with coupon code */}
+            {componentStep === (isLoggedIn ? 2 : 3) && (
+              <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={isLoggedIn} />
             )}
-            {componentStep === 4 && <CheckoutStep4 order={order} />}
+            {/* Confirmation */}
+            {componentStep === (isLoggedIn ? 3 : 4) && <CheckoutStep4 order={order} />}
           </motion.div>
         </AnimatePresence>
       </div>
