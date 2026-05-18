@@ -23,11 +23,29 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    // Create or update user profile in Supabase first
+    if (email) {
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        email,
+        full_name: orderData.full_name || user.full_name,
+        phone: orderData.phone,
+        country: orderData.country,
+        city: orderData.city,
+        address: orderData.address,
+        postal_code: orderData.postal_code,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+      
+      if (profileError) {
+        console.error('Failed to create/update profile:', profileError);
+      }
+    }
+    
     // Create order in Supabase
     if (order_id && email) {
       const { error: orderError } = await supabase.from('orders').insert({
         order_id,
-        email,
+        user_email: email,
         price: amount,
         payment_method: orderData.payment_method || 'checkout_com',
         payment_gateway: 'checkout_com',
@@ -50,6 +68,8 @@ Deno.serve(async (req) => {
       
       if (orderError) {
         console.error('Failed to create order in Supabase:', orderError);
+      } else {
+        console.log(`Order ${order_id} created in Supabase for user ${email}`);
       }
     }
     
