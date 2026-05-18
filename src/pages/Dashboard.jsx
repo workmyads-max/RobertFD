@@ -40,6 +40,9 @@ import AdminUserManagement from '../components/admin/AdminUserManagement';
 import PlatformVisibilityControl from '../components/admin/PlatformVisibilityControl';
 import DashboardPopupNotification from '../components/dashboard/DashboardPopupNotification';
 import KYC from '../components/dashboard/KYC';
+import MyPerformance from '../components/performance/MyPerformance';
+import AdminCoupons from '../components/admin/AdminCoupons';
+import AdminAppeals from '../components/admin/AdminAppeals';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
@@ -150,6 +153,9 @@ export default function Dashboard() {
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
+      case 'performance': return <MyPerformance user={user} />;
+      case 'admin-coupons': return isAdmin ? <AdminCoupons /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-appeals': return isAdmin ? <AdminAppeals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Shield, Zap, Clock, CheckCircle2, CreditCard } from 'lucide-react';
+import CouponInput from './CouponInput';
 
 const METHODS = [
   {
@@ -26,7 +27,18 @@ const METHODS = [
 ];
 
 export default function CheckoutStep2({ order, updateOrder, onNext, onBack }) {
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const canContinue = !!order.payment_method;
+
+  const handleApplyCoupon = (coupon) => {
+    setAppliedCoupon(coupon);
+    updateOrder({ discount_amount: coupon.discountAmount, coupon_code: coupon.code, price: order.original_price ? order.original_price - coupon.discountAmount : order.price - coupon.discountAmount, original_price: order.original_price || order.price });
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    updateOrder({ discount_amount: 0, coupon_code: null, price: order.original_price || order.price });
+  };
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
@@ -101,6 +113,12 @@ export default function CheckoutStep2({ order, updateOrder, onNext, onBack }) {
           })}
         </div>
 
+        {/* Coupon Code */}
+        <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-2">Redeem Coupon Code</div>
+          <CouponInput order={order} onApply={handleApplyCoupon} appliedCoupon={appliedCoupon} onRemove={handleRemoveCoupon} />
+        </div>
+
         {/* Security note */}
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
           style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
@@ -134,6 +152,12 @@ export default function CheckoutStep2({ order, updateOrder, onNext, onBack }) {
                   <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</span>
                 </div>
               ))}
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-emerald-400">
+                  <span className="text-xs font-mono">Coupon ({appliedCoupon.code})</span>
+                  <span className="text-xs font-bold">-${appliedCoupon.discountAmount}</span>
+                </div>
+              )}
               <div className="border-t border-white/10 pt-3 mt-1">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold">Total</span>

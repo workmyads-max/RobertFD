@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Moon, Sun } from 'lucide-react';
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'accounts', label: 'My Accounts', icon: Wallet },
   { id: 'account-overview', label: 'Account Overview', icon: BarChart3 },
+  { id: 'performance', label: 'My Performance', icon: Activity },
   { id: 'marketplace', label: 'New Challenge', icon: Zap },
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
   { id: 'xcopier', label: 'X-Copier', icon: Activity },
@@ -277,6 +278,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },
               { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle },
+              { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag },
+              { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;

@@ -1,0 +1,56 @@
+{
+  "name": "ViolationAppeal",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "account_id": {
+      "type": "string"
+    },
+    "violation_type": {
+      "type": "string",
+      "enum": [
+        "hft_detection",
+        "arbitrage_detection",
+        "ip_kyc_conflict",
+        "hedge_detection",
+        "other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "evidence_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "under_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "violation_type",
+    "description"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "Coupon",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Coupon code (uppercase)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "discount_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "fixed"
+      ],
+      "default": "percentage"
+    },
+    "discount_value": {
+      "type": "number",
+      "description": "Percentage (0-100) or fixed dollar amount"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "max_uses": {
+      "type": "number",
+      "description": "0 = unlimited"
+    },
+    "uses_count": {
+      "type": "number",
+      "default": 0
+    },
+    "per_user_limit": {
+      "type": "number",
+      "default": 1
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "applicable_challenge_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "applicable_account_sizes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "discount_type",
+    "discount_value"
+  ]
+}
