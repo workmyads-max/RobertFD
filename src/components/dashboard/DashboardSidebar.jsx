@@ -272,6 +272,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet },
               { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },
               { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle },
+              { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity },
               { id: 'admin-platforms', label: 'Platforms API', icon: Cpu },
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },

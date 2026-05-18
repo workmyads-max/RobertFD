@@ -27,7 +27,8 @@
     },
     "platform": {
       "type": "string",
-      "default": "xtrading"
+      "default": "xtrading",
+      "description": "xtrading | match_trader | mt5 | tradelocker"
     },
     "leverage": {
       "type": "string",
@@ -115,6 +116,30 @@
     },
     "user_email": {
       "type": "string"
+    },
+    "mt_login": {
+      "type": "string",
+      "description": "Match Trader login ID"
+    },
+    "mt_password": {
+      "type": "string",
+      "description": "Match Trader password (encrypted at rest)"
+    },
+    "mt_server": {
+      "type": "string",
+      "description": "Match Trader server address"
+    },
+    "mt_group": {
+      "type": "string",
+      "description": "Match Trader account group"
+    },
+    "provisioned_at": {
+      "type": "string",
+      "description": "ISO timestamp when the MT account was provisioned"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "description": "ISO timestamp of last sync with Match Trader API"
     }
   },
   "required": [

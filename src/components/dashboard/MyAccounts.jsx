@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
@@ -19,8 +19,63 @@ const DEMO_ACCOUNTS = [
   { id: 'demo2', account_id: 'RF-082341', challenge_type: 'instant', account_type: 'swing', account_size: 50000, platform: 'xtrading', leverage: '1:30', status: 'funded', phase: 'funded', balance: 52400, equity: 52400, pnl: 2400, daily_pnl: 180, daily_drawdown_used: 0.8, max_drawdown_used: 1.4, profit_target_progress: 100, win_rate: 68.2, total_trades: 31 },
 ];
 
+const PLATFORM_LABELS = { xtrading: 'XTrading Terminal', match_trader: 'Match Trader', mt5: 'MetaTrader 5', tradelocker: 'TradeLocker' };
+
+function CredentialsModal({ account, onClose }) {
+  const [copied, setCopied] = useState('');
+  const copy = (val, key) => { navigator.clipboard.writeText(val); setCopied(key); setTimeout(() => setCopied(''), 2000); };
+  const rows = [
+    { label: 'Platform', value: PLATFORM_LABELS[account.platform] || account.platform || 'XTrading' },
+    { label: 'Login ID', value: account.mt_login || account.login_credentials?.split('|')[0]?.replace('Login:', '')?.trim() || account.account_id, copyable: true },
+    { label: 'Password', value: account.mt_password || '••••••••••••', copyable: !!account.mt_password },
+    { label: 'Server', value: account.mt_server || account.server || 'mt.fundedfirms.com', copyable: true },
+    { label: 'Account ID', value: account.account_id, copyable: true },
+    { label: 'Leverage', value: account.leverage || '1:100' },
+    { label: 'Account Size', value: `$${(account.account_size || 0).toLocaleString()}` },
+    { label: 'Challenge Type', value: account.challenge_type === 'two-step' ? 'Two-Step Challenge' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant Funding' },
+    { label: 'Status', value: account.status?.toUpperCase() },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}>
+      <motion.div initial={{ scale: 0.95, y: 16 }} animate={{ scale: 1, y: 0 }}
+        className="w-full max-w-md rounded-2xl overflow-hidden"
+        style={{ background: '#0d0f16', border: '1px solid rgba(255,92,0,0.3)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div>
+            <h3 className="text-sm font-black text-white">Account Credentials</h3>
+            <p className="text-[11px] font-mono text-white/30">Keep these private and secure</p>
+          </div>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-2">
+          {rows.map(r => (
+            <div key={r.label} className="flex items-center justify-between py-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <span className="text-[11px] font-mono text-white/30 uppercase">{r.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-white">{r.value}</span>
+                {r.copyable && (
+                  <button onClick={() => copy(r.value, r.label)} className="text-white/20 hover:text-primary transition-colors">
+                    {copied === r.label ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-5 pb-5">
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] text-white/40 font-mono"
+            style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
+            🔒 Never share your credentials. Funded Firms will never ask for your password.
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   const [expanded, setExpanded] = useState(false);
+  const [showCreds, setShowCreds] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusCfg.icon;
   const isPnlPos = (account.pnl || 0) >= 0;
@@ -146,12 +201,26 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               <DollarSign className="w-3.5 h-3.5" /> Withdraw
             </button>
           )}
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 ml-auto"
+          <button onClick={() => setShowCreds(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 ml-auto"
             style={{ border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--muted-foreground))' }}>
             <Eye className="w-3.5 h-3.5" /> Credentials
           </button>
         </div>
+        {/* Platform badge */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
+            📊 {PLATFORM_LABELS[account.platform] || 'XTrading Terminal'}
+          </span>
+          {account.last_synced_at && (
+            <span className="text-[9px] font-mono text-white/20">
+              Synced {new Date(account.last_synced_at).toLocaleTimeString()}
+            </span>
+          )}
+        </div>
       </div>
+      {showCreds && <CredentialsModal account={account} onClose={() => setShowCreds(false)} />}
     </motion.div>
   );
 }
