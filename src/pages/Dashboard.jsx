@@ -43,6 +43,7 @@ import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
 import AdminCoupons from '../components/admin/AdminCoupons';
 import AdminAppeals from '../components/admin/AdminAppeals';
+import MarketsHub from '../components/dashboard/MarketsHub';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
@@ -122,6 +123,7 @@ export default function Dashboard() {
       case 'xcopier': return isEnabled('x_copier') ? <XCopier /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return isEnabled('analytics') ? <Analytics onStartChallenge={goToChallenge} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'markets': return <MarketsHub />;
       case 'calendar': return isEnabled('economic_calendar') ? <EconomicCalendar /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'news': return isEnabled('market_news') ? <MarketNews /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'leaderboard': return isEnabled('leaderboard') ? <Leaderboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
