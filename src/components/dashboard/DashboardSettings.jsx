@@ -253,15 +253,16 @@ export default function DashboardSettings({ user }) {
       canvas.height = 400;
       ctx.drawImage(img, x, y, size, size, 0, 0, 400, 400);
 
-      // Convert to blob and upload
+      // Convert to blob and upload - preserve PNG transparency
       canvas.toBlob(async (blob) => {
-        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+        // Use PNG format to preserve transparency
+        const file = new File([blob], 'profile.png', { type: 'image/png' });
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         setProfilePhoto(file_url);
         await base44.auth.updateMe({ avatar_url: file_url, profile_photo_url: file_url });
         setShowCropModal(false);
         setTempImage(null);
-      }, 'image/jpeg', 0.9);
+      }, 'image/png');
     } catch (err) {
       console.error('Crop failed:', err);
     } finally {
