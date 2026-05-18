@@ -17,7 +17,7 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
     challenge_type: 'two-step',
     account_type: 'standard',
     account_size: 100000,
-    platform: '',
+    platform: 'match_trader',
     leverage: '1:100',
     price: 517,
     payment_method: '',

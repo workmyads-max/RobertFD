@@ -62,13 +62,13 @@ const PRICES = {
 export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [challengeType, setChallengeType] = useState('two-step');
   const [accountType, setAccountType] = useState('standard');
-  const [platform, setPlatform] = useState('xtrading');
+  const [platform, setPlatform] = useState('match_trader');
   const [selected, setSelected] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null); // order waiting for terms acceptance
   const [showTerms, setShowTerms] = useState(false);
 
   const PLATFORMS = [
-    { id: 'xtrading', label: 'XTrading Terminal', desc: 'Built-in terminal — instant access', available: true, icon: '⚡' },
+    { id: 'match_trader', label: 'Match Trader', desc: 'Institutional platform — recommended', available: true, icon: '📊' },
     { id: 'tradelocker', label: 'TradeLocker', desc: 'Coming soon', available: false, icon: '🔒' },
     { id: 'mt5', label: 'MetaTrader 5', desc: 'Coming soon', available: false, icon: '🔒' },
   ];
@@ -77,7 +77,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
-    if (platform !== 'xtrading') return;
+    if (!['match_trader', 'xtrading'].includes(platform)) return;
     setSelected(plan);
     const leverage = accountType === 'standard' ? plan.leverage100 : plan.leverage30;
     const order = {

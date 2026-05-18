@@ -4,17 +4,6 @@ import { ArrowRight, CheckCircle2, Clock, Zap, Monitor } from 'lucide-react';
 
 const PLATFORMS = [
   {
-    id: 'xtrading',
-    name: 'XTrading Terminal',
-    subtitle: 'In-Browser Trading',
-    description: 'Trade directly inside your dashboard with our proprietary web terminal.',
-    badge: 'Built-in',
-    badgeColor: '#FF5C00',
-    available: true,
-    features: ['Browser-based', 'No download required', 'Real-time dashboard sync'],
-    icon: '🖥️',
-  },
-  {
     id: 'match_trader',
     name: 'Match Trader',
     subtitle: 'Institutional Platform',
