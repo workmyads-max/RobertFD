@@ -79,6 +79,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
   const PLATFORMS = [
     { id: 'match_trader', label: 'Match Trader', desc: 'Institutional platform — recommended', available: enabledPlatforms.match_trader !== false, icon: '📊' },
+    { id: 'xtrading', label: 'XTrading', desc: 'Built-in simulated terminal', available: enabledPlatforms.xtrading !== false, icon: '⚡' },
     { id: 'mt5', label: 'MetaTrader 5', desc: 'Industry standard platform', available: enabledPlatforms.mt5 !== false, icon: '📈' },
     { id: 'tradelocker', label: 'TradeLocker', desc: 'Next-gen prop firm platform', available: enabledPlatforms.tradelocker !== false, icon: '🔓' },
   ];

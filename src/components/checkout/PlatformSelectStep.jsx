@@ -16,6 +16,16 @@ const ALL_PLATFORMS = [
     icon: '📊',
   },
   {
+    id: 'xtrading',
+    name: 'XTrading',
+    subtitle: 'Built-in Terminal',
+    description: 'Fully integrated simulated trading terminal built directly into the dashboard with real-time prices.',
+    badge: 'Built-in',
+    badgeColor: '#FF5C00',
+    features: ['No download required', 'Real-time prices', 'Built-in dashboard'],
+    icon: '⚡',
+  },
+  {
     id: 'mt5',
     name: 'MetaTrader 5',
     subtitle: 'Industry Standard',

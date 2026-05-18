@@ -12,6 +12,7 @@ const PLATFORMS = [
 
 const TRADEABLE_PLATFORMS = [
   { key: 'match_trader', label: 'Match Trader', icon: '📊', color: '#10b981' },
+  { key: 'xtrading', label: 'XTrading', icon: '⚡', color: '#FF5C00' },
   { key: 'mt5', label: 'MetaTrader 5', icon: '📈', color: '#0066CC' },
   { key: 'tradelocker', label: 'TradeLocker', icon: '🔓', color: '#00A86B' },
 ];
