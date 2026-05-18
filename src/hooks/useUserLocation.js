@@ -12,11 +12,11 @@ export function useUserLocation() {
   useEffect(() => {
     const fetchLocation = async () => {
       try {
-        // Fetch IP and location data from ipapi
-        const response = await fetch('http://ip-api.com/json/?fields=status,country,countryCode,city,query');
+        // Fetch IP and location data from ipapi (CORS-friendly)
+        const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
 
-        const countryCode = data.countryCode || 'US';
+        const countryCode = data.country_code || 'US';
         const flag = countryCode
           .toUpperCase()
           .split('')
@@ -24,8 +24,8 @@ export function useUserLocation() {
           .join('');
 
         setLocation({
-          ip: data.query || 'Unknown',
-          country: data.country || 'Unknown',
+          ip: data.ip || 'Unknown',
+          country: data.country_name || 'Unknown',
           city: data.city || 'Unknown',
           countryCode,
           flag,
