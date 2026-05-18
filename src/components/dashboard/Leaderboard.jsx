@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, TrendingUp, Users, Globe, Medal, Crown, Star, Zap, Filter, Radio } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Globe, Medal, Crown, Filter, Radio, DollarSign, Target, Zap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import confetti from 'canvas-confetti';
@@ -22,13 +22,13 @@ const COUNTRY_NAMES = {
 };
 
 const MEDALS = {
-  1: { color: '#FFD700', glow: 'rgba(255,215,0,0.35)', bg: 'rgba(255,215,0,0.08)', border: 'rgba(255,215,0,0.35)', label: '1ST', emoji: '🥇', title: '🏆 CHAMPION' },
-  2: { color: '#C0C0C0', glow: 'rgba(192,192,192,0.25)', bg: 'rgba(192,192,192,0.06)', border: 'rgba(192,192,192,0.25)', label: '2ND', emoji: '🥈', title: '🥈 RUNNER-UP' },
-  3: { color: '#CD7F32', glow: 'rgba(205,127,50,0.25)', bg: 'rgba(205,127,50,0.06)', border: 'rgba(205,127,50,0.25)', label: '3RD', emoji: '🥉', title: '🥉 3RD PLACE' },
+  1: { color: '#FFD700', glow: 'rgba(255,215,0,0.5)', bg: 'rgba(255,215,0,0.09)', border: 'rgba(255,215,0,0.4)', label: '1ST', emoji: '🥇', title: '🏆 CHAMPION', crown: '👑' },
+  2: { color: '#C0C0C0', glow: 'rgba(192,192,192,0.35)', bg: 'rgba(192,192,192,0.07)', border: 'rgba(192,192,192,0.3)', label: '2ND', emoji: '🥈', title: '🥈 RUNNER-UP', crown: '🎖' },
+  3: { color: '#CD7F32', glow: 'rgba(205,127,50,0.35)', bg: 'rgba(205,127,50,0.07)', border: 'rgba(205,127,50,0.3)', label: '3RD', emoji: '🥉', title: '🥉 3RD PLACE', crown: '🎗' },
 };
 
 const ACCOUNT_SIZE_FILTERS = [
-  { label: 'All Sizes', value: 0 },
+  { label: 'All', value: 0 },
   { label: '$10K', value: 10000 },
   { label: '$25K', value: 25000 },
   { label: '$50K', value: 50000 },
@@ -38,18 +38,62 @@ const ACCOUNT_SIZE_FILTERS = [
 
 const PLATFORM_COLORS = {
   match_trader: { color: '#60a5fa', label: 'Match Trader' },
-  xtrading: { color: '#FF5C00', label: 'XTrading' },
-  mt5: { color: '#10b981', label: 'MT5' },
-  tradelocker: { color: '#a78bfa', label: 'TradeLocker' },
+  xtrading:     { color: '#FF5C00', label: 'XTrading'     },
+  mt5:          { color: '#10b981', label: 'MT5'          },
+  tradelocker:  { color: '#a78bfa', label: 'TradeLocker'  },
 };
+
+// Mask email/name for privacy: "john.doe@gmail.com" → "j***e"
+function maskTraderName(account) {
+  if (account.user_email) {
+    const local = account.user_email.split('@')[0];
+    if (local.length <= 2) return local[0] + '***';
+    return local[0] + '***' + local[local.length - 1];
+  }
+  return `Trader_${(account.account_id || account.id || '').slice(-4)}`;
+}
+
+// Consistency score: based on win_rate + trading_days + drawdown usage
+function calcConsistency(account) {
+  const wr = account.win_rate || 0;
+  const days = Math.min(account.trading_days || 0, 30);
+  const ddPenalty = Math.max(0, (account.max_drawdown_used || 0) - 3) * 3;
+  const score = Math.min(100, Math.round((wr * 0.5) + (days / 30 * 30) + 20 - ddPenalty));
+  return Math.max(0, score);
+}
+
+// ── Animated rank badge ───────────────────────────────────────────────────────
+function RankBadge({ rank }) {
+  const m = MEDALS[rank];
+  if (!m) return (
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
+      style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      #{rank}
+    </div>
+  );
+  return (
+    <motion.div
+      animate={rank === 1 ? { boxShadow: [`0 0 12px ${m.glow}`, `0 0 28px ${m.glow}`, `0 0 12px ${m.glow}`] } : {}}
+      transition={{ duration: 2, repeat: Infinity }}
+      className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0 relative"
+      style={{ background: m.bg, border: `1px solid ${m.border}`, boxShadow: `0 0 12px ${m.glow}` }}>
+      {m.emoji}
+      {rank === 1 && (
+        <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }} transition={{ duration: 1.8, repeat: Infinity }}
+          className="absolute inset-0 rounded-xl" style={{ border: `1px solid ${m.color}`, opacity: 0.4 }} />
+      )}
+    </motion.div>
+  );
+}
 
 // ── Podium card ───────────────────────────────────────────────────────────────
 function PodiumCard({ trader, rank, onCelebrate }) {
   const m = MEDALS[rank];
   const profitRatio = ((trader.pnl || 0) / (trader.account_size || 1)) * 100;
-  const heights = { 1: 'h-64', 2: 'h-52', 3: 'h-48' };
-  const orders = { 1: 'order-2', 2: 'order-1', 3: 'order-3' };
+  const consistency = calcConsistency(trader);
   const plt = PLATFORM_COLORS[trader.platform] || PLATFORM_COLORS.xtrading;
+  const podiumH = { 1: 'min-h-[280px]', 2: 'min-h-[240px]', 3: 'min-h-[220px]' };
+  const podiumOrder = { 1: 'order-2', 2: 'order-1', 3: 'order-3' };
 
   return (
     <motion.div
@@ -57,52 +101,86 @@ function PodiumCard({ trader, rank, onCelebrate }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.1, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => onCelebrate(rank)}
-      className={`${orders[rank]} cursor-pointer flex flex-col items-center`}
+      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center`}
     >
-      {rank === 1 && (
-        <motion.div animate={{ y: [-3, 3, -3], rotate: [-5, 5, -5] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="text-3xl mb-1">
-          👑
-        </motion.div>
-      )}
+      {/* Crown above card */}
+      <motion.div
+        animate={{ y: [-3, 3, -3], rotate: rank === 1 ? [-6, 6, -6] : [0, 0, 0] }}
+        transition={{ duration: rank === 1 ? 2.5 : 4, repeat: Infinity, ease: 'easeInOut' }}
+        className="text-2xl mb-1"
+      >
+        {m.crown}
+      </motion.div>
 
-      <motion.div whileHover={{ scale: 1.04, y: -4 }} whileTap={{ scale: 0.97 }}
-        className={`relative w-full rounded-2xl p-5 flex flex-col items-center ${heights[rank]}`}
-        style={{ background: `linear-gradient(160deg, ${m.bg}, rgba(8,12,22,0.98))`, border: `1px solid ${m.border}`, boxShadow: `0 0 50px ${m.glow}, inset 0 0 20px ${m.bg}` }}>
+      <motion.div whileHover={{ scale: 1.04, y: -5 }} whileTap={{ scale: 0.97 }}
+        className={`relative w-full rounded-2xl p-5 flex flex-col items-center ${podiumH[rank]}`}
+        style={{
+          background: `linear-gradient(160deg, ${m.bg}, rgba(6,9,20,0.98))`,
+          border: `1px solid ${m.border}`,
+          boxShadow: `0 0 60px ${m.glow}, 0 0 20px ${m.glow}, inset 0 0 30px ${m.bg}`,
+        }}>
 
+        {/* Top shimmer */}
         <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
-          style={{ background: `linear-gradient(90deg, transparent, ${m.color}, transparent)` }} />
+          style={{ background: `linear-gradient(90deg, transparent, ${m.color}, ${m.color}80, transparent)` }} />
 
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-black"
-          style={{ background: m.color, color: '#000' }}>{m.label}</div>
+        {/* Rank label */}
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full text-[9px] font-black tracking-wider"
+          style={{ background: m.color, color: '#000', boxShadow: `0 4px 16px ${m.glow}` }}>{m.label}</div>
 
-        <div className="mt-3 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black mb-2 relative flex-shrink-0"
-          style={{ background: `${m.color}22`, border: `2px solid ${m.color}60`, boxShadow: `0 0 24px ${m.glow}` }}>
+        {/* Animated glow pulse for #1 */}
+        {rank === 1 && (
+          <motion.div animate={{ opacity: [0.15, 0.35, 0.15] }} transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at 50% 30%, ${m.color}20, transparent 70%)` }} />
+        )}
+
+        {/* Flag avatar */}
+        <div className="mt-4 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-2 relative flex-shrink-0"
+          style={{ background: `${m.color}18`, border: `2px solid ${m.color}55`, boxShadow: `0 0 28px ${m.glow}` }}>
           {FLAG(trader.country)}
-          {rank === 1 && (
-            <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }} transition={{ duration: 2, repeat: Infinity }}
-              className="absolute inset-0 rounded-2xl" style={{ background: m.color, opacity: 0.1 }} />
-          )}
         </div>
 
-        <div className="text-sm font-black text-white truncate max-w-full">{trader.username || 'Trader'}</div>
+        <div className="text-sm font-black text-white truncate max-w-full px-1">{trader.username}</div>
         <div className="text-[10px] font-mono mb-1" style={{ color: m.color }}>
           {COUNTRY_NAMES[trader.country?.toUpperCase()] || trader.country || 'Global'}
         </div>
-        <div className="text-[9px] font-mono mb-2 px-2 py-0.5 rounded-full" style={{ background: `${plt.color}18`, color: plt.color }}>{plt.label}</div>
+        <div className="text-[9px] px-2 py-0.5 rounded-full mb-3"
+          style={{ background: `${plt.color}18`, color: plt.color, border: `1px solid ${plt.color}30` }}>
+          {plt.label}
+        </div>
 
-        <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2.5, repeat: Infinity }}
-          className="text-2xl font-black" style={{ color: m.color, textShadow: `0 0 16px ${m.glow}` }}>
+        {/* Profit % — animated */}
+        <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2.5, repeat: Infinity }}
+          className="text-2xl font-black" style={{ color: m.color, textShadow: `0 0 20px ${m.glow}` }}>
           +{profitRatio.toFixed(1)}%
         </motion.div>
-        <div className="text-[10px] font-mono text-white/30">${(trader.pnl || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} profit</div>
+        <div className="text-[10px] font-mono text-white/35 mb-1">
+          ${(trader.pnl || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} profit
+        </div>
 
-        <div className="mt-auto pt-2 border-t w-full text-center" style={{ borderColor: `${m.color}25` }}>
-          <span className="text-[10px] font-mono text-white/30">${(trader.account_size || 0).toLocaleString()} account</span>
+        {/* Payout amount */}
+        {trader.totalPayout > 0 && (
+          <div className="text-[10px] font-mono" style={{ color: '#10b981' }}>
+            💸 ${trader.totalPayout.toLocaleString()} paid out
+          </div>
+        )}
+
+        {/* Consistency badge */}
+        <div className="flex items-center gap-1 mt-1">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: consistency >= 70 ? '#10b981' : consistency >= 40 ? '#f59e0b' : '#ef4444' }} />
+          <span className="text-[9px] font-mono text-white/30">Consistency: {consistency}%</span>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto pt-2 border-t w-full text-center" style={{ borderColor: `${m.color}20` }}>
+          <span className="text-[10px] font-mono text-white/30">${(trader.account_size || 0).toLocaleString()} · {trader.challengeLabel}</span>
         </div>
       </motion.div>
 
+      {/* Podium base */}
       <div className="w-full mt-1 rounded-b-lg flex items-center justify-center py-1.5"
-        style={{ background: `${m.color}18`, border: `1px solid ${m.color}25`, borderTop: 'none' }}>
+        style={{ background: `${m.color}15`, border: `1px solid ${m.color}20`, borderTop: 'none' }}>
         <span className="text-[9px] font-mono" style={{ color: m.color }}>{m.title}</span>
       </div>
     </motion.div>
@@ -111,35 +189,34 @@ function PodiumCard({ trader, rank, onCelebrate }) {
 
 // ── Leaderboard row ───────────────────────────────────────────────────────────
 function LeaderRow({ trader, rank }) {
-  const m = MEDALS[rank] || { color: 'rgba(255,255,255,0.25)', glow: 'none', bg: 'rgba(255,255,255,0.02)', border: 'rgba(255,255,255,0.06)' };
+  const m = MEDALS[rank] || { color: 'rgba(255,255,255,0.2)', glow: 'none', bg: 'rgba(255,255,255,0.02)', border: 'rgba(255,255,255,0.06)', emoji: null };
   const profitRatio = ((trader.pnl || 0) / (trader.account_size || 1)) * 100;
-  const challengeLabel = { 'instant_light': 'Instant Light', 'instant': 'Instant', 'two-step': 'Two-Step' }[trader.challenge_type] || 'Funded';
+  const consistency = calcConsistency(trader);
   const plt = PLATFORM_COLORS[trader.platform] || PLATFORM_COLORS.xtrading;
+  const consistencyColor = consistency >= 70 ? '#10b981' : consistency >= 40 ? '#f59e0b' : '#ef4444';
 
   return (
-    <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(rank * 0.03, 0.4) }}
-      whileHover={{ x: 3, background: 'rgba(255,255,255,0.04)' }}
-      className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all"
+    <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(rank * 0.025, 0.5) }}
+      whileHover={{ x: 4 }}
+      className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all cursor-default"
       style={{ background: m.bg, border: `1px solid ${m.border}` }}>
 
-      {/* Rank */}
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
-        style={{ background: `${m.color}18`, color: m.color, border: `1px solid ${m.color}35` }}>
-        {rank <= 3 ? m.emoji : `#${rank}`}
-      </div>
+      {/* Animated rank badge */}
+      <RankBadge rank={rank} />
 
       {/* Flag + name */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <span className="text-xl flex-shrink-0">{FLAG(trader.country)}</span>
         <div className="min-w-0">
-          <div className="text-sm font-bold text-white truncate">{trader.username || 'Trader'}</div>
+          <div className="text-sm font-bold text-white truncate">{trader.username}</div>
           <div className="text-[10px] font-mono text-white/30">{COUNTRY_NAMES[trader.country?.toUpperCase()] || 'Global'}</div>
         </div>
       </div>
 
       {/* Platform */}
       <div className="hidden md:block flex-shrink-0">
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: `${plt.color}15`, color: plt.color, border: `1px solid ${plt.color}25` }}>
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+          style={{ background: `${plt.color}15`, color: plt.color, border: `1px solid ${plt.color}25` }}>
           {plt.label}
         </span>
       </div>
@@ -148,7 +225,7 @@ function LeaderRow({ trader, rank }) {
       <div className="hidden sm:block flex-shrink-0">
         <span className="px-2 py-0.5 rounded-full text-[9px] font-black"
           style={{ background: trader.status === 'funded' ? 'rgba(204,255,0,0.1)' : 'rgba(255,92,0,0.1)', border: `1px solid ${trader.status === 'funded' ? 'rgba(204,255,0,0.3)' : 'rgba(255,92,0,0.3)'}`, color: trader.status === 'funded' ? '#CCFF00' : '#FF5C00' }}>
-          {challengeLabel}
+          {trader.challengeLabel}
         </span>
       </div>
 
@@ -158,15 +235,29 @@ function LeaderRow({ trader, rank }) {
         <span className="text-sm font-bold text-white">${(trader.account_size || 0).toLocaleString()}</span>
       </div>
 
+      {/* Payout */}
+      <div className="hidden lg:flex flex-col items-end flex-shrink-0">
+        <span className="text-[10px] text-white/25 font-mono">Payout</span>
+        <span className="text-sm font-bold" style={{ color: trader.totalPayout > 0 ? '#10b981' : 'rgba(255,255,255,0.2)' }}>
+          {trader.totalPayout > 0 ? `$${trader.totalPayout.toLocaleString()}` : '—'}
+        </span>
+      </div>
+
+      {/* Consistency */}
+      <div className="hidden xl:flex flex-col items-end flex-shrink-0">
+        <span className="text-[10px] text-white/25 font-mono">Consistency</span>
+        <span className="text-sm font-bold" style={{ color: consistencyColor }}>{consistency}%</span>
+      </div>
+
       {/* Win rate */}
       <div className="hidden lg:flex flex-col items-end flex-shrink-0">
-        <span className="text-[10px] text-white/25 font-mono">Win %</span>
+        <span className="text-[10px] text-white/25 font-mono">Win Rate</span>
         <span className="text-sm font-bold text-white">{(trader.win_rate || 0).toFixed(0)}%</span>
       </div>
 
       {/* Profit % */}
       <div className="flex flex-col items-end flex-shrink-0">
-        <span className="text-[10px] text-white/25 font-mono">Profit</span>
+        <span className="text-[10px] text-white/25 font-mono">Profit %</span>
         <span className="text-sm font-black" style={{ color: profitRatio >= 0 ? '#10b981' : '#ef4444' }}>
           {profitRatio >= 0 ? '+' : ''}{profitRatio.toFixed(1)}%
         </span>
@@ -188,7 +279,7 @@ export default function Leaderboard() {
   const [country, setCountry] = useState('all');
   const [sizeFilter, setSizeFilter] = useState(0);
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
     queryKey: ['leaderboard-accounts'],
     queryFn: async () => {
       const [funded, instant, instantLight] = await Promise.all([
@@ -201,30 +292,52 @@ export default function Leaderboard() {
     refetchInterval: 30000,
   });
 
-  const sorted = [...accounts]
-    .filter(a => (a.pnl || 0) > 0)
-    .map(a => ({
-      ...a,
-      username: a.login_credentials || `Trader_${(a.account_id || a.id || '').slice(-4)}`,
-      profitRatio: ((a.pnl || 0) / (a.account_size || 1)) * 100,
-    }))
-    .sort((x, y) => y.profitRatio - x.profitRatio);
+  // Fetch real payout data
+  const { data: payouts = [] } = useQuery({
+    queryKey: ['leaderboard-payouts'],
+    queryFn: () => base44.entities.WithdrawalRequest.filter({ status: 'paid' }, '-created_date', 500),
+    refetchInterval: 60000,
+  });
 
-  // Apply filters
+  // Build payout map: account_id → total paid out
+  const payoutMap = useMemo(() => {
+    const map = {};
+    payouts.forEach(p => {
+      if (p.account_id) map[p.account_id] = (map[p.account_id] || 0) + (p.trader_share || p.amount || 0);
+    });
+    return map;
+  }, [payouts]);
+
+  const CHALLENGE_LABELS = { 'instant_light': 'Instant Light', 'instant': 'Instant', 'two-step': 'Two-Step' };
+
+  const sorted = useMemo(() => (
+    [...accounts]
+      .filter(a => (a.pnl || 0) > 0)
+      .map(a => ({
+        ...a,
+        username: maskTraderName(a),
+        profitRatio: ((a.pnl || 0) / (a.account_size || 1)) * 100,
+        totalPayout: payoutMap[a.account_id] || 0,
+        challengeLabel: CHALLENGE_LABELS[a.challenge_type] || 'Funded',
+      }))
+      .sort((x, y) => y.profitRatio - x.profitRatio)
+  ), [accounts, payoutMap]);
+
   const afterSize = sizeFilter === 0 ? sorted : sorted.filter(t => t.account_size === sizeFilter);
   const filtered = country === 'all' ? afterSize : afterSize.filter(t => t.country?.toUpperCase() === country);
 
-  const countries = [...new Set(sorted.map(t => t.country?.toUpperCase()).filter(Boolean))].slice(0, 12);
+  const countries = [...new Set(sorted.map(t => t.country?.toUpperCase()).filter(Boolean))].slice(0, 14);
   const top3 = filtered.slice(0, 3);
   const rest = filtered.slice(3, 50);
 
   const fireCelebration = (rank) => {
     if (rank !== 1) return;
-    confetti({ particleCount: 140, spread: 80, origin: { y: 0.5 }, colors: ['#FFD700', '#FF5C00', '#CCFF00', '#fff'] });
+    confetti({ particleCount: 160, spread: 90, origin: { y: 0.45 }, colors: ['#FFD700', '#FF5C00', '#CCFF00', '#fff', '#C0C0C0'] });
   };
 
   const totalCapital = sorted.reduce((s, t) => s + (t.account_size || 0), 0);
   const avgProfit = sorted.length > 0 ? sorted.reduce((s, t) => s + t.profitRatio, 0) / sorted.length : 0;
+  const totalPaidOut = sorted.reduce((s, t) => s + t.totalPayout, 0);
 
   return (
     <div className="space-y-6">
@@ -243,12 +356,12 @@ export default function Leaderboard() {
             </motion.div>
             Funded Leaderboard
           </h1>
-          <p className="text-xs font-mono text-white/30 mt-1">Institutional performance rankings · Real backend data only</p>
+          <p className="text-xs font-mono text-white/30 mt-1">Institutional performance rankings · Real backend data · No fake traders</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono"
           style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          LIVE · Auto-refresh 30s
+          LIVE · 30s refresh
         </div>
       </div>
 
@@ -257,29 +370,28 @@ export default function Leaderboard() {
         {[
           { label: 'Funded Traders', value: sorted.length, icon: Users, color: '#FF5C00' },
           { label: 'Avg Profit %', value: `${avgProfit.toFixed(1)}%`, icon: TrendingUp, color: '#10b981' },
-          { label: 'Top Trader', value: sorted[0]?.username || '—', icon: Crown, color: '#FFD700', truncate: true },
-          { label: 'Total Capital', value: totalCapital >= 1e6 ? `$${(totalCapital / 1e6).toFixed(1)}M` : `$${(totalCapital / 1e3).toFixed(0)}K`, icon: Trophy, color: '#a78bfa' },
+          { label: 'Total Paid Out', value: totalPaidOut >= 1e6 ? `$${(totalPaidOut/1e6).toFixed(1)}M` : `$${(totalPaidOut/1e3).toFixed(0)}K`, icon: DollarSign, color: '#CCFF00' },
+          { label: 'Total Capital', value: totalCapital >= 1e6 ? `$${(totalCapital/1e6).toFixed(1)}M` : `$${(totalCapital/1e3).toFixed(0)}K`, icon: Trophy, color: '#a78bfa' },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
             <motion.div key={s.label}
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-              className="rounded-2xl p-4 relative overflow-hidden"
-              style={{ background: `${s.color}08`, border: `1px solid ${s.color}22` }}>
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+              className="rounded-2xl p-4" style={{ background: `${s.color}08`, border: `1px solid ${s.color}22` }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[9px] font-mono uppercase text-white/30">{s.label}</span>
                 <Icon className="w-4 h-4" style={{ color: s.color }} />
               </div>
-              <div className={`text-lg font-black text-white ${s.truncate ? 'truncate' : ''}`}>{s.value}</div>
+              <div className="text-lg font-black text-white">{s.value}</div>
             </motion.div>
           );
         })}
       </div>
 
       {/* Account size filter */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/30 mr-1">
-          <Filter className="w-3 h-3" /> Size:
+          <Filter className="w-3 h-3" /> Account Size:
         </div>
         {ACCOUNT_SIZE_FILTERS.map(f => (
           <button key={f.value} onClick={() => setSizeFilter(f.value)}
@@ -310,7 +422,23 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {isLoading ? (
+      {/* Table header for rows */}
+      {filtered.length > 3 && (
+        <div className="hidden lg:flex items-center gap-3 px-4 py-2 text-[9px] font-mono uppercase text-white/20 tracking-widest">
+          <div className="w-10 flex-shrink-0">Rank</div>
+          <div className="flex-1">Trader · Country</div>
+          <div className="w-24 hidden md:block">Platform</div>
+          <div className="w-20 hidden sm:block">Type</div>
+          <div className="w-20 hidden md:block text-right">Account</div>
+          <div className="w-20 hidden lg:block text-right">Payout</div>
+          <div className="w-20 hidden xl:block text-right">Consistency</div>
+          <div className="w-16 hidden lg:block text-right">Win %</div>
+          <div className="w-16 text-right">Profit %</div>
+          <div className="w-20 text-right">P&L</div>
+        </div>
+      )}
+
+      {loadingAccounts ? (
         <div className="py-20 flex flex-col items-center gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin" />
           <span className="text-xs font-mono text-white/30">Loading rankings…</span>
@@ -321,7 +449,7 @@ export default function Leaderboard() {
           <Trophy className="w-12 h-12 text-white/10 mx-auto mb-3" />
           <div className="text-base font-bold text-white/40">No traders ranked yet</div>
           <div className="text-xs font-mono text-white/20 mt-1">
-            {sizeFilter > 0 ? `No funded traders with $${sizeFilter.toLocaleString()} account` : country !== 'all' ? `No funded traders from ${COUNTRY_NAMES[country] || country} yet` : 'Complete a challenge to appear here'}
+            {sizeFilter > 0 ? `No funded traders with $${sizeFilter.toLocaleString()} account` : country !== 'all' ? `No funded traders from ${COUNTRY_NAMES[country] || country} yet` : 'Complete a funded challenge to appear here'}
           </div>
         </motion.div>
       ) : (
@@ -329,16 +457,16 @@ export default function Leaderboard() {
           {/* Podium */}
           {top3.length >= 1 && (
             <div>
-              <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-4 flex items-center gap-2">
-                <Crown className="w-3 h-3 text-yellow-400" /> Top Performers — All data from live backend
+              <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-5 flex items-center gap-2">
+                <Crown className="w-3 h-3 text-yellow-400" /> Top Performers
               </div>
-              <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
+              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
                 {top3.map((t, i) => <PodiumCard key={t.id} trader={t} rank={i + 1} onCelebrate={fireCelebration} />)}
               </div>
             </div>
           )}
 
-          {/* Rest */}
+          {/* Rest of rankings */}
           {rest.length > 0 && (
             <div>
               <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-3 flex items-center gap-2">
@@ -352,8 +480,8 @@ export default function Leaderboard() {
         </>
       )}
 
-      <div className="text-center text-[10px] font-mono text-white/20 pt-2 pb-4">
-        Rankings: profit % = (P&L ÷ account size) × 100 · Funded & active accounts only · No fake or demo data
+      <div className="text-center text-[10px] font-mono text-white/15 pt-2 pb-4">
+        Profit % = (P&L ÷ account size) × 100 · Funded & active real accounts only · Payout data from live withdrawal records
       </div>
     </div>
   );
