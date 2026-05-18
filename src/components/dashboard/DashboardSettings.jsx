@@ -251,6 +251,8 @@ export default function DashboardSettings({ user }) {
 
       canvas.width = 400;
       canvas.height = 400;
+      // Ensure transparent background for PNG
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, x, y, size, size, 0, 0, 400, 400);
 
       // Convert to blob and upload - preserve PNG transparency

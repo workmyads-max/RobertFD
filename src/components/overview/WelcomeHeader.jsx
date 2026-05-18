@@ -72,7 +72,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
                 border: '2px solid rgba(255,92,0,0.5)',
               }}>
               {user?.avatar_url ? (
-                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" style={{ background: 'transparent' }} />
               ) : (
                 initials
               )}
