@@ -1,0 +1,45 @@
+{
+  "name": "OTP",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email address for OTP"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number for OTP"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "registration",
+        "withdrawal",
+        "security",
+        "phone_verification"
+      ],
+      "description": "Type of OTP verification"
+    },
+    "code": {
+      "type": "string",
+      "description": "6-digit OTP code"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "OTP expiration time"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "code",
+    "type"
+  ]
+}
