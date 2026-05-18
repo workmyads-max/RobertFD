@@ -5,21 +5,20 @@ const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY') || 'EWpgx-jtNvPTvPJXQMfa
 
 const mtHeaders = {
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${MT_API_KEY}`,
   'api-key': MT_API_KEY,
 };
 
 // Map challenge type + size to a Match Trader group name
 function getGroupName(challengeType, accountSize, accountModel) {
-  const model = accountModel === 'swing' ? 'swing' : 'std';
+  const model = accountModel === 'swing' ? 'SWING' : 'STD';
   const sizeK = accountSize / 1000;
-  if (challengeType === 'two-step') return `FF_2STEP_${sizeK}K_${model.toUpperCase()}`;
-  if (challengeType === 'instant') return `FF_INSTANT_${sizeK}K_${model.toUpperCase()}`;
-  if (challengeType === 'instant_light') return `FF_INSTLIGHT_${sizeK}K_${model.toUpperCase()}`;
+  if (challengeType === 'two-step') return `FF_2STEP_${sizeK}K_${model}`;
+  if (challengeType === 'instant') return `FF_INSTANT_${sizeK}K_${model}`;
+  if (challengeType === 'instant_light') return `FF_INSTLIGHT_${sizeK}K_${model}`;
   return `FF_CHALLENGE_${sizeK}K`;
 }
 
-// Generate a random secure password
+// Generate a secure password
 function genPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
   let p = '';
@@ -45,6 +44,8 @@ Deno.serve(async (req) => {
     const leverageValue = parseInt((leverage || '1:100').split(':')[1]) || 100;
     const groupName = getGroupName(challenge_type, account_size, account_type);
 
+    console.log(`Provisioning MT account for ${user_email}, group: ${groupName}, leverage: ${leverageValue}`);
+
     // Step 1: Create the trading account on Match Trader
     const createRes = await fetch(`${MT_BASE}/accounts`, {
       method: 'POST',
@@ -62,37 +63,58 @@ Deno.serve(async (req) => {
       }),
     });
 
-    let mtAccount = null;
-    if (createRes.ok) {
-      mtAccount = await createRes.json();
-    } else {
-      const errText = await createRes.text();
-      console.error('MT create error:', errText);
-      // Still store the attempt so admin can retry
-      mtAccount = {
-        login: `MT-PENDING-${Date.now()}`,
-        server: 'broker-api-demo.match-trader.com',
-        error: errText,
-        provisioned: false,
-      };
+    const responseText = await createRes.text();
+    console.log(`MT API response (${createRes.status}):`, responseText);
+
+    if (!createRes.ok) {
+      // NEVER generate fake credentials — mark account as provisioning_failed and notify admin
+      const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ account_id });
+      if (accounts.length > 0) {
+        await base44.asServiceRole.entities.ChallengeAccount.update(accounts[0].id, {
+          status: 'pending',
+          mt_group: groupName,
+          // Store error detail for admin visibility
+          login_credentials: `PROVISIONING_FAILED: ${responseText.substring(0, 200)}`,
+        });
+      }
+      return Response.json({
+        success: false,
+        error: 'Match Trader API error',
+        details: responseText,
+        account_id,
+        status: 'provisioning_failed',
+      }, { status: 502 });
     }
 
-    const mtLogin = mtAccount?.login || mtAccount?.accountId || `MT-${Date.now()}`;
-    const mtServer = 'mt.fundedfirms.com';
+    let mtAccount;
+    try {
+      mtAccount = JSON.parse(responseText);
+    } catch {
+      return Response.json({ success: false, error: 'Invalid JSON response from MT API', details: responseText }, { status: 502 });
+    }
 
-    // Step 2: Update ChallengeAccount in CRM with credentials
+    // Extract real login from API response
+    const mtLogin = mtAccount?.login || mtAccount?.accountId || mtAccount?.id;
+    if (!mtLogin) {
+      return Response.json({ success: false, error: 'MT API did not return a login ID', details: mtAccount }, { status: 502 });
+    }
+
+    const mtServer = 'broker-api-demo.match-trader.com';
+
+    // Step 2: Update ChallengeAccount in CRM with REAL credentials
     const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ account_id });
     if (accounts.length > 0) {
-      const acc = accounts[0];
-      await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+      await base44.asServiceRole.entities.ChallengeAccount.update(accounts[0].id, {
         status: 'active',
         platform: 'match_trader',
-        login_credentials: `Login: ${mtLogin} | Password: ${password}`,
-        server: mtServer,
-        mt_login: mtLogin,
+        mt_login: String(mtLogin),
         mt_password: password,
         mt_server: mtServer,
+        mt_group: groupName,
         provisioned_at: new Date().toISOString(),
+        // Store readable credentials (login_credentials kept for backward compat)
+        login_credentials: `Login: ${mtLogin} | Password: ${password} | Server: ${mtServer}`,
+        server: mtServer,
       });
     }
 
@@ -105,10 +127,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    console.log(`Successfully provisioned MT account: login=${mtLogin}, group=${groupName}`);
+
     return Response.json({
       success: true,
       mt_login: mtLogin,
-      mt_password: password,
       mt_server: mtServer,
       mt_group: groupName,
       platform: 'match_trader',
@@ -116,6 +139,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
+    console.error('Provisioning error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

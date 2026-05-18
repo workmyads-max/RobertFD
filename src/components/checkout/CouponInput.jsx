@@ -26,6 +26,21 @@ export default function CouponInput({ order, onApply, appliedCoupon, onRemove })
       setStatus('invalid'); setMessage('This coupon has reached its usage limit.'); return;
     }
 
+    // Check applicable challenge types
+    if (coupon.applicable_challenge_types?.length > 0 && order.challenge_type && !coupon.applicable_challenge_types.includes(order.challenge_type)) {
+      setStatus('invalid'); setMessage(`This coupon is not valid for ${order.challenge_type} challenges.`); return;
+    }
+
+    // Check applicable account sizes
+    if (coupon.applicable_account_sizes?.length > 0 && order.account_size && !coupon.applicable_account_sizes.includes(order.account_size)) {
+      setStatus('invalid'); setMessage(`This coupon is not valid for $${order.account_size?.toLocaleString()} accounts.`); return;
+    }
+
+    // Check applicable platforms
+    if (coupon.applicable_platforms?.length > 0 && order.platform && !coupon.applicable_platforms.includes(order.platform)) {
+      setStatus('invalid'); setMessage(`This coupon is not valid for the selected platform.`); return;
+    }
+
     const discount = coupon.discount_type === 'percentage'
       ? Math.round((order.price * coupon.discount_value) / 100)
       : Math.min(coupon.discount_value, order.price - 1);

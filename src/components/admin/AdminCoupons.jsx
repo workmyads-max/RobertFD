@@ -4,7 +4,46 @@ import { Tag, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Copy, CheckCircle } 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
-const EMPTY_FORM = { code: '', name: '', discount_type: 'percentage', discount_value: 10, is_active: true, max_uses: 0, per_user_limit: 1, expires_at: '', notes: '' };
+const EMPTY_FORM = { code: '', name: '', discount_type: 'percentage', discount_value: 10, is_active: true, max_uses: 0, per_user_limit: 1, expires_at: '', notes: '', applicable_challenge_types: [], applicable_account_sizes: [], applicable_platforms: [] };
+
+const CHALLENGE_TYPE_OPTIONS = [
+  { id: 'two-step', label: 'Two-Step Challenge' },
+  { id: 'instant', label: 'Instant Funding' },
+  { id: 'instant_light', label: 'Instant Light' },
+];
+const PLATFORM_OPTIONS = [
+  { id: 'match_trader', label: 'Match Trader' },
+  { id: 'xtrading', label: 'XTrading' },
+  { id: 'mt5', label: 'MetaTrader 5' },
+  { id: 'tradelocker', label: 'TradeLocker' },
+];
+const SIZE_OPTIONS = [5000, 10000, 25000, 50000, 100000, 200000];
+
+function MultiToggle({ label, options, selected = [], onChange }) {
+  const toggle = (id) => {
+    const s = selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id];
+    onChange(s);
+  };
+  return (
+    <div>
+      <label className="text-[10px] font-mono text-muted-foreground uppercase mb-1 block">{label} <span className="text-white/20">(empty = all)</span></label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(o => {
+          const id = o.id !== undefined ? o.id : o;
+          const lbl = o.label !== undefined ? o.label : `$${(o/1000)}K`;
+          const active = selected.includes(id);
+          return (
+            <button key={id} type="button" onClick={() => toggle(id)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all"
+              style={{ background: active ? 'rgba(255,92,0,0.2)' : 'rgba(255,255,255,0.04)', color: active ? '#FF5C00' : 'rgba(255,255,255,0.4)', border: `1px solid ${active ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}` }}>
+              {lbl}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminCoupons() {
   const [showForm, setShowForm] = useState(false);
@@ -138,6 +177,13 @@ export default function AdminCoupons() {
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', colorScheme: 'dark' }} />
               </div>
             </div>
+            {/* Applicable filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              <MultiToggle label="Applicable Challenge Types" options={CHALLENGE_TYPE_OPTIONS} selected={form.applicable_challenge_types || []} onChange={v => setForm(p => ({ ...p, applicable_challenge_types: v }))} />
+              <MultiToggle label="Applicable Account Sizes" options={SIZE_OPTIONS} selected={form.applicable_account_sizes || []} onChange={v => setForm(p => ({ ...p, applicable_account_sizes: v }))} />
+              <MultiToggle label="Applicable Platforms" options={PLATFORM_OPTIONS} selected={form.applicable_platforms || []} onChange={v => setForm(p => ({ ...p, applicable_platforms: v }))} />
+            </div>
+
             <div className="flex gap-3">
               <button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"

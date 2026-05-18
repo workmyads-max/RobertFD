@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X, Loader2, ExternalLink, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
@@ -13,11 +13,6 @@ const STATUS_CONFIG = {
   funded: { label: 'Funded', color: '#FF5C00', bg: 'rgba(255,92,0,0.12)', icon: TrendingUp },
 };
 
-// Demo accounts shown when no real ones exist
-const DEMO_ACCOUNTS = [
-  { id: 'demo1', account_id: 'RF-100423', challenge_type: 'two-step', account_type: 'standard', account_size: 100000, platform: 'xtrading', leverage: '1:100', status: 'active', phase: 'phase1', balance: 104280, equity: 104280, pnl: 4280, daily_pnl: 420, daily_drawdown_used: 1.2, max_drawdown_used: 2.1, profit_target_progress: 42.8, win_rate: 74.6, total_trades: 48 },
-  { id: 'demo2', account_id: 'RF-082341', challenge_type: 'instant', account_type: 'swing', account_size: 50000, platform: 'xtrading', leverage: '1:30', status: 'funded', phase: 'funded', balance: 52400, equity: 52400, pnl: 2400, daily_pnl: 180, daily_drawdown_used: 0.8, max_drawdown_used: 1.4, profit_target_progress: 100, win_rate: 68.2, total_trades: 31 },
-];
 
 const PLATFORM_LABELS = { xtrading: 'XTrading Terminal', match_trader: 'Match Trader', mt5: 'MetaTrader 5', tradelocker: 'TradeLocker' };
 
@@ -183,13 +178,40 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
           </div>
         </div>
 
+        {/* Provisioning pending state */}
+        {account.status === 'pending' && account.platform === 'match_trader' && !account.mt_login && (
+          <div className="mb-4 rounded-xl p-3 flex items-center gap-3"
+            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
+            <Loader2 className="w-4 h-4 text-yellow-400 animate-spin flex-shrink-0" />
+            <div className="flex-1">
+              <div className="text-xs font-bold text-yellow-400 mb-1">Account Provisioning In Progress</div>
+              <div className="flex gap-2 flex-wrap">
+                {['Payment Confirmed', 'Creating Account', 'Assigning Rules', 'Syncing CRM', 'Account Ready'].map((stage, i) => (
+                  <span key={stage} className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+                    style={{ background: i === 1 ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)', color: i === 1 ? '#f59e0b' : 'rgba(255,255,255,0.3)', border: i === 1 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(255,255,255,0.07)' }}>
+                    {i === 1 ? '⟳ ' : i < 1 ? '✓ ' : ''}{stage}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-2 flex-wrap relative z-10">
-          <button onClick={() => onOpenTerminal && onOpenTerminal(account)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
-            <Monitor className="w-3.5 h-3.5" /> Open Terminal
-          </button>
+          {account.platform === 'match_trader' && account.mt_login ? (
+            <a href="https://app.match-trader.com" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(90deg,#10b981,#059669)', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
+              <ExternalLink className="w-3.5 h-3.5" /> Open Match Trader
+            </a>
+          ) : (
+            <button onClick={() => onOpenTerminal && onOpenTerminal(account)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
+              <Monitor className="w-3.5 h-3.5" /> Open Terminal
+            </button>
+          )}
           <button onClick={() => onOpenAnalytics && onOpenAnalytics(account)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5"
             style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>

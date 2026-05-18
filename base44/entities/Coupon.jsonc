@@ -46,13 +46,22 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Empty = all types"
     },
     "applicable_account_sizes": {
       "type": "array",
       "items": {
         "type": "number"
-      }
+      },
+      "description": "Empty = all sizes"
+    },
+    "applicable_platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Empty = all platforms"
     },
     "notes": {
       "type": "string"
