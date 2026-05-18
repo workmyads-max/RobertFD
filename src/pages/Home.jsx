@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
@@ -31,8 +31,13 @@ const IMAGES = {
 };
 
 export default function Home() {
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter">
+    <div className="min-h-screen bg-background text-foreground font-inter dark">
       <PromoPopup mascotImage={IMAGES.mascot} />
       <Navbar />
       <HeroSection heroImage={IMAGES.hero} />
