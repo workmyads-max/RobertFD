@@ -277,6 +277,20 @@ function CertCard({ cert, index, onPreview }) {
           ))}
         </div>
 
+        {/* CEO Signature strip */}
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3"
+          style={{ background: `${cfg.color}06`, border: `1px solid ${cfg.color}20` }}>
+          <div>
+            <div className="text-[8px] font-mono uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>Authorized Signature</div>
+            <div className="text-sm font-black italic" style={{ color: cfg.color, textShadow: `0 0 10px ${cfg.glow}` }}>Diego Reyes</div>
+            <div className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>Chief Executive Officer</div>
+          </div>
+          <div className="text-right">
+            <div className="w-16 h-px mb-1 ml-auto" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color})` }} />
+            <div className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>CEO Signature</div>
+          </div>
+        </div>
+
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
           style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
           <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
