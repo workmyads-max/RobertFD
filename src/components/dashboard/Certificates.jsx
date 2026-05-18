@@ -160,10 +160,19 @@ function CertificateDocument({ cert, forCapture = false }) {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '4px' }}>AUTHORIZED SIGNATURE</div>
-          <div style={{ color: cfg.color, fontSize: '14px', fontWeight: 800, fontStyle: 'italic', letterSpacing: '0.03em', marginBottom: '3px', textShadow: `0 0 10px ${cfg.glow}` }}>Diego Reyes</div>
-          <div style={{ width: '90px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color})`, marginLeft: 'auto', marginBottom: '2px' }} />
-          <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: '7px' }}>Chief Executive Officer</div>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '6px' }}>AUTHORIZED SIGNATURE</div>
+          {/* SVG cursive signature for Diego Reyes */}
+          <svg width="110" height="36" viewBox="0 0 110 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', marginLeft: 'auto', marginBottom: '4px' }}>
+            <path d="M4 26 C8 10, 14 8, 18 14 C22 20, 20 28, 24 22 C28 16, 30 10, 34 12 C38 14, 36 24, 40 20 C44 16, 46 10, 52 12 C56 14, 54 22, 58 18 C62 14, 66 8, 72 10 C76 12, 74 24, 78 20 C82 16, 86 10, 92 12 C97 14, 96 22, 100 20 C104 18, 106 14, 108 12"
+              stroke={cfg.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
+            <path d="M14 28 C22 30, 32 31, 42 30 C52 29, 62 30, 72 29 C82 28, 94 29, 104 28"
+              stroke={cfg.color} strokeWidth="0.8" strokeLinecap="round" opacity="0.35"/>
+            <path d="M58 18 C60 22, 62 28, 60 30" stroke={cfg.color} strokeWidth="1.4" strokeLinecap="round" opacity="0.7"/>
+            <path d="M72 10 C74 6, 78 4, 80 8" stroke={cfg.color} strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+          </svg>
+          <div style={{ width: '110px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color}80, ${cfg.color})`, marginLeft: 'auto', marginBottom: '3px' }} />
+          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '8px', fontWeight: 700 }}>Diego Reyes</div>
+          <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: '7px', marginTop: '1px' }}>Chief Executive Officer</div>
         </div>
       </div>
 
@@ -281,13 +290,20 @@ function CertCard({ cert, index, onPreview }) {
         <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3"
           style={{ background: `${cfg.color}06`, border: `1px solid ${cfg.color}20` }}>
           <div>
-            <div className="text-[8px] font-mono uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>Authorized Signature</div>
-            <div className="text-sm font-black italic" style={{ color: cfg.color, textShadow: `0 0 10px ${cfg.glow}` }}>Diego Reyes</div>
+            <div className="text-[8px] font-mono uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.2)' }}>Authorized Signature</div>
+            <div className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>Diego Reyes</div>
             <div className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>Chief Executive Officer</div>
           </div>
-          <div className="text-right">
-            <div className="w-16 h-px mb-1 ml-auto" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color})` }} />
-            <div className="text-[8px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>CEO Signature</div>
+          <div className="flex flex-col items-end gap-1">
+            {/* SVG cursive signature */}
+            <svg width="80" height="28" viewBox="0 0 110 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 26 C8 10, 14 8, 18 14 C22 20, 20 28, 24 22 C28 16, 30 10, 34 12 C38 14, 36 24, 40 20 C44 16, 46 10, 52 12 C56 14, 54 22, 58 18 C62 14, 66 8, 72 10 C76 12, 74 24, 78 20 C82 16, 86 10, 92 12 C97 14, 96 22, 100 20 C104 18, 106 14, 108 12"
+                stroke={cfg.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
+              <path d="M14 28 C22 30, 32 31, 42 30 C52 29, 62 30, 72 29 C82 28, 94 29, 104 28"
+                stroke={cfg.color} strokeWidth="0.8" strokeLinecap="round" opacity="0.3"/>
+              <path d="M58 18 C60 22, 62 28, 60 30" stroke={cfg.color} strokeWidth="1.4" strokeLinecap="round" opacity="0.7"/>
+            </svg>
+            <div className="w-16 h-px" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color})` }} />
           </div>
         </div>
 
