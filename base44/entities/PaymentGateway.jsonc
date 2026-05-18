@@ -4,11 +4,13 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Display name, e.g. NOWPayments"
+      "description": "Display name, e.g. Checkout.com, Confirmo"
     },
     "provider": {
       "type": "string",
       "enum": [
+        "checkout_com",
+        "confirmo",
         "manual_crypto",
         "nowpayments",
         "coinpayments",
@@ -22,17 +24,47 @@
       "type": "boolean",
       "default": true
     },
+    "sandbox_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Test mode for checkout_com and confirmo"
+    },
     "api_key": {
-      "type": "string"
+      "type": "string",
+      "description": "API key or secret key"
     },
     "secret_key": {
-      "type": "string"
+      "type": "string",
+      "description": "Secret key (for checkout_com)"
     },
     "webhook_secret": {
-      "type": "string"
+      "type": "string",
+      "description": "Webhook signature verification secret"
     },
     "webhook_url": {
-      "type": "string"
+      "type": "string",
+      "description": "Webhook endpoint URL"
+    },
+    "supported_cards": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "visa",
+          "mastercard",
+          "amex",
+          "apple_pay",
+          "google_pay"
+        ]
+      },
+      "description": "Supported card types (checkout_com)"
+    },
+    "supported_crypto": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supported cryptocurrencies (confirmo)"
     },
     "networks": {
       "type": "array",
