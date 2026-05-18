@@ -5,38 +5,37 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── Light mode (default :root) — premium soft fintech ── */
+  /* ── Dark mode ONLY (forced) ── */
   :root {
-    --background: 220 20% 97%;
-    --foreground: 222 30% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 30% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 30% 12%;
+    --background: 222 20% 10%;
+    --foreground: 210 30% 95%;
+    --card: 222 18% 13%;
+    --card-foreground: 210 30% 95%;
+    --popover: 222 18% 13%;
+    --popover-foreground: 210 30% 95%;
     --primary: 22 100% 52%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 93%;
-    --secondary-foreground: 222 20% 25%;
-    --muted: 220 14% 93%;
-    --muted-foreground: 220 12% 46%;
-    --accent: 73 80% 44%;
-    --accent-foreground: 0 0% 5%;
-    --destructive: 0 84.2% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 88%;
-    --input: 220 14% 90%;
+    --secondary: 222 15% 18%;
+    --secondary-foreground: 210 25% 90%;
+    --muted: 222 15% 18%;
+    --muted-foreground: 215 20% 62%;
+    --accent: 73 100% 50%;
+    --accent-foreground: 0 0% 2%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 14% 22%;
+    --input: 222 14% 22%;
     --ring: 22 100% 52%;
     --chart-1: 22 100% 50%;
-    --chart-2: 73 80% 40%;
-    --chart-3: 197 55% 42%;
-    --chart-4: 43 74% 52%;
-    --chart-5: 27 87% 60%;
+    --chart-2: 73 100% 50%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
     --radius: 0.75rem;
     --font-inter: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
 
-  /* ── Dark mode ── */
   .dark {
     --background: 222 20% 10%;
     --foreground: 210 30% 95%;
@@ -117,60 +116,8 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* ── Light mode overrides for glass utilities ── */
-:root:not(.dark) .glass {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-}
-:root:not(.dark) .glass-light {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-/* ── Light mode scrollbar ── */
-:root:not(.dark) ::-webkit-scrollbar-track { background: #f0f1f5; }
-:root:not(.dark) ::-webkit-scrollbar-thumb { background: #d0d3de; }
-:root:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #FF5C00; }
-
-/* ── Light mode circuit-bg sidebar ── */
-:root:not(.dark) .circuit-bg {
-  background-image:
-    linear-gradient(rgba(22,100,200,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(22,100,200,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* Light mode card surfaces */
-:root:not(.dark) .bg-card { background: #ffffff; }
-:root:not(.dark) .bg-background { background: hsl(220, 20%, 97%); }
-
-/* Sidebar variable */
-:root:not(.dark) { --sidebar-bg: rgba(248,249,252,0.98); }
+/* Sidebar variable (dark only) */
 .dark { --sidebar-bg: rgba(7,8,14,0.99); }
-
-/* Light mode — force readable text on hardcoded dark surfaces */
-:root:not(.dark) [style*="color: rgba(255,255,255"] { color: inherit; }
-
-/* Light mode glow soften */
-:root:not(.dark) .glow-orange { box-shadow: 0 0 14px rgba(255,92,0,0.18), 0 0 36px rgba(255,92,0,0.07); }
-:root:not(.dark) .text-glow-orange { text-shadow: 0 0 12px rgba(255,92,0,0.3); }
-
-/* Light mode ticker bar */
-:root:not(.dark) .ticker-scroll-wrap {
-  background: rgba(255,255,255,0.9);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-/* Light mode chart text */
-:root:not(.dark) .recharts-text,
-:root:not(.dark) .recharts-legend-item-text {
-  fill: hsl(222, 30%, 25%) !important;
-  color: hsl(222, 30%, 25%) !important;
-}
-
-/* Light mode font-mono muted */
-:root:not(.dark) .font-mono { color: inherit; }
 
 /* AI neon glow effects */
 .glow-blue {
