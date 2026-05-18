@@ -66,12 +66,16 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             <motion.div
               animate={{ boxShadow: ['0 0 0px rgba(255,92,0,0)', '0 0 24px rgba(255,92,0,0.4)', '0 0 0px rgba(255,92,0,0)'] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
                 border: '2px solid rgba(255,92,0,0.5)',
               }}>
-              {initials}
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </motion.div>
             {/* KYC dot */}
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
@@ -133,8 +137,8 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           whileTap={{ scale: 0.95 }}
           className="relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-white text-base group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #00f5a0 0%, #4dffbb 50%, #80ffdd 100%)',
-            boxShadow: '0 8px 32px rgba(0,245,160,0.45), 0 0 20px rgba(0,245,160,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)',
+            boxShadow: '0 8px 32px rgba(139,92,246,0.45), 0 0 20px rgba(139,92,246,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
           }}>
           {/* Animated border glow */}
           <motion.div
