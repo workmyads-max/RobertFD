@@ -36,11 +36,31 @@ function AnimatedCounter({ value, prefix, suffix }) {
 function FloatingCard({ children, className, delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, scale: 0.85, rotateX: 18, y: 40 }}
+      animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
+      transition={{
+        duration: 1.1,
+        delay,
+        ease: [0.22, 1, 0.36, 1],
+        opacity: { duration: 0.6, delay },
+      }}
+      whileHover={{
+        scale: 1.04,
+        y: -6,
+        boxShadow: '0 0 32px rgba(255,92,0,0.25), 0 8px 40px rgba(0,0,0,0.5)',
+        transition: { duration: 0.25 },
+      }}
+      style={{ transformPerspective: 800 }}
       className={className}
     >
+      {/* Funded-firm shimmer sweep on mount */}
+      <motion.div
+        initial={{ x: '-100%', opacity: 0.6 }}
+        animate={{ x: '200%', opacity: 0 }}
+        transition={{ duration: 1.2, delay: delay + 0.3, ease: 'easeOut' }}
+        className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden"
+        style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,92,0,0.18) 50%, transparent 60%)' }}
+      />
       {children}
     </motion.div>
   );
