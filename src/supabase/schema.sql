@@ -899,10 +899,10 @@ CREATE POLICY "Anyone can view platform settings" ON public.platform_settings FO
 CREATE POLICY "Admins can manage platform settings" ON public.platform_settings FOR ALL USING (public.is_admin());
 
 -- ==================================================
--- STORAGE BUCKETS (Execute in Supabase Dashboard)
+-- STORAGE BUCKETS (Execute in Supabase Dashboard UI)
 -- ==================================================
 
--- Note: Storage buckets must be created via Supabase Dashboard UI
+-- Note: Storage buckets must be created manually via Supabase Dashboard UI
 -- Go to Storage → Create bucket
 -- 
 -- Required buckets:
@@ -913,13 +913,7 @@ CREATE POLICY "Admins can manage platform settings" ON public.platform_settings 
 -- 5. support-attachments (private)
 -- 6. trading-screenshots (private)
 --
--- Storage policies example (run in SQL Editor after creating buckets):
---
--- CREATE POLICY "Public Read Profile Pics" ON storage.objects FOR SELECT USING (bucket_id = 'profile-pictures');
--- CREATE POLICY "User Upload Profile Pics" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'profile-pictures' AND auth.uid()::text = (storage.foldername(name))[1]);
---
--- CREATE POLICY "Admin Read KYC" ON storage.objects FOR SELECT USING (bucket_id = 'kyc-documents' AND public.is_admin());
--- CREATE POLICY "User Upload KYC" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'kyc-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Storage policies should be created after buckets are set up (separate SQL file)
 
 -- ==================================================
 -- SEED DATA
