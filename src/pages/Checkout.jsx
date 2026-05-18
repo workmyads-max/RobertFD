@@ -72,11 +72,11 @@ export default function Checkout() {
           coupon_code: '',
         });
       } else {
-        setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage }));
+        setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage, discount_amount: 0, final_price: basePrice }));
       }
       setAuthChecked(true);
     }).catch(() => {
-      setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage }));
+      setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage, discount_amount: 0, final_price: basePrice }));
       setAuthChecked(true);
     });
   }, []);
