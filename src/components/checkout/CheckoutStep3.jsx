@@ -48,12 +48,34 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack }) {
   const wallet = getWallet();
 
   const createOrderMutation = useMutation({
-    mutationFn: () => base44.entities.Order.create({
-      ...order,
-      order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
-      payment_address: wallet?.address || '',
-      payment_status: 'pending',
-    }),
+    mutationFn: async () => {
+      // Create order in Base44
+      const orderData = {
+        ...order,
+        order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
+        payment_address: wallet?.address || '',
+        payment_status: 'pending',
+      };
+      const base44Order = await base44.entities.Order.create(orderData);
+      
+      // Sync to Supabase
+      try {
+        await base44.functions.invoke('createManualOrderInSupabase', {
+          order_id: base44Order.order_id,
+          email: order.email,
+          orderData: {
+            ...order,
+            payment_address: wallet?.address || '',
+            payment_status: 'pending',
+          },
+        });
+      } catch (err) {
+        console.error('Failed to sync to Supabase:', err);
+        // Don't fail the checkout, just log the error
+      }
+      
+      return base44Order;
+    },
     onSuccess: (data) => {
       updateOrder({ order_id: data.order_id });
     },
