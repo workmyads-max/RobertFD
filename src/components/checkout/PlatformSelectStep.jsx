@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2, Clock, Zap, Monitor } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Monitor } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
-const PLATFORMS = [
+const ALL_PLATFORMS = [
   {
     id: 'match_trader',
     name: 'Match Trader',
@@ -10,7 +12,6 @@ const PLATFORMS = [
     description: 'Professional Match Trader platform with real broker-level infrastructure and live market data.',
     badge: 'Recommended',
     badgeColor: '#10b981',
-    available: true,
     features: ['Mobile + Desktop', 'Real broker engine', 'Live MT credentials'],
     icon: '📊',
   },
@@ -18,10 +19,9 @@ const PLATFORMS = [
     id: 'mt5',
     name: 'MetaTrader 5',
     subtitle: 'Industry Standard',
-    description: 'The world\'s most popular trading platform. Coming soon to Funded Firms.',
-    badge: 'Coming Soon',
-    badgeColor: '#6366f1',
-    available: false,
+    description: "The world's most popular trading platform with advanced charting and algorithmic trading support.",
+    badge: 'Popular',
+    badgeColor: '#0066CC',
     features: ['Expert Advisors', 'Advanced charting', 'Algorithmic trading'],
     icon: '📈',
   },
@@ -29,17 +29,30 @@ const PLATFORMS = [
     id: 'tradelocker',
     name: 'TradeLocker',
     subtitle: 'Next-Gen Platform',
-    description: 'Modern trading platform built for prop firms. Coming soon.',
-    badge: 'Coming Soon',
+    description: 'Modern trading platform built for prop firms with advanced risk tools and multi-account management.',
+    badge: 'Modern',
     badgeColor: '#8b5cf6',
-    available: false,
     features: ['Modern UI', 'Advanced risk tools', 'Multi-account'],
-    icon: '🔒',
+    icon: '🔓',
   },
 ];
 
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   const selected = order.platform || '';
+
+  const { data: platformSettings = [] } = useQuery({
+    queryKey: ['platform-settings-trading'],
+    queryFn: () => base44.entities.PlatformSettings.filter({ category: 'trading' }),
+  });
+  const enabledMap = Object.fromEntries(
+    platformSettings.map(s => [s.setting_key, s.is_enabled !== false])
+  );
+
+  // If a platform has no setting record yet, default to enabled
+  const PLATFORMS = ALL_PLATFORMS.map(p => ({
+    ...p,
+    available: enabledMap[p.id] !== false,
+  }));
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
@@ -72,7 +85,7 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                   background: isSelected ? 'rgba(255,92,0,0.08)' : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${isSelected ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
                   boxShadow: isSelected ? '0 0 28px rgba(255,92,0,0.15)' : 'none',
-                  opacity: p.available ? 1 : 0.55,
+                  opacity: p.available ? 1 : 0.45,
                   cursor: p.available ? 'pointer' : 'not-allowed',
                 }}
               >
@@ -80,11 +93,10 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 <div className="absolute top-3 right-3">
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-black"
                     style={{ background: `${p.badgeColor}20`, color: p.badgeColor, border: `1px solid ${p.badgeColor}40` }}>
-                    {p.badge}
+                    {p.available ? p.badge : 'Disabled'}
                   </span>
                 </div>
 
-                {/* Selected indicator */}
                 {isSelected && (
                   <div className="absolute top-3 left-3">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
@@ -99,7 +111,7 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 <div className="space-y-1">
                   {p.features.map(f => (
                     <div key={f} className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-                      <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: p.badgeColor }} />
+                      <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: p.available ? p.badgeColor : '#555' }} />
                       {f}
                     </div>
                   ))}
@@ -108,7 +120,7 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 {!p.available && (
                   <div className="flex items-center gap-1.5 mt-3">
                     <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] font-mono text-muted-foreground">Coming Soon</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">Currently Unavailable</span>
                   </div>
                 )}
               </motion.button>

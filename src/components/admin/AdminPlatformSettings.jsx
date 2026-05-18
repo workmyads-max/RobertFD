@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Eye, EyeOff, Save, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Settings, Eye, EyeOff, Save, Plus, Edit2, Trash2, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const PLATFORMS = [
-  { id: 'mt5', name: 'MetaTrader 5', icon: '📊', color: '#0066CC' },
+  { id: 'match_trader', name: 'Match Trader', icon: '📊', color: '#10b981' },
+  { id: 'mt5', name: 'MetaTrader 5', icon: '📈', color: '#0066CC' },
   { id: 'tradelocker', name: 'TradeLocker', icon: '🔓', color: '#00A86B' },
+];
+
+const TRADEABLE_PLATFORMS = [
+  { key: 'match_trader', label: 'Match Trader', icon: '📊', color: '#10b981' },
+  { key: 'mt5', label: 'MetaTrader 5', icon: '📈', color: '#0066CC' },
+  { key: 'tradelocker', label: 'TradeLocker', icon: '🔓', color: '#00A86B' },
 ];
 
 export default function AdminPlatformSettings() {
@@ -46,6 +53,29 @@ export default function AdminPlatformSettings() {
   const selectedProviders = providers.filter(p => p.platform_name === selectedPlatform);
   const platformConfig = PLATFORMS.find(p => p.id === selectedPlatform);
 
+  // Platform visibility toggles via PlatformSettings entity
+  const { data: platformSettings = [] } = useQuery({
+    queryKey: ['platform-settings-trading'],
+    queryFn: () => base44.entities.PlatformSettings.filter({ category: 'trading' }),
+  });
+
+  const togglePlatformMutation = useMutation({
+    mutationFn: async ({ key, enabled }) => {
+      const existing = platformSettings.find(s => s.setting_key === key);
+      if (existing) {
+        return base44.entities.PlatformSettings.update(existing.id, { is_enabled: enabled });
+      } else {
+        return base44.entities.PlatformSettings.create({ setting_key: key, label: key, category: 'trading', is_enabled: enabled });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['platform-settings-trading'] }),
+  });
+
+  const isPlatformEnabled = (key) => {
+    const s = platformSettings.find(p => p.setting_key === key);
+    return s ? s.is_enabled !== false : true; // default enabled
+  };
+
   const handleSubmit = () => {
     if (!formData.api_key) return alert('API Key required');
     if (editingId) {
@@ -67,6 +97,40 @@ export default function AdminPlatformSettings() {
           <Settings className="w-6 h-6 text-primary" /> Trading Platform API
         </h1>
         <p className="text-base text-muted-foreground font-mono mt-1">Configure MT5 and TradeLocker API credentials</p>
+      </div>
+
+      {/* Platform Availability Toggles */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <h3 className="text-sm font-bold text-foreground mb-1 flex items-center gap-2">
+          <ToggleRight className="w-4 h-4 text-primary" /> Platform Availability for Traders
+        </h3>
+        <p className="text-[11px] font-mono text-muted-foreground mb-4">Enable or disable platforms in the checkout and marketplace.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {TRADEABLE_PLATFORMS.map(p => {
+            const enabled = isPlatformEnabled(p.key);
+            return (
+              <div key={p.key} className="flex items-center justify-between px-4 py-3 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${enabled ? p.color + '30' : 'rgba(255,255,255,0.07)'}` }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{p.icon}</span>
+                  <div>
+                    <div className="text-xs font-bold text-foreground">{p.label}</div>
+                    <div className="text-[10px] font-mono" style={{ color: enabled ? p.color : '#666' }}>{enabled ? 'Available' : 'Disabled'}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => togglePlatformMutation.mutate({ key: p.key, enabled: !enabled })}
+                  disabled={togglePlatformMutation.isPending}
+                  className="transition-all"
+                >
+                  {enabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color: p.color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground" />}
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Platform tabs */}

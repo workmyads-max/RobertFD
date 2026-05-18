@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, Zap, Shield, TrendingUp, Clock, BarChart2 } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 const TWO_STEP = [
   { size: 5000,   price: 49,   phase1Target: 10, phase2Target: 5, maxDD: 10, dailyDD: 5, leverage100: '1:100', leverage30: '1:30', split: '80%' },
@@ -63,21 +65,30 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [challengeType, setChallengeType] = useState('two-step');
   const [accountType, setAccountType] = useState('standard');
   const [platform, setPlatform] = useState('match_trader');
+
+  const { data: platformSettings = [] } = useQuery({
+    queryKey: ['platform-settings-trading'],
+    queryFn: () => base44.entities.PlatformSettings.filter({ category: 'trading' }),
+  });
+  const enabledPlatforms = Object.fromEntries(
+    platformSettings.map(s => [s.setting_key, s.is_enabled !== false])
+  );
   const [selected, setSelected] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null); // order waiting for terms acceptance
   const [showTerms, setShowTerms] = useState(false);
 
   const PLATFORMS = [
-    { id: 'match_trader', label: 'Match Trader', desc: 'Institutional platform — recommended', available: true, icon: '📊' },
-    { id: 'tradelocker', label: 'TradeLocker', desc: 'Coming soon', available: false, icon: '🔒' },
-    { id: 'mt5', label: 'MetaTrader 5', desc: 'Coming soon', available: false, icon: '🔒' },
+    { id: 'match_trader', label: 'Match Trader', desc: 'Institutional platform — recommended', available: enabledPlatforms.match_trader !== false, icon: '📊' },
+    { id: 'mt5', label: 'MetaTrader 5', desc: 'Industry standard platform', available: enabledPlatforms.mt5 !== false, icon: '📈' },
+    { id: 'tradelocker', label: 'TradeLocker', desc: 'Next-gen prop firm platform', available: enabledPlatforms.tradelocker !== false, icon: '🔓' },
   ];
 
   const plans = challengeType === 'two-step' ? TWO_STEP : challengeType === 'instant_light' ? INSTANT_LIGHT : INSTANT;
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
-    if (!['match_trader', 'xtrading'].includes(platform)) return;
+    const availablePlatform = PLATFORMS.find(p => p.id === platform);
+    if (!availablePlatform?.available) return;
     setSelected(plan);
     const leverage = accountType === 'standard' ? plan.leverage100 : plan.leverage30;
     const order = {
