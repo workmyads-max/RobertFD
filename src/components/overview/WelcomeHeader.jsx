@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, AlertCircle, MapPin, Wifi, Zap, Globe, MessageCircle, Send } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Zap, Globe, MessageCircle, Send, ArrowRight } from 'lucide-react';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -126,58 +126,29 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Right: Location + session info + Social Media */}
-        <div className="flex flex-col gap-3 md:text-right">
-          {!location.loading && (
-            <>
-              <div className="flex items-center gap-2 text-[11px] font-mono text-white/40 md:justify-end">
-                <MapPin className="w-3.5 h-3.5 text-white/25" />
-                {location.flag && <span>{location.flag}</span>}
-                <span>{location.city || '—'}, {location.country || '—'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] font-mono text-white/25 md:justify-end">
-                <Wifi className="w-3.5 h-3.5" />
-                <span>{location.ip || '—'}</span>
-              </div>
-            </>
-          )}
-          {location.loading && (
-            <div className="text-[10px] font-mono text-white/20 animate-pulse">Identifying session...</div>
-          )}
-
-          {/* Social Media Links - Top Bar */}
-          <div className="flex items-center gap-2 md:justify-end pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span className="text-[9px] font-mono text-white/30 uppercase tracking-wider">Connect:</span>
-            {social.discord_enabled && social.discord_url && (
-              <a href={social.discord_url} target="_blank" rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: 'rgba(88,101,242,0.15)', border: '1px solid rgba(88,101,242,0.3)' }}>
-                <MessageCircle className="w-3.5 h-3.5" style={{ color: '#5865F2' }} />
-              </a>
-            )}
-            {social.twitter_enabled && social.twitter_url && (
-              <a href={social.twitter_url} target="_blank" rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: 'rgba(29,155,240,0.15)', border: '1px solid rgba(29,155,240,0.3)' }}>
-                <Globe className="w-3.5 h-3.5" style={{ color: '#1D9BF0' }} />
-              </a>
-            )}
-            {social.instagram_enabled && social.instagram_url && (
-              <a href={social.instagram_url} target="_blank" rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: 'rgba(225,48,108,0.15)', border: '1px solid rgba(225,48,108,0.3)' }}>
-                <Send className="w-3.5 h-3.5" style={{ color: '#E1306C' }} />
-              </a>
-            )}
-            {social.youtube_enabled && social.youtube_url && (
-              <a href={social.youtube_url} target="_blank" rel="noopener noreferrer"
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: 'rgba(255,0,0,0.15)', border: '1px solid rgba(255,0,0,0.3)' }}>
-                <Globe className="w-3.5 h-3.5" style={{ color: '#FF0000' }} />
-              </a>
-            )}
-          </div>
-        </div>
+        {/* Right: Start New Challenge Button */}
+        <motion.button
+          onClick={onStartChallenge}
+          whileHover={{ scale: 1.04, boxShadow: '0 0 40px rgba(255,92,0,0.4)' }}
+          whileTap={{ scale: 0.98 }}
+          className="relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-white text-lg group"
+          style={{
+            background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)',
+            boxShadow: '0 0 30px rgba(255,92,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+          }}>
+          <span>Start New Challenge</span>
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          {/* Shimmer effect */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+              backgroundSize: '200% 100%',
+            }}
+            animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          />
+        </motion.button>
       </div>
     </motion.div>
   );

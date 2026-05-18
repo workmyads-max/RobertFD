@@ -14,7 +14,7 @@ const navItems = [
   { id: 'accounts', label: 'My Accounts', icon: Wallet },
   { id: 'account-overview', label: 'Account Overview', icon: BarChart3 },
   { id: 'performance', label: 'My Performance', icon: Activity },
-  { id: 'marketplace', label: 'New Challenge', icon: Zap },
+  { id: 'marketplace', label: 'New Challenge', icon: Zap, highlight: true },
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
   { id: 'xcopier', label: 'X-Copier', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -167,17 +167,25 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                   ? 'text-white'
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
+                    : item.highlight && !isActive
+                    ? 'text-accent hover:text-accent hover:bg-accent/10'
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
               style={isActive ? {
-                background: collapsed
+                background: item.highlight
+                  ? collapsed
+                    ? 'rgba(115,255,0,0.18)'
+                    : 'linear-gradient(90deg, rgba(115,255,0,0.15), rgba(115,255,0,0.06), rgba(115,255,0,0.04))'
+                  : collapsed
                   ? 'rgba(255,92,0,0.18)'
                   : 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(139,92,246,0.06), rgba(255,92,0,0.04))',
-                borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
-                boxShadow: collapsed ? '0 0 12px rgba(255,92,0,0.2)' : 'inset 0 0 20px rgba(255,92,0,0.05)',
+                borderLeft: collapsed ? 'none' : `2px solid ${item.highlight ? '#73ff00' : '#FF5C00'}`,
+                boxShadow: collapsed ? `0 0 12px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.2)` : `inset 0 0 20px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.05)`,
+              } : item.highlight && !isActive ? {
+                background: 'rgba(115,255,0,0.08)',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : 'text-white/25 group-hover:text-white/60'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
               {!collapsed && <span className="flex-1 text-left font-medium relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
