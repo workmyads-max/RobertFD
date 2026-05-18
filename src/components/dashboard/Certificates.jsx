@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Download, CheckCircle, Shield, Star, Trophy, Zap, Crown, Share2, Eye, ExternalLink } from 'lucide-react';
+import { Award, Download, CheckCircle, Shield, Star, Trophy, Zap, Crown, Eye, Loader2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 const FIRM = {
@@ -14,98 +15,206 @@ const FIRM = {
 };
 
 const CERT_CONFIG = {
-  phase1_passed: { title: 'Phase I Passed',           icon: Star,   color: '#FF5C00', glow: 'rgba(255,92,0,0.4)',    bg: 'rgba(255,92,0,0.06)',    label: 'Phase 1'     },
-  phase2_passed: { title: 'Phase II Passed',           icon: Trophy, color: '#60a5fa', glow: 'rgba(96,165,250,0.4)', bg: 'rgba(96,165,250,0.06)',  label: 'Phase 2'     },
-  funded:        { title: 'Funded Trader',             icon: Award,  color: '#CCFF00', glow: 'rgba(204,255,0,0.4)',  bg: 'rgba(204,255,0,0.06)',   label: 'Funded'      },
-  first_payout:  { title: 'First Payout',             icon: Zap,    color: '#10b981', glow: 'rgba(16,185,129,0.4)', bg: 'rgba(16,185,129,0.06)', label: 'First Payout'},
-  consistency:   { title: 'Consistency Award',         icon: Shield, color: '#a78bfa', glow: 'rgba(167,139,250,0.4)',bg: 'rgba(167,139,250,0.06)',label: 'Consistency' },
-  special:       { title: 'Special Achievement',       icon: Crown,  color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', bg: 'rgba(245,158,11,0.06)', label: 'Special'     },
+  phase1_passed: { title: 'Phase I Passed',       icon: Star,   color: '#FF5C00', glow: 'rgba(255,92,0,0.4)',    bg: 'rgba(255,92,0,0.06)',    label: 'Phase 1'      },
+  phase2_passed: { title: 'Phase II Passed',       icon: Trophy, color: '#60a5fa', glow: 'rgba(96,165,250,0.4)', bg: 'rgba(96,165,250,0.06)',  label: 'Phase 2'      },
+  funded:        { title: 'Funded Trader',         icon: Award,  color: '#CCFF00', glow: 'rgba(204,255,0,0.4)',  bg: 'rgba(204,255,0,0.06)',   label: 'Funded'       },
+  first_payout:  { title: 'First Payout',          icon: Zap,    color: '#10b981', glow: 'rgba(16,185,129,0.4)','bg': 'rgba(16,185,129,0.06)', label: 'First Payout' },
+  consistency:   { title: 'Consistency Award',     icon: Shield, color: '#a78bfa', glow: 'rgba(167,139,250,0.4)',bg: 'rgba(167,139,250,0.06)', label: 'Consistency'  },
+  special:       { title: 'Special Achievement',   icon: Crown,  color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', bg: 'rgba(245,158,11,0.06)', label: 'Special'      },
 };
 
-function hexToRgb(hex) {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return r ? [parseInt(r[1], 16), parseInt(r[2], 16), parseInt(r[3], 16)] : [255, 92, 0];
+// ── Pixel-perfect HTML certificate (used for both preview AND PDF capture) ────
+function CertificateDocument({ cert, forCapture = false }) {
+  const cfg = CERT_CONFIG[cert.type] || CERT_CONFIG.funded;
+  const Icon = cfg.icon;
+  const challengeMap = { 'two-step': 'Two-Step Challenge', 'instant': 'Instant Funding Program', 'instant_light': 'Instant Light Program' };
+
+  return (
+    <div
+      style={{
+        width: forCapture ? '1200px' : '100%',
+        aspectRatio: '1.414 / 1',
+        background: 'linear-gradient(135deg, #030408 0%, #0a0608 50%, #030408 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        fontFamily: '"Inter", "Helvetica Neue", Arial, sans-serif',
+        borderRadius: forCapture ? '0' : '16px',
+        border: `2px solid ${cfg.color}40`,
+        flexShrink: 0,
+      }}
+    >
+      {/* Background glow orbs */}
+      <div style={{ position: 'absolute', top: '-80px', left: '-80px', width: '400px', height: '400px', background: `radial-gradient(circle, ${cfg.color}18 0%, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-80px', right: '-80px', width: '350px', height: '350px', background: `radial-gradient(circle, ${cfg.color}10 0%, transparent 70%)`, pointerEvents: 'none' }} />
+
+      {/* Grid pattern */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.025,
+        backgroundImage: `repeating-linear-gradient(0deg, ${cfg.color} 0, ${cfg.color} 0.5px, transparent 0, transparent 48px), repeating-linear-gradient(90deg, ${cfg.color} 0, ${cfg.color} 0.5px, transparent 0, transparent 48px)`,
+      }} />
+
+      {/* Outer border frame */}
+      <div style={{ position: 'absolute', inset: '12px', border: `1px solid ${cfg.color}20`, borderRadius: '8px', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: '16px', border: `1px solid ${cfg.color}10`, borderRadius: '4px', pointerEvents: 'none' }} />
+
+      {/* Corner accents */}
+      {[[12,12,'0 0'],['auto',12,'0 0'],[12,'auto','0 0'],['auto','auto','0 0']].map((_, i) => {
+        const cx = i % 2 === 0 ? '14px' : 'auto', cy = i < 2 ? '14px' : 'auto';
+        const rx = i % 2 === 0 ? '14px' : '14px', ry = i < 2 ? '14px' : '14px';
+        const brs = [i % 2 === 0 ? `2px solid ${cfg.color}` : 'none', i % 2 !== 0 ? `2px solid ${cfg.color}` : 'none',
+                     i < 2 ? 'none' : `2px solid ${cfg.color}`, i >= 2 ? 'none' : `2px solid ${cfg.color}`];
+        return null; // rendered below
+      })}
+      {/* Simplified corner L-marks */}
+      {[{t:'14px',l:'14px',bl:'none',br:'none',bt:`2px solid ${cfg.color}`,bb:'none',bbt:`2px solid ${cfg.color}`,bbb:'none',bl2:`2px solid ${cfg.color}`,br2:'none'},].map(()=>null)}
+
+      {/* Top header band */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: `linear-gradient(90deg, ${cfg.color}12, rgba(0,0,0,0) 50%, ${cfg.color}08)`, borderBottom: `1px solid ${cfg.color}25` }} />
+
+      {/* Top accent line */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, transparent, ${cfg.color}, ${cfg.color}80, transparent)` }} />
+
+      {/* Firm logo + name in header */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '36px', height: '36px', background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}80)`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#000', fontWeight: 900, fontSize: '14px' }}>FC</span>
+          </div>
+          <div>
+            <div style={{ color: cfg.color, fontSize: '13px', fontWeight: 900, letterSpacing: '0.15em' }}>{FIRM.name}</div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', letterSpacing: '0.2em', marginTop: '1px' }}>{FIRM.tagline}</div>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: cfg.color, fontSize: '9px', fontWeight: 700, letterSpacing: '0.25em' }}>{cfg.label.toUpperCase()} CERTIFICATE</div>
+          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', marginTop: '2px' }}>{FIRM.address}</div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{ position: 'absolute', top: '80px', left: 0, right: 0, bottom: '70px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 60px' }}>
+
+        {/* Icon */}
+        <div style={{ width: '72px', height: '72px', background: cfg.bg, border: `2px solid ${cfg.color}50`, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', boxShadow: `0 0 40px ${cfg.glow}` }}>
+          <Icon style={{ width: '36px', height: '36px', color: cfg.color }} />
+        </div>
+
+        {/* Certificate type */}
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', letterSpacing: '0.3em', marginBottom: '8px', fontWeight: 600 }}>
+          THIS CERTIFICATE IS PROUDLY AWARDED TO
+        </div>
+
+        {/* Trader name */}
+        <div style={{ color: cfg.color, fontSize: '36px', fontWeight: 900, letterSpacing: '0.05em', marginBottom: '4px', textShadow: `0 0 30px ${cfg.glow}`, textAlign: 'center' }}>
+          {(cert.trader_name || 'TRADER').toUpperCase()}
+        </div>
+
+        {/* Divider with diamond */}
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', maxWidth: '500px', margin: '16px 0' }}>
+          <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color}50)` }} />
+          <div style={{ width: '8px', height: '8px', background: cfg.color, transform: 'rotate(45deg)', margin: '0 12px', boxShadow: `0 0 8px ${cfg.glow}` }} />
+          <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, ${cfg.color}50, transparent)` }} />
+        </div>
+
+        {/* Achievement title */}
+        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '18px', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '6px' }}>
+          {cfg.title.toUpperCase()}
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', textAlign: 'center', maxWidth: '400px', lineHeight: 1.6, marginBottom: '28px' }}>
+          For successfully completing the{' '}
+          <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
+            {challengeMap[cert.challenge_type] || 'Funded Program'}
+          </span>
+          {' '}with a{' '}
+          <span style={{ color: cfg.color, fontWeight: 700 }}>${(cert.account_size || 0).toLocaleString()}</span>
+          {' '}account
+        </div>
+
+        {/* Stats boxes */}
+        <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '600px' }}>
+          {[
+            { label: 'ACCOUNT SIZE', value: `$${(cert.account_size || 0).toLocaleString()}` },
+            { label: 'ACCOUNT ID', value: cert.account_id || '—' },
+            { label: 'DATE ISSUED', value: cert.issue_date || new Date().toLocaleDateString('en-GB') },
+            { label: 'CERT ID', value: cert.certificate_id ? `#${cert.certificate_id.slice(0, 8)}` : '—' },
+          ].map(s => (
+            <div key={s.label} style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: `1px solid ${cfg.color}25`, borderRadius: '10px', padding: '10px 8px', textAlign: 'center', borderTop: `2px solid ${cfg.color}60` }}>
+              <div style={{ color: cfg.color, fontSize: '11px', fontWeight: 800 }}>{s.value}</div>
+              <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '8px', letterSpacing: '0.1em', marginTop: '3px' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer band */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70px', background: `linear-gradient(90deg, ${cfg.color}08, rgba(0,0,0,0) 50%, ${cfg.color}05)`, borderTop: `1px solid ${cfg.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
+        <div>
+          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', letterSpacing: '0.1em' }}>CERTIFICATE ID</div>
+          <div style={{ color: cfg.color, fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>{cert.certificate_id || `XTC-${Date.now()}`}</div>
+          <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: '8px', marginTop: '1px' }}>Verify at: {FIRM.verifyUrl}</div>
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: cfg.color, fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em' }}>{FIRM.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', marginTop: '1px' }}>Institutional Prop Trading · Elite Funded Program</div>
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', letterSpacing: '0.1em', marginBottom: '4px' }}>AUTHORIZED SIGNATURE</div>
+          <div style={{ width: '80px', height: '1px', background: `linear-gradient(90deg, transparent, ${cfg.color})`, marginLeft: 'auto' }} />
+          <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: '7px', marginTop: '2px' }}>CEO & RISK DIRECTOR</div>
+        </div>
+      </div>
+
+      {/* Watermark */}
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-25deg)', color: cfg.color, fontSize: '80px', fontWeight: 900, opacity: 0.025, pointerEvents: 'none', whiteSpace: 'nowrap', letterSpacing: '0.1em' }}>
+        CERTIFICATE
+      </div>
+    </div>
+  );
 }
 
-function generatePDF(cert) {
-  const cfg = CERT_CONFIG[cert.type] || CERT_CONFIG.funded;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const W = 297, H = 210;
-  const [r1, g1, b1] = hexToRgb(cfg.color);
+// ── PDF download using html2canvas ────────────────────────────────────────────
+async function downloadCertificatePDF(cert, setLoading) {
+  setLoading(true);
+  // Create a hidden container, render the certificate into it, capture as image
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:1200px;z-index:-1;';
+  document.body.appendChild(container);
 
-  doc.setFillColor(3, 5, 12); doc.rect(0, 0, W, H, 'F');
-  doc.setFillColor(14, 8, 4); doc.rect(0, 0, 80, 80, 'F'); doc.rect(W - 80, H - 80, 80, 80, 'F');
+  const { createRoot } = await import('react-dom/client');
+  const root = createRoot(container);
 
-  doc.setDrawColor(r1, g1, b1); doc.setLineWidth(1.8); doc.rect(7, 7, W - 14, H - 14);
-  doc.setLineWidth(0.35); doc.rect(11, 11, W - 22, H - 22);
-
-  [[10, 10], [W - 10, 10], [10, H - 10], [W - 10, H - 10]].forEach(([cx, cy], idx) => {
-    const xs = idx % 2 === 0 ? 1 : -1, ys = idx < 2 ? 1 : -1, d = 12;
-    doc.setDrawColor(r1, g1, b1); doc.setLineWidth(0.6);
-    doc.line(cx, cy, cx + xs * d, cy); doc.line(cx, cy, cx, cy + ys * d);
-    doc.setFillColor(r1, g1, b1); doc.circle(cx, cy, 0.8, 'F');
+  await new Promise(resolve => {
+    root.render(
+      React.createElement(CertificateDocument, { cert, forCapture: true })
+    );
+    setTimeout(resolve, 300); // allow render
   });
 
-  doc.setFillColor(8, 4, 2); doc.rect(11, 11, W - 22, 34, 'F');
-  doc.setDrawColor(r1, g1, b1); doc.setLineWidth(0.4); doc.line(11, 45, W - 11, 45);
-
-  doc.setTextColor(r1, g1, b1); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-  doc.text(FIRM.name, W / 2, 26, { align: 'center' });
-  doc.setFontSize(7.5); doc.setTextColor(160, 160, 160); doc.setFont('helvetica', 'normal');
-  doc.text(FIRM.tagline + '  ·  ' + FIRM.address, W / 2, 34, { align: 'center' });
-  doc.setFontSize(7); doc.setTextColor(r1, g1, b1);
-  doc.text(cfg.label.toUpperCase() + ' CERTIFICATE', W - 20, 24, { align: 'right' });
-
-  doc.setFontSize(58); doc.setFont('helvetica', 'bold'); doc.setTextColor(r1, g1, b1);
-  doc.setGState(new doc.GState({ opacity: 0.04 }));
-  doc.text('CERTIFICATE', W / 2, H / 2 + 8, { align: 'center' });
-  doc.setGState(new doc.GState({ opacity: 1 }));
-
-  doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-  doc.text(cfg.title.toUpperCase(), W / 2, 66, { align: 'center' });
-  doc.setDrawColor(r1, g1, b1); doc.setLineWidth(0.7); doc.line(70, 71, W - 70, 71);
-  doc.setFillColor(r1, g1, b1); doc.rect(W / 2 - 1.5, 69, 3, 3, 'F');
-
-  doc.setFontSize(8.5); doc.setTextColor(140, 140, 140); doc.setFont('helvetica', 'normal');
-  doc.text('THIS CERTIFICATE IS PROUDLY AWARDED TO', W / 2, 82, { align: 'center' });
-  doc.setFontSize(30); doc.setFont('helvetica', 'bold'); doc.setTextColor(r1, g1, b1);
-  doc.text((cert.trader_name || 'TRADER').toUpperCase(), W / 2, 98, { align: 'center' });
-  const nameWidth = doc.getTextWidth((cert.trader_name || 'TRADER').toUpperCase());
-  doc.setLineWidth(0.3); doc.line(W / 2 - nameWidth / 2, 101, W / 2 + nameWidth / 2, 101);
-
-  const challengeMap = { 'two-step': 'Two-Step Challenge', 'instant': 'Instant Funding Program', 'instant_light': 'Instant Light Program' };
-  doc.setFontSize(10.5); doc.setTextColor(200, 200, 200); doc.setFont('helvetica', 'normal');
-  doc.text(`For successfully completing the ${challengeMap[cert.challenge_type] || 'Funded Program'}  —  $${(cert.account_size || 0).toLocaleString()} Account`, W / 2, 112, { align: 'center' });
-
-  const statsY = 124;
-  [{ label: 'FIRM', value: FIRM.name }, { label: 'ACCOUNT SIZE', value: `$${(cert.account_size || 0).toLocaleString()}` }, { label: 'ACCOUNT ID', value: cert.account_id || '—' }, { label: 'ACHIEVEMENT', value: cfg.label }, { label: 'DATE ISSUED', value: cert.issue_date || new Date().toLocaleDateString('en-GB') }].forEach((s, i) => {
-    const boxW = (W - 30) / 5, bx = 15 + i * boxW;
-    doc.setFillColor(14, 14, 18); doc.rect(bx, statsY, boxW - 4, 22, 'F');
-    doc.setDrawColor(r1, g1, b1); doc.setLineWidth(0.3); doc.rect(bx, statsY, boxW - 4, 22);
-    doc.setLineWidth(0.8); doc.line(bx, statsY, bx + boxW - 4, statsY);
-    doc.setFontSize(i === 0 ? 7 : 11); doc.setFont('helvetica', 'bold'); doc.setTextColor(r1, g1, b1);
-    doc.text(s.value, bx + (boxW - 4) / 2, statsY + 10, { align: 'center', maxWidth: boxW - 8 });
-    doc.setFontSize(6.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100);
-    doc.text(s.label, bx + (boxW - 4) / 2, statsY + 17, { align: 'center' });
+  const canvas = await html2canvas(container.firstChild, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#030408',
+    logging: false,
   });
 
-  doc.setFillColor(8, 6, 3); doc.rect(11, H - 35, W - 22, 24, 'F');
-  doc.setDrawColor(r1, g1, b1); doc.setLineWidth(0.4); doc.line(11, H - 35, W - 11, H - 35);
-  doc.setLineWidth(0.5); doc.line(W - 80, H - 18, W - 20, H - 18);
-  doc.setFontSize(6.5); doc.setTextColor(120, 120, 120);
-  doc.text('AUTHORIZED SIGNATURE — CEO & RISK DIRECTOR', W - 50, H - 14, { align: 'center' });
-  doc.setFontSize(7); doc.setTextColor(80, 80, 80);
-  doc.text(`Certificate ID: ${cert.certificate_id || 'XTC-' + Date.now()}`, 20, H - 24);
-  doc.text(`Verify at: ${FIRM.verifyUrl}`, 20, H - 18);
-  doc.setTextColor(r1, g1, b1); doc.text(FIRM.name, W / 2, H - 24, { align: 'center' });
-  doc.setTextColor(80, 80, 80); doc.text('Institutional Prop Trading · Elite Funded Program', W / 2, H - 18, { align: 'center' });
-  doc.save(`${FIRM.name.replace(/\s/g, '-')}-Certificate-${cert.certificate_id || Date.now()}.pdf`);
+  root.unmount();
+  document.body.removeChild(container);
+
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+  pdf.save(`${FIRM.name.replace(/\s/g, '-')}-Certificate-${cert.certificate_id || Date.now()}.pdf`);
+
+  setLoading(false);
 }
 
 // ── Certificate Card ──────────────────────────────────────────────────────────
 function CertCard({ cert, index, onPreview }) {
   const cfg = CERT_CONFIG[cert.type] || CERT_CONFIG.funded;
   const Icon = cfg.icon;
+  const [downloading, setDownloading] = useState(false);
 
   return (
     <motion.div
@@ -116,20 +225,13 @@ function CertCard({ cert, index, onPreview }) {
       className="group relative rounded-3xl overflow-hidden"
       style={{ background: 'rgba(6,8,18,0.98)', border: `1px solid ${cfg.color}30` }}
     >
-      {/* Animated top glow line */}
       <div className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}, ${cfg.color}90, transparent)` }} />
-
-      {/* Background glow orb */}
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full pointer-events-none"
         style={{ background: cfg.glow, filter: 'blur(48px)', opacity: 0.12 }} />
-
-      {/* Grid pattern */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
         style={{ backgroundImage: `repeating-linear-gradient(0deg, ${cfg.color} 0, ${cfg.color} 0.5px, transparent 0, transparent 40px), repeating-linear-gradient(90deg, ${cfg.color} 0, ${cfg.color} 0.5px, transparent 0, transparent 40px)` }} />
 
-      {/* Content */}
       <div className="relative z-10 p-6">
-        {/* Top row: type badge + date */}
         <div className="flex items-center justify-between mb-5">
           <span className="text-[9px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-widest"
             style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.color}30` }}>
@@ -138,7 +240,6 @@ function CertCard({ cert, index, onPreview }) {
           <span className="text-[9px] font-mono text-white/25">{cert.issue_date || '—'}</span>
         </div>
 
-        {/* Main display: icon + amount */}
         <div className="flex items-center gap-5 mb-5">
           <motion.div
             animate={{ y: [-2, 2, -2] }}
@@ -156,14 +257,12 @@ function CertCard({ cert, index, onPreview }) {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 mb-5">
           <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}30)` }} />
           <div className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ background: cfg.color, opacity: 0.6 }} />
           <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cfg.color}30, transparent)` }} />
         </div>
 
-        {/* Meta grid */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
             { label: 'Account ID', value: cert.account_id || '—' },
@@ -177,7 +276,6 @@ function CertCard({ cert, index, onPreview }) {
           ))}
         </div>
 
-        {/* Verified strip */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
           style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
           <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -185,7 +283,6 @@ function CertCard({ cert, index, onPreview }) {
           <span className="text-[9px] font-mono text-white/15 ml-auto">{FIRM.verifyUrl}</span>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2">
           <button
             onClick={() => onPreview(cert)}
@@ -194,10 +291,12 @@ function CertCard({ cert, index, onPreview }) {
             <Eye className="w-3.5 h-3.5" /> Preview
           </button>
           <button
-            onClick={() => generatePDF(cert)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-black transition-all hover:opacity-90 active:scale-95"
+            onClick={() => downloadCertificatePDF(cert, setDownloading)}
+            disabled={downloading}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-black transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
             style={{ background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}cc)`, boxShadow: `0 4px 16px ${cfg.glow}` }}>
-            <Download className="w-3.5 h-3.5" /> Download PDF
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            {downloading ? 'Generating...' : 'Download PDF'}
           </button>
         </div>
       </div>
@@ -205,76 +304,59 @@ function CertCard({ cert, index, onPreview }) {
   );
 }
 
-// ── Preview Modal ─────────────────────────────────────────────────────────────
+// ── Preview Modal — renders the actual HTML cert ──────────────────────────────
 function CertPreviewModal({ cert, onClose }) {
   const cfg = CERT_CONFIG[cert?.type] || CERT_CONFIG.funded;
-  const Icon = cfg.icon;
+  const [downloading, setDownloading] = useState(false);
   if (!cert) return null;
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+      style={{ background: 'rgba(0,0,0,0.90)', backdropFilter: 'blur(16px)' }}
       onClick={onClose}>
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
         onClick={e => e.stopPropagation()}
-        className="relative rounded-3xl overflow-hidden max-w-2xl w-full"
-        style={{ background: 'linear-gradient(160deg, rgba(8,5,2,0.99), rgba(14,10,4,0.98))', border: `2px solid ${cfg.color}60` }}>
+        className="w-full max-w-4xl">
 
-        <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}, transparent)` }} />
+        <button onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-white/40 hover:text-white transition-colors text-2xl font-bold">×</button>
 
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 text-white/30 hover:text-white transition-colors text-xl font-bold">×</button>
+        {/* The actual certificate rendered as HTML */}
+        <div className="w-full mb-4">
+          <CertificateDocument cert={cert} forCapture={false} />
+        </div>
 
-        <div className="p-10 text-center">
-          <div className="text-[11px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: cfg.color }}>{FIRM.name}</div>
-          <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-6">{FIRM.tagline}</div>
-
-          <div className="w-20 h-20 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-            style={{ background: cfg.bg, border: `1px solid ${cfg.color}50`, boxShadow: `0 0 32px ${cfg.glow}` }}>
-            <Icon className="w-10 h-10" style={{ color: cfg.color }} />
-          </div>
-
-          <div className="text-xs font-mono text-white/30 uppercase tracking-widest mb-2">{cfg.title}</div>
-          <div className="text-5xl font-black mb-2" style={{ color: cfg.color, textShadow: `0 0 30px ${cfg.glow}` }}>
-            ${(cert.account_size || 0).toLocaleString()}
-          </div>
-          <div className="text-xl font-black text-white mb-1">{cert.trader_name || 'Trader'}</div>
-          <div className="text-[10px] text-white/25 font-mono mb-6">
-            {cert.challenge_type === 'two-step' ? 'Two-Step Challenge' : cert.challenge_type === 'instant' ? 'Instant Funding' : 'Instant Light Program'}
-          </div>
-
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}40)` }} />
-            <div className="w-2 h-2 rotate-45" style={{ background: cfg.color }} />
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cfg.color}40, transparent)` }} />
-          </div>
-
-          <div className="flex justify-center gap-3">
-            <button onClick={() => generatePDF(cert)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black text-black"
-              style={{ background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}cc)`, boxShadow: `0 6px 20px ${cfg.glow}` }}>
-              <Download className="w-4 h-4" /> Download PDF
-            </button>
-          </div>
+        {/* Download button below preview */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => downloadCertificatePDF(cert, setDownloading)}
+            disabled={downloading}
+            className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-black text-black disabled:opacity-60 transition-all"
+            style={{ background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}cc)`, boxShadow: `0 6px 24px ${cfg.glow}` }}>
+            {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {downloading ? 'Generating PDF...' : 'Download as PDF'}
+          </button>
         </div>
       </motion.div>
     </motion.div>
   );
 }
 
-// ── Main Export ───────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function Certificates({ user }) {
   const [previewCert, setPreviewCert] = useState(null);
 
   const { data: certs = [], isLoading } = useQuery({
-    queryKey: ['certificates'],
+    queryKey: ['certificates', user?.email],
     queryFn: () => base44.entities.Certificate.list('-created_date', 50),
   });
 
   const stats = [
-    { label: 'Total Certificates', value: certs.length,                                                                          color: '#FF5C00', icon: Award },
-    { label: 'Phases Passed',      value: certs.filter(c => c.type === 'phase1_passed' || c.type === 'phase2_passed').length,    color: '#60a5fa', icon: Trophy },
-    { label: 'Funded Accounts',    value: certs.filter(c => c.type === 'funded').length,                                          color: '#CCFF00', icon: Star },
-    { label: 'Payouts Received',   value: certs.filter(c => c.type === 'first_payout').length,                                    color: '#10b981', icon: Zap },
+    { label: 'Total Certificates', value: certs.length,                                                                       color: '#FF5C00', icon: Award },
+    { label: 'Phases Passed',      value: certs.filter(c => c.type === 'phase1_passed' || c.type === 'phase2_passed').length, color: '#60a5fa', icon: Trophy },
+    { label: 'Funded Accounts',    value: certs.filter(c => c.type === 'funded').length,                                       color: '#CCFF00', icon: Star },
+    { label: 'Payouts Received',   value: certs.filter(c => c.type === 'first_payout').length,                                 color: '#10b981', icon: Zap },
   ];
 
   return (
@@ -340,7 +422,6 @@ export default function Certificates({ user }) {
         </div>
       )}
 
-      {/* Preview Modal */}
       <AnimatePresence>
         {previewCert && <CertPreviewModal cert={previewCert} onClose={() => setPreviewCert(null)} />}
       </AnimatePresence>
