@@ -16,14 +16,16 @@ export default function AdminPaymentControl() {
   const [selectedGateway, setSelectedGateway] = useState(null);
   const qc = useQueryClient();
 
-  const { data: gateways = [], isLoading } = useQuery({
+  const { data: gateways = [], isLoading, error } = useQuery({
     queryKey: ['payment-gateways'],
     queryFn: () => base44.entities.PaymentGateway.list('-created_date', 50),
   });
 
-  const { data: paymentLogs = [] } = useQuery({
+  const { data: paymentLogs = [], error: logsError } = useQuery({
     queryKey: ['payment-logs'],
     queryFn: () => base44.entities.PaymentLog.list('-created_date', 100),
+    retry: false,
+    onError: () => {} // Silently fail if entity doesn't exist
   });
 
   const toggleMutation = useMutation({
@@ -36,8 +38,26 @@ export default function AdminPaymentControl() {
     active: gateways.filter(g => g.is_active).length,
     checkout_com: gateways.filter(g => g.provider === 'checkout_com').length,
     confirmo: gateways.filter(g => g.provider === 'confirmo').length,
-    recent_payments: paymentLogs.filter(l => l.created_date && new Date(l.created_date) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length,
+    recent_payments: logsError ? 0 : paymentLogs.filter(l => l.created_date && new Date(l.created_date) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="py-16 text-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-sm text-muted-foreground font-mono">Loading payment gateways...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 rounded-2xl" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <h3 className="text-sm font-bold text-red-400 mb-2">Failed to load payment gateways</h3>
+        <p className="text-xs text-muted-foreground font-mono">{error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
