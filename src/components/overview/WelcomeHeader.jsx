@@ -68,8 +68,8 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
-                border: '2px solid rgba(255,92,0,0.5)',
+                background: user?.avatar_url ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
+                border: user?.avatar_url ? 'none' : '2px solid rgba(255,92,0,0.5)',
               }}>
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" style={{ background: 'transparent' }} />
