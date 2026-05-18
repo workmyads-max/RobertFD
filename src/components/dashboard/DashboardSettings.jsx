@@ -77,20 +77,95 @@ function StatusBadge({ verified }) {
 // Country codes data
 const COUNTRY_CODES = [
   { code: '+1', country: 'United States', flag: '🇺🇸' },
+  { code: '+1', country: 'Canada', flag: '🇨🇦' },
   { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
   { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
-  { code: '+66', country: 'Thailand', flag: '🇹🇭' },
-  { code: '+971', country: 'UAE', flag: '🇦🇪' },
-  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
   { code: '+91', country: 'India', flag: '🇮🇳' },
   { code: '+86', country: 'China', flag: '🇨🇳' },
   { code: '+81', country: 'Japan', flag: '🇯🇵' },
   { code: '+49', country: 'Germany', flag: '🇩🇪' },
   { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+61', country: 'Australia', flag: '🇦🇺' },
-  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺' },
   { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
+  { code: '+62', country: 'Indonesia', flag: '🇮🇩' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
+  { code: '+63', country: 'Philippines', flag: '🇵🇭' },
+  { code: '+66', country: 'Thailand', flag: '🇹🇭' },
+  { code: '+84', country: 'Vietnam', flag: '🇻🇳' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷' },
+  { code: '+98', country: 'Iran', flag: '🇮🇷' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬' },
   { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+  { code: '+968', country: 'Oman', flag: '🇴🇲' },
+  { code: '+973', country: 'Bahrain', flag: '🇧🇭' },
+  { code: '+964', country: 'Iraq', flag: '🇮🇶' },
+  { code: '+962', country: 'Jordan', flag: '🇯🇴' },
+  { code: '+961', country: 'Lebanon', flag: '🇱🇧' },
+  { code: '+972', country: 'Israel', flag: '🇮🇱' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱' },
+  { code: '+420', country: 'Czech Republic', flag: '🇨🇿' },
+  { code: '+36', country: 'Hungary', flag: '🇭🇺' },
+  { code: '+40', country: 'Romania', flag: '🇷🇴' },
+  { code: '+380', country: 'Ukraine', flag: '🇺🇦' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+  { code: '+852', country: 'Hong Kong', flag: '🇭🇰' },
+  { code: '+886', country: 'Taiwan', flag: '🇹🇼' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱' },
+  { code: '+57', country: 'Colombia', flag: '🇨🇴' },
+  { code: '+58', country: 'Venezuela', flag: '🇻🇪' },
+  { code: '+51', country: 'Peru', flag: '🇵🇪' },
+  { code: '+593', country: 'Ecuador', flag: '🇪🇨' },
+  { code: '+507', country: 'Panama', flag: '🇵🇦' },
+  { code: '+506', country: 'Costa Rica', flag: '🇨🇷' },
+  { code: '+212', country: 'Morocco', flag: '🇲🇦' },
+  { code: '+213', country: 'Algeria', flag: '🇩🇿' },
+  { code: '+216', country: 'Tunisia', flag: '🇹🇳' },
+  { code: '+233', country: 'Ghana', flag: '🇬🇭' },
+  { code: '+255', country: 'Tanzania', flag: '🇹🇿' },
+  { code: '+256', country: 'Uganda', flag: '🇺🇬' },
+  { code: '+251', country: 'Ethiopia', flag: '🇪🇹' },
+  { code: '+93', country: 'Afghanistan', flag: '🇦🇫' },
+  { code: '+7', country: 'Kazakhstan', flag: '🇰🇿' },
+  { code: '+998', country: 'Uzbekistan', flag: '🇺🇿' },
+  { code: '+994', country: 'Azerbaijan', flag: '🇦🇿' },
+  { code: '+374', country: 'Armenia', flag: '🇦🇲' },
+  { code: '+995', country: 'Georgia', flag: '🇬🇪' },
+  { code: '+370', country: 'Lithuania', flag: '🇱🇹' },
+  { code: '+371', country: 'Latvia', flag: '🇱🇻' },
+  { code: '+372', country: 'Estonia', flag: '🇪🇪' },
+  { code: '+385', country: 'Croatia', flag: '🇭🇷' },
+  { code: '+381', country: 'Serbia', flag: '🇷🇸' },
+  { code: '+386', country: 'Slovenia', flag: '🇸🇮' },
+  { code: '+421', country: 'Slovakia', flag: '🇸🇰' },
+  { code: '+354', country: 'Iceland', flag: '🇮🇸' },
+  { code: '+352', country: 'Luxembourg', flag: '🇱🇺' },
+  { code: '+356', country: 'Malta', flag: '🇲🇹' },
+  { code: '+377', country: 'Monaco', flag: '🇲🇨' },
 ];
 
 const WALLET_TYPES = [
@@ -116,9 +191,6 @@ export default function DashboardSettings({ user }) {
   // Phone verification state
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES.find(c => c.code === '+1') || COUNTRY_CODES[0]);
   const [phone, setPhone] = useState(user?.phone || '');
-  const [phoneCode, setPhoneCode] = useState('');
-  const [phoneSent, setPhoneSent] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(user?.phone_verified || false);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
@@ -127,6 +199,7 @@ export default function DashboardSettings({ user }) {
 
   // Google auth state
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleDisconnectLoading, setGoogleDisconnectLoading] = useState(false);
 
   // Payout wallet selection
   const [selectedWalletType, setSelectedWalletType] = useState(user?.payout_wallet_type || 'usdt_trc20');
@@ -196,67 +269,41 @@ export default function DashboardSettings({ user }) {
     }
   };
 
-  const handleSendPhoneCode = async () => {
+  const handleSavePhone = async () => {
     if (!phone || phone.length < 7) return;
     setPhoneLoading(true);
     try {
       const fullPhone = `${selectedCountry.code}${phone.replace(/\D/g, '')}`;
-      await base44.functions.invoke('sendOTP', {
-        email: user?.email,
-        phone: fullPhone,
-        type: 'phone_verification'
-      });
-      setPhoneSent(true);
+      await base44.auth.updateMe({ phone: fullPhone, phone_verified: true });
     } catch (err) {
-      console.error('Failed to send code:', err);
+      console.error('Failed to save phone:', err);
     } finally {
       setPhoneLoading(false);
     }
   };
 
-  const handleVerifyPhone = async () => {
-    if (phoneCode.length < 4) return;
-    setPhoneLoading(true);
-    try {
-      const otpRecords = await base44.entities.OTP.filter({ phone: `${selectedCountry.code}${phone.replace(/\D/g, '')}`, type: 'phone_verification' });
-      const latestOTP = otpRecords.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
-      
-      if (!latestOTP) {
-        alert('No OTP found. Please request a new code.');
-        return;
-      }
-
-      await base44.functions.invoke('verifyOTP', {
-        otp_id: latestOTP.id,
-        code: phoneCode
-      });
-      
-      setPhoneVerified(true);
-      setPhoneSent(false);
-      setPhoneCode('');
-    } catch (err) {
-      alert('Invalid code. Please try again.');
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
+  const handleGoogleConnect = async () => {
     setGoogleLoading(true);
     try {
-      // This would integrate with Google OAuth - placeholder for now
-      // In production, use Google OAuth popup flow
-      const result = await base44.functions.invoke('googleAuth', { code: 'placeholder' });
-      if (result.success) {
-        await base44.auth.updateMe({ 
-          google_linked: true, 
-          google_id: result.google_id 
-        });
-      }
+      // Redirect to Google OAuth - the googleAuth function handles the redirect
+      window.location.href = '/api/auth/google';
     } catch (err) {
       console.error('Google auth failed:', err);
-    } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleDisconnect = async () => {
+    setGoogleDisconnectLoading(true);
+    try {
+      await base44.auth.updateMe({ 
+        google_linked: false, 
+        google_id: null 
+      });
+    } catch (err) {
+      console.error('Google disconnect failed:', err);
+    } finally {
+      setGoogleDisconnectLoading(false);
     }
   };
 
@@ -436,16 +483,16 @@ export default function DashboardSettings({ user }) {
                       </div>
                       
                       <button
-                        onClick={handleGoogleAuth}
-                        disabled={googleLoading}
+                        onClick={user?.google_linked ? handleGoogleDisconnect : handleGoogleConnect}
+                        disabled={googleLoading || googleDisconnectLoading}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
                         style={{
                           background: user?.google_linked ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.06)',
                           border: user?.google_linked ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,255,255,0.12)',
                           color: user?.google_linked ? '#ef4444' : 'rgba(255,255,255,0.9)',
                         }}>
-                        {googleLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Chrome className="w-4 h-4" />}
-                        {googleLoading ? 'Processing...' : user?.google_linked ? 'Disconnect Google' : 'Connect with Google'}
+                        {googleLoading || googleDisconnectLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Chrome className="w-4 h-4" />}
+                        {googleLoading ? 'Connecting...' : googleDisconnectLoading ? 'Disconnecting...' : user?.google_linked ? 'Disconnect Google' : 'Connect with Google'}
                       </button>
 
                       {user?.google_linked && (
@@ -469,8 +516,7 @@ export default function DashboardSettings({ user }) {
                           <div className="relative">
                             <button
                               onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                              disabled={phoneVerified}
-                              className="flex items-center gap-2 px-3 py-3 rounded-xl text-sm text-white font-medium disabled:opacity-50 min-w-[140px]"
+                              className="flex items-center gap-2 px-3 py-3 rounded-xl text-sm text-white font-medium min-w-[140px]"
                               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
                               <span className="text-lg">{selectedCountry.flag}</span>
                               <span className="text-xs font-mono">{selectedCountry.code}</span>
@@ -481,12 +527,28 @@ export default function DashboardSettings({ user }) {
                               <motion.div
                                 initial={{ opacity: 0, y: -8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="absolute top-full left-0 mt-2 w-56 max-h-64 overflow-y-auto rounded-xl border shadow-2xl z-50"
+                                className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto rounded-xl border shadow-2xl z-50"
                                 style={{ background: 'rgba(10,11,16,0.98)', borderColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
-                                <div className="p-2">
+                                <div className="p-2 sticky top-0 bg-[rgba(10,11,16,0.98)] border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                                  <input
+                                    type="text"
+                                    placeholder="Search country..."
+                                    className="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10 text-white outline-none focus:border-primary/50"
+                                    onChange={(e) => {
+                                      const search = e.target.value.toLowerCase();
+                                      const buttons = document.querySelectorAll('[data-country-btn]');
+                                      buttons.forEach(btn => {
+                                        const text = btn.textContent.toLowerCase();
+                                        btn.style.display = text.includes(search) ? 'flex' : 'none';
+                                      });
+                                    }}
+                                  />
+                                </div>
+                                <div className="p-2 max-h-[320px] overflow-y-auto">
                                   {COUNTRY_CODES.map(country => (
                                     <button
-                                      key={country.code}
+                                      key={country.code + country.country}
+                                      data-country-btn
                                       onClick={() => { setSelectedCountry(country); setShowCountryDropdown(false); }}
                                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-white/[0.05] transition-colors"
                                     >
@@ -504,43 +566,22 @@ export default function DashboardSettings({ user }) {
                             value={phone}
                             onChange={e => setPhone(e.target.value)}
                             placeholder="1234567890"
-                            disabled={phoneVerified}
-                            className="flex-1 rounded-xl px-4 py-3 text-sm text-white outline-none disabled:opacity-50"
+                            className="flex-1 rounded-xl px-4 py-3 text-sm text-white outline-none"
                             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
                           />
-                          {!phoneVerified && (
-                            <button onClick={handleSendPhoneCode} disabled={phoneLoading || phone.length < 7}
-                              className="px-4 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-40 flex items-center gap-1.5 flex-shrink-0"
-                              style={{ background: 'rgba(255,92,0,0.2)', border: '1px solid rgba(255,92,0,0.3)' }}>
-                              {phoneLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Smartphone className="w-3 h-3" />}
-                              {phoneSent ? 'Resend' : 'Send Code'}
-                            </button>
-                          )}
-                          {phoneVerified && <StatusBadge verified />}
+                          <button onClick={handleSavePhone} disabled={phoneLoading || phone.length < 7}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-40 flex items-center gap-1.5 flex-shrink-0"
+                            style={{ background: 'rgba(255,92,0,0.2)', border: '1px solid rgba(255,92,0,0.3)' }}>
+                            {phoneLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                            Save
+                          </button>
                         </div>
-                        {phoneVerified && (
+                        {user?.phone && (
                           <div className="mt-2 text-xs font-mono" style={{ color: '#10b981' }}>
-                            ✓ Verified: {selectedCountry.code}{phone}
+                            ✓ Saved: {user.phone}
                           </div>
                         )}
                       </div>
-
-                      {phoneSent && !phoneVerified && (
-                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                          <InputField
-                            label="Verification Code"
-                            value={phoneCode}
-                            onChange={e => setPhoneCode(e.target.value)}
-                            placeholder="Enter 6-digit code"
-                            hint="Enter the code sent to your phone via SMS"
-                          />
-                          <button onClick={handleVerifyPhone} disabled={phoneCode.length < 4}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-40"
-                            style={{ background: 'linear-gradient(90deg, #10b981, #059669)' }}>
-                            <CheckCircle className="w-4 h-4" /> Verify Phone
-                          </button>
-                        </motion.div>
-                      )}
                     </div>
                   </Card>
 
