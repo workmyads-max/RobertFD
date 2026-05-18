@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
-import PremiumTraderMascot from './PremiumTraderMascot';
 
 const stats = [
   { label: 'Traders Worldwide', value: 14202, prefix: '', suffix: '+', icon: Users },
@@ -186,7 +185,7 @@ export default function HeroSection({ heroImage }) {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-8">
                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground tracking-wider uppercase">
-                  Robert Funds — Singapore
+                  Robert Funds — Dubai
                 </span>
               </div>
 
@@ -240,84 +239,61 @@ export default function HeroSection({ heroImage }) {
             </motion.div>
           </div>
 
-          {/* Right - Premium Mascot Character */}
-          <div className="relative hidden lg:block h-[600px]">
-            <PremiumTraderMascot />
-            
-            {/* Floating Cards around mascot */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 0.8 }}
-              className="absolute top-8 right-0"
-            >
-              <FloatingCard delay={0.3} className="glass rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-mono text-muted-foreground">BTC/USD</span>
-                  <span className="text-xs text-accent font-mono">+2.34%</span>
-                </div>
-                <svg viewBox="0 0 200 60" className="w-full h-16 mb-4">
-                  <polyline
-                    fill="none"
-                    stroke="hsl(22, 100%, 50%)"
-                    strokeWidth="2"
-                    points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8"
-                  />
-                  <defs>
-                    <linearGradient id="chartGrad2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <polygon
-                    fill="url(#chartGrad2)"
-                    points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8 200,60 0,60"
-                  />
-                </svg>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground font-semibold">$67,842.30</span>
-                  <span className="text-accent font-mono text-xs">LIVE</span>
-                </div>
-              </FloatingCard>
-            </motion.div>
+          {/* Right - Floating Cards */}
+          <div className="relative hidden lg:block">
+            <FloatingCard delay={0.3} className="glass rounded-2xl p-6 animate-float">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-mono text-muted-foreground">BTC/USD</span>
+                <span className="text-xs text-accent font-mono">+2.34%</span>
+              </div>
+              {/* Mini chart SVG */}
+              <svg viewBox="0 0 200 60" className="w-full h-16 mb-4">
+                <polyline
+                  fill="none"
+                  stroke="hsl(22, 100%, 50%)"
+                  strokeWidth="2"
+                  points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8"
+                />
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon
+                  fill="url(#chartGrad)"
+                  points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8 200,60 0,60"
+                />
+              </svg>
+              <div className="flex justify-between text-sm">
+                <span className="text-foreground font-semibold">$95,842.30</span>
+                <span className="text-accent font-mono text-xs">LIVE</span>
+              </div>
+            </FloatingCard>
 
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 1 }}
-              className="absolute bottom-20 -left-4"
-            >
-              <FloatingCard delay={0.5} className="glass rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Payout Approved</div>
-                    <div className="text-sm font-semibold text-foreground">+$12,400.00</div>
-                  </div>
+            <FloatingCard delay={0.5} className="glass rounded-2xl p-4 absolute -bottom-4 -left-8 w-64 animate-float-delayed">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-accent" />
                 </div>
-              </FloatingCard>
-            </motion.div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Payout Approved</div>
+                  <div className="text-sm font-semibold text-foreground">+$12,400.00</div>
+                </div>
+              </div>
+            </FloatingCard>
 
-            <motion.div
-              initial={{ opacity: 0, y: -40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 1.2 }}
-              className="absolute top-1/2 -right-8"
-            >
-              <FloatingCard delay={0.7} className="glass rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Account Funded</div>
-                    <div className="text-sm font-semibold text-foreground">$100,000</div>
-                  </div>
+            <FloatingCard delay={0.7} className="glass rounded-2xl p-4 absolute top-4 -right-4 w-56 animate-float-slow">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-primary" />
                 </div>
-              </FloatingCard>
-            </motion.div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Account Funded</div>
+                  <div className="text-sm font-semibold text-foreground">$100,000</div>
+                </div>
+              </div>
+            </FloatingCard>
           </div>
         </div>
       </div>
