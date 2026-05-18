@@ -733,7 +733,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM public.profiles 
-        WHERE email = (auth.jwt() ->> 'email') AND role = 'admin'
+        WHERE email = (auth.jwt() ->> 'email')::TEXT AND role = 'admin'
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -742,7 +742,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.current_user_email()
 RETURNS TEXT AS $$
 BEGIN
-    RETURN auth.jwt() ->> 'email';
+    RETURN (auth.jwt() ->> 'email')::TEXT;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -779,45 +779,45 @@ ALTER TABLE public.user_feature_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- PROFILES RLS
-CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.jwt() ->> 'email' = email);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.jwt() ->> 'email' = email);
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = email);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING ((auth.jwt() ->> 'email')::TEXT = email);
 CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE USING (public.is_admin());
 
 -- CHALLENGE ACCOUNTS RLS
-CREATE POLICY "Users can view own accounts" ON public.challenge_accounts FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own accounts" ON public.challenge_accounts FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all accounts" ON public.challenge_accounts FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all accounts" ON public.challenge_accounts FOR UPDATE USING (public.is_admin());
 
 -- ORDERS RLS
-CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all orders" ON public.orders FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all orders" ON public.orders FOR UPDATE USING (public.is_admin());
 
 -- WITHDRAWALS RLS
-CREATE POLICY "Users can view own withdrawals" ON public.withdrawal_requests FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can create withdrawals" ON public.withdrawal_requests FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own withdrawals" ON public.withdrawal_requests FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can create withdrawals" ON public.withdrawal_requests FOR INSERT WITH CHECK ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all withdrawals" ON public.withdrawal_requests FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all withdrawals" ON public.withdrawal_requests FOR UPDATE USING (public.is_admin());
 
 -- AFFILIATE PROFILES RLS
-CREATE POLICY "Users can view own affiliate profile" ON public.affiliate_profiles FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own affiliate profile" ON public.affiliate_profiles FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all affiliate profiles" ON public.affiliate_profiles FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all affiliate profiles" ON public.affiliate_profiles FOR UPDATE USING (public.is_admin());
 
 -- AFFILIATE COMMISSIONS RLS
-CREATE POLICY "Users can view own commissions" ON public.affiliate_commissions FOR SELECT USING (auth.jwt() ->> 'email' = affiliate_email);
+CREATE POLICY "Users can view own commissions" ON public.affiliate_commissions FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = affiliate_email);
 CREATE POLICY "Admins can view all commissions" ON public.affiliate_commissions FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all commissions" ON public.affiliate_commissions FOR UPDATE USING (public.is_admin());
 
 -- KYC RLS
-CREATE POLICY "Users can view own KYC" ON public.kyc_verifications FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can manage own KYC" ON public.kyc_verifications FOR ALL USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own KYC" ON public.kyc_verifications FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can manage own KYC" ON public.kyc_verifications FOR ALL USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all KYC" ON public.kyc_verifications FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all KYC" ON public.kyc_verifications FOR UPDATE USING (public.is_admin());
 
 -- TRADE RECORDS RLS
-CREATE POLICY "Users can view own trades" ON public.trade_records FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own trades" ON public.trade_records FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all trades" ON public.trade_records FOR SELECT USING (public.is_admin());
 
 -- COUPONS RLS
@@ -825,7 +825,7 @@ CREATE POLICY "Anyone can view active coupons" ON public.coupons FOR SELECT USIN
 CREATE POLICY "Admins can manage coupons" ON public.coupons FOR ALL USING (public.is_admin());
 
 -- CERTIFICATES RLS
-CREATE POLICY "Users can view own certificates" ON public.certificates FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own certificates" ON public.certificates FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Anyone can view verified certificates" ON public.certificates FOR SELECT USING (is_verified = true);
 CREATE POLICY "Admins can manage certificates" ON public.certificates FOR ALL USING (public.is_admin());
 
@@ -834,15 +834,15 @@ CREATE POLICY "Anyone can view active notifications" ON public.notifications FOR
 CREATE POLICY "Admins can manage notifications" ON public.notifications FOR ALL USING (public.is_admin());
 
 -- SUPPORT TICKETS RLS
-CREATE POLICY "Users can view own tickets" ON public.support_tickets FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can create tickets" ON public.support_tickets FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can update own tickets" ON public.support_tickets FOR UPDATE USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own tickets" ON public.support_tickets FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can create tickets" ON public.support_tickets FOR INSERT WITH CHECK ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can update own tickets" ON public.support_tickets FOR UPDATE USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all tickets" ON public.support_tickets FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all tickets" ON public.support_tickets FOR UPDATE USING (public.is_admin());
 
 -- SUPPORT MESSAGES RLS
-CREATE POLICY "Users can view own ticket messages" ON public.support_messages FOR SELECT USING (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = auth.jwt() ->> 'email'));
-CREATE POLICY "Users can create ticket messages" ON public.support_messages FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = auth.jwt() ->> 'email'));
+CREATE POLICY "Users can view own ticket messages" ON public.support_messages FOR SELECT USING (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = (auth.jwt() ->> 'email')::TEXT));
+CREATE POLICY "Users can create ticket messages" ON public.support_messages FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.support_tickets WHERE id = ticket_id AND user_email = (auth.jwt() ->> 'email')::TEXT));
 CREATE POLICY "Admins can view all messages" ON public.support_messages FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can create messages" ON public.support_messages FOR INSERT WITH CHECK (public.is_admin());
 
@@ -858,20 +858,20 @@ CREATE POLICY "Admins can manage providers" ON public.trading_platform_providers
 CREATE POLICY "Admins can view audit logs" ON public.audit_logs FOR SELECT USING (public.is_admin());
 
 -- DEVICE LOGS RLS
-CREATE POLICY "Users can view own device logs" ON public.device_logs FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own device logs" ON public.device_logs FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all device logs" ON public.device_logs FOR SELECT USING (public.is_admin());
 
 -- OTPS RLS
-CREATE POLICY "Users can view own OTPs" ON public.otps FOR SELECT USING (auth.jwt() ->> 'email' = email OR auth.jwt() ->> 'email' = phone);
+CREATE POLICY "Users can view own OTPs" ON public.otps FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = email OR (auth.jwt() ->> 'email')::TEXT = phone);
 CREATE POLICY "Admins can view all OTPs" ON public.otps FOR SELECT USING (public.is_admin());
 
 -- USER FEATURE SETTINGS RLS
-CREATE POLICY "Users can view own feature settings" ON public.user_feature_settings FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own feature settings" ON public.user_feature_settings FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can manage all feature settings" ON public.user_feature_settings FOR ALL USING (public.is_admin());
 
 -- VIOLATION APPEALS RLS
-CREATE POLICY "Users can view own appeals" ON public.violation_appeals FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can create appeals" ON public.violation_appeals FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own appeals" ON public.violation_appeals FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can create appeals" ON public.violation_appeals FOR INSERT WITH CHECK ((auth.jwt() ->> 'email')::TEXT = user_email);
 CREATE POLICY "Admins can view all appeals" ON public.violation_appeals FOR SELECT USING (public.is_admin());
 CREATE POLICY "Admins can update all appeals" ON public.violation_appeals FOR UPDATE USING (public.is_admin());
 
@@ -880,8 +880,8 @@ CREATE POLICY "Admins can view all risk flags" ON public.risk_flags FOR SELECT U
 CREATE POLICY "Admins can manage risk flags" ON public.risk_flags FOR ALL USING (public.is_admin());
 
 -- TRADING JOURNAL RLS
-CREATE POLICY "Users can view own journal" ON public.trading_journal_entries FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-CREATE POLICY "Users can manage own journal" ON public.trading_journal_entries FOR ALL USING (auth.jwt() ->> 'email' = user_email);
+CREATE POLICY "Users can view own journal" ON public.trading_journal_entries FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = user_email);
+CREATE POLICY "Users can manage own journal" ON public.trading_journal_entries FOR ALL USING ((auth.jwt() ->> 'email')::TEXT = user_email);
 
 -- PAYMENT LOGS RLS (Admin Only)
 CREATE POLICY "Admins can view payment logs" ON public.payment_logs FOR SELECT USING (public.is_admin());
