@@ -6,13 +6,11 @@ import CheckoutStep2 from '../checkout/CheckoutStep2';
 import CheckoutStep3 from '../checkout/CheckoutStep3';
 import CheckoutStep4 from '../checkout/CheckoutStep4';
 import PlatformSelectStep from '../checkout/PlatformSelectStep';
-import TermsModal from '../checkout/TermsModal';
 
 const STEPS = ['Platform', 'Personal Info', 'Payment Method', 'Payment', 'Confirmation'];
 
 export default function DashboardCheckout({ initialOrder, onBack, onComplete }) {
   const [step, setStep] = useState(1);
-  const [showTerms, setShowTerms] = useState(false);
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
     account_type: 'standard',
@@ -27,9 +25,6 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
   });
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
-
-  // Show terms before going to payment step
-  const handleStep2Next = () => setShowTerms(true);
 
   return (
     <div>
@@ -71,19 +66,13 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
         </div>
       </div>
 
-      <TermsModal
-        open={showTerms}
-        onClose={() => setShowTerms(false)}
-        onAccept={() => { setShowTerms(false); setStep(3); }}
-      />
-
       <AnimatePresence mode="wait">
         <motion.div key={step}
           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
           {step === 1 && <PlatformSelectStep order={order} updateOrder={updateOrder} onNext={() => setStep(2)} />}
           {step === 2 && <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={() => setStep(3)} />}
-          {step === 3 && <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={handleStep2Next} onBack={() => setStep(2)} />}
+          {step === 3 && <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
           {step === 4 && <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
           {step === 5 && <CheckoutStep4 order={order} onGoToDashboard={onComplete || onBack} />}
         </motion.div>
