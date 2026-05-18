@@ -42,13 +42,17 @@ export default function SocialMediaWidget() {
     refetchInterval: 60000,
   });
 
-  const settings = settingsList[0] || {};
+  const settings = settingsList[0] || null;
 
-  const activePlatforms = SOCIAL_CONFIG.filter(p => {
-    const url = settings[p.urlKey];
-    const enabled = settings[p.enableKey] !== false;
-    return enabled && url && url.trim() !== '';
-  });
+  // If no settings record exists yet, show all platforms as placeholder (no URLs = no links shown)
+  // If settings exist, filter by enabled + has URL
+  const activePlatforms = settings
+    ? SOCIAL_CONFIG.filter(p => {
+        const url = settings[p.urlKey];
+        const enabled = settings[p.enableKey] !== false;
+        return enabled && url && url.trim() !== '';
+      })
+    : [];
 
   if (activePlatforms.length === 0) return null;
 

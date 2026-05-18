@@ -137,11 +137,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             <div className="text-[10px] font-mono text-white/20 animate-pulse">Identifying session...</div>
           )}
 
-          {/* Platform badge */}
-          <div className="flex items-center gap-1.5 md:justify-end mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[9px] font-mono text-emerald-400/70 uppercase tracking-widest">XTrading Terminal Active</span>
-          </div>
+
         </div>
       </div>
     </motion.div>
