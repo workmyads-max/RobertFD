@@ -6,7 +6,7 @@ import {
   Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Moon, Sun } from 'lucide-react';
+
 import { useFeatureVisibility } from '../../hooks/useFeatureVisibility';
 
 const navItems = [
@@ -33,22 +33,11 @@ const navItems = [
 
 export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount = 0, collapsed = false, setCollapsed }) {
   const { isEnabled } = useFeatureVisibility();
-  const [isDarkMode, setIsDarkMode] = React.useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') !== 'light';
-    }
-    return true;
-  });
-
+  // Force dark mode only
   React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   const handleNav = (id) => {
     setActivePage(id);
@@ -320,11 +309,6 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           </>
         ) : (
           <>
-            <button onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/30 hover:text-white/60 transition-colors">
-              {isDarkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </button>
             <a href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/30 hover:text-white/60 transition-colors">
               ← Back to site
             </a>
