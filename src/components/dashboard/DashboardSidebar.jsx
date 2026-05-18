@@ -125,11 +125,9 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <div className={`border-b ${collapsed ? 'px-2 py-3 flex justify-center' : 'px-4 py-3'}`} style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className={`flex ${collapsed ? 'justify-center' : 'items-center gap-3'}`}>
             <div className="relative flex-shrink-0 group">
-              <div className={`${collapsed ? 'w-9 h-9' : 'w-10 h-10'} rounded-xl flex items-center justify-center text-sm font-black text-white overflow-hidden`}
+              <div className={`${collapsed ? 'w-9 h-9' : 'w-10 h-10'} rounded-xl flex items-center justify-center text-sm font-black text-white`}
                 style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.4), rgba(255,92,0,0.3))', border: '1px solid rgba(139,92,246,0.3)' }}>
-                {user.avatar_url
-                  ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                  : <span>{user.full_name?.charAt(0)?.toUpperCase() || 'T'}</span>}
+                {user.full_name?.charAt(0)?.toUpperCase() || 'T'}
               </div>
               {collapsed && (
                 <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black animate-pulse" style={{ background: '#00f5a0' }} />

@@ -133,8 +133,8 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           whileTap={{ scale: 0.95 }}
           className="relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-white text-base group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #FF5C00 0%, #FF8A3D 50%, #FFAA5C 100%)',
-            boxShadow: '0 8px 32px rgba(255,92,0,0.45), 0 0 20px rgba(255,92,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
+            background: 'linear-gradient(135deg, #73ff00 0%, #a3ff4d 50%, #ccff66 100%)',
+            boxShadow: '0 8px 32px rgba(115,255,0,0.45), 0 0 20px rgba(115,255,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
           }}>
           {/* Animated border glow */}
           <motion.div
