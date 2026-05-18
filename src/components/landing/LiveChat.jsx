@@ -1,9 +1,42 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Phone, Mail, Clock, Settings } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function LiveChat() {
   const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const queryClient = useQueryClient();
+
+  // Fetch live chat settings
+  const { data: settings } = useQuery({
+    queryKey: ['livechat-settings'],
+    queryFn: () => base44.entities.SocialMediaSettings.list().then(data => data[0]),
+    retry: 1,
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: (msg) => base44.entities.LiveChatMessage.create({
+      message: msg,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      setMessage('');
+      queryClient.invalidateQueries({ queryKey: ['livechat-messages'] });
+    },
+  });
+
+  const handleSend = () => {
+    if (!message.trim()) return;
+    sendMessageMutation.mutate(message);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSend();
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -14,14 +47,17 @@ export default function LiveChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="glass rounded-2xl w-80 mb-4 overflow-hidden"
+            className="glass rounded-2xl w-96 overflow-hidden"
           >
+            {/* Header */}
             <div className="p-4 border-b border-border/30 flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-foreground">Robert Funds Support</div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  <span className="text-xs text-muted-foreground">Online — avg. 15min response</span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="text-xs text-muted-foreground">
+                    {settings?.discord_enabled ? 'Online' : 'Offline'} — avg. 15min response
+                  </span>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
@@ -29,22 +65,49 @@ export default function LiveChat() {
               </button>
             </div>
 
-            <div className="p-4 h-56 flex flex-col justify-end">
-              <div className="glass-light rounded-xl p-3 mb-3 max-w-[80%]">
+            {/* Chat Messages */}
+            <div className="p-4 h-64 overflow-y-auto flex flex-col gap-3">
+              {/* Welcome message */}
+              <div className="glass-light rounded-xl p-3 max-w-[85%]">
                 <p className="text-sm text-foreground">
                   👋 Welcome to Robert Funds! How can we help you today?
                 </p>
                 <span className="text-[10px] text-muted-foreground mt-1 block">Just now</span>
               </div>
+
+              {/* User messages would appear here */}
             </div>
 
+            {/* Quick Actions */}
+            <div className="px-4 pb-3 flex flex-wrap gap-2">
+              <button className="px-3 py-1.5 rounded-full text-xs font-medium text-white" 
+                style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.25)' }}>
+                Account Setup
+              </button>
+              <button className="px-3 py-1.5 rounded-full text-xs font-medium text-white"
+                style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.25)' }}>
+                Payment Issue
+              </button>
+              <button className="px-3 py-1.5 rounded-full text-xs font-medium text-white"
+                style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.25)' }}>
+                Technical Support
+              </button>
+            </div>
+
+            {/* Input */}
             <div className="p-3 border-t border-border/30 flex items-center gap-2">
               <input
                 type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
               />
-              <button className="w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
+              <button 
+                onClick={handleSend}
+                disabled={sendMessageMutation.isPending || !message.trim()}
+                className="w-9 h-9 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50">
                 <Send className="w-4 h-4 text-white" />
               </button>
             </div>
@@ -52,6 +115,7 @@ export default function LiveChat() {
         )}
       </AnimatePresence>
 
+      {/* Toggle Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

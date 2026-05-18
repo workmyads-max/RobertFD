@@ -2,37 +2,47 @@
   "name": "LiveChatMessage",
   "type": "object",
   "properties": {
-    "ticket_id": {
-      "type": "string"
+    "message": {
+      "type": "string",
+      "description": "Chat message content"
     },
     "sender_email": {
-      "type": "string"
+      "type": "string",
+      "description": "User email (if logged in)"
     },
     "sender_name": {
-      "type": "string"
+      "type": "string",
+      "description": "User name"
     },
-    "sender_role": {
+    "status": {
       "type": "string",
       "enum": [
-        "user",
-        "admin"
+        "pending",
+        "read",
+        "replied",
+        "archived"
       ],
-      "default": "user"
+      "default": "pending",
+      "description": "Message status"
     },
-    "message": {
-      "type": "string"
+    "admin_response": {
+      "type": "string",
+      "description": "Admin reply"
     },
-    "is_read": {
-      "type": "boolean",
-      "default": false
+    "admin_email": {
+      "type": "string",
+      "description": "Admin who responded"
     },
-    "attachment_url": {
-      "type": "string"
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
-    "ticket_id",
-    "message",
-    "sender_email"
+    "message"
   ]
 }

@@ -239,7 +239,7 @@ export default function HeroSection({ heroImage }) {
             </motion.div>
           </div>
 
-          {/* Right - Floating Cards */}
+          {/* Right - Floating Card (Top Only) */}
           <div className="relative hidden lg:block">
             <FloatingCard delay={0.3} className="glass rounded-2xl p-6 animate-float">
               <div className="flex items-center justify-between mb-4">
@@ -268,30 +268,6 @@ export default function HeroSection({ heroImage }) {
               <div className="flex justify-between text-sm">
                 <span className="text-foreground font-semibold">$95,842.30</span>
                 <span className="text-accent font-mono text-xs">LIVE</span>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard delay={0.5} className="glass rounded-2xl p-4 absolute -bottom-4 -left-8 w-64 animate-float-delayed">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-accent" />
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Payout Approved</div>
-                  <div className="text-sm font-semibold text-foreground">+$12,400.00</div>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard delay={0.7} className="glass rounded-2xl p-4 absolute top-4 -right-4 w-56 animate-float-slow">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Account Funded</div>
-                  <div className="text-sm font-semibold text-foreground">$100,000</div>
-                </div>
               </div>
             </FloatingCard>
           </div>
