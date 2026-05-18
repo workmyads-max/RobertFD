@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Check, Zap, Shield, TrendingUp, Clock, BarChart2 } from 'lucide-react';
+import { ArrowRight, Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -118,18 +118,27 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     setPendingOrder(null);
   };
 
+  const CHALLENGE_RULES = [
+    { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: 'Max 5% loss per trading day. Resets at 3:00 AM GMT+4 daily.' },
+    { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: 'Total equity must never fall more than 10% below starting balance. This does NOT reset.' },
+    { icon: Target, color: '#10b981', title: 'Profit Target', body: 'Phase 1: 10% target. Phase 2: 5% target. Instant: maintain profitable operation.' },
+    { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
+    { icon: Ban, color: '#ef4444', title: 'News Trading', body: '1:100 accounts may not hold during high-impact news (NFP, FOMC, CPI). 1:30 swing accounts are exempt.' },
+    { icon: Moon, color: '#8b5cf6', title: 'Overnight / Weekend', body: '1:100 accounts cannot hold past Friday 21:00 GMT. Swing (1:30) accounts may hold overnight and over weekends.' },
+    { icon: TrendingUp, color: '#FF5C00', title: 'Consistency Rule', body: 'No single trade may make up more than 50% of total profits. Consistent lot sizing required.' },
+    { icon: Users, color: '#0ea5e9', title: 'Prohibited Activities', body: 'No tick scalping, arbitrage, copy trading (without approval), HFT, or price manipulation tools.' },
+    { icon: Shield, color: '#10b981', title: 'Account Security', body: 'Credentials are personal and non-transferable. Account sharing or selling = immediate termination.' },
+    { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: '80% profit split for funded accounts. KYC required. Min 1 profitable cycle before withdrawal.' },
+  ];
+
   return (
     <div>
       {/* Terms Modal */}
-      <AnimatePresence>
-        {showTerms && (
-          <TermsModal
-            order={pendingOrder}
-            onAccept={handleTermsAccept}
-            onDecline={handleTermsDecline}
-          />
-        )}
-      </AnimatePresence>
+      <TermsModal
+        open={showTerms}
+        onAccept={handleTermsAccept}
+        onClose={handleTermsDecline}
+      />
 
       {/* Header */}
       <div className="mb-8">
@@ -302,8 +311,8 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Rules summary */}
-      <div className="rounded-2xl p-5 grid md:grid-cols-3 gap-5"
+      {/* Quick highlights */}
+      <div className="rounded-2xl p-5 grid md:grid-cols-3 gap-5 mb-10"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         {[
           { icon: TrendingUp, title: 'Profit Split', desc: 'Up to 80% profit split. Scaling plan available on all funded accounts.' },
@@ -321,6 +330,49 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 <div className="text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
               </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Full Challenge Rules */}
+      <div className="mb-2">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.12)' }}>
+            <Shield className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-foreground">Challenge Rules</h2>
+            <p className="text-xs text-muted-foreground font-mono">Understand all rules before purchasing — violations result in termination without refund.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+        {CHALLENGE_RULES.map((rule, i) => {
+          const Icon = rule.icon;
+          return (
+            <motion.div
+              key={rule.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06, duration: 0.4 }}
+              whileHover={{ y: -3, transition: { duration: 0.2 } }}
+              className="rounded-2xl p-5 flex gap-4"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: `1px solid ${rule.color}22`,
+                boxShadow: `0 0 20px ${rule.color}08`,
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: `${rule.color}15`, border: `1px solid ${rule.color}30` }}>
+                <Icon className="w-5 h-5" style={{ color: rule.color }} />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-foreground mb-1">{rule.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
+              </div>
+            </motion.div>
           );
         })}
       </div>
