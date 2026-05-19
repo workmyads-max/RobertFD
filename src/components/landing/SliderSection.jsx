@@ -65,7 +65,7 @@ function DashboardSlide() {
           transition={{ delay: 0.3 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-foreground">Equity Curve</span>
-            <motion.span className="text-[10px] font-mono" style={{ color: '#10b981' }}
+            <motion.span className="text-[10px] font-mono" style={{ color: '#00f5a0' }}
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}>
               +4.28%
@@ -103,7 +103,7 @@ function DashboardSlide() {
           </div>
           {[
             { label: 'Profit Target', pct: 43, color: '#FF5C00' },
-            { label: 'Drawdown Used', pct: 24, color: '#10b981' },
+            { label: 'Drawdown Used', pct: 24, color: '#00f5a0' },
           ].map((p) => (
             <div key={p.label} className="mb-2 last:mb-0">
               <div className="flex justify-between text-[9px] font-mono mb-1">
@@ -158,7 +158,7 @@ function RiskShieldSlide() {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
             {/* Outer glow rings */}
             <motion.div className="absolute inset-0 rounded-3xl border-2"
-              style={{ borderColor: 'rgba(16,185,129,0.3)' }}
+              style={{ borderColor: 'rgba(0,245,160,0.3)' }}
               animate={{ scale: [1, 1.15, 1] }}
               transition={{ duration: 3, repeat: Infinity }} />
             <motion.div className="absolute inset-3 rounded-2xl border"
@@ -169,11 +169,11 @@ function RiskShieldSlide() {
             {/* Shield center */}
             <div className="absolute inset-0 rounded-3xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(255,92,0,0.08))',
-                border: '2px solid rgba(16,185,129,0.4)',
-                boxShadow: '0 0 30px rgba(16,185,129,0.2), inset 0 0 30px rgba(16,185,129,0.1)',
+                background: 'linear-gradient(135deg, rgba(0,245,160,0.15), rgba(255,92,0,0.08))',
+                border: '2px solid rgba(0,245,160,0.4)',
+                boxShadow: '0 0 30px rgba(0,245,160,0.2), inset 0 0 30px rgba(0,245,160,0.1)',
               }}>
-              <Shield className="w-14 h-14" style={{ color: '#10b981' }} />
+              <Shield className="w-14 h-14" style={{ color: '#00f5a0' }} />
             </div>
           </motion.div>
         </div>
@@ -181,9 +181,9 @@ function RiskShieldSlide() {
         {/* Protection Features */}
         <div className="space-y-2">
           {[
-            { icon: Lock, label: 'Account Protection', color: '#3b82f6' },
-            { icon: Flame, label: 'Stop Loss Enforcement', color: '#ef4444' },
-            { icon: ZapIcon, label: 'Auto Risk Limits', color: '#eab308' },
+            { icon: Lock, label: 'Account Protection', color: '#00f5a0' },
+            { icon: Flame, label: 'Stop Loss Enforcement', color: '#FF5C00' },
+            { icon: ZapIcon, label: 'Auto Risk Limits', color: '#CCFF00' },
           ].map((item, i) => {
             const Icon = item.icon;
             return (
@@ -195,7 +195,7 @@ function RiskShieldSlide() {
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <Icon className="w-4 h-4 flex-shrink-0" style={{ color: item.color }} />
                 <span className="text-xs font-medium text-foreground">{item.label}</span>
-                <motion.div className="w-1 h-1 rounded-full ml-auto" style={{ color: '#10b981' }}
+                <motion.div className="w-1 h-1 rounded-full ml-auto" style={{ color: '#00f5a0' }}
                   animate={{ scale: [1, 1.5, 1] }}
                   transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} />
               </motion.div>
