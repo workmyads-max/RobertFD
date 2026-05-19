@@ -14,7 +14,7 @@ export default function AboutSection({ aboutImage }) {
     <section id="about" className="relative py-32">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Animated 3D Geometric Shape */}
+          {/* XFT Logo Design */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -22,109 +22,67 @@ export default function AboutSection({ aboutImage }) {
             className="relative h-[450px] flex items-center justify-center"
           >
             <div className="glass rounded-2xl overflow-hidden relative w-full h-full flex items-center justify-center">
-              {/* Animated background grid */}
-              <motion.div 
-                className="absolute inset-0"
-                style={{ 
-                  backgroundImage: 'linear-gradient(rgba(255,92,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.05) 1px, transparent 1px)',
-                  backgroundSize: '50px 50px'
-                }}
-              />
+              {/* Background gradient mesh */}
+              <div className="absolute inset-0" style={{ 
+                  backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,92,0,0.08) 0%, transparent 70%)'
+                }} />
 
-              {/* 3D Rotating XFT Logo */}
-              <motion.div
-                className="relative w-72 h-72"
-                animate={{ rotateX: [0, 360], rotateY: [0, 360], rotateZ: [0, 180] }}
-                transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-                style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
-              >
-                <svg
-                  viewBox="0 0 500 500"
-                  className="w-full h-full"
-                  style={{
-                    filter: 'drop-shadow(0 0 50px rgba(255, 92, 0, 0.5))'
-                  }}
-                >
+              {/* XFT Logo - Static Design */}
+              <div className="relative w-80 h-80">
+                <svg viewBox="0 0 400 400" className="w-full h-full">
                   <defs>
-                    <linearGradient id="xftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="xftGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FF5C00" />
-                      <stop offset="50%" stopColor="#FF8A3D" />
-                      <stop offset="100%" stopColor="#CCFF00" />
+                      <stop offset="100%" stopColor="#FF8A3D" />
                     </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <linearGradient id="xftGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#CCFF00" />
+                      <stop offset="100%" stopColor="#FF5C00" />
+                    </linearGradient>
+                    <filter id="glow2">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                       <feMerge>
                         <feMergeNode in="coloredBlur"/>
                         <feMergeNode in="SourceGraphic"/>
                       </feMerge>
                     </filter>
-                    <linearGradient id="xfGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FF5C00" />
-                      <stop offset="100%" stopColor="#FF8A3D" />
-                    </linearGradient>
-                    <linearGradient id="tGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#CCFF00" />
-                      <stop offset="100%" stopColor="#FF5C00" />
-                    </linearGradient>
                   </defs>
 
-                  {/* X Letter - Angular geometric */}
-                  <g filter="url(#glow)">
-                    <path
-                      d="M 80 120 L 180 250 L 80 380 L 130 380 L 230 250 L 130 120 Z"
-                      fill="url(#xfGradient)"
-                      opacity="0.95"
-                    />
-                    <path
-                      d="M 270 120 L 370 120 L 270 250 L 370 380 L 320 380 L 220 250 Z"
-                      fill="url(#xfGradient)"
-                      opacity="0.95"
-                    />
+                  {/* Abstract X shape */}
+                  <g filter="url(#glow2)">
+                    <rect x="120" y="100" width="40" height="200" rx="8" fill="url(#xftGrad1)" transform="rotate(45 140 200)" opacity="0.9" />
+                    <rect x="240" y="100" width="40" height="200" rx="8" fill="url(#xftGrad1)" transform="rotate(-45 260 200)" opacity="0.9" />
                   </g>
 
-                  {/* F Letter - Connected to X */}
-                  <g filter="url(#glow)">
-                    <path
-                      d="M 380 120 L 430 120 L 430 170 L 380 170 L 380 250 L 430 250 L 430 300 L 330 300 L 330 120 Z"
-                      fill="url(#tGradient)"
-                      opacity="0.9"
-                    />
+                  {/* F shape integrated */}
+                  <g filter="url(#glow2)">
+                    <path d="M 220 140 L 300 140 L 300 180 L 260 180 L 260 220 L 300 220 L 300 260 L 220 260 Z" fill="url(#xftGrad2)" opacity="0.85" />
                   </g>
 
-                  {/* T Letter - Top accent */}
-                  <g filter="url(#glow)">
-                    <path
-                      d="M 100 80 L 400 80 L 400 130 L 350 130 L 350 200 L 300 200 L 300 130 L 150 130 L 150 200 L 100 200 Z"
-                      fill="url(#tGradient)"
-                      opacity="0.85"
-                    />
+                  {/* T shape on top */}
+                  <g filter="url(#glow2)">
+                    <rect x="100" y="80" width="200" height="35" rx="6" fill="url(#xftGrad2)" opacity="0.9" />
+                    <rect x="185" y="115" width="30" height="85" rx="6" fill="url(#xftGrad2)" opacity="0.9" />
                   </g>
 
-                  {/* Accent elements */}
-                  <circle cx="450" cy="100" r="15" fill="#CCFF00" opacity="0.6" filter="url(#glow)" />
-                  <circle cx="50" cy="400" r="10" fill="#FF5C00" opacity="0.5" filter="url(#glow)" />
+                  {/* Decorative circles */}
+                  <circle cx="320" cy="120" r="12" fill="#CCFF00" opacity="0.5" filter="url(#glow2)" />
+                  <circle cx="80" cy="280" r="8" fill="#FF5C00" opacity="0.4" filter="url(#glow2)" />
+                  <circle cx="320" cy="300" r="10" fill="#FF8A3D" opacity="0.3" filter="url(#glow2)" />
                 </svg>
-              </motion.div>
+              </div>
 
               {/* Floating XFT Badge */}
               <motion.div 
                 initial={{ opacity: 0, scale: 0 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.5, type: 'spring' }}
+                transition={{ delay: 0.3, type: 'spring' }}
                 className="absolute top-8 right-8 glass rounded-xl p-4 border border-primary/30"
               >
                 <div className="text-xs font-mono text-primary mb-1">XFT</div>
-                <div className="text-xl font-black gradient-text">Momentum</div>
+                <div className="text-lg font-black gradient-text">XfundedTrader</div>
               </motion.div>
-
-              {/* Scanning line effect */}
-              <motion.div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(180deg, transparent, rgba(204,255,0,0.08), transparent)' }}
-                animate={{ top: ['-100%', '200%'] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-              />
             </div>
 
             {/* Floating stats card */}
