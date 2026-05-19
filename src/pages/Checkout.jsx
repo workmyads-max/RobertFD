@@ -11,6 +11,7 @@ import { base44 } from '@/api/base44Client';
 const PRICES = {
   'two-step': { 5000: 49, 10000: 89, 25000: 235, 50000: 349, 100000: 517, 200000: 1089 },
   'instant': { 10000: 270, 25000: 607, 50000: 1350, 100000: 2430, 200000: 4850 },
+  'instant_light': { 5000: 79, 10000: 137 },
 };
 
 // Steps differ based on whether user is already logged in
