@@ -14,7 +14,7 @@ export default function AboutSection({ aboutImage }) {
     <section id="about" className="relative py-32">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* XFT Logo Design */}
+          {/* Trading Export Visualization */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -22,67 +22,109 @@ export default function AboutSection({ aboutImage }) {
             className="relative h-[450px] flex items-center justify-center"
           >
             <div className="glass rounded-2xl overflow-hidden relative w-full h-full flex items-center justify-center">
-              {/* Background gradient mesh */}
-              <div className="absolute inset-0" style={{ 
-                  backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,92,0,0.08) 0%, transparent 70%)'
+              {/* Background trading pattern */}
+              <div className="absolute inset-0 opacity-10" style={{ 
+                  backgroundImage: 'linear-gradient(rgba(255,92,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.1) 1px, transparent 1px)',
+                  backgroundSize: '30px 30px'
                 }} />
 
-              {/* XFT Logo - Static Design */}
-              <div className="relative w-80 h-80">
-                <svg viewBox="0 0 400 400" className="w-full h-full">
-                  <defs>
-                    <linearGradient id="xftGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FF5C00" />
-                      <stop offset="100%" stopColor="#FF8A3D" />
-                    </linearGradient>
-                    <linearGradient id="xftGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#CCFF00" />
-                      <stop offset="100%" stopColor="#FF5C00" />
-                    </linearGradient>
-                    <filter id="glow2">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
+              {/* Main trading visualization */}
+              <div className="relative w-full h-full p-8">
+                {/* Candlestick chart */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg viewBox="0 0 400 300" className="w-full h-full">
+                    {/* Grid lines */}
+                    <defs>
+                      <linearGradient id="candleUp" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#00f5a0" />
+                        <stop offset="100%" stopColor="#00a86b" />
+                      </linearGradient>
+                      <linearGradient id="candleDown" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#FF5C00" />
+                        <stop offset="100%" stopColor="#cc4900" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Candlestick 1 */}
+                    <line x1="50" y1="180" x2="50" y2="120" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="40" y="180" width="20" height="40" fill="#00f5a0" rx="2" />
+                    
+                    {/* Candlestick 2 */}
+                    <line x1="90" y1="160" x2="90" y2="200" stroke="#FF5C00" strokeWidth="2" />
+                    <rect x="80" y="160" width="20" height="40" fill="#FF5C00" rx="2" />
+                    
+                    {/* Candlestick 3 */}
+                    <line x1="130" y1="190" x2="130" y2="110" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="120" y="140" width="20" height="50" fill="#00f5a0" rx="2" />
+                    
+                    {/* Candlestick 4 */}
+                    <line x1="170" y1="150" x2="170" y2="100" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="160" y="110" width="20" height="40" fill="#00f5a0" rx="2" />
+                    
+                    {/* Candlestick 5 */}
+                    <line x1="210" y1="130" x2="210" y2="170" stroke="#FF5C00" strokeWidth="2" />
+                    <rect x="200" y="130" width="20" height="40" fill="#FF5C00" rx="2" />
+                    
+                    {/* Candlestick 6 */}
+                    <line x1="250" y1="160" x2="250" y2="90" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="240" y="100" width="20" height="60" fill="#00f5a0" rx="2" />
+                    
+                    {/* Candlestick 7 */}
+                    <line x1="290" y1="120" x2="290" y2="80" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="280" y="90" width="20" height="30" fill="#00f5a0" rx="2" />
+                    
+                    {/* Candlestick 8 */}
+                    <line x1="330" y1="110" x2="330" y2="70" stroke="#00f5a0" strokeWidth="2" />
+                    <rect x="320" y="80" width="20" height="30" fill="#00f5a0" rx="2" />
+                    
+                    {/* Trend line */}
+                    <polyline points="50,150 90,180 130,165 170,125 210,150 250,125 290,100 330,90" 
+                              fill="none" stroke="#CCFF00" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
+                  </svg>
+                </div>
 
-                  {/* Abstract X shape */}
-                  <g filter="url(#glow2)">
-                    <rect x="120" y="100" width="40" height="200" rx="8" fill="url(#xftGrad1)" transform="rotate(45 140 200)" opacity="0.9" />
-                    <rect x="240" y="100" width="40" height="200" rx="8" fill="url(#xftGrad1)" transform="rotate(-45 260 200)" opacity="0.9" />
-                  </g>
+                {/* Trading stats overlay */}
+                <div className="absolute top-4 left-4 right-4 grid grid-cols-3 gap-3">
+                  <div className="glass rounded-lg p-3 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground">Win Rate</div>
+                    <div className="text-lg font-bold text-accent">78%</div>
+                  </div>
+                  <div className="glass rounded-lg p-3 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground">Profit</div>
+                    <div className="text-lg font-bold" style={{ color: '#00f5a0' }}>+24.5%</div>
+                  </div>
+                  <div className="glass rounded-lg p-3 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground">Trades</div>
+                    <div className="text-lg font-bold text-primary">1,247</div>
+                  </div>
+                </div>
 
-                  {/* F shape integrated */}
-                  <g filter="url(#glow2)">
-                    <path d="M 220 140 L 300 140 L 300 180 L 260 180 L 260 220 L 300 220 L 300 260 L 220 260 Z" fill="url(#xftGrad2)" opacity="0.85" />
-                  </g>
+                {/* XFT Brand badge */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4, type: 'spring' }}
+                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30"
+                >
+                  <div className="text-xs font-mono text-primary mb-1">XFT</div>
+                  <div className="text-sm font-black gradient-text">XfundedTrader</div>
+                </motion.div>
 
-                  {/* T shape on top */}
-                  <g filter="url(#glow2)">
-                    <rect x="100" y="80" width="200" height="35" rx="6" fill="url(#xftGrad2)" opacity="0.9" />
-                    <rect x="185" y="115" width="30" height="85" rx="6" fill="url(#xftGrad2)" opacity="0.9" />
-                  </g>
-
-                  {/* Decorative circles */}
-                  <circle cx="320" cy="120" r="12" fill="#CCFF00" opacity="0.5" filter="url(#glow2)" />
-                  <circle cx="80" cy="280" r="8" fill="#FF5C00" opacity="0.4" filter="url(#glow2)" />
-                  <circle cx="320" cy="300" r="10" fill="#FF8A3D" opacity="0.3" filter="url(#glow2)" />
-                </svg>
+                {/* Floating elements */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-mono text-emerald-400">LIVE</span>
+                  </div>
+                </motion.div>
               </div>
-
-              {/* Floating XFT Badge */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3, type: 'spring' }}
-                className="absolute top-8 right-8 glass rounded-xl p-4 border border-primary/30"
-              >
-                <div className="text-xs font-mono text-primary mb-1">XFT</div>
-                <div className="text-lg font-black gradient-text">XfundedTrader</div>
-              </motion.div>
             </div>
 
             {/* Floating stats card */}
