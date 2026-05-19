@@ -45,16 +45,24 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    if (!fields.email || !fields.username || !fields.full_name || !fields.password) { setError('All fields are required.'); return; }
     if (fields.password !== fields.confirm) { setError('Passwords do not match.'); return; }
     if (fields.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) { setError('Username can only contain letters, numbers and underscores.'); return; }
     setLoading(true);
-    const res = await callAuth('register', { email: fields.email, username: fields.username, full_name: fields.full_name, password: fields.password });
-    setLoading(false);
-    if (res.error) { setError(res.error); return; }
-    setUserId(res.userId);
-    if (res.dev_otp) setDevOtp(res.dev_otp);
-    setStep('otp');
+    try {
+      const res = await Promise.race([
+        callAuth('register', { email: fields.email, username: fields.username, full_name: fields.full_name, password: fields.password }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 15000))
+      ]);
+      if (res.error) { setError(res.error); setLoading(false); return; }
+      setUserId(res.userId);
+      if (res.dev_otp) setDevOtp(res.dev_otp);
+      setStep('otp');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handleOTPSuccess = (user, token) => {
