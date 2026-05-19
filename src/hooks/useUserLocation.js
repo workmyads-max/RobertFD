@@ -12,10 +12,15 @@ export function useUserLocation() {
   useEffect(() => {
     const fetchLocation = async () => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
       try {
-        const response = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        const response = await fetch('https://ipapi.co/json/', { 
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
         const countryCode = data.country_code || 'US';
@@ -34,7 +39,13 @@ export function useUserLocation() {
           loading: false,
         });
       } catch (error) {
-        setLocation(prev => ({ ...prev, loading: false }));
+        setLocation({
+          ip: null,
+          country: null,
+          countryCode: 'US',
+          flag: '🇺🇸',
+          loading: false,
+        });
       } finally {
         clearTimeout(timeoutId);
       }
