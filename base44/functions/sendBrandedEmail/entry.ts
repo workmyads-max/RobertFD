@@ -33,7 +33,7 @@ function getEmailTemplate(type, data) {
 
   const templates = {
     registration: `
-      <h1>Welcome to Funded Firms</h1>
+      <h1>Welcome to XFunded Trader</h1>
       <p class="subtitle">Your trading journey starts here</p>
       <div class="content">
         <p style="color: rgba(255,255,255,0.8); font-size: 15px; margin-bottom: 24px;">
@@ -49,7 +49,7 @@ function getEmailTemplate(type, data) {
             Registered: ${new Date().toLocaleDateString()}
           </div>
         </div>
-        <a href="https://xtrading.com/dashboard" class="button">Access Dashboard</a>
+        <a href="https://xfundedtrader.com/dashboard" class="button">Access Dashboard</a>
       </div>
     `,
 
@@ -211,7 +211,7 @@ function getEmailTemplate(type, data) {
     </div>
     ${template}
     <div class="footer">
-      <p>© 2026 Funded Firms. All rights reserved.</p>
+      <p>© 2026 XFunded Trader. All rights reserved.</p>
       <p>Dubai International Financial Centre, UAE</p>
     </div>
   </div>

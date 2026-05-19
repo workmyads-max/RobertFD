@@ -14,7 +14,7 @@ export default function Footer() {
       {/* Watermark */}
       <div className="absolute bottom-0 left-0 right-0 text-center pointer-events-none select-none">
         <span className="text-[12vw] font-black text-foreground/[0.015] leading-none tracking-tighter font-mono">
-          ROBERT FUNDS
+          XFUNDED TRADER
         </span>
       </div>
 
@@ -25,20 +25,20 @@ export default function Footer() {
             <div className="flex items-center gap-3 mb-6">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.35)' }}>
-                <span className="text-primary font-black text-sm" style={{ fontFamily: 'Georgia, serif' }}>RW</span>
+                <span className="text-primary font-black text-sm" style={{ fontFamily: 'Georgia, serif' }}>XF</span>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-foreground font-bold text-sm tracking-tight">Robert</span>
-                <span className="text-primary font-black text-sm tracking-tighter">Funds</span>
+                <span className="text-foreground font-bold text-sm tracking-tight">XFunded</span>
+                <span className="text-primary font-black text-sm tracking-tighter">Trader</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Singapore-based institutional proprietary trading firm. Empowering elite traders worldwide.
+              Dubai-based institutional proprietary trading firm. Empowering elite traders worldwide.
             </p>
             <p className="text-xs text-primary/70 font-mono mb-4">Established Since 2026</p>
             <div className="text-xs text-muted-foreground">
-              <p>support@robertfunds.com</p>
-              <p className="mt-1">Singapore, Southeast Asia</p>
+              <p>support@xfundedtrader.com</p>
+              <p className="mt-1">Dubai International Financial Centre, UAE</p>
             </div>
           </div>
 
@@ -63,7 +63,7 @@ export default function Footer() {
         <div className="border-t border-border/30 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Robert Funds Pte. Ltd. All rights reserved. — Established Since 2026
+              © {new Date().getFullYear()} XFunded Trader. All rights reserved. — Established Since 2026
             </p>
             <div className="flex items-center gap-6">
               {['Twitter', 'Discord', 'Telegram', 'Instagram', 'LinkedIn'].map((social) => (
@@ -77,7 +77,7 @@ export default function Footer() {
           <div className="mt-8 p-4 glass-light rounded-xl">
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <strong>Risk Disclosure:</strong> Trading foreign exchange, cryptocurrencies, and CFDs carries a
-              high level of risk and may not be suitable for all investors. Robert Funds does not provide financial
+              high level of risk and may not be suitable for all investors. XFunded Trader does not provide financial
               advice. Past performance is not indicative of future results. By using our services, you acknowledge
               and accept the risks involved in trading financial instruments.
             </p>

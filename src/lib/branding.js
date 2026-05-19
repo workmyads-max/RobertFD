@@ -1,10 +1,10 @@
 export const BRAND = {
-  name: 'Funded Firms CRM',
-  shortName: 'Funded Firms',
+  name: 'XFunded Trader',
+  shortName: 'XFunded',
   tagline: 'Institutional Trading Platform',
-  description: 'Funded Firms CRM is a next-generation institutional trading platform. Get funded with up to $200K. Fast payouts. Institutional-grade trading conditions.',
-  website: 'https://fundedfirms.com',
-  location: 'Singapore',
+  description: 'XFunded Trader is a next-generation institutional trading platform. Get funded with up to $200K. Fast payouts. Institutional-grade trading conditions.',
+  website: 'https://xfundedtrader.com',
+  location: 'Dubai International Financial Centre, UAE',
   
   // Color scheme
   primary: '#FF5C00',
@@ -13,9 +13,9 @@ export const BRAND = {
   
   // Social
   social: {
-    twitter: 'https://twitter.com/fundedfirms',
-    discord: 'https://discord.gg/fundedfirms',
-    linkedin: 'https://linkedin.com/company/fundedfirms',
+    twitter: 'https://twitter.com/xfundedtrader',
+    discord: 'https://discord.gg/xfundedtrader',
+    linkedin: 'https://linkedin.com/company/xfundedtrader',
   },
 };
 

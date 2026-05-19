@@ -79,7 +79,7 @@ export default function HeroSection({ heroImage }) {
       {/* Decorative large text */}
       <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none select-none">
         <span className="text-[15vw] font-black text-foreground/[0.02] leading-none tracking-tighter font-mono">
-          ROBERT FUNDS
+          XFUNDED TRADER
         </span>
       </div>
 
@@ -185,7 +185,7 @@ export default function HeroSection({ heroImage }) {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-8">
                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground tracking-wider uppercase">
-                  Robert Funds — Dubai
+                  XFunded Trader — Dubai
                 </span>
               </div>
 
@@ -194,11 +194,11 @@ export default function HeroSection({ heroImage }) {
                 <br />
                 Scale Faster.{' '}
                 <br />
-                <span className="gradient-text">Powered by Robert Funds.</span>
+                <span className="gradient-text">Powered by XFunded Trader.</span>
               </h1>
 
               <p className="text-base sm:text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">
-                An institutional-grade Singapore-based proprietary trading firm built for
+                An institutional-grade Dubai-based proprietary trading firm built for
                 the next generation of global traders. Access up to $200K in funded capital.
               </p>
 
