@@ -28,7 +28,7 @@ export default function LivePayouts() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-4xl font-black mb-2">
-            Over <span className="text-accent">6.0M+</span> Verified Payouts
+            Over <span className="text-primary">200K+</span> Verified Payouts
           </h2>
         </motion.div>
 
