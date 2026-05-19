@@ -399,7 +399,7 @@ function PlatformSlide({ image }) {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Platforms', value: '3+', color: '#FF5C00' },
-              { label: 'Uptime', value: '99.9%', color: '#10b981' },
+              { label: 'Uptime', value: '99.9%', color: '#00f5a0' },
               { label: 'Latency', value: '<50ms', color: '#CCFF00' },
             ].map((stat, i) => (
               <motion.div
@@ -461,7 +461,9 @@ export default function SliderSection({ images }) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((prev) => (prev + 1) % slides.length), 7000);
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
