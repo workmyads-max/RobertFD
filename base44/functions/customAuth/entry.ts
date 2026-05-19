@@ -254,15 +254,15 @@ Deno.serve(async (req) => {
         last_login_at: new Date().toISOString(),
       });
 
-      // Send login alert email
-      await sendEmail(base44, account.email, 'login_alert', {
+      const sessionToken = generateToken();
+      
+      // Send login alert email (non-blocking)
+      sendEmail(base44, account.email, 'login_alert', {
         name: account.full_name,
         time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }),
         ip: ipAddress,
         device: userAgent.substring(0, 80),
-      });
-
-      const sessionToken = generateToken();
+      }).catch(e => console.error('Login alert email failed:', e));
       return Response.json({
         success: true,
         token: sessionToken,
