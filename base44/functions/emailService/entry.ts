@@ -247,80 +247,42 @@ async function logEmailToSupabase(emailData) {
 }
 
 /**
- * Send email via SendGrid SMTP
+ * Send email via SendGrid HTTP API
  */
 async function sendEmailViaSMTP(to, subject, body) {
   try {
-    const host = Deno.env.get('SMTP_HOST') || 'smtp.sendgrid.net';
-    const port = parseInt(Deno.env.get('SMTP_PORT') || '587');
-    const username = Deno.env.get('SMTP_USERNAME') || 'apikey';
-    const password = Deno.env.get('SMTP_PASSWORD');
+    const apiKey = Deno.env.get('SMTP_PASSWORD'); // SendGrid API key stored here
     const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
     const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
 
-    if (!password) {
-      throw new Error('SMTP_PASSWORD not configured');
+    if (!apiKey) {
+      throw new Error('SendGrid API key not configured');
     }
 
-    // Connect with TLS
-    const conn = await Deno.connectTls({ hostname: host, port, caCerts: [] });
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: fromEmail, name: fromName },
+        subject: subject,
+        content: [{ type: 'text/html', value: body }],
+      }),
+    });
 
-    const readResponse = async () => {
-      const buf = new Uint8Array(1024);
-      const n = await conn.read(buf);
-      if (!n) return '';
-      return decoder.decode(buf.subarray(0, n));
-    };
+    if (response.status === 202) {
+      console.log('Email sent successfully via SendGrid API');
+      return true;
+    }
 
-    const sendCommand = async (cmd) => {
-      console.log('Sending:', cmd.substring(0, 50));
-      await conn.write(encoder.encode(cmd + '\r\n'));
-      const resp = await readResponse();
-      console.log('Response:', resp.trim().substring(0, 100));
-      if (!resp.startsWith('2') && !resp.startsWith('3')) {
-        throw new Error(`SMTP error: ${resp.substring(0, 100)}`);
-      }
-      return resp;
-    };
-
-    // Read greeting
-    const greeting = await readResponse();
-    console.log('SMTP Greeting:', greeting.trim());
-    
-    // EHLO
-    await sendCommand(`EHLO ${host}`);
-    
-    // AUTH LOGIN
-    await sendCommand('AUTH LOGIN');
-    await sendCommand(btoa(username));
-    await sendCommand(btoa(password));
-    
-    // Send email
-    await sendCommand(`MAIL FROM: <${fromEmail}>`);
-    await sendCommand(`RCPT TO: <${to}>`);
-    await sendCommand('DATA');
-
-    const emailContent = `From: ${fromName} <${fromEmail}>
-To: ${to}
-Subject: ${subject}
-MIME-Version: 1.0
-Content-Type: text/html; charset=UTF-8
-
-${body}
-.`;
-
-    await conn.write(encoder.encode(emailContent + '\r\n'));
-    const dataResp = await readResponse();
-    console.log('Message sent:', dataResp.trim().substring(0, 50));
-    
-    await sendCommand('QUIT');
-    conn.close();
-
-    return true;
+    const errorText = await response.text();
+    console.error('SendGrid API error:', response.status, errorText);
+    return false;
   } catch (error) {
-    console.error('SMTP send failed:', error.message);
+    console.error('Email send failed:', error.message);
     return false;
   }
 }
