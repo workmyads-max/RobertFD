@@ -44,6 +44,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState(null);
+  const [devOtp, setDevOtp] = useState(null);
 
   const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
 
@@ -58,6 +59,7 @@ export default function Register() {
     setLoading(false);
     if (res.error) { setError(res.error); return; }
     setUserId(res.userId);
+    if (res.dev_otp) setDevOtp(res.dev_otp);
     setStep('otp');
   };
 
@@ -84,7 +86,7 @@ export default function Register() {
   if (step === 'otp') {
     return (
       <AuthCard>
-        <OTPStep userId={userId} onSuccess={handleOTPSuccess} onBack={() => setStep('form')} purpose="registration" />
+        <OTPStep userId={userId} onSuccess={handleOTPSuccess} onBack={() => setStep('form')} purpose="registration" devOtp={devOtp} />
       </AuthCard>
     );
   }

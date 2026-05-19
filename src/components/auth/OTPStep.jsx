@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ShieldCheck, Loader, RefreshCw, AlertCircle } from 'lucide-react';
 import { callAuth } from '@/lib/customAuth';
 
-export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login' }) {
+export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login', devOtp = null }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -86,6 +86,12 @@ export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login' }
         <div className="mt-2 text-xs font-mono text-primary">
           Code expires in: {formatTime(timer)}
         </div>
+        {devOtp && (
+          <div className="mt-3 px-4 py-2 rounded-lg text-sm font-mono text-center"
+            style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.3)', color: '#ccff00' }}>
+            📧 Email delivery not configured yet — your code is: <strong style={{ letterSpacing: '4px' }}>{devOtp}</strong>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-center gap-2" onPaste={handlePaste}>

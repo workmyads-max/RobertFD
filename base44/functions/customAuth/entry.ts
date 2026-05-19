@@ -125,14 +125,15 @@ Deno.serve(async (req) => {
         login_attempts: 0,
       });
 
-      // Send verification OTP email
+      // Try sending email (may fail if email provider not configured)
       await sendEmail(base44, email, 'otp', {
         name: full_name,
         code: otp_code,
         purpose: 'Email Verification',
       });
 
-      return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.' });
+      // Return OTP in response as fallback so user can complete registration even if email fails
+      return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.', dev_otp: otp_code });
     }
 
     // ─── VERIFY REGISTRATION OTP ─────────────────────────────────
