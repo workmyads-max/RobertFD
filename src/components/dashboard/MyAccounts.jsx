@@ -206,11 +206,11 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               <ExternalLink className="w-3.5 h-3.5" /> Open Match Trader
             </a>
           ) : (
-            <button onClick={() => onOpenTerminal && onOpenTerminal(account)}
+            <a href="https://web.metatrader.app/terminal" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
               style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
               <Monitor className="w-3.5 h-3.5" /> Open Terminal
-            </button>
+            </a>
           )}
           <button onClick={() => onOpenAnalytics && onOpenAnalytics(account)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5"
