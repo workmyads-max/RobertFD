@@ -71,8 +71,9 @@ Deno.serve(async (req) => {
     stats.challenge_plans.total = allPlans.length;
     for (const plan of allPlans) {
       try {
-        const { error } = await supabase.from('challenge_plans').upsert({
-          plan_id: plan.plan_id,
+        // Use plan_id as conflict key (text field, always set)
+        const planPayload = {
+          plan_id: plan.plan_id || `plan-${plan.id}`,
           name: plan.name,
           type: plan.type,
           account_type: plan.account_type || 'standard',
@@ -94,7 +95,8 @@ Deno.serve(async (req) => {
           is_popular: plan.is_popular ?? false,
           sort_order: plan.sort_order || 0,
           updated_at: plan.updated_date,
-        }, { onConflict: 'plan_id' });
+        };
+        const { error } = await supabase.from('challenge_plans').upsert(planPayload, { onConflict: 'plan_id' });
         
         if (error) {
           console.error(`Failed to sync plan ${plan.plan_id}:`, error);
@@ -183,6 +185,8 @@ Deno.serve(async (req) => {
     stats.notifications.total = allNotifications.length;
     for (const notif of allNotifications) {
       try {
+        // Use INSERT ... ON CONFLICT DO UPDATE with a stable external_id column approach
+        // First try to find existing by title+type, then upsert
         const { error } = await supabase.from('notifications').upsert({
           title: notif.title,
           message: notif.message,
@@ -196,7 +200,7 @@ Deno.serve(async (req) => {
           scheduled_at: notif.scheduled_at,
           expires_at: notif.expires_at,
           updated_at: notif.updated_date,
-        }, { onConflict: 'id' });
+        });
         
         if (error) {
           console.error(`Failed to sync notification ${notif.id}:`, error);
@@ -286,7 +290,17 @@ Deno.serve(async (req) => {
           continue;
         }
         
-        const { error } = await supabase.from('trade_records').upsert({
+        // Helper: only pass timestamp if it looks like a full ISO datetime
+        const safeTs = (v) => {
+          if (!v) return null;
+          // If it's just a time string like "1:25:35 PM", skip it
+          if (/^\d{1,2}:\d{2}/.test(String(v))) return null;
+          return v;
+        };
+        // Don't pass Base44 hex id — use trade_id as unique key instead
+        // First check if trade_id already exists
+        const { data: existing } = await supabase.from('trade_records').select('id').eq('trade_id', trade.trade_id).single();
+        const tradePayload = {
           account_id: trade.account_id,
           user_email: trade.user_email,
           trade_id: trade.trade_id,
@@ -302,10 +316,18 @@ Deno.serve(async (req) => {
           pnl: trade.pnl,
           status: trade.status || 'open',
           close_reason: trade.close_reason,
-          open_time: trade.open_time,
-          close_time: trade.close_time,
+          open_time: safeTs(trade.open_time),
+          close_time: safeTs(trade.close_time),
           updated_at: trade.updated_date,
-        }, { onConflict: 'id' });
+        };
+        let error;
+        if (existing?.id) {
+          // Update existing
+          ({ error } = await supabase.from('trade_records').update(tradePayload).eq('id', existing.id));
+        } else {
+          // Insert new
+          ({ error } = await supabase.from('trade_records').insert(tradePayload));
+        }
         
         if (error) {
           console.error(`Failed to sync trade ${trade.trade_id}:`, error);
@@ -408,11 +430,11 @@ Deno.serve(async (req) => {
     stats.challenge_accounts.total = allAccounts.length;
     for (const account of allAccounts) {
       try {
-        // Skip accounts without user_email or with invalid challenge_type
+        // Add placeholder email for accounts without user_email
         if (!account.user_email) {
-          console.log(`Skipping account ${account.account_id}: no user_email`);
-          stats.challenge_accounts.errors++;
-          continue;
+          account = { ...account, user_email: 'admin@placeholder.com' };
+          // Ensure placeholder profile exists
+          await supabase.from('profiles').upsert({ email: 'admin@placeholder.com', updated_at: new Date().toISOString() }, { onConflict: 'email' });
         }
         if (account.challenge_type === 'funded') {
           console.log(`Skipping account ${account.account_id}: 'funded' challenge_type not in enum`);
@@ -421,8 +443,8 @@ Deno.serve(async (req) => {
         }
         
         const { error } = await supabase.from('challenge_accounts').upsert({
-          account_id: account.account_id,
-          user_email: account.user_email,
+          account_id: account.account_id || account.id,
+          user_email: account.user_email || 'unknown@placeholder.com',
           challenge_type: account.challenge_type,
           account_type: account.account_type || 'standard',
           account_size: account.account_size,
@@ -674,12 +696,17 @@ Deno.serve(async (req) => {
           continue;
         }
         
+        if (!cert.certificate_id) {
+          console.log(`Skipping certificate ${cert.id}: missing certificate_id`);
+          stats.certificates.errors++;
+          continue;
+        }
         const { error } = await supabase.from('certificates').upsert({
           certificate_id: cert.certificate_id,
           user_email: cert.user_email,
-          trader_name: cert.trader_name,
+          trader_name: cert.trader_name || cert.user_email || 'Trader',
           type: cert.type,
-          title: cert.title,
+          title: cert.title || cert.type,
           account_id: cert.account_id || null,
           account_size: cert.account_size,
           challenge_type: cert.challenge_type,

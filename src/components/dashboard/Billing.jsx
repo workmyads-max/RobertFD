@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Download, CheckCircle } from 'lucide-react';
+import { CreditCard, Download, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import jsPDF from 'jspdf';
@@ -155,17 +155,15 @@ function generateInvoicePDF(order, user) {
 }
 
 export default function Billing() {
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+
   const { data: orders = [] } = useQuery({
-    queryKey: ['my-orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 20),
+    queryKey: ['my-orders', user?.email],
+    queryFn: () => base44.entities.Order.filter({ email: user?.email }),
+    enabled: !!user?.email,
   });
 
-  const DEMO_ORDERS = [
-    { id: 'demo1', order_id: 'RF-A1B2C3', challenge_type: 'instant', account_size: 50000, price: 1350, payment_status: 'confirmed', payment_method: 'usdt_trc20', created_date: '2026-05-08' },
-    { id: 'demo2', order_id: 'RF-D4E5F6', challenge_type: 'two-step', account_size: 100000, price: 517, payment_status: 'confirmed', payment_method: 'bitcoin', created_date: '2026-04-20' },
-  ];
-
-  const displayOrders = orders.length > 0 ? orders : DEMO_ORDERS;
+  const displayOrders = orders;
 
   return (
     <div>
@@ -176,6 +174,13 @@ export default function Billing() {
         <p className="text-sm text-muted-foreground font-mono mt-1">Your invoices and payment history</p>
       </div>
 
+      {displayOrders.length === 0 && (
+        <div className="rounded-2xl p-12 text-center" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <CreditCard className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No orders yet. Purchase a challenge to see your billing history.</p>
+        </div>
+      )}
+      {displayOrders.length > 0 && (
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="grid grid-cols-6 gap-2 px-5 py-3 text-[10px] font-mono text-muted-foreground uppercase border-b border-white/5">
           <span className="col-span-2">Order ID</span>
@@ -191,8 +196,14 @@ export default function Billing() {
             <span className="text-xs text-muted-foreground capitalize">{order.challenge_type === 'two-step' ? 'Two-Step' : 'Instant'} ${(order.account_size / 1000)}K</span>
             <span className="text-xs font-bold text-foreground">${order.price}</span>
             <span className="flex items-center gap-1 text-[10px] font-mono">
-              <CheckCircle className="w-3 h-3 text-emerald-400" />
-              <span className="text-emerald-400 capitalize">{order.payment_status}</span>
+              {order.payment_status === 'confirmed' || order.payment_status === 'paid'
+                ? <CheckCircle className="w-3 h-3 text-emerald-400" />
+                : order.payment_status === 'failed' || order.payment_status === 'cancelled'
+                ? <XCircle className="w-3 h-3 text-red-400" />
+                : <Clock className="w-3 h-3 text-yellow-400" />}
+              <span className={`capitalize ${order.payment_status === 'confirmed' || order.payment_status === 'paid' ? 'text-emerald-400' : order.payment_status === 'failed' ? 'text-red-400' : 'text-yellow-400'}`}>
+                {order.payment_status}
+              </span>
             </span>
             <button onClick={() => generateInvoicePDF(order, null)}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
@@ -201,6 +212,7 @@ export default function Billing() {
           </motion.div>
         ))}
       </div>
+      )}
     </div>
   );
 }

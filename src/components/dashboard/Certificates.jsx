@@ -412,7 +412,8 @@ export default function Certificates({ user }) {
 
   const { data: certs = [], isLoading } = useQuery({
     queryKey: ['certificates', user?.email],
-    queryFn: () => base44.entities.Certificate.list('-created_date', 50),
+    queryFn: () => base44.entities.Certificate.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
   });
 
   const stats = [

@@ -167,8 +167,9 @@ export default function Withdrawals({ user }) {
   const kycApproved = kyc?.status === 'approved';
 
   const { data: withdrawals = [] } = useQuery({
-    queryKey: ['withdrawals'],
-    queryFn: () => base44.entities.WithdrawalRequest.list('-created_date', 50),
+    queryKey: ['withdrawals', user?.email],
+    queryFn: () => base44.entities.WithdrawalRequest.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
   });
 
   const createMutation = useMutation({
@@ -181,8 +182,10 @@ export default function Withdrawals({ user }) {
       const companyShare = gross * 0.2;
       const affiliateReward = traderShare * 0.09;
       const finalAmount = Math.max(0, traderShare - affiliateReward - WITHDRAWAL_FEE);
+      const withdrawalId = `WD-${Date.now().toString(36).toUpperCase()}`;
       return base44.entities.WithdrawalRequest.create({
         ...data,
+        withdrawal_id: withdrawalId,
         account_id: selectedAcc.account_id,
         user_email: user?.email,
         status: 'pending',

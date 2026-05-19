@@ -102,8 +102,9 @@ function QuickActions({ onNavigate }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['funded-dashboard-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['funded-dashboard-accounts', user?.email],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
 

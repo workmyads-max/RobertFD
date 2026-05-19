@@ -251,13 +251,14 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
 
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
     refetchInterval: 15000,
   });
 
   const { data: myOrders = [] } = useQuery({
-    queryKey: ['my-orders'],
+    queryKey: ['my-orders', user?.email],
     queryFn: () => base44.entities.Order.filter({ email: user?.email }),
     enabled: !!user?.email,
   });
