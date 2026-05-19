@@ -14,142 +14,91 @@ export default function AboutSection({ aboutImage }) {
     <section id="about" className="relative py-32">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Animated UI/UX Visualization */}
+          {/* Animated 3D Geometric Shape */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="relative"
+            className="relative h-[450px] flex items-center justify-center"
           >
-            <div className="glass rounded-2xl overflow-hidden relative h-[400px] circuit-bg">
-              {/* Animated grid background */}
+            <div className="glass rounded-2xl overflow-hidden relative w-full h-full flex items-center justify-center">
+              {/* Animated background grid */}
               <motion.div 
-                className="absolute inset-0 opacity-20"
+                className="absolute inset-0"
                 style={{ 
-                  backgroundImage: 'linear-gradient(rgba(255,92,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.1) 1px, transparent 1px)',
-                  backgroundSize: '40px 40px'
+                  backgroundImage: 'linear-gradient(rgba(255,92,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.05) 1px, transparent 1px)',
+                  backgroundSize: '50px 50px'
                 }}
-                animate={{ backgroundPosition: ['0px 0px', '40px 40px'] }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
               />
-              
-              {/* Floating chart cards */}
+
+              {/* 3D Rotating Shape */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="absolute top-8 left-8 right-8 h-32 glass rounded-xl border border-primary/20 p-4"
+                className="relative w-64 h-64"
+                animate={{ rotateX: [0, 360], rotateY: [0, 360], rotateZ: [0, 180] }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono text-primary">XAU/USD</span>
-                  <span className="text-xs font-mono text-accent">+2.4%</span>
-                </div>
-                <motion.div 
-                  className="h-16 flex items-end gap-1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
+                <svg
+                  viewBox="0 0 400 400"
+                  className="w-full h-full"
+                  style={{
+                    filter: 'drop-shadow(0 0 40px rgba(255, 92, 0, 0.4))'
+                  }}
                 >
-                  {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
-                    <motion.div
-                      key={i}
-                      className="flex-1 rounded-t bg-gradient-to-t from-primary/60 to-primary/20"
-                      style={{ height: `${h}%` }}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${h}%` }}
-                      transition={{ delay: 0.5 + i * 0.05, duration: 0.3 }}
-                    />
-                  ))}
-                </motion.div>
-              </motion.div>
-
-              {/* Middle stats row */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
-                className="absolute top-44 left-8 right-8 grid grid-cols-3 gap-3"
-              >
-                {[
-                  { label: 'Traders', value: '15K+', color: '#FF5C00' },
-                  { label: 'Payouts', value: '$50M', color: '#CCFF00' },
-                  { label: 'Countries', value: '150+', color: '#8b5cf6' },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={stat.label}
-                    className="glass rounded-lg p-3 border border-white/5 text-center"
-                    whileHover={{ scale: 1.05, borderColor: 'rgba(255,92,0,0.3)' }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                  >
-                    <motion.div 
-                      className="text-lg font-black"
-                      style={{ color: stat.color }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.6 + i * 0.1, type: 'spring' }}
-                    >
-                      {stat.value}
-                    </motion.div>
-                    <div className="text-[9px] font-mono text-muted-foreground mt-1">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* Bottom animated line chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.6 }}
-                className="absolute bottom-8 left-8 right-8 glass rounded-xl border border-primary/20 p-4"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono text-muted-foreground">Performance</span>
-                  <motion.div 
-                    className="w-2 h-2 rounded-full bg-accent"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </div>
-                <svg className="h-20 w-full" viewBox="0 0 400 80" preserveAspectRatio="none">
-                  <motion.path
-                    d="M0,60 Q40,55 80,40 T160,35 T240,45 T320,25 T400,15"
-                    fill="none"
-                    stroke="url(#gradient)"
-                    strokeWidth="2"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, delay: 0.8, ease: 'easeInOut' }}
-                  />
-                  <motion.path
-                    d="M0,60 Q40,55 80,40 T160,35 T240,45 T320,25 T400,15 L400,80 L0,80 Z"
-                    fill="url(#gradientFill)"
-                    opacity="0.2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.2 }}
-                    transition={{ delay: 1.5 }}
-                  />
+                  {/* Main boomerang shape with gradient */}
                   <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id="xftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FF5C00" />
+                      <stop offset="50%" stopColor="#FF8A3D" />
                       <stop offset="100%" stopColor="#CCFF00" />
                     </linearGradient>
-                    <linearGradient id="gradientFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#FF5C00" />
-                      <stop offset="100%" stopColor="transparent" />
-                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
                   </defs>
+
+                  {/* Primary shape */}
+                  <path
+                    d="M 80 320 Q 120 280 150 250 Q 200 200 280 140 Q 320 100 340 80 Q 360 60 380 80 Q 400 100 360 160 Q 300 240 240 300 Q 180 360 120 360 Q 80 360 60 340 Q 40 320 80 320 Z"
+                    fill="url(#xftGradient)"
+                    filter="url(#glow)"
+                    opacity="0.9"
+                  />
+
+                  {/* Secondary darker shape for depth */}
+                  <path
+                    d="M 100 300 Q 130 270 160 240 Q 200 200 260 150 Q 290 120 310 100 Q 330 80 345 100 Q 360 120 330 170 Q 280 250 220 310 Q 160 360 110 360 Q 90 360 80 340 Q 70 320 100 300 Z"
+                    fill="#FF5C00"
+                    opacity="0.6"
+                  />
+
+                  {/* Accent glow element */}
+                  <circle cx="300" cy="150" r="25" fill="#CCFF00" opacity="0.4" filter="url(#glow)" />
                 </svg>
+              </motion.div>
+
+              {/* Floating XFT Badge */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5, type: 'spring' }}
+                className="absolute top-8 right-8 glass rounded-xl p-4 border border-primary/30"
+              >
+                <div className="text-xs font-mono text-primary mb-1">XFT</div>
+                <div className="text-xl font-black gradient-text">Momentum</div>
               </motion.div>
 
               {/* Scanning line effect */}
               <motion.div
                 className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(180deg, transparent, rgba(204,255,0,0.05), transparent)' }}
+                style={{ background: 'linear-gradient(180deg, transparent, rgba(204,255,0,0.08), transparent)' }}
                 animate={{ top: ['-100%', '200%'] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'linear', delay: 1 }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
               />
             </div>
 
@@ -168,15 +117,15 @@ export default function AboutSection({ aboutImage }) {
 
             {/* Decorative glow elements */}
             <motion.div 
-              className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-3xl opacity-20"
+              className="absolute -top-4 -left-4 w-32 h-32 rounded-full blur-3xl opacity-25"
               style={{ background: '#FF5C00' }}
-              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.25, 0.4, 0.25] }}
               transition={{ duration: 4, repeat: Infinity }}
             />
             <motion.div 
-              className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full blur-3xl opacity-15"
-              style={{ background: '#CCFF00' }}
-              animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
+              className="absolute -bottom-4 -right-4 w-40 h-40 rounded-full blur-3xl opacity-20"
+              style={{ background: '#8b5cf6' }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
               transition={{ duration: 5, repeat: Infinity, delay: 1 }}
             />
           </motion.div>
