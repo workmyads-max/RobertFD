@@ -44,14 +44,14 @@ export default function LivePayouts() {
                 transition={{ delay: index * 0.05 }}
                 className="relative w-56 h-48 rounded-2xl overflow-hidden group"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(255,92,0,0.1))',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                  boxShadow: '0 8px 32px rgba(139,92,246,0.15)',
+                  background: 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(204,255,0,0.1))',
+                  border: '1px solid rgba(255,92,0,0.3)',
+                  boxShadow: '0 8px 32px rgba(255,92,0,0.15)',
                 }}
               >
                 {/* Hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
-                  style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139,92,246,0.2), transparent)' }} />
+                  style={{ background: 'radial-gradient(circle at 50% 50%, rgba(255,92,0,0.2), transparent)' }} />
 
                 {/* Content */}
                 <div className="relative p-5 h-full flex flex-col justify-between">
@@ -69,7 +69,7 @@ export default function LivePayouts() {
                       <div className="text-2xl font-black text-white mb-1">{item.amount}</div>
                       <div className="text-xs text-muted-foreground">{item.days}</div>
                     </div>
-                    <button className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-violet-600/40 to-violet-500/30 hover:from-violet-600/60 hover:to-violet-500/50 border border-violet-500/40 text-xs font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2">
+                    <button className="w-full py-2 px-3 rounded-lg text-xs font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.4), rgba(204,255,0,0.3))', border: '1px solid rgba(255,92,0,0.4)' }}>
                       <span>SHOW PAYOUT</span>
                       <ChevronRight className="w-3 h-3" />
                     </button>
@@ -78,7 +78,7 @@ export default function LivePayouts() {
 
                 {/* Accent border gradient */}
                 <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
-                  background: 'linear-gradient(135deg, rgba(139,92,246,0.5) 0%, transparent 50%, rgba(255,92,0,0.3) 100%)',
+                  background: 'linear-gradient(135deg, rgba(255,92,0,0.5) 0%, transparent 50%, rgba(204,255,0,0.3) 100%)',
                   opacity: '0.3',
                 }} />
               </motion.div>
