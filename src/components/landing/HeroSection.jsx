@@ -192,9 +192,7 @@ export default function HeroSection({ heroImage }) {
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight mb-6">
                 Trade Bigger.
                 <br />
-                Scale Faster.{' '}
-                <br />
-                <span className="gradient-text">Powered by XFunded Trader.</span>
+                Scale Faster.
               </h1>
 
               <p className="text-base sm:text-lg text-muted-foreground max-w-lg mb-10 leading-relaxed">
