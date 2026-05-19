@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight } from 'lucide-react';
 
 const payoutData = [
-  { id: 'XF_9', flag: '🇸🇬', country: 'Singapore', amount: '$12,400', time: '2m ago' },
-  { id: 'XF_22', flag: '🇺🇸', country: 'USA', amount: '$8,750', time: '5m ago' },
-  { id: 'XF_7', flag: '🇬🇧', country: 'UK', amount: '$15,200', time: '8m ago' },
-  { id: 'XF_14', flag: '🇩🇪', country: 'Germany', amount: '$6,300', time: '12m ago' },
-  { id: 'XF_33', flag: '🇯🇵', country: 'Japan', amount: '$22,100', time: '15m ago' },
-  { id: 'XF_5', flag: '🇦🇺', country: 'Australia', amount: '$9,850', time: '18m ago' },
-  { id: 'XF_8', flag: '🇨🇦', country: 'Canada', amount: '$11,600', time: '22m ago' },
-  { id: 'XF_19', flag: '🇦🇪', country: 'UAE', amount: '$18,900', time: '25m ago' },
-  { id: 'XF_2', flag: '🇮🇳', country: 'India', amount: '$7,400', time: '30m ago' },
-  { id: 'XF_16', flag: '🇵🇰', country: 'Pakistan', amount: '$5,200', time: '38m ago' },
-  { id: 'XF_21', flag: '🇧🇷', country: 'Brazil', amount: '$9,100', time: '42m ago' },
-  { id: 'XF_28', flag: '🇿🇦', country: 'South Africa', amount: '$6,800', time: '45m ago' },
-  { id: 'XF_31', flag: '🇳🇬', country: 'Nigeria', amount: '$4,500', time: '48m ago' },
-  { id: 'XF_35', flag: '🇰🇪', country: 'Kenya', amount: '$3,900', time: '52m ago' },
+  { id: 'XF_9', flag: '🇸🇬', country: 'Singapore', amount: '$25,227', days: '2 days' },
+  { id: 'XF_22', flag: '🇺🇸', country: 'USA', amount: '$4,413', days: 'Michael' },
+  { id: 'XF_7', flag: '🇬🇧', country: 'UK', amount: '$1,561', days: 'Jun-need' },
+  { id: 'XF_14', flag: '🇩🇪', country: 'Germany', amount: '$39,000', days: '5 months' },
+  { id: 'XF_33', flag: '🇯🇵', country: 'Japan', amount: '$17,368', days: 'Off-st' },
+  { id: 'XF_5', flag: '🇦🇺', country: 'Australia', amount: '$3,595', days: 'Ask h' },
+  { id: 'XF_8', flag: '🇨🇦', country: 'Canada', amount: '$5,322', days: 'Canada P' },
+  { id: 'XF_19', flag: '🇦🇪', country: 'UAE', amount: '$18,900', days: '25m ago' },
+  { id: 'XF_2', flag: '🇮🇳', country: 'India', amount: '$7,400', days: '30m ago' },
+  { id: 'XF_16', flag: '🇵🇰', country: 'Pakistan', amount: '$5,200', days: '38m ago' },
 ];
 
 export default function LivePayouts() {
@@ -31,43 +27,60 @@ export default function LivePayouts() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-mono text-emerald-400 uppercase tracking-widest">Live Feed</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black mb-4">
-            Live Payouts
+          <h2 className="text-3xl md:text-4xl font-black mb-2">
+            Over <span className="text-accent">6.0M+</span> Verified Payouts
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Real-time payouts to traders worldwide.
-          </p>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto">
-          <div className="glass rounded-2xl overflow-hidden border border-white/10">
+        {/* Horizontal Scrolling Cards */}
+        <div className="overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-4 min-w-max px-6">
             {items.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.05, duration: 0.3 }}
-                className="flex items-center justify-between px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+                transition={{ delay: index * 0.05 }}
+                className="relative w-56 h-48 rounded-2xl overflow-hidden group"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(255,92,0,0.1))',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                  boxShadow: '0 8px 32px rgba(139,92,246,0.15)',
+                }}
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <span className="text-sm font-mono font-semibold text-white w-20">{item.id}</span>
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-2xl">{item.flag}</span>
-                    <span className="text-sm text-muted-foreground">{item.country}</span>
+                {/* Hover glow */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+                  style={{ background: 'radial-gradient(circle at 50% 50%, rgba(139,92,246,0.2), transparent)' }} />
+
+                {/* Content */}
+                <div className="relative p-5 h-full flex flex-col justify-between">
+                  {/* Top Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-mono text-primary uppercase tracking-wider">Show Payout</span>
+                      <span className="text-2xl">{item.flag}</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Section */}
+                  <div>
+                    <div className="mb-3">
+                      <div className="text-2xl font-black text-white mb-1">{item.amount}</div>
+                      <div className="text-xs text-muted-foreground">{item.days}</div>
+                    </div>
+                    <button className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-violet-600/40 to-violet-500/30 hover:from-violet-600/60 hover:to-violet-500/50 border border-violet-500/40 text-xs font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2">
+                      <span>SHOW PAYOUT</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <span className="text-base font-bold text-accent font-mono">{item.amount}</span>
-                  <div className="flex items-center gap-2 w-24">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-mono text-muted-foreground">{item.time}</span>
-                  </div>
-                </div>
+
+                {/* Accent border gradient */}
+                <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.5) 0%, transparent 50%, rgba(255,92,0,0.3) 100%)',
+                  opacity: '0.3',
+                }} />
               </motion.div>
             ))}
           </div>
