@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail, Globe
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -267,6 +267,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },
               { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle },
               { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity },
+              { id: 'admin-mt5-config', label: 'MT5 Config', icon: Globe },
               { id: 'admin-platforms', label: 'Platforms API', icon: Cpu },
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },

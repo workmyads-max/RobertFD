@@ -11,13 +11,19 @@ async function confirmAndProvisionAccount(order) {
   // 2. Create the funded challenge account
   const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
   
-  // For MT5 platform, set status to 'pending' to wait for MT5 API provisioning
-  const accountStatus = order.platform === 'mt5' ? 'pending' : 'active';
-  const credentials = order.platform === 'mt5' 
-    ? 'Provisioning via MT5 API...' 
+  // Determine platform-specific provisioning strategy
+  const isMatchTrader = order.platform === 'match_trader';
+  const isMT5 = order.platform === 'mt5';
+  
+  // For Match Trader/MT5: set status to 'pending' and trigger API provisioning
+  // For xtrading: create active account with simulated credentials
+  const accountStatus = (isMatchTrader || isMT5) ? 'pending' : 'active';
+  const server = isMatchTrader ? 'broker-api-demo.match-trader.com' : isMT5 ? 'mt5-provisioning' : 'rf-live.robertfunds.com';
+  const credentials = (isMatchTrader || isMT5)
+    ? `Pending API provisioning...`
     : `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
   
-  await base44.entities.ChallengeAccount.create({
+  const accountData = {
     account_id: accountId,
     user_email: order.email,
     challenge_type: order.challenge_type || 'two-step',
@@ -36,11 +42,32 @@ async function confirmAndProvisionAccount(order) {
     profit_target_progress: 0,
     win_rate: 0,
     total_trades: 0,
-    server: order.platform === 'mt5' ? 'mt5-provisioning' : 'rf-live.robertfunds.com',
+    server,
     login_credentials: credentials,
-  });
+  };
 
-  // 3. Email user (only send email, don't broadcast fake popup)
+  await base44.entities.ChallengeAccount.create(accountData);
+
+  // 3. For Match Trader/MT5: trigger API provisioning automatically
+  if (isMatchTrader || isMT5) {
+    try {
+      // Fire-and-forget: provision the account via API
+      base44.functions.invoke('provisionMatchTraderAccount', {
+        order_id: order.order_id || accountId,
+        account_id: accountId,
+        user_email: order.email,
+        challenge_type: order.challenge_type,
+        account_type: order.account_type,
+        account_size: order.account_size,
+        leverage: order.leverage,
+        platform: order.platform,
+      }).catch(err => console.error('Auto-provision failed:', err));
+    } catch (e) {
+      console.error('Failed to trigger provisioning:', e);
+    }
+  }
+
+  // 4. Email user
   try {
     await base44.functions.invoke('emailService', {
       action: 'send_notification',

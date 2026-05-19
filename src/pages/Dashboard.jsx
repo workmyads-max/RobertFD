@@ -31,6 +31,7 @@ import AdminChallenges from '../components/admin/AdminChallenges';
 import AdminTerminalControl from '../components/admin/AdminTerminalControl';
 import AdminRiskManagement from '../components/admin/AdminRiskManagement';
 import AdminMatchTrader from '../components/admin/AdminMatchTrader';
+import AdminMT5Configuration from '../components/admin/AdminMT5Configuration';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
