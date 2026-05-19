@@ -273,22 +273,39 @@ async function sendEmailViaSMTP(to, subject, body) {
       return decoder.decode(buf.subarray(0, n || 0));
     };
 
-    const sendCommand = async (cmd: string) => {
+    const sendCommand = async (cmd) => {
       await conn.write(encoder.encode(cmd + '\r\n'));
       const resp = await readResponse();
-      if (!resp.startsWith('2')) {
+      console.log('SMTP Response:', resp.trim());
+      if (!resp.startsWith('2') && !resp.startsWith('3')) {
         throw new Error(`SMTP error: ${resp}`);
       }
+      return resp;
     };
 
-    // SMTP handshake
-    await readResponse(); // Server greeting
+    // SMTP handshake with proper sequence
+    const greeting = await readResponse();
+    console.log('SMTP Greeting:', greeting.trim());
+    
+    // EHLO handshake
     await sendCommand(`EHLO ${host}`);
-    await sendCommand(`AUTH LOGIN`);
+    
+    // AUTH LOGIN
+    await sendCommand('AUTH LOGIN');
+    
+    // Send username (base64 encoded)
     await sendCommand(btoa(username));
+    
+    // Send password (base64 encoded)
     await sendCommand(btoa(password));
+    
+    // MAIL FROM
     await sendCommand(`MAIL FROM: <${fromEmail}>`);
+    
+    // RCPT TO
     await sendCommand(`RCPT TO: <${to}>`);
+    
+    // DATA
     await sendCommand('DATA');
 
     // Send email content
@@ -302,13 +319,15 @@ ${body}
 .`;
 
     await conn.write(encoder.encode(emailContent + '\r\n'));
-    await readResponse();
+    const dataResp = await readResponse();
+    console.log('DATA Response:', dataResp.trim());
+    
     await sendCommand('QUIT');
     conn.close();
 
     return true;
   } catch (error) {
-    console.error('SMTP send failed:', error);
+    console.error('SMTP send failed:', error.message);
     return false;
   }
 }
