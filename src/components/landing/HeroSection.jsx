@@ -237,35 +237,136 @@ export default function HeroSection({ heroImage }) {
             </motion.div>
           </div>
 
-          {/* Right - Floating Card (Top Only) */}
+          {/* Right - Funded Performance Graph */}
           <div className="relative hidden lg:block">
             <FloatingCard delay={0.3} className="glass rounded-2xl p-6 animate-float">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-mono text-muted-foreground">BTC/USD</span>
-                <span className="text-xs text-accent font-mono">+2.34%</span>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <div className="text-xs font-mono text-muted-foreground mb-0.5">FUNDED ACCOUNT</div>
+                  <div className="text-sm font-bold text-foreground">Performance Growth</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-primary">$184,250</div>
+                  <div className="text-xs text-accent font-mono">+84.25%</div>
+                </div>
               </div>
-              {/* Mini chart SVG */}
-              <svg viewBox="0 0 200 60" className="w-full h-16 mb-4">
-                <polyline
-                  fill="none"
-                  stroke="hsl(22, 100%, 50%)"
-                  strokeWidth="2"
-                  points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8"
-                />
-                <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="hsl(22, 100%, 50%)" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  fill="url(#chartGrad)"
-                  points="0,50 20,45 40,48 60,30 80,35 100,20 120,25 140,15 160,18 180,10 200,8 200,60 0,60"
-                />
-              </svg>
-              <div className="flex justify-between text-sm">
-                <span className="text-foreground font-semibold">$95,842.30</span>
-                <span className="text-accent font-mono text-xs">LIVE</span>
+
+              {/* Animated Performance Graph */}
+              <div className="relative h-32 mb-4">
+                <svg viewBox="0 0 280 120" className="w-full h-full">
+                  {/* Grid lines */}
+                  <defs>
+                    <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
+                    </linearGradient>
+                    <linearGradient id="glowGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#FF5C00" />
+                      <stop offset="50%" stopColor="#FF8A3D" />
+                      <stop offset="100%" stopColor="#CCFF00" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Background grid */}
+                  {[20, 40, 60, 80, 100].map(y => (
+                    <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                  ))}
+
+                  {/* Animated growth curve */}
+                  <motion.polyline
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 2.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    fill="none"
+                    stroke="url(#glowGrad)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    points="0,110 30,105 60,95 90,88 120,75 150,68 180,52 210,42 240,28 270,18"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(255,92,0,0.6))' }}
+                  />
+
+                  {/* Fill area under curve */}
+                  <motion.polygon
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 2.5, delay: 0.5 }}
+                    fill="url(#perfGrad)"
+                    points="0,110 30,105 60,95 90,88 120,75 150,68 180,52 210,42 240,28 270,18 270,120 0,120"
+                  />
+
+                  {/* Animated data points */}
+                  {[
+                    { x: 30, y: 105, delay: 0.7 },
+                    { x: 90, y: 88, delay: 1.0 },
+                    { x: 150, y: 68, delay: 1.3 },
+                    { x: 210, y: 42, delay: 1.6 },
+                    { x: 270, y: 18, delay: 1.9 },
+                  ].map((point, i) => (
+                    <motion.circle
+                      key={i}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: point.delay, ease: 'easeOut' }}
+                      cx={point.x}
+                      cy={point.y}
+                      r="4"
+                      fill="#FF5C00"
+                      stroke="#FF8A3D"
+                      strokeWidth="2"
+                      style={{ filter: 'drop-shadow(0 0 6px rgba(255,92,0,0.8))' }}
+                    />
+                  ))}
+
+                  {/* Pulsing endpoint */}
+                  <motion.circle
+                    cx="270"
+                    cy="18"
+                    r="8"
+                    fill="rgba(255,92,0,0.2)"
+                    stroke="#FF5C00"
+                    strokeWidth="2"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0.3, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                </svg>
+
+                {/* Floating profit badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 2.2 }}
+                  className="absolute top-2 right-0 px-3 py-1.5 rounded-lg"
+                  style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}
+                >
+                  <div className="text-[10px] font-mono text-emerald-400">+$84,250</div>
+                </motion.div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[10px] font-mono text-muted-foreground mb-0.5">Profit</div>
+                  <div className="text-sm font-bold text-accent">+84%</div>
+                </div>
+                <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[10px] font-mono text-muted-foreground mb-0.5">Win Rate</div>
+                  <div className="text-sm font-bold text-foreground">73%</div>
+                </div>
+                <div className="text-center p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[10px] font-mono text-muted-foreground mb-0.5">Trades</div>
+                  <div className="text-sm font-bold text-foreground">247</div>
+                </div>
+              </div>
+
+              {/* Bottom info */}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-mono text-muted-foreground">ACTIVE</span>
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground">Phase 2 → Funded</span>
               </div>
             </FloatingCard>
           </div>
