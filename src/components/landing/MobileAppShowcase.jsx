@@ -135,7 +135,7 @@ export default function MobileAppShowcase() {
             </h2>
 
             <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-lg">
-              The AlphaFund mobile app brings institutional-grade trading to your fingertips.
+              The XTrading Terminal mobile app brings institutional-grade trading to your fingertips.
               Real-time charts, instant payouts, and full account management — anywhere, anytime.
             </p>
 
