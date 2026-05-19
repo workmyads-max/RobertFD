@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
         });
 
         await sendEmail(base44, email, 'otp', { name: full_name, code: otp_code, purpose: 'Email Verification' });
-        return Response.json({ success: true, userId: existingAccount.id, message: 'OTP sent to email.', dev_otp: otp_code });
+        return Response.json({ success: true, userId: existingAccount.id, message: 'OTP sent to email.' });
       }
 
       // Check duplicate username
@@ -115,8 +115,7 @@ Deno.serve(async (req) => {
         purpose: 'Email Verification',
       });
 
-      // Return OTP in response as fallback so user can complete registration even if email fails
-      return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.', dev_otp: otp_code });
+      return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.' });
     }
 
     // ─── VERIFY REGISTRATION OTP ─────────────────────────────────
