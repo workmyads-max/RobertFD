@@ -10,7 +10,13 @@ async function confirmAndProvisionAccount(order) {
 
   // 2. Create the funded challenge account
   const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
-  const credentials = `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+  
+  // For MT5 platform, set status to 'pending' to wait for MT5 API provisioning
+  const accountStatus = order.platform === 'mt5' ? 'pending' : 'active';
+  const credentials = order.platform === 'mt5' 
+    ? 'Provisioning via MT5 API...' 
+    : `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+  
   await base44.entities.ChallengeAccount.create({
     account_id: accountId,
     user_email: order.email,
@@ -19,7 +25,7 @@ async function confirmAndProvisionAccount(order) {
     account_size: order.account_size,
     platform: order.platform || 'xtrading',
     leverage: order.leverage || '1:100',
-    status: 'active',
+    status: accountStatus,
     phase: 'phase1',
     balance: order.account_size,
     equity: order.account_size,
@@ -30,22 +36,25 @@ async function confirmAndProvisionAccount(order) {
     profit_target_progress: 0,
     win_rate: 0,
     total_trades: 0,
-    server: 'rf-live.robertfunds.com',
+    server: order.platform === 'mt5' ? 'mt5-provisioning' : 'rf-live.robertfunds.com',
     login_credentials: credentials,
   });
 
-  // 3. Notify user
+  // 3. Email user (only send email, don't broadcast fake popup)
   try {
-    await base44.entities.Notification.create({
-      title: '🎉 Account Activated!',
-      message: `Your ${order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account ($${(order.account_size||0).toLocaleString()}) is now LIVE. Account ID: ${accountId}. Open the XTrading Terminal to start trading. Credentials: ${credentials}`,
-      type: 'payout',
-      priority: 'high',
-      display_mode: 'popup',
-      is_active: true,
-      target: 'all',
+    await base44.functions.invoke('emailService', {
+      action: 'send_notification',
+      to: order.email,
+      type: 'challenge_purchase',
+      data: {
+        name: order.full_name,
+        challenge_type: order.challenge_type,
+        account_size: order.account_size,
+        account_id: accountId,
+        platform: order.platform || 'xtrading'
+      }
     });
-  } catch (e) { /* silent */ }
+  } catch (e) { console.error('Email send failed:', e); }
 
   return accountId;
 }
