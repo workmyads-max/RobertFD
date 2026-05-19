@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Edit2, Trash2, Plus, Save, X, Search, Loader2, RefreshCw, CheckCircle } from 'lucide-react';
+import { Zap, Edit2, Trash2, Plus, Save, X, Search, Loader2, CheckCircle, Eye, EyeOff, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -85,6 +85,11 @@ export default function AdminChallenges() {
   const handleDelete = (ch) => {
     if (window.confirm(`Delete "${ch.name}"?`)) deleteMutation.mutate(ch.id);
   };
+
+  const quickUpdateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.ChallengePlan.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['challenge-plans-admin'] }); qc.invalidateQueries({ queryKey: ['challenge-plans'] }); },
+  });
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -232,7 +237,21 @@ export default function AdminChallenges() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2 flex-shrink-0 ml-4">
+                      <div className="flex gap-1.5 flex-shrink-0 ml-4 items-center">
+                        {/* Quick toggle: Active */}
+                        <button
+                          onClick={() => quickUpdateMutation.mutate({ id: ch.id, data: { is_active: !ch.is_active } })}
+                          title={ch.is_active ? 'Disable plan' : 'Enable plan'}
+                          className={`p-2 rounded-lg transition-colors ${ch.is_active ? 'text-emerald-400 hover:bg-emerald-500/20' : 'text-muted-foreground hover:bg-white/10'}`}>
+                          {ch.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+                        {/* Quick toggle: Popular */}
+                        <button
+                          onClick={() => quickUpdateMutation.mutate({ id: ch.id, data: { is_popular: !ch.is_popular } })}
+                          title={ch.is_popular ? 'Remove popular' : 'Mark as popular'}
+                          className={`p-2 rounded-lg transition-colors ${ch.is_popular ? 'text-yellow-400 hover:bg-yellow-500/20' : 'text-muted-foreground hover:bg-white/10'}`}>
+                          <Star className="w-4 h-4" fill={ch.is_popular ? 'currentColor' : 'none'} />
+                        </button>
                         <button onClick={() => handleEdit(ch)} className="p-2 rounded-lg hover:bg-primary/20 text-primary transition-colors">
                           <Edit2 className="w-4 h-4" />
                         </button>
