@@ -42,7 +42,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     queryFn: () => base44.entities.ChallengePlan.list('sort_order', 100),
   });
 
-  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType && p.is_active !== false);
+  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType);
 
   const { data: platformSettings = [] } = useQuery({
     queryKey: ['platform-settings-trading'],

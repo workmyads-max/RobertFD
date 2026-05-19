@@ -52,7 +52,7 @@ export default function ChallengeSelect() {
     queryFn: () => base44.entities.ChallengePlan.list('sort_order', 100),
   });
 
-  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType && p.is_active !== false);
+  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType);
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
