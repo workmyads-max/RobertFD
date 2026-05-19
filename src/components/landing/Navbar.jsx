@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const navLinks = [
   { label: 'Start Challenge', href: '#challenge' },
@@ -70,10 +71,11 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <a href="/dashboard" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => base44.auth.redirectToLogin('/dashboard')}
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               Login
-            </a>
-            <a href="/dashboard" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+            </button>
+            <a href="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
               Register
             </a>
             <button
@@ -117,9 +119,10 @@ export default function Navbar() {
               ))}
             </div>
             <div className="mt-8 space-y-3">
-              <a href="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
+              <button onClick={() => base44.auth.redirectToLogin('/dashboard')}
+                className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
                 Login
-              </a>
+              </button>
               <a href="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
                 Register
               </a>
