@@ -107,203 +107,365 @@ export default function PlatformsSection({ mobileImage }) {
                 </div>
               </div>
             </div>
-            <div className="relative h-80 lg:h-auto overflow-hidden p-6 flex items-center justify-center">
-              {/* Animated phone mockups */}
-              <div className="relative w-full max-w-md mx-auto">
-                {/* Back phone (iOS) */}
+            <div className="relative h-[500px] lg:h-auto overflow-hidden p-8 flex items-center justify-center">
+              {/* Animated phone mockups with premium design */}
+              <div className="relative w-full max-w-lg mx-auto">
+                {/* Back phone (iOS - Left) */}
                 <motion.div
-                  initial={{ opacity: 0, x: -60, rotateY: -15 }}
-                  whileInView={{ opacity: 0.6, x: -40, rotateY: -10 }}
+                  initial={{ opacity: 0, x: -80, rotateY: -20, rotateX: 10 }}
+                  whileInView={{ opacity: 0.7, x: -60, rotateY: -15, rotateX: 5 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 1, delay: 0.2 }}
-                  className="absolute left-0 top-8 w-32 h-64 rounded-3xl border-2"
+                  transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute left-0 top-4 w-36 h-72"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,92,0,0.1), rgba(255,92,0,0.05))',
-                    borderColor: 'rgba(255,92,0,0.3)',
-                    boxShadow: '0 0 30px rgba(255,92,0,0.2)',
+                    transformStyle: 'preserve-3d',
                   }}
                 >
-                  {/* Screen content */}
-                  <div className="absolute inset-2 rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.8)' }}>
-                    {/* Animated chart lines */}
-                    <motion.svg viewBox="0 0 100 60" className="w-full h-full">
-                      <motion.polyline
-                        fill="none"
-                        stroke="#FF5C00"
-                        strokeWidth="1.5"
-                        points="0,50 20,45 40,48 60,30 80,35 100,20"
-                        initial={{ pathLength: 0 }}
-                        whileInView={{ pathLength: 1 }}
-                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                      />
-                    </motion.svg>
-                  </div>
-                  {/* iOS notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-3 bg-black rounded-b-lg" />
-                </motion.div>
-
-                {/* Front phone (Android) */}
-                <motion.div
-                  initial={{ opacity: 0, x: 60, rotateY: 15 }}
-                  whileInView={{ opacity: 0.6, x: 40, rotateY: 10 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, delay: 0.4 }}
-                  className="absolute right-0 top-8 w-32 h-64 rounded-3xl border-2"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(204,255,0,0.1), rgba(204,255,0,0.05))',
-                    borderColor: 'rgba(204,255,0,0.3)',
-                    boxShadow: '0 0 30px rgba(204,255,0,0.2)',
-                  }}
-                >
-                  {/* Screen content */}
-                  <div className="absolute inset-2 rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.8)' }}>
-                    {/* Animated candlesticks */}
-                    <motion.div className="w-full h-full p-2 flex items-end justify-around gap-1">
-                      {[
-                        { h: 20, color: '#10b981' },
-                        { h: 35, color: '#ef4444' },
-                        { h: 25, color: '#10b981' },
-                        { h: 40, color: '#10b981' },
-                        { h: 30, color: '#ef4444' },
-                      ].map((candle, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0 }}
-                          whileInView={{ height: `${candle.h}%` }}
-                          transition={{ duration: 0.6, delay: 0.6 + i * 0.1 }}
-                          className="w-2 rounded-sm"
-                          style={{ background: candle.color }}
+                  {/* Phone frame */}
+                  <div className="relative w-full h-full rounded-[2.5rem] p-1.5"
+                    style={{
+                      background: 'linear-gradient(135deg, #2a2a2e, #1a1a1e)',
+                      boxShadow: '0 0 40px rgba(255,92,0,0.25), inset 0 0 20px rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,92,0,0.3)',
+                    }}
+                  >
+                    {/* Screen */}
+                    <div className="w-full h-full rounded-[2.2rem] overflow-hidden relative" style={{ background: '#000' }}>
+                      {/* Chart */}
+                      <motion.svg viewBox="0 0 120 80" className="w-full h-full">
+                        <motion.polyline
+                          fill="none"
+                          stroke="#FF5C00"
+                          strokeWidth="2"
+                          points="0,70 15,65 30,68 45,55 60,58 75,45 90,48 105,35 120,30"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5 }}
                         />
-                      ))}
-                    </motion.div>
+                        <defs>
+                          <linearGradient id="iosGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon
+                          fill="url(#iosGrad)"
+                          points="0,70 15,65 30,68 45,55 60,58 75,45 90,48 105,35 120,30 120,80 0,80"
+                        />
+                      </motion.svg>
+                      {/* Notch */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-b-2xl" />
+                    </div>
                   </div>
-                  {/* Android camera hole */}
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-black rounded-full" />
+                  {/* Side button */}
+                  <div className="absolute -right-0.5 top-16 w-1 h-8 rounded-r-md bg-gradient-to-b from-gray-600 to-gray-800" />
                 </motion.div>
 
-                {/* Center phone (Main) */}
+                {/* Front phone (Android - Right) */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  initial={{ opacity: 0, x: 80, rotateY: 20, rotateX: 10 }}
+                  whileInView={{ opacity: 0.7, x: 60, rotateY: 15, rotateX: 5 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  className="relative w-40 h-72 mx-auto rounded-[2.5rem] border-2 overflow-hidden"
+                  transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute right-0 top-4 w-36 h-72"
                   style={{
-                    background: 'linear-gradient(180deg, rgba(255,92,0,0.15), rgba(14,14,16,0.95))',
-                    borderColor: 'rgba(255,92,0,0.5)',
-                    boxShadow: '0 0 60px rgba(255,92,0,0.3), inset 0 0 40px rgba(255,92,0,0.1)',
+                    transformStyle: 'preserve-3d',
                   }}
                 >
-                  {/* Screen bezel */}
-                  <div className="absolute inset-1 rounded-[2rem] overflow-hidden" style={{ background: '#0a0a0c' }}>
-                    {/* Status bar */}
-                    <div className="absolute top-0 left-0 right-0 h-6 flex items-center justify-between px-4">
-                      <span className="text-[6px] text-white/60">9:41</span>
-                      <div className="flex gap-1">
-                        <div className="w-3 h-2 rounded-sm bg-white/60" />
-                        <div className="w-2 h-2 rounded-full bg-white/60" />
+                  {/* Phone frame */}
+                  <div className="relative w-full h-full rounded-[2.5rem] p-1.5"
+                    style={{
+                      background: 'linear-gradient(135deg, #1e2a1a, #0f1410)',
+                      boxShadow: '0 0 40px rgba(204,255,0,0.25), inset 0 0 20px rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(204,255,0,0.3)',
+                    }}
+                  >
+                    {/* Screen */}
+                    <div className="w-full h-full rounded-[2.2rem] overflow-hidden relative" style={{ background: '#000' }}>
+                      {/* Candlesticks */}
+                      <div className="w-full h-full p-3 flex items-end justify-around gap-1">
+                        {[
+                          { h: 25, color: '#10b981', wick: 15 },
+                          { h: 40, color: '#ef4444', wick: 20 },
+                          { h: 30, color: '#10b981', wick: 12 },
+                          { h: 50, color: '#10b981', wick: 18 },
+                          { h: 35, color: '#ef4444', wick: 16 },
+                        ].map((candle, i) => (
+                          <motion.div
+                            key={i}
+                            className="flex flex-col items-center"
+                            initial={{ opacity: 0, scale: 0 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: 0.8 + i * 0.1 }}
+                          >
+                            {/* Wick top */}
+                            <div className="w-px mb-0.5" style={{ height: candle.wick * 0.4, background: candle.color }} />
+                            {/* Body */}
+                            <div className="w-3 rounded-sm" style={{ height: candle.h, background: candle.color }} />
+                            {/* Wick bottom */}
+                            <div className="w-px mt-0.5" style={{ height: candle.wick * 0.3, background: candle.color }} />
+                          </motion.div>
+                        ))}
                       </div>
+                      {/* Camera hole */}
+                      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-black border border-gray-700" />
                     </div>
+                  </div>
+                  {/* Side buttons */}
+                  <div className="absolute -right-0.5 top-14 w-1 h-6 rounded-r-md bg-gradient-to-b from-gray-600 to-gray-800" />
+                  <div className="absolute -right-0.5 top-24 w-1 h-8 rounded-r-md bg-gradient-to-b from-gray-600 to-gray-800" />
+                </motion.div>
 
-                    {/* Trading terminal UI */}
-                    <div className="absolute inset-0 top-6 p-3">
-                      {/* Symbol header */}
-                      <motion.div
-                        className="flex items-center justify-between mb-2"
-                        animate={{ x: [0, 2, 0] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      >
-                        <span className="text-[9px] font-bold text-white">BTC/USD</span>
-                        <motion.span
-                          className="text-[8px] text-emerald-400"
-                          animate={{ opacity: [0.7, 1, 0.7] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          +2.34%
-                        </motion.span>
-                      </motion.div>
-
-                      {/* Price display */}
-                      <motion.div
-                        className="text-center mb-2"
-                        animate={{ scale: [1, 1.02, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <span className="text-lg font-black text-primary">$95,842</span>
-                      </motion.div>
-
-                      {/* Mini chart */}
-                      <div className="h-16 mb-2 rounded-lg overflow-hidden" style={{ background: 'rgba(255,92,0,0.05)' }}>
-                        <svg viewBox="0 0 120 50" className="w-full h-full">
-                          <motion.polyline
-                            fill="none"
-                            stroke="#FF5C00"
-                            strokeWidth="1.5"
-                            points="0,45 15,42 30,38 45,40 60,30 75,28 90,20 105,18 120,12"
-                            initial={{ pathLength: 0 }}
-                            whileInView={{ pathLength: 1 }}
-                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5 }}
+                {/* Center phone (Main - Premium iPhone Pro style) */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85, y: 30, rotateX: 10 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative w-48 h-80 mx-auto"
+                  style={{
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  {/* Titanium frame with gradient */}
+                  <div className="absolute inset-0 rounded-[2.8rem] p-[3px]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,92,0,0.4), rgba(255,140,61,0.3), rgba(255,92,0,0.4))',
+                      boxShadow: `
+                        0 0 80px rgba(255,92,0,0.4),
+                        0 0 120px rgba(255,92,0,0.2),
+                        inset 0 0 40px rgba(255,255,255,0.1),
+                        inset 0 0 80px rgba(0,0,0,0.3)
+                      `,
+                    }}
+                  >
+                    {/* Inner frame */}
+                    <div className="w-full h-full rounded-[2.6rem] p-[2px]"
+                      style={{
+                        background: 'linear-gradient(180deg, #2a2a2e, #0a0a0c)',
+                        boxShadow: 'inset 0 2px 8px rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      {/* Screen display */}
+                      <div className="w-full h-full rounded-[2.4rem] overflow-hidden relative" style={{ background: '#000000' }}>
+                        {/* Dynamic Island */}
+                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-7 bg-black rounded-full z-20 flex items-center justify-center gap-2">
+                          <motion.div
+                            className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+                            animate={{ opacity: [0.6, 1, 0.6] }}
+                            transition={{ duration: 2, repeat: Infinity }}
                           />
-                          <defs>
-                            <linearGradient id="phoneChartGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.3" />
-                              <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                          <polygon
-                            fill="url(#phoneChartGrad)"
-                            points="0,45 15,42 30,38 45,40 60,30 75,28 90,20 105,18 120,12 120,50 0,50"
+                          <motion.div
+                            className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                            animate={{ opacity: [0.6, 1, 0.6] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
                           />
-                        </svg>
-                      </div>
+                        </div>
 
-                      {/* Action buttons */}
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <motion.button
-                          className="py-2 rounded-lg text-[8px] font-bold"
-                          style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)' }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <span className="text-emerald-400">BUY</span>
-                        </motion.button>
-                        <motion.button
-                          className="py-2 rounded-lg text-[8px] font-bold"
-                          style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)' }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <span className="text-red-400">SELL</span>
-                        </motion.button>
+                        {/* Status bar */}
+                        <div className="absolute top-2 left-0 right-0 h-8 flex items-center justify-between px-5 z-10">
+                          <span className="text-[9px] font-medium text-white/70">9:41</span>
+                          <div className="flex items-center gap-1.5">
+                            {/* Signal */}
+                            <div className="flex gap-0.5 items-end">
+                              {[1, 2, 3, 4].map(h => (
+                                <div key={h} className="w-1 rounded-sm bg-white/70" style={{ height: h * 1.5 }} />
+                              ))}
+                            </div>
+                            {/* WiFi */}
+                            <div className="w-3 h-2 rounded-t-full border-t border-white/70" />
+                            {/* Battery */}
+                            <div className="w-5 h-2.5 rounded-sm border border-white/70 p-0.5">
+                              <div className="h-full w-3/4 rounded-sm bg-gradient-to-r from-emerald-400 to-emerald-500" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Trading Terminal UI */}
+                        <div className="absolute inset-0 top-10 p-4">
+                          {/* Symbol & Price Header */}
+                          <motion.div
+                            className="text-center mb-3"
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                          >
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                              <span className="text-[10px] font-bold text-white/90">BTC/USD</span>
+                              <motion.span
+                                className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400"
+                                animate={{ opacity: [0.7, 1, 0.7] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >
+                                +2.34%
+                              </motion.span>
+                            </div>
+                            <motion.div
+                              className="text-2xl font-black"
+                              style={{
+                                background: 'linear-gradient(135deg, #FF5C00, #FF8A3D)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                              }}
+                              animate={{ scale: [1, 1.03, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              $95,842.30
+                            </motion.div>
+                          </motion.div>
+
+                          {/* Advanced Chart */}
+                          <div className="h-24 mb-3 rounded-xl overflow-hidden relative group">
+                            <div className="absolute inset-0" style={{ background: 'rgba(255,92,0,0.05)' }}>
+                              <svg viewBox="0 0 160 80" className="w-full h-full">
+                                {/* Grid lines */}
+                                {[20, 40, 60].map(y => (
+                                  <line key={y} x1="0" y1={y} x2="160" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+                                ))}
+                                {/* Main chart line */}
+                                <motion.polyline
+                                  fill="none"
+                                  stroke="url(#mainChartGrad)"
+                                  strokeWidth="2.5"
+                                  points="0,70 20,65 40,68 60,50 80,55 100,40 120,35 140,25 160,20"
+                                  initial={{ pathLength: 0 }}
+                                  whileInView={{ pathLength: 1 }}
+                                  transition={{ duration: 3, repeat: Infinity, repeatDelay: 0.5 }}
+                                  style={{ filter: 'drop-shadow(0 0 8px rgba(255,92,0,0.6))' }}
+                                />
+                                {/* Gradient fill */}
+                                <defs>
+                                  <linearGradient id="mainChartGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#FF5C00" />
+                                    <stop offset="100%" stopColor="#FF8A3D" />
+                                  </linearGradient>
+                                  <linearGradient id="mainChartFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.3" />
+                                    <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
+                                  </linearGradient>
+                                </defs>
+                                <polygon
+                                  fill="url(#mainChartFill)"
+                                  points="0,70 20,65 40,68 60,50 80,55 100,40 120,35 140,25 160,20 160,80 0,80"
+                                />
+                                {/* Pulsing dot at end */}
+                                <motion.circle
+                                  cx="160"
+                                  cy="20"
+                                  r="4"
+                                  fill="#FF5C00"
+                                  animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0.4, 0.8] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Order Book Preview */}
+                          <div className="mb-3 rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div className="flex justify-between text-[7px] font-mono text-white/40 mb-1">
+                              <span>Best Ask</span>
+                              <span>Best Bid</span>
+                            </div>
+                            <div className="flex justify-between text-[9px] font-bold">
+                              <span className="text-red-400">95,843.50</span>
+                              <span className="text-emerald-400">95,841.00</span>
+                            </div>
+                          </div>
+
+                          {/* Trading Buttons */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <motion.button
+                              className="py-2.5 rounded-xl text-[9px] font-black flex items-center justify-center gap-1.5"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.15))',
+                                border: '1px solid rgba(16,185,129,0.4)',
+                                boxShadow: '0 0 20px rgba(16,185,129,0.2), inset 0 0 10px rgba(16,185,129,0.1)',
+                              }}
+                              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(16,185,129,0.35)' }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span className="text-emerald-400">BUY</span>
+                              <span className="text-[10px]">📈</span>
+                            </motion.button>
+                            <motion.button
+                              className="py-2.5 rounded-xl text-[9px] font-black flex items-center justify-center gap-1.5"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.15))',
+                                border: '1px solid rgba(239,68,68,0.4)',
+                                boxShadow: '0 0 20px rgba(239,68,68,0.2), inset 0 0 10px rgba(239,68,68,0.1)',
+                              }}
+                              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(239,68,68,0.35)' }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span className="text-red-400">SELL</span>
+                              <span className="text-[10px]">📉</span>
+                            </motion.button>
+                          </div>
+                        </div>
+
+                        {/* Home indicator */}
+                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full bg-white/40" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Home indicator */}
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-white/30" />
+                  {/* Side buttons - Premium design */}
+                  <div className="absolute -left-0.5 top-16 w-1.5 h-8 rounded-l-md bg-gradient-to-r from-gray-500 to-gray-700 shadow-lg" />
+                  <div className="absolute -right-0.5 top-14 w-1.5 h-6 rounded-r-md bg-gradient-to-l from-gray-500 to-gray-700 shadow-lg" />
+                  <div className="absolute -right-0.5 top-24 w-1.5 h-10 rounded-r-md bg-gradient-to-l from-gray-500 to-gray-700 shadow-lg" />
+
+                  {/* Floating "Pro" badge */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, y: -10 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 1.2, type: 'spring' }}
+                    className="absolute -top-3 -right-3 px-3 py-1.5 rounded-full text-[9px] font-black"
+                    style={{
+                      background: 'linear-gradient(135deg, #FF5C00, #FF8A3D)',
+                      boxShadow: '0 0 20px rgba(255,92,255,0,0.4), 0 0 40px rgba(255,92,0,0.2)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                    }}
+                  >
+                    PRO
+                  </motion.div>
                 </motion.div>
 
-                {/* Floating badges */}
+                {/* Floating platform badges */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 1 }}
-                  className="absolute -top-2 -right-2 px-3 py-1.5 rounded-full text-[9px] font-bold"
+                  transition={{ delay: 1.4 }}
+                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-[10px] font-bold flex items-center gap-2"
                   style={{
-                    background: 'rgba(255,92,0,0.2)',
-                    border: '1px solid rgba(255,92,0,0.4)',
-                    color: '#FF5C00',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
                   }}
                 >
-                  iOS + Android
+                  <span className="text-white">iOS</span>
+                  <span className="w-1 h-1 rounded-full bg-primary" />
+                  <span className="text-white">Android</span>
                 </motion.div>
               </div>
 
-              {/* Background glow effects */}
+              {/* Enhanced background effects */}
               <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl opacity-20" style={{ background: '#FF5C00' }} />
-                <div className="absolute bottom-1/4 right-1/4 w-32 h-32 rounded-full blur-3xl opacity-20" style={{ background: '#CCFF00' }} />
+                {/* Rotating gradient ring */}
+                <motion.div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full"
+                  style={{
+                    background: 'conic-gradient(from 0deg, rgba(255,92,0,0.1), rgba(204,255,0,0.1), rgba(255,92,0,0.1))',
+                    filter: 'blur(60px)',
+                  }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                />
+                {/* Additional glows */}
+                <div className="absolute top-1/4 left-1/4 w-40 h-40 rounded-full blur-3xl opacity-25" style={{ background: '#FF5C00' }} />
+                <div className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full blur-3xl opacity-25" style={{ background: '#CCFF00' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-[100px] opacity-15" style={{ background: 'radial-gradient(circle, rgba(255,92,0,0.3), transparent)' }} />
               </div>
             </div>
           </div>
