@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import XFLogo from '@/components/shared/XFLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -42,20 +43,7 @@ export default function Navbar() {
       >
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-3 group">
-            {/* FC Monogram Logo */}
-              <div className="relative w-9 h-9 flex-shrink-0">
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-orange-400 opacity-20 group-hover:opacity-30 transition-opacity" />
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center glow-orange-sm"
-                  style={{ background: 'linear-gradient(135deg, #1a0e06 0%, #2a1506 100%)', border: '1px solid rgba(255,92,0,0.4)' }}>
-                  <span className="text-primary font-black text-sm tracking-tight" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>XF</span>
-                </div>
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="text-foreground font-bold text-base tracking-tight">XFunded</span>
-                <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Trader</span>
-              </div>
-          </a>
+          <a href="#"><XFLogo size="md" animate /></a>
 
           {/* Desktop Links */}
           <div className="hidden lg:flex items-center gap-1">

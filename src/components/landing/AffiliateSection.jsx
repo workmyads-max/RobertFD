@@ -27,7 +27,7 @@ const FLOW_STEPS = [
   {
     step: '01', icon: Users, color: '#FF5C00',
     title: 'Invite Traders',
-    desc: 'Share your unique referral link. Your network joins Funded Firms.',
+    desc: 'Share your unique referral link. Your network joins XFunded Trader.',
   },
   {
     step: '02', icon: Zap, color: '#60a5fa',

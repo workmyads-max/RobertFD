@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Users, Shield, Globe } from 'lucide-react';
 
 const highlights = [
-  { icon: MapPin, label: 'Headquartered', value: 'Singapore' },
+{ icon: MapPin, label: 'Headquartered', value: 'Dubai' },
   { icon: Users, label: 'Team Members', value: '120+' },
   { icon: Shield, label: 'Regulated', value: 'Compliant' },
   { icon: Globe, label: 'Countries Served', value: '150+' },
@@ -27,7 +27,7 @@ export default function AboutSection({ aboutImage }) {
             <div className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs">
               <div className="text-xs font-mono text-primary mb-2">ESTABLISHED</div>
               <div className="text-2xl font-black">Since 2026</div>
-              <div className="text-sm text-muted-foreground mt-1">Singapore, Southeast Asia</div>
+              <div className="text-sm text-muted-foreground mt-1">Dubai, UAE</div>
             </div>
           </motion.div>
 
@@ -37,12 +37,12 @@ export default function AboutSection({ aboutImage }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-xs font-mono text-primary uppercase tracking-widest">About Robert Funds</span>
+            <span className="text-xs font-mono text-primary uppercase tracking-widest">About XFunded Trader</span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mt-4 mb-6">
               The Future of Prop Trading
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-              We are a Singapore-based next-generation proprietary trading firm focused on empowering
+              We are a Dubai-based next-generation proprietary trading firm focused on empowering
               traders globally with fair evaluation models, advanced trading technology, and fast payouts.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-10">

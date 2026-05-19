@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import XFLogo from '@/components/shared/XFLogo';
 import { callAuth, saveSession } from '@/lib/customAuth';
 import OTPStep from './OTPStep';
 
@@ -42,15 +43,8 @@ export default function LoginPage({ onLoginSuccess }) {
       </div>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative z-10">
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center glow-orange-sm"
-            style={{ background: 'linear-gradient(135deg,#1a0e06,#2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
-            <span className="text-primary font-black text-sm" style={{ fontFamily: 'Georgia,serif' }}>XF</span>
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-foreground font-bold text-base">XFunded</span>
-            <span className="text-primary font-black text-base" style={{ letterSpacing: '-0.03em' }}>Trader</span>
-          </div>
+        <div className="flex justify-center mb-10">
+          <XFLogo size="md" animate />
         </div>
         <div className="rounded-2xl p-8"
           style={{

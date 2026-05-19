@@ -28,8 +28,8 @@ function generateToken() {
 async function sendEmail(base44, to, type, data) {
   try {
     const subjectMap = {
-      registration: '🎉 Welcome to Funded Firms',
-      otp: '🔐 Your Verification Code - Funded Firms',
+      registration: '🎉 Welcome to XFunded Trader',
+      otp: '🔐 Your Verification Code - XFunded Trader',
       login_alert: '🔐 New Login to Your Account',
     };
 
@@ -38,8 +38,8 @@ async function sendEmail(base44, to, type, data) {
       body = `
         <div style="font-family:sans-serif;background:#0a0b10;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
           <div style="text-align:center;margin-bottom:30px;">
-            <div style="width:60px;height:60px;background:linear-gradient(135deg,#FF5C00,#cc4900);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:16px;">FC</div>
-            <h1 style="color:#FF5C00;font-size:24px;margin:0;">Funded Firms</h1>
+            <div style="width:60px;height:60px;background:linear-gradient(135deg,#FF5C00,#cc4900);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:16px;">XF</div>
+            <h1 style="color:#FF5C00;font-size:24px;margin:0;">XFunded Trader</h1>
           </div>
           <h2 style="color:#fff;text-align:center;">Your Verification Code</h2>
           <p style="color:rgba(255,255,255,0.6);text-align:center;">Hi ${data.name || 'Trader'}, here is your ${data.purpose || 'verification'} code:</p>
@@ -69,7 +69,7 @@ async function sendEmail(base44, to, type, data) {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to,
-      subject: subjectMap[type] || 'Funded Firms Notification',
+      subject: subjectMap[type] || 'XFunded Trader Notification',
       body,
     });
   } catch (e) {

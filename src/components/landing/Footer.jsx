@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import XFLogo from '@/components/shared/XFLogo';
 
 const links = {
   Product: ['Start Challenge', 'Instant Funding', 'Pricing', 'Platforms', 'Leaderboard'],
@@ -22,15 +23,8 @@ export default function Footer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.35)' }}>
-                <span className="text-primary font-black text-sm" style={{ fontFamily: 'Georgia, serif' }}>XF</span>
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="text-foreground font-bold text-sm tracking-tight">XFunded</span>
-                <span className="text-primary font-black text-sm tracking-tighter">Trader</span>
-              </div>
+            <div className="mb-6">
+              <XFLogo size="sm" />
             </div>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               Dubai-based institutional proprietary trading firm. Empowering elite traders worldwide.
