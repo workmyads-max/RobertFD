@@ -23,8 +23,8 @@ export default function AboutSection({ aboutImage }) {
           >
             <div className="glass rounded-2xl overflow-hidden relative group">
               <img 
-                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop" 
-                alt="Future of trading technology" 
+                src="https://images.unsplash.com/photo-1642543492481-44e81e3912a7?q=80&w=1200&auto=format&fit=crop" 
+                alt="Modern trading desk with multiple monitors" 
                 className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               {/* Overlay gradient */}
