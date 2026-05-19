@@ -27,50 +27,12 @@ function generateToken() {
 
 async function sendEmail(base44, to, type, data) {
   try {
-    const subjectMap = {
-      registration: '🎉 Welcome to XFunded Trader',
-      otp: '🔐 Your Verification Code - XFunded Trader',
-      login_alert: '🔐 New Login to Your Account',
-    };
-
-    let body = '';
-    if (type === 'otp') {
-      body = `
-        <div style="font-family:sans-serif;background:#0a0b10;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
-          <div style="text-align:center;margin-bottom:30px;">
-            <div style="width:60px;height:60px;background:linear-gradient(135deg,#FF5C00,#cc4900);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:16px;">XF</div>
-            <h1 style="color:#FF5C00;font-size:24px;margin:0;">XFunded Trader</h1>
-          </div>
-          <h2 style="color:#fff;text-align:center;">Your Verification Code</h2>
-          <p style="color:rgba(255,255,255,0.6);text-align:center;">Hi ${data.name || 'Trader'}, here is your ${data.purpose || 'verification'} code:</p>
-          <div style="background:rgba(255,92,0,0.1);border:2px solid rgba(255,92,0,0.4);border-radius:16px;padding:32px;text-align:center;margin:24px 0;">
-            <div style="font-size:48px;font-weight:900;letter-spacing:12px;color:#FF5C00;">${data.code}</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:12px;">Valid for 10 minutes</div>
-          </div>
-          <p style="color:rgba(255,255,255,0.4);text-align:center;font-size:12px;">If you did not request this code, please ignore this email.</p>
-        </div>
-      `;
-    } else if (type === 'registration') {
-      body = `
-        <div style="font-family:sans-serif;background:#0a0b10;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
-          <h2 style="color:#FF5C00;">Welcome to Funded Firms, ${data.name || 'Trader'}!</h2>
-          <p style="color:rgba(255,255,255,0.7);">Your account has been verified and is now active. Start your trading challenge today!</p>
-        </div>
-      `;
-    } else if (type === 'login_alert') {
-      body = `
-        <div style="font-family:sans-serif;background:#0a0b10;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
-          <h2 style="color:#FF5C00;">New Login Alert</h2>
-          <p style="color:rgba(255,255,255,0.7);">Hi ${data.name || 'Trader'}, your account was accessed at ${data.time}.</p>
-          <p style="color:rgba(255,255,255,0.5);">IP: ${data.ip} | Device: ${data.device}</p>
-        </div>
-      `;
-    }
-
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    // Use the new emailService function for better tracking
+    await base44.functions.invoke('emailService', {
+      action: 'send_notification',
       to,
-      subject: subjectMap[type] || 'XFunded Trader Notification',
-      body,
+      type,
+      data
     });
   } catch (e) {
     console.error('Email send failed:', e.message);

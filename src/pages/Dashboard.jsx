@@ -45,6 +45,7 @@ import AdminCoupons from '../components/admin/AdminCoupons';
 import AdminAppeals from '../components/admin/AdminAppeals';
 import AdminAffiliate from '../components/admin/AdminAffiliate';
 import AdminSocialMedia from '../components/admin/AdminSocialMedia';
+import EmailLogsDashboard from '../components/admin/EmailLogsDashboard';
 import MarketsHub from '../components/dashboard/MarketsHub';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
@@ -161,6 +162,7 @@ export default function Dashboard() {
       case 'admin-appeals': return isAdmin ? <AdminAppeals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-affiliate': return isAdmin ? <AdminAffiliate /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-social': return isAdmin ? <AdminSocialMedia /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-email-logs': return isAdmin ? <EmailLogsDashboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };
