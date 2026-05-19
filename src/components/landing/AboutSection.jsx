@@ -31,21 +31,20 @@ export default function AboutSection({ aboutImage }) {
                 }}
               />
 
-              {/* 3D Rotating Shape */}
+              {/* 3D Rotating XFT Logo */}
               <motion.div
-                className="relative w-64 h-64"
+                className="relative w-72 h-72"
                 animate={{ rotateX: [0, 360], rotateY: [0, 360], rotateZ: [0, 180] }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
                 style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
               >
                 <svg
-                  viewBox="0 0 400 400"
+                  viewBox="0 0 500 500"
                   className="w-full h-full"
                   style={{
-                    filter: 'drop-shadow(0 0 40px rgba(255, 92, 0, 0.4))'
+                    filter: 'drop-shadow(0 0 50px rgba(255, 92, 0, 0.5))'
                   }}
                 >
-                  {/* Main boomerang shape with gradient */}
                   <defs>
                     <linearGradient id="xftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FF5C00" />
@@ -53,31 +52,57 @@ export default function AboutSection({ aboutImage }) {
                       <stop offset="100%" stopColor="#CCFF00" />
                     </linearGradient>
                     <filter id="glow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                       <feMerge>
                         <feMergeNode in="coloredBlur"/>
                         <feMergeNode in="SourceGraphic"/>
                       </feMerge>
                     </filter>
+                    <linearGradient id="xfGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FF5C00" />
+                      <stop offset="100%" stopColor="#FF8A3D" />
+                    </linearGradient>
+                    <linearGradient id="tGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#CCFF00" />
+                      <stop offset="100%" stopColor="#FF5C00" />
+                    </linearGradient>
                   </defs>
 
-                  {/* Primary shape */}
-                  <path
-                    d="M 80 320 Q 120 280 150 250 Q 200 200 280 140 Q 320 100 340 80 Q 360 60 380 80 Q 400 100 360 160 Q 300 240 240 300 Q 180 360 120 360 Q 80 360 60 340 Q 40 320 80 320 Z"
-                    fill="url(#xftGradient)"
-                    filter="url(#glow)"
-                    opacity="0.9"
-                  />
+                  {/* X Letter - Angular geometric */}
+                  <g filter="url(#glow)">
+                    <path
+                      d="M 80 120 L 180 250 L 80 380 L 130 380 L 230 250 L 130 120 Z"
+                      fill="url(#xfGradient)"
+                      opacity="0.95"
+                    />
+                    <path
+                      d="M 270 120 L 370 120 L 270 250 L 370 380 L 320 380 L 220 250 Z"
+                      fill="url(#xfGradient)"
+                      opacity="0.95"
+                    />
+                  </g>
 
-                  {/* Secondary darker shape for depth */}
-                  <path
-                    d="M 100 300 Q 130 270 160 240 Q 200 200 260 150 Q 290 120 310 100 Q 330 80 345 100 Q 360 120 330 170 Q 280 250 220 310 Q 160 360 110 360 Q 90 360 80 340 Q 70 320 100 300 Z"
-                    fill="#FF5C00"
-                    opacity="0.6"
-                  />
+                  {/* F Letter - Connected to X */}
+                  <g filter="url(#glow)">
+                    <path
+                      d="M 380 120 L 430 120 L 430 170 L 380 170 L 380 250 L 430 250 L 430 300 L 330 300 L 330 120 Z"
+                      fill="url(#tGradient)"
+                      opacity="0.9"
+                    />
+                  </g>
 
-                  {/* Accent glow element */}
-                  <circle cx="300" cy="150" r="25" fill="#CCFF00" opacity="0.4" filter="url(#glow)" />
+                  {/* T Letter - Top accent */}
+                  <g filter="url(#glow)">
+                    <path
+                      d="M 100 80 L 400 80 L 400 130 L 350 130 L 350 200 L 300 200 L 300 130 L 150 130 L 150 200 L 100 200 Z"
+                      fill="url(#tGradient)"
+                      opacity="0.85"
+                    />
+                  </g>
+
+                  {/* Accent elements */}
+                  <circle cx="450" cy="100" r="15" fill="#CCFF00" opacity="0.6" filter="url(#glow)" />
+                  <circle cx="50" cy="400" r="10" fill="#FF5C00" opacity="0.5" filter="url(#glow)" />
                 </svg>
               </motion.div>
 
