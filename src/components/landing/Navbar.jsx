@@ -48,12 +48,12 @@ export default function Navbar() {
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-orange-400 opacity-20 group-hover:opacity-30 transition-opacity" />
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center glow-orange-sm"
                   style={{ background: 'linear-gradient(135deg, #1a0e06 0%, #2a1506 100%)', border: '1px solid rgba(255,92,0,0.4)' }}>
-                  <span className="text-primary font-black text-sm tracking-tight" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>FC</span>
+                  <span className="text-primary font-black text-sm tracking-tight" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>XF</span>
                 </div>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-foreground font-bold text-base tracking-tight">Funded</span>
-                <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Firms</span>
+                <span className="text-foreground font-bold text-base tracking-tight">XFunded</span>
+                <span className="text-primary font-black text-base tracking-tighter" style={{ letterSpacing: '-0.03em' }}>Trader</span>
               </div>
           </a>
 
