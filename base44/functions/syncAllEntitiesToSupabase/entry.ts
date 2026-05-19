@@ -120,6 +120,13 @@ Deno.serve(async (req) => {
           continue;
         }
         
+        // Map payment methods to valid enum values
+        const validPaymentMethods = ['usdt_trc20','bitcoin','checkout_com_card','checkout_com_apple_pay','checkout_com_google_pay','confirmo_crypto','nowpayments','coinpayments'];
+        const pmRaw = order.payment_method || '';
+        let pm = pmRaw;
+        if (pmRaw === 'confirmo') pm = 'confirmo_crypto';
+        if (!validPaymentMethods.includes(pm)) pm = null;
+
         const { error } = await supabase.from('orders').upsert({
           order_id: order.order_id,
           user_email: order.email,
@@ -129,7 +136,7 @@ Deno.serve(async (req) => {
           platform: order.platform,
           leverage: order.leverage,
           price: order.price,
-          payment_method: order.payment_method,
+          payment_method: pm,
           payment_gateway: order.payment_gateway || 'manual',
           payment_address: order.payment_address,
           payment_status: order.payment_status || 'pending',
@@ -428,7 +435,7 @@ Deno.serve(async (req) => {
 
     // 1. Sync Challenge Accounts
     stats.challenge_accounts.total = allAccounts.length;
-    for (const account of allAccounts) {
+    for (let account of allAccounts) {
       try {
         // Add placeholder email for accounts without user_email
         if (!account.user_email) {
@@ -436,8 +443,9 @@ Deno.serve(async (req) => {
           // Ensure placeholder profile exists
           await supabase.from('profiles').upsert({ email: 'admin@placeholder.com', updated_at: new Date().toISOString() }, { onConflict: 'email' });
         }
-        if (account.challenge_type === 'funded') {
-          console.log(`Skipping account ${account.account_id}: 'funded' challenge_type not in enum`);
+        const validChallengeTypes = ['two-step', 'instant', 'instant_light'];
+        if (!validChallengeTypes.includes(account.challenge_type)) {
+          console.log(`Skipping account ${account.account_id}: invalid challenge_type '${account.challenge_type}'`);
           stats.challenge_accounts.errors++;
           continue;
         }
@@ -652,25 +660,21 @@ Deno.serve(async (req) => {
     stats.support_tickets.total = allTickets.length;
     for (const ticket of allTickets) {
       try {
-        // Skip if missing user_email
-        if (!ticket.user_email) {
-          console.log(`Skipping ticket ${ticket.id}: missing user_email`);
-          stats.support_tickets.errors++;
-          continue;
-        }
+        // Use placeholder for tickets without user_email
+        let ticketData = ticket.user_email ? ticket : { ...ticket, user_email: 'admin@placeholder.com' };
         
         const { error } = await supabase.from('support_tickets').upsert({
-          ticket_id: ticket.ticket_id || `TICKET-${ticket.id}`,
-          user_email: ticket.user_email,
-          subject: ticket.subject,
-          description: ticket.message,
-          category: ticket.category,
-          status: ticket.status || 'open',
-          priority: ticket.priority || 'medium',
-          assigned_to: ticket.assigned_to,
-          resolved_at: ticket.resolved_at,
-          resolved_by: ticket.resolved_by,
-          updated_at: ticket.updated_date,
+          ticket_id: ticketData.ticket_id || `TICKET-${ticketData.id}`,
+          user_email: ticketData.user_email,
+          subject: ticketData.subject,
+          description: ticketData.message,
+          category: ticketData.category,
+          status: ticketData.status || 'open',
+          priority: ticketData.priority || 'medium',
+          assigned_to: ticketData.assigned_to,
+          resolved_at: ticketData.resolved_at,
+          resolved_by: ticketData.resolved_by,
+          updated_at: ticketData.updated_date,
         }, { onConflict: 'ticket_id' });
         
         if (error) {
