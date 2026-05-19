@@ -13,7 +13,7 @@ function getEmailTemplate(type, data) {
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0b10; color: #ffffff; line-height: 1.6; }
     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
     .header { text-align: center; padding: 30px 0; border-bottom: 2px solid rgba(255,92,0,0.3); }
-    .logo { width: 60px; height: 60px; background: linear-gradient(135deg, #FF5C00, #cc4900); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; margin-bottom: 16px; }
+    .logo { width: 60px; height: 60px; background: linear-gradient(135deg, #FF5C00, #cc4900); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; margin-bottom: 16px; font-family: Georgia, serif; }
     h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #FF5C00, #FF8A3D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
     .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 500; }
     .content { padding: 40px 0; }
@@ -159,10 +159,10 @@ function getEmailTemplate(type, data) {
           Welcome <strong>${data.name || 'Trader'}</strong>! Your email has been verified and your account is now active.
         </p>
         <div class="card">
-          <p style="color: rgba(255,255,255,0.7);">🚀 You're now part of the Funded Firms elite trading community.</p>
+          <p style="color: rgba(255,255,255,0.7);">🚀 You're now part of the XFunded Trader elite trading community.</p>
           <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 12px;">Start your challenge today and get funded within days.</p>
         </div>
-        <a href="${data.dashboard_url || 'https://fundedfirms.com/dashboard'}" class="button">Go to Dashboard</a>
+        <a href="${data.dashboard_url || 'https://xfundedtrader.com/dashboard'}" class="button">Go to Dashboard</a>
       </div>
     `,
 
@@ -205,9 +205,9 @@ function getEmailTemplate(type, data) {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">FC</div>
+      <div class="logo">XF</div>
       <h1>${type === 'registration' ? 'Welcome' : type === 'payout_approved' ? 'Payout Approved' : type === 'phase_passed' ? 'Achievement Unlocked' : type === 'funded_approval' ? 'You\'re Funded!' : 'Account Notification'}</h1>
-      <p class="subtitle">Funded Firms - Elite Proprietary Trading</p>
+      <p class="subtitle">XFunded Trader - Elite Proprietary Trading</p>
     </div>
     ${template}
     <div class="footer">
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
     const emailBody = getEmailTemplate(type, data || {});
 
     const subjectMap = {
-      registration: '🎉 Welcome to Funded Firms',
+      registration: '🎉 Welcome to XFunded Trader',
       otp: '🔐 Your Verification Code',
       challenge_purchase: '✅ Challenge Purchased Successfully',
       payout_approved: '💰 Payout Approved - Processing',
@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
       affiliate_commission: '💵 Commission Earned',
       breach_alert: '⚠️ Account Breach Alert',
       login_alert: '🔐 New Login to Your Account',
-      welcome: '🎉 Welcome to Funded Firms - Account Activated',
+      welcome: '🎉 Welcome to XFunded Trader - Account Activated',
     };
 
     await base44.integrations.Core.SendEmail({

@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0b10; color: #ffffff; line-height: 1.6; }
     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
     .header { text-align: center; padding: 30px 0; border-bottom: 2px solid rgba(255,92,0,0.3); }
-    .logo { width: 60px; height: 60px; background: linear-gradient(135deg, #FF5C00, #cc4900); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; margin-bottom: 16px; }
+    .logo { width: 60px; height: 60px; background: linear-gradient(135deg, #FF5C00, #cc4900); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; margin-bottom: 16px; font-family: Georgia, serif; }
     h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #FF5C00, #FF8A3D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
     .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 500; }
     .content { padding: 40px 0; }
@@ -52,9 +52,9 @@ Deno.serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">FC</div>
+      <div class="logo">XF</div>
       <h1>Verification Code</h1>
-      <p class="subtitle">Funded Firms - Elite Proprietary Trading</p>
+      <p class="subtitle">XFunded Trader - Elite Proprietary Trading</p>
     </div>
     
     <div class="content">
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     </div>
 
     <div class="footer">
-      <p>© 2026 Funded Firms. All rights reserved.</p>
+      <p>© 2026 XFunded Trader. All rights reserved.</p>
       <p>Dubai International Financial Centre, UAE</p>
     </div>
   </div>
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
       await base44.integrations.Core.SendEmail({
         to: email,
-        subject: '🔐 Your Verification Code - Funded Firms',
+        subject: '🔐 Your Verification Code - XFunded Trader',
         body: emailTemplate
       });
     }
