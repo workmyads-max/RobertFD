@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
 
 const navLinks = [
@@ -74,12 +75,12 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                <a href="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
-                </a>
-                <a href="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+                </Link>
+                <Link to="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
                   <User className="w-4 h-4" /> {user.username || user.full_name}
-                </a>
+                </Link>
                 <button onClick={logout}
                   className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-red-400 transition-colors">
                   <LogOut className="w-4 h-4" /> Logout
@@ -87,12 +88,12 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <a href="/login" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/login" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Login
-                </a>
-                <a href="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+                </Link>
+                <Link to="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
                   Register
-                </a>
+                </Link>
                 <button onClick={() => scrollTo('#challenge')}
                   className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring">
                   Start Challenge <ChevronRight className="inline w-4 h-4 ml-1" />
@@ -135,13 +136,13 @@ export default function Navbar() {
             <div className="mt-8 space-y-3">
               {user ? (
                 <>
-                  <a href="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full">Dashboard</a>
+                  <Link to="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full">Dashboard</Link>
                   <button onClick={logout} className="block w-full py-3 text-sm text-center text-red-400 border border-red-400/30 rounded-full">Logout</button>
                 </>
               ) : (
                 <>
-                  <a href="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</a>
-                  <a href="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Register</a>
+                  <Link to="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</Link>
+                  <Link to="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Register</Link>
                   <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
                 </>
               )}
