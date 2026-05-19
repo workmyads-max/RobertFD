@@ -23,12 +23,21 @@ Deno.serve(async (req) => {
     const stats = {
       profiles: { total: 0, synced: 0, errors: 0 },
       challenge_accounts: { total: 0, synced: 0, errors: 0 },
+      challenge_plans: { total: 0, synced: 0, errors: 0 },
+      orders: { total: 0, synced: 0, errors: 0 },
       withdrawals: { total: 0, synced: 0, errors: 0 },
       affiliate_profiles: { total: 0, synced: 0, errors: 0 },
       affiliate_commissions: { total: 0, synced: 0, errors: 0 },
       kyc_verifications: { total: 0, synced: 0, errors: 0 },
       support_tickets: { total: 0, synced: 0, errors: 0 },
       certificates: { total: 0, synced: 0, errors: 0 },
+      notifications: { total: 0, synced: 0, errors: 0 },
+      coupons: { total: 0, synced: 0, errors: 0 },
+      payment_gateways: { total: 0, synced: 0, errors: 0 },
+      trade_records: { total: 0, synced: 0, errors: 0 },
+      platform_settings: { total: 0, synced: 0, errors: 0 },
+      social_media_settings: { total: 0, synced: 0, errors: 0 },
+      affiliate_settings: { total: 0, synced: 0, errors: 0 },
     };
 
     // 0. Create all user profiles first (to avoid FK constraint errors)
@@ -40,6 +49,14 @@ Deno.serve(async (req) => {
     const allTickets = await base44.asServiceRole.entities.SupportTicket.list();
     const allCerts = await base44.asServiceRole.entities.Certificate.list();
     const allWithdrawals = await base44.asServiceRole.entities.WithdrawalRequest.list();
+    const allPlans = await base44.asServiceRole.entities.ChallengePlan.list();
+    const allNotifications = await base44.asServiceRole.entities.Notification.list();
+    const allCoupons = await base44.asServiceRole.entities.Coupon.list();
+    const allGateways = await base44.asServiceRole.entities.PaymentGateway.list();
+    const allTrades = await base44.asServiceRole.entities.TradeRecord.list();
+    const allPlatformSettings = await base44.asServiceRole.entities.PlatformSettings.list();
+    const allSocialSettings = await base44.asServiceRole.entities.SocialMediaSettings.list();
+    const allAffiliateSettings = await base44.asServiceRole.entities.AffiliateSettings.list();
     
     // Collect all emails
     allOrders.forEach(o => o.email && allEmails.add(o.email));
@@ -49,6 +66,98 @@ Deno.serve(async (req) => {
     allTickets.forEach(t => t.user_email && allEmails.add(t.user_email));
     allCerts.forEach(c => c.user_email && allEmails.add(c.user_email));
     allWithdrawals.forEach(w => w.user_email && allEmails.add(w.user_email));
+    
+    // 0.5 Sync Challenge Plans (no user_email needed)
+    stats.challenge_plans.total = allPlans.length;
+    for (const plan of allPlans) {
+      try {
+        const { error } = await supabase.from('challenge_plans').upsert({
+          plan_id: plan.plan_id,
+          name: plan.name,
+          type: plan.type,
+          account_type: plan.account_type || 'standard',
+          size: plan.size,
+          price: plan.price,
+          leverage_standard: plan.leverage_standard || '1:100',
+          leverage_swing: plan.leverage_swing || '1:30',
+          phase1_target: plan.phase1_target || 10,
+          phase2_target: plan.phase2_target || 5,
+          daily_dd: plan.daily_dd || 5,
+          max_dd: plan.max_dd || 10,
+          profit_split: plan.profit_split || 80,
+          max_lots: plan.max_lots || 20,
+          news_trading: plan.news_trading ?? false,
+          overnight_holding: plan.overnight_holding ?? false,
+          weekend_holding: plan.weekend_holding ?? false,
+          hedging: plan.hedging ?? false,
+          is_active: plan.is_active ?? true,
+          is_popular: plan.is_popular ?? false,
+          sort_order: plan.sort_order || 0,
+          updated_at: plan.updated_date,
+        }, { onConflict: 'plan_id' });
+        
+        if (error) {
+          console.error(`Failed to sync plan ${plan.plan_id}:`, error);
+          stats.challenge_plans.errors++;
+        } else {
+          stats.challenge_plans.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing plan ${plan.plan_id}:`, err);
+        stats.challenge_plans.errors++;
+      }
+    }
+    
+    // 0.6 Sync Orders
+    stats.orders.total = allOrders.length;
+    for (const order of allOrders) {
+      try {
+        if (!order.order_id || !order.email) {
+          console.log(`Skipping order ${order.id}: missing order_id or email`);
+          stats.orders.errors++;
+          continue;
+        }
+        
+        const { error } = await supabase.from('orders').upsert({
+          order_id: order.order_id,
+          user_email: order.email,
+          challenge_type: order.challenge_type,
+          account_type: order.account_type || 'standard',
+          account_size: order.account_size,
+          platform: order.platform,
+          leverage: order.leverage,
+          price: order.price,
+          payment_method: order.payment_method,
+          payment_gateway: order.payment_gateway || 'manual',
+          payment_address: order.payment_address,
+          payment_status: order.payment_status || 'pending',
+          full_name: order.full_name,
+          username: order.username,
+          email: order.email,
+          phone: order.phone,
+          country: order.country,
+          city: order.city,
+          address: order.address,
+          postal_code: order.postal_code,
+          transaction_id: order.transaction_id,
+          account_id: order.account_id,
+          coupon_code: order.coupon_code,
+          discount_amount: order.discount_amount || 0,
+          affiliate_code: order.affiliate_code,
+          updated_at: order.updated_date,
+        }, { onConflict: 'order_id' });
+        
+        if (error) {
+          console.error(`Failed to sync order ${order.order_id}:`, error);
+          stats.orders.errors++;
+        } else {
+          stats.orders.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing order ${order.order_id}:`, err);
+        stats.orders.errors++;
+      }
+    }
     
     stats.profiles.total = allEmails.size;
     for (const email of allEmails) {
@@ -67,6 +176,231 @@ Deno.serve(async (req) => {
       } catch (err) {
         console.error(`Error creating profile for ${email}:`, err);
         stats.profiles.errors++;
+      }
+    }
+
+    // 0.7 Sync Notifications
+    stats.notifications.total = allNotifications.length;
+    for (const notif of allNotifications) {
+      try {
+        const { error } = await supabase.from('notifications').upsert({
+          title: notif.title,
+          message: notif.message,
+          type: notif.type || 'announcement',
+          priority: notif.priority || 'medium',
+          display_mode: notif.display_mode || 'sidebar',
+          is_active: notif.is_active ?? true,
+          cta_label: notif.cta_label,
+          cta_link: notif.cta_link,
+          target: notif.target || 'all',
+          scheduled_at: notif.scheduled_at,
+          expires_at: notif.expires_at,
+          updated_at: notif.updated_date,
+        }, { onConflict: 'id' });
+        
+        if (error) {
+          console.error(`Failed to sync notification ${notif.id}:`, error);
+          stats.notifications.errors++;
+        } else {
+          stats.notifications.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing notification ${notif.id}:`, err);
+        stats.notifications.errors++;
+      }
+    }
+    
+    // 0.8 Sync Coupons
+    stats.coupons.total = allCoupons.length;
+    for (const coupon of allCoupons) {
+      try {
+        const { error } = await supabase.from('coupons').upsert({
+          code: coupon.code,
+          name: coupon.name,
+          discount_type: coupon.discount_type || 'percentage',
+          discount_value: coupon.discount_value,
+          is_active: coupon.is_active ?? true,
+          max_uses: coupon.max_uses,
+          uses_count: coupon.uses_count || 0,
+          per_user_limit: coupon.per_user_limit || 1,
+          expires_at: coupon.expires_at,
+          applicable_challenge_types: coupon.applicable_challenge_types || [],
+          applicable_account_sizes: coupon.applicable_account_sizes || [],
+          applicable_platforms: coupon.applicable_platforms || [],
+          notes: coupon.notes,
+          updated_at: coupon.updated_date,
+        }, { onConflict: 'code' });
+        
+        if (error) {
+          console.error(`Failed to sync coupon ${coupon.code}:`, error);
+          stats.coupons.errors++;
+        } else {
+          stats.coupons.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing coupon ${coupon.code}:`, err);
+        stats.coupons.errors++;
+      }
+    }
+    
+    // 0.9 Sync Payment Gateways
+    stats.payment_gateways.total = allGateways.length;
+    for (const gw of allGateways) {
+      try {
+        const { error } = await supabase.from('payment_gateways').upsert({
+          name: gw.name,
+          provider: gw.provider,
+          is_active: gw.is_active ?? true,
+          sandbox_mode: gw.sandbox_mode ?? false,
+          api_key: gw.api_key,
+          secret_key: gw.secret_key,
+          webhook_secret: gw.webhook_secret,
+          webhook_url: gw.webhook_url,
+          supported_cards: gw.supported_cards || [],
+          supported_crypto: gw.supported_crypto || [],
+          networks: gw.networks || [],
+          wallets: gw.wallets || [],
+          notes: gw.notes,
+          updated_at: gw.updated_date,
+        }, { onConflict: 'id' });
+        
+        if (error) {
+          console.error(`Failed to sync gateway ${gw.name}:`, error);
+          stats.payment_gateways.errors++;
+        } else {
+          stats.payment_gateways.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing gateway ${gw.name}:`, err);
+        stats.payment_gateways.errors++;
+      }
+    }
+    
+    // 0.10 Sync Trade Records
+    stats.trade_records.total = allTrades.length;
+    for (const trade of allTrades) {
+      try {
+        if (!trade.account_id || !trade.trade_id) {
+          console.log(`Skipping trade ${trade.id}: missing account_id or trade_id`);
+          stats.trade_records.errors++;
+          continue;
+        }
+        
+        const { error } = await supabase.from('trade_records').upsert({
+          account_id: trade.account_id,
+          user_email: trade.user_email,
+          trade_id: trade.trade_id,
+          symbol: trade.symbol,
+          type: trade.type,
+          order_type: trade.order_type,
+          lots: trade.lots,
+          entry: trade.entry,
+          close: trade.close,
+          sl: trade.sl,
+          tp: trade.tp,
+          margin: trade.margin,
+          pnl: trade.pnl,
+          status: trade.status || 'open',
+          close_reason: trade.close_reason,
+          open_time: trade.open_time,
+          close_time: trade.close_time,
+          updated_at: trade.updated_date,
+        }, { onConflict: 'id' });
+        
+        if (error) {
+          console.error(`Failed to sync trade ${trade.trade_id}:`, error);
+          stats.trade_records.errors++;
+        } else {
+          stats.trade_records.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing trade ${trade.trade_id}:`, err);
+        stats.trade_records.errors++;
+      }
+    }
+    
+    // 0.11 Sync Platform Settings
+    stats.platform_settings.total = allPlatformSettings.length;
+    for (const setting of allPlatformSettings) {
+      try {
+        const { error } = await supabase.from('platform_settings').upsert({
+          setting_key: setting.setting_key,
+          label: setting.label,
+          is_enabled: setting.is_enabled ?? true,
+          category: setting.category || 'system',
+          description: setting.description,
+          updated_at: setting.updated_date,
+        }, { onConflict: 'setting_key' });
+        
+        if (error) {
+          console.error(`Failed to sync platform setting ${setting.setting_key}:`, error);
+          stats.platform_settings.errors++;
+        } else {
+          stats.platform_settings.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing platform setting ${setting.setting_key}:`, err);
+        stats.platform_settings.errors++;
+      }
+    }
+    
+    // 0.12 Sync Social Media Settings
+    stats.social_media_settings.total = allSocialSettings.length;
+    for (const social of allSocialSettings) {
+      try {
+        const { error } = await supabase.from('social_media_settings').upsert({
+          setting_key: social.setting_key,
+          discord_url: social.discord_url,
+          discord_enabled: social.discord_enabled ?? true,
+          instagram_url: social.instagram_url,
+          instagram_enabled: social.instagram_enabled ?? true,
+          twitter_url: social.twitter_url,
+          twitter_enabled: social.twitter_enabled ?? true,
+          youtube_url: social.youtube_url,
+          youtube_enabled: social.youtube_enabled ?? true,
+          updated_at: social.updated_date,
+        }, { onConflict: 'setting_key' });
+        
+        if (error) {
+          console.error(`Failed to sync social media setting ${social.setting_key}:`, error);
+          stats.social_media_settings.errors++;
+        } else {
+          stats.social_media_settings.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing social media setting ${social.setting_key}:`, err);
+        stats.social_media_settings.errors++;
+      }
+    }
+    
+    // 0.13 Sync Affiliate Settings
+    stats.affiliate_settings.total = allAffiliateSettings.length;
+    for (const affSetting of allAffiliateSettings) {
+      try {
+        const { error } = await supabase.from('affiliate_settings').upsert({
+          setting_key: affSetting.setting_key,
+          l1_rate: affSetting.l1_rate || 8,
+          l2_rate: affSetting.l2_rate || 2,
+          l3_rate: affSetting.l3_rate || 1,
+          payout_tier_0_rate: affSetting.payout_tier_0_rate || 7,
+          payout_tier_10_rate: affSetting.payout_tier_10_rate || 11,
+          payout_tier_25_rate: affSetting.payout_tier_25_rate || 17,
+          payout_tier_50_rate: affSetting.payout_tier_50_rate || 25,
+          min_withdrawal: affSetting.min_withdrawal || 50,
+          withdrawal_fee: affSetting.withdrawal_fee || 0,
+          is_program_active: affSetting.is_program_active ?? true,
+          updated_at: affSetting.updated_date,
+        }, { onConflict: 'setting_key' });
+        
+        if (error) {
+          console.error(`Failed to sync affiliate setting ${affSetting.setting_key}:`, error);
+          stats.affiliate_settings.errors++;
+        } else {
+          stats.affiliate_settings.synced++;
+        }
+      } catch (err) {
+        console.error(`Error processing affiliate setting ${affSetting.setting_key}:`, err);
+        stats.affiliate_settings.errors++;
       }
     }
 
@@ -346,7 +680,7 @@ Deno.serve(async (req) => {
           trader_name: cert.trader_name,
           type: cert.type,
           title: cert.title,
-          account_id: cert.account_id,
+          account_id: cert.account_id || null,
           account_size: cert.account_size,
           challenge_type: cert.challenge_type,
           issue_date: cert.issue_date,

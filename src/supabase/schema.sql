@@ -188,7 +188,35 @@ CREATE TABLE public.kyc_verifications (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. CHALLENGE ACCOUNTS
+-- 4. CHALLENGE PLANS
+CREATE TABLE public.challenge_plans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    plan_id TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    type challenge_type NOT NULL,
+    account_type account_type DEFAULT 'standard',
+    size DECIMAL(12,2) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    leverage_standard TEXT DEFAULT '1:100',
+    leverage_swing TEXT DEFAULT '1:30',
+    phase1_target DECIMAL(5,2) DEFAULT 10,
+    phase2_target DECIMAL(5,2) DEFAULT 5,
+    daily_dd DECIMAL(5,2) DEFAULT 5,
+    max_dd DECIMAL(5,2) DEFAULT 10,
+    profit_split DECIMAL(5,2) DEFAULT 80,
+    max_lots DECIMAL(10,2) DEFAULT 20,
+    news_trading BOOLEAN DEFAULT false,
+    overnight_holding BOOLEAN DEFAULT false,
+    weekend_holding BOOLEAN DEFAULT false,
+    hedging BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    is_popular BOOLEAN DEFAULT false,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. CHALLENGE ACCOUNTS
 CREATE TABLE public.challenge_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     account_id TEXT UNIQUE NOT NULL,
@@ -634,6 +662,12 @@ CREATE TABLE public.audit_logs (
 CREATE INDEX idx_profiles_email ON public.profiles(email);
 CREATE INDEX idx_profiles_role ON public.profiles(role);
 
+-- Challenge plans
+CREATE INDEX idx_challenge_plans_type ON public.challenge_plans(type);
+CREATE INDEX idx_challenge_plans_account_type ON public.challenge_plans(account_type);
+CREATE INDEX idx_challenge_plans_is_active ON public.challenge_plans(is_active);
+CREATE INDEX idx_challenge_plans_sort_order ON public.challenge_plans(sort_order);
+
 -- Challenge accounts
 CREATE INDEX idx_challenge_accounts_user_email ON public.challenge_accounts(user_email);
 CREATE INDEX idx_challenge_accounts_status ON public.challenge_accounts(status);
@@ -696,6 +730,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to all tables with updated_at
+CREATE TRIGGER update_challenge_plans_updated_at BEFORE UPDATE ON public.challenge_plans FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_affiliate_profiles_updated_at BEFORE UPDATE ON public.affiliate_profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_kyc_verifications_updated_at BEFORE UPDATE ON public.kyc_verifications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -751,6 +786,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ==================================================
 
 -- Enable RLS on all tables
+ALTER TABLE public.challenge_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.affiliate_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.kyc_verifications ENABLE ROW LEVEL SECURITY;
@@ -777,6 +813,10 @@ ALTER TABLE public.social_media_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.affiliate_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_feature_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- CHALLENGE PLANS RLS
+CREATE POLICY "Anyone can view active challenge plans" ON public.challenge_plans FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can manage challenge plans" ON public.challenge_plans FOR ALL USING (public.is_admin());
 
 -- PROFILES RLS
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING ((auth.jwt() ->> 'email')::TEXT = email);
@@ -918,6 +958,10 @@ CREATE POLICY "Admins can manage platform settings" ON public.platform_settings 
 -- ==================================================
 -- SEED DATA
 -- ==================================================
+
+-- Insert default challenge plans (synced from Base44)
+-- Note: Challenge plans are managed in Base44 and synced via syncAllEntitiesToSupabase function
+-- Manual inserts can be added here if needed
 
 -- Insert default affiliate settings
 INSERT INTO public.affiliate_settings (setting_key, l1_rate, l2_rate, l3_rate, payout_tier_0_rate, payout_tier_10_rate, payout_tier_25_rate, payout_tier_50_rate)
