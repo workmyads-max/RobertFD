@@ -4,52 +4,7 @@ import { User, Mail, Lock, AtSign, Loader, CheckCircle2, AlertCircle, Eye, EyeOf
 import { callAuth, saveSession } from '@/lib/customAuth';
 import OTPStep from '@/components/auth/OTPStep';
 
-export default function Register() {
-  const [step, setStep] = useState('form'); // form | otp | done
-  const [fields, setFields] = useState({ full_name: '', username: '', email: '', password: '', confirm: '' });
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [userId, setUserId] = useState(null);
-
-  const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (fields.password !== fields.confirm) {
-      setError('Passwords do not match.');
-      return;
-    }
-    if (fields.password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) {
-      setError('Username can only contain letters, numbers and underscores.');
-      return;
-    }
-    setLoading(true);
-    const res = await callAuth('register', {
-      email: fields.email,
-      username: fields.username,
-      full_name: fields.full_name,
-      password: fields.password,
-    });
-    setLoading(false);
-
-    if (res.error) { setError(res.error); return; }
-    setUserId(res.userId);
-    setStep('otp');
-  };
-
-  const handleOTPSuccess = (user, token) => {
-    saveSession(user, token);
-    setStep('done');
-    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
-  };
-
-  const AuthCard = ({ children, title, subtitle }) => (
+const AuthCard = ({ children, title, subtitle }) => (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -81,6 +36,36 @@ export default function Register() {
       </motion.div>
     </div>
   );
+
+export default function Register() {
+  const [step, setStep] = useState('form'); // form | otp | done
+  const [fields, setFields] = useState({ full_name: '', username: '', email: '', password: '', confirm: '' });
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [userId, setUserId] = useState(null);
+
+  const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (fields.password !== fields.confirm) { setError('Passwords do not match.'); return; }
+    if (fields.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) { setError('Username can only contain letters, numbers and underscores.'); return; }
+    setLoading(true);
+    const res = await callAuth('register', { email: fields.email, username: fields.username, full_name: fields.full_name, password: fields.password });
+    setLoading(false);
+    if (res.error) { setError(res.error); return; }
+    setUserId(res.userId);
+    setStep('otp');
+  };
+
+  const handleOTPSuccess = (user, token) => {
+    saveSession(user, token);
+    setStep('done');
+    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+  };
 
   if (step === 'done') {
     return (
