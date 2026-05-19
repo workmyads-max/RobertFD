@@ -208,21 +208,218 @@ function RiskShieldSlide() {
 
 function PlatformSlide({ image }) {
   return (
-    <div className="glass rounded-2xl overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-      <img src={image} alt="Platform" className="w-full rounded-xl opacity-80" />
-      <div className="absolute inset-0 flex flex-col justify-end p-6">
-        <div className="glass rounded-xl p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Monitor className="w-5 h-5 text-primary" />
-            <span className="text-sm font-bold text-foreground">Multi-Platform Access</span>
-          </div>
-          <div className="flex gap-2">
-            {['MT5', 'TradeLocker', 'Web Terminal'].map((p) => (
-              <span key={p} className="px-2.5 py-1 rounded-full text-[10px] font-mono" style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>{p}</span>
+    <div className="glass rounded-2xl overflow-hidden relative h-full">
+      {/* Animated luxury background */}
+      <div className="absolute inset-0">
+        {/* Rotating gradient rings */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(255,92,0,0.15), transparent 70%)' }} />
+        </motion.div>
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+        >
+          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(204,255,0,0.12), transparent 70%)' }} />
+        </motion.div>
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,92,0,0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,92,0,0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+          }} />
+
+        {/* Shimmer sweep effect */}
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: '100%' }}
+          transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }}
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,92,0,0.12) 50%, transparent 60%)',
+          }} />
+      </div>
+
+      {/* Platform showcase */}
+      <div className="relative z-10 p-6 h-full flex flex-col">
+        {/* Window chrome with animated dots */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex gap-1.5">
+            {[
+              { color: 'bg-red-500', delay: 0 },
+              { color: 'bg-yellow-500', delay: 0.2 },
+              { color: 'bg-emerald-500', delay: 0.4 },
+            ].map((dot, i) => (
+              <motion.div
+                key={i}
+                className={`w-2.5 h-2.5 rounded-full ${dot.color}`}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity, delay: dot.delay }}
+              />
             ))}
           </div>
+          <motion.span
+            className="flex-1 text-center text-[10px] font-mono text-muted-foreground"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            Multi-Platform Trading
+          </motion.span>
         </div>
+
+        {/* 3D Platform Cards */}
+        <div className="flex-1 flex flex-col justify-center gap-3 mb-6">
+          {[
+            { name: 'MetaTrader 5', icon: '📊', color: '#FF5C00', features: ['Advanced Charting', 'Expert Advisors', 'Mobile Trading'] },
+            { name: 'TradeLocker', icon: '🔐', color: '#CCFF00', features: ['Risk Management', 'One-Click Trading', 'Real-Time Data'] },
+            { name: 'Web Terminal', icon: '🌐', color: '#00F5A0', features: ['No Download', 'Instant Access', 'Full Features'] },
+          ].map((platform, idx) => (
+            <motion.div
+              key={platform.name}
+              initial={{ opacity: 0, x: -30, rotateY: -10 }}
+              animate={{ opacity: 1, x: 0, rotateY: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 + idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{
+                scale: 1.03,
+                x: 8,
+                boxShadow: '0 0 30px rgba(255,92,0,0.3), 0 8px 40px rgba(0,0,0,0.4)',
+                transition: { duration: 0.25 },
+              }}
+              className="relative group"
+              style={{ perspective: '800px' }}
+            >
+              {/* Card glow on hover */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: `linear-gradient(135deg, ${platform.color}40, ${platform.color}10)`,
+                  filter: 'blur(8px)',
+                }}
+              />
+
+              {/* Card content */}
+              <div
+                className="relative rounded-xl p-4 flex items-center gap-4 overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${platform.color}30`,
+                }}
+              >
+                {/* Animated icon background */}
+                <motion.div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${platform.color}20, ${platform.color}05)`,
+                    border: `1px solid ${platform.color}40`,
+                  }}
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, delay: idx * 0.3 }}
+                >
+                  {platform.icon}
+                </motion.div>
+
+                {/* Platform info */}
+                <div className="flex-1 min-w-0">
+                  <motion.div
+                    className="text-sm font-bold text-foreground mb-0.5"
+                    animate={{ x: [0, 2, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, delay: idx * 0.2 }}
+                  >
+                    {platform.name}
+                  </motion.div>
+                  <div className="flex gap-1.5">
+                    {platform.features.slice(0, 2).map((feature, i) => (
+                      <motion.span
+                        key={feature}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.6 + idx * 0.15 + i * 0.05 }}
+                        className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+                        style={{
+                          background: `${platform.color}15`,
+                          color: platform.color,
+                          border: `1px solid ${platform.color}25`,
+                        }}
+                      >
+                        {feature}
+                      </motion.span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Animated status indicator */}
+                <motion.div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: platform.color }}
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0.7, 1, 0.7],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, delay: idx * 0.3 }}
+                />
+              </div>
+
+              {/* Sweep effect on card */}
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: '100%' }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 + idx * 0.5, ease: 'easeInOut' }}
+                className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden"
+                style={{
+                  background: `linear-gradient(105deg, transparent 40%, ${platform.color}20 50%, transparent 60%)`,
+                }}
+              />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Bottom stats bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="rounded-xl p-3"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Platforms', value: '3+', color: '#FF5C00' },
+              { label: 'Uptime', value: '99.9%', color: '#10b981' },
+              { label: 'Latency', value: '<50ms', color: '#CCFF00' },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1 + i * 0.1 }}
+              >
+                <motion.div
+                  className="text-lg font-black"
+                  style={{ color: stat.color }}
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                >
+                  {stat.value}
+                </motion.div>
+                <div className="text-[9px] font-mono text-muted-foreground mt-0.5">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
