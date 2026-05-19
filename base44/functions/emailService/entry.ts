@@ -262,53 +262,46 @@ async function sendEmailViaSMTP(to, subject, body) {
       throw new Error('SMTP_PASSWORD not configured');
     }
 
-    // Connect to SMTP server
-    const conn = await Deno.connect({ hostname: host, port });
+    // Connect with TLS
+    const conn = await Deno.connectTls({ hostname: host, port, caCerts: [] });
     const decoder = new TextDecoder();
     const encoder = new TextEncoder();
 
     const readResponse = async () => {
       const buf = new Uint8Array(1024);
       const n = await conn.read(buf);
-      return decoder.decode(buf.subarray(0, n || 0));
+      if (!n) return '';
+      return decoder.decode(buf.subarray(0, n));
     };
 
     const sendCommand = async (cmd) => {
+      console.log('Sending:', cmd.substring(0, 50));
       await conn.write(encoder.encode(cmd + '\r\n'));
       const resp = await readResponse();
-      console.log('SMTP Response:', resp.trim());
+      console.log('Response:', resp.trim().substring(0, 100));
       if (!resp.startsWith('2') && !resp.startsWith('3')) {
-        throw new Error(`SMTP error: ${resp}`);
+        throw new Error(`SMTP error: ${resp.substring(0, 100)}`);
       }
       return resp;
     };
 
-    // SMTP handshake with proper sequence
+    // Read greeting
     const greeting = await readResponse();
     console.log('SMTP Greeting:', greeting.trim());
     
-    // EHLO handshake
+    // EHLO
     await sendCommand(`EHLO ${host}`);
     
     // AUTH LOGIN
     await sendCommand('AUTH LOGIN');
-    
-    // Send username (base64 encoded)
     await sendCommand(btoa(username));
-    
-    // Send password (base64 encoded)
     await sendCommand(btoa(password));
     
-    // MAIL FROM
+    // Send email
     await sendCommand(`MAIL FROM: <${fromEmail}>`);
-    
-    // RCPT TO
     await sendCommand(`RCPT TO: <${to}>`);
-    
-    // DATA
     await sendCommand('DATA');
 
-    // Send email content
     const emailContent = `From: ${fromName} <${fromEmail}>
 To: ${to}
 Subject: ${subject}
@@ -320,7 +313,7 @@ ${body}
 
     await conn.write(encoder.encode(emailContent + '\r\n'));
     const dataResp = await readResponse();
-    console.log('DATA Response:', dataResp.trim());
+    console.log('Message sent:', dataResp.trim().substring(0, 50));
     
     await sendCommand('QUIT');
     conn.close();
