@@ -271,6 +271,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-platforms', label: 'Platforms API', icon: Cpu },
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },
+              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield },
               { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle },
               { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag },
               { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield },

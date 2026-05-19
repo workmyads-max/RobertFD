@@ -32,6 +32,7 @@ import AdminTerminalControl from '../components/admin/AdminTerminalControl';
 import AdminRiskManagement from '../components/admin/AdminRiskManagement';
 import AdminMatchTrader from '../components/admin/AdminMatchTrader';
 import AdminMT5Configuration from '../components/admin/AdminMT5Configuration';
+import AdminRiskDetection from '../components/admin/AdminRiskDetection';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
@@ -152,6 +153,7 @@ export default function Dashboard() {
       case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-challenges': return isAdmin ? <AdminChallenges /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-terminal': return isAdmin ? <AdminTerminalControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-risk-detection': return isAdmin ? <AdminRiskDetection /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
