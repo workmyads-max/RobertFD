@@ -247,21 +247,72 @@ async function logEmailToSupabase(emailData) {
 }
 
 /**
- * Send email via Base44 integration
+ * Send email via SendGrid SMTP
  */
-async function sendEmailViaBase44(base44, to, subject, body) {
+async function sendEmailViaSMTP(to, subject, body) {
   try {
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to,
-      subject,
-      body,
-    });
+    const host = Deno.env.get('SMTP_HOST') || 'smtp.sendgrid.net';
+    const port = parseInt(Deno.env.get('SMTP_PORT') || '587');
+    const username = Deno.env.get('SMTP_USERNAME') || 'apikey';
+    const password = Deno.env.get('SMTP_PASSWORD');
+    const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
+    const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
+
+    if (!password) {
+      throw new Error('SMTP_PASSWORD not configured');
+    }
+
+    // Connect to SMTP server
+    const conn = await Deno.connect({ hostname: host, port });
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+
+    const readResponse = async () => {
+      const buf = new Uint8Array(1024);
+      const n = await conn.read(buf);
+      return decoder.decode(buf.subarray(0, n || 0));
+    };
+
+    const sendCommand = async (cmd: string) => {
+      await conn.write(encoder.encode(cmd + '\r\n'));
+      const resp = await readResponse();
+      if (!resp.startsWith('2')) {
+        throw new Error(`SMTP error: ${resp}`);
+      }
+    };
+
+    // SMTP handshake
+    await readResponse(); // Server greeting
+    await sendCommand(`EHLO ${host}`);
+    await sendCommand(`AUTH LOGIN`);
+    await sendCommand(btoa(username));
+    await sendCommand(btoa(password));
+    await sendCommand(`MAIL FROM: <${fromEmail}>`);
+    await sendCommand(`RCPT TO: <${to}>`);
+    await sendCommand('DATA');
+
+    // Send email content
+    const emailContent = `From: ${fromName} <${fromEmail}>
+To: ${to}
+Subject: ${subject}
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+${body}
+.`;
+
+    await conn.write(encoder.encode(emailContent + '\r\n'));
+    await readResponse();
+    await sendCommand('QUIT');
+    conn.close();
+
     return true;
   } catch (error) {
-    console.error('Email send failed:', error);
+    console.error('SMTP send failed:', error);
     return false;
   }
 }
+
 
 Deno.serve(async (req) => {
   try {
@@ -282,7 +333,7 @@ Deno.serve(async (req) => {
         purpose: purpose || 'verification'
       });
 
-      const sent = await sendEmailViaBase44(base44, to, '🔐 Your Verification Code - XFunded Trader', emailBody);
+      const sent = await sendEmailViaSMTP(to, '🔐 Your Verification Code - XFunded Trader', emailBody);
       
       // Log to Supabase
       await logEmailToSupabase({
@@ -317,7 +368,7 @@ Deno.serve(async (req) => {
       };
 
       const subject = subjectMap[type] || 'XFunded Trader Notification';
-      const sent = await sendEmailViaBase44(base44, to, subject, emailBody);
+      const sent = await sendEmailViaSMTP(to, subject, emailBody);
       
       // Log to Supabase
       await logEmailToSupabase({
