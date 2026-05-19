@@ -11,9 +11,11 @@ export function useUserLocation() {
 
   useEffect(() => {
     const fetchLocation = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       try {
-        // Fetch IP and location data from ipapi (CORS-friendly)
-        const response = await fetch('https://ipapi.co/json/');
+        const response = await fetch('https://ipapi.co/json/', { signal: controller.signal });
         const data = await response.json();
 
         const countryCode = data.country_code || 'US';
@@ -32,8 +34,9 @@ export function useUserLocation() {
           loading: false,
         });
       } catch (error) {
-        console.error('Failed to fetch location:', error);
         setLocation(prev => ({ ...prev, loading: false }));
+      } finally {
+        clearTimeout(timeoutId);
       }
     };
 
