@@ -49,10 +49,10 @@ export default function ChallengeSelect() {
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ['challenge-plans'],
-    queryFn: () => base44.entities.ChallengePlan.filter({ is_active: true }, 'sort_order', 50),
+    queryFn: () => base44.entities.ChallengePlan.list('sort_order', 100),
   });
 
-  const plans = allPlans.filter(p => p.type === challengeType);
+  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType && p.is_active !== false);
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {
