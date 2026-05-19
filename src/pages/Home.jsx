@@ -52,7 +52,6 @@ export default function Home() {
       <AffiliateSection />
       <FAQSection />
       <AboutSection aboutImage={IMAGES.singapore} />
-      <LiveChat />
       <Footer />
     </div>
   );
