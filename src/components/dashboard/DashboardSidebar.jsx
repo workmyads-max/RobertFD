@@ -79,13 +79,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           onClick={() => setCollapsed?.(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{ background: 'linear-gradient(135deg, #FF5C00, #cc4900)', boxShadow: '0 4px 20px rgba(255,92,0,0.45)' }}>
-          <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>FC</span>
+          <span className="text-white font-black text-xs" style={{ fontFamily: 'Georgia, serif' }}>XF</span>
         </div>
         {!collapsed && (
           <>
             <div className="flex flex-col leading-none relative z-10">
-              <span className="text-white font-extrabold text-sm tracking-tight">Funded</span>
-              <span className="font-black text-sm tracking-tight" style={{ color: '#FF5C00' }}>Firms</span>
+              <span className="text-white font-extrabold text-sm tracking-tight">XFunded</span>
+              <span className="font-black text-sm tracking-tight" style={{ color: '#FF5C00' }}>Trader</span>
             </div>
             <div className="ml-auto flex items-center gap-1 flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00f5a0' }} />
