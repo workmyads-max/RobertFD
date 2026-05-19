@@ -59,7 +59,28 @@ Deno.serve(async (req) => {
       // Check duplicate email
       const existing = await base44.asServiceRole.entities.UserAccount.filter({ email: email.toLowerCase() });
       if (existing.length > 0) {
-        return Response.json({ error: 'This email is already registered.' }, { status: 409 });
+        const existingAccount = existing[0];
+        // If already verified, reject
+        if (existingAccount.is_verified) {
+          return Response.json({ error: 'This email is already registered.' }, { status: 409 });
+        }
+        // If unverified, allow re-registration: update the existing account with new details
+        const password_hash = await hashPassword(password);
+        const otp_code = generateOTP();
+        const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+        await base44.asServiceRole.entities.UserAccount.update(existingAccount.id, {
+          username: username.toLowerCase(),
+          full_name,
+          password_hash,
+          otp_code,
+          otp_expires_at,
+          otp_type: 'registration',
+          otp_sent_at: new Date().toISOString(),
+        });
+
+        await sendEmail(base44, email, 'otp', { name: full_name, code: otp_code, purpose: 'Email Verification' });
+        return Response.json({ success: true, userId: existingAccount.id, message: 'OTP sent to email.', dev_otp: otp_code });
       }
 
       // Check duplicate username
