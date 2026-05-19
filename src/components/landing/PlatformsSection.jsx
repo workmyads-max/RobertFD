@@ -116,7 +116,7 @@ export default function PlatformsSection({ mobileImage }) {
                   whileInView={{ opacity: 0.7, x: -60, rotateY: -15, rotateX: 5 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute left-0 top-4 w-36 h-72"
+                  className="absolute left-0 top-8 w-[200px] h-[400px]"
                   style={{
                     transformStyle: 'preserve-3d',
                   }}
@@ -167,7 +167,7 @@ export default function PlatformsSection({ mobileImage }) {
                   whileInView={{ opacity: 0.7, x: 60, rotateY: 15, rotateX: 5 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute right-0 top-4 w-36 h-72"
+                  className="absolute right-0 top-8 w-[200px] h-[400px]"
                   style={{
                     transformStyle: 'preserve-3d',
                   }}
@@ -216,13 +216,13 @@ export default function PlatformsSection({ mobileImage }) {
                   <div className="absolute -right-0.5 top-24 w-1 h-8 rounded-r-md bg-gradient-to-b from-gray-600 to-gray-800" />
                 </motion.div>
 
-                {/* Center phone (Main - Premium iPhone Pro style) */}
+                {/* Center phone (Main - iPhone 15 Pro size) */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.85, y: 30, rotateX: 10 }}
                   whileInView={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative w-48 h-80 mx-auto"
+                  className="relative w-[280px] h-[580px] mx-auto"
                   style={{
                     transformStyle: 'preserve-3d',
                   }}
@@ -281,124 +281,114 @@ export default function PlatformsSection({ mobileImage }) {
                           </div>
                         </div>
 
-                        {/* Trading Terminal UI */}
+                        {/* Trading Terminal UI - Abstract Design */}
                         <div className="absolute inset-0 top-10 p-4">
-                          {/* Symbol & Price Header */}
+                          {/* Account Balance Card */}
                           <motion.div
-                            className="text-center mb-3"
-                            animate={{ y: [0, -2, 0] }}
+                            className="mb-3 p-3 rounded-xl"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))',
+                              border: '1px solid rgba(255,92,0,0.3)',
+                            }}
+                            animate={{ y: [0, -1, 0] }}
                             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                           >
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                              <span className="text-[10px] font-bold text-white/90">BTC/USD</span>
-                              <motion.span
-                                className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400"
-                                animate={{ opacity: [0.7, 1, 0.7] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              >
-                                +2.34%
-                              </motion.span>
-                            </div>
+                            <div className="text-[7px] text-white/50 mb-0.5">Total Balance</div>
+                            <div className="text-lg font-black text-white">●●●●●</div>
                             <motion.div
-                              className="text-2xl font-black"
-                              style={{
-                                background: 'linear-gradient(135deg, #FF5C00, #FF8A3D)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                              }}
-                              animate={{ scale: [1, 1.03, 1] }}
+                              className="text-[8px] font-mono text-emerald-400 mt-1"
+                              animate={{ opacity: [0.7, 1, 0.7] }}
                               transition={{ duration: 2, repeat: Infinity }}
                             >
-                              $95,842.30
+                              ▲ Performance Active
                             </motion.div>
                           </motion.div>
 
-                          {/* Advanced Chart */}
-                          <div className="h-24 mb-3 rounded-xl overflow-hidden relative group">
+                          {/* Abstract Chart */}
+                          <div className="h-20 mb-3 rounded-xl overflow-hidden relative">
                             <div className="absolute inset-0" style={{ background: 'rgba(255,92,0,0.05)' }}>
                               <svg viewBox="0 0 160 80" className="w-full h-full">
-                                {/* Grid lines */}
+                                {/* Grid */}
                                 {[20, 40, 60].map(y => (
                                   <line key={y} x1="0" y1={y} x2="160" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
                                 ))}
-                                {/* Main chart line */}
+                                {/* Animated line */}
                                 <motion.polyline
                                   fill="none"
-                                  stroke="url(#mainChartGrad)"
-                                  strokeWidth="2.5"
-                                  points="0,70 20,65 40,68 60,50 80,55 100,40 120,35 140,25 160,20"
+                                  stroke="url(#chartGrad)"
+                                  strokeWidth="2"
+                                  points="0,65 25,60 50,62 75,45 100,50 125,35 150,30 160,25"
                                   initial={{ pathLength: 0 }}
                                   whileInView={{ pathLength: 1 }}
-                                  transition={{ duration: 3, repeat: Infinity, repeatDelay: 0.5 }}
-                                  style={{ filter: 'drop-shadow(0 0 8px rgba(255,92,0,0.6))' }}
+                                  transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 0.5 }}
+                                  style={{ filter: 'drop-shadow(0 0 6px rgba(255,92,0,0.5))' }}
                                 />
-                                {/* Gradient fill */}
                                 <defs>
-                                  <linearGradient id="mainChartGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#FF5C00" />
                                     <stop offset="100%" stopColor="#FF8A3D" />
                                   </linearGradient>
-                                  <linearGradient id="mainChartFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.3" />
+                                  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.25" />
                                     <stop offset="100%" stopColor="#FF5C00" stopOpacity="0" />
                                   </linearGradient>
                                 </defs>
                                 <polygon
-                                  fill="url(#mainChartFill)"
-                                  points="0,70 20,65 40,68 60,50 80,55 100,40 120,35 140,25 160,20 160,80 0,80"
+                                  fill="url(#chartFill)"
+                                  points="0,65 25,60 50,62 75,45 100,50 125,35 150,30 160,25 160,80 0,80"
                                 />
-                                {/* Pulsing dot at end */}
+                                {/* Pulsing point */}
                                 <motion.circle
                                   cx="160"
-                                  cy="20"
-                                  r="4"
+                                  cy="25"
+                                  r="3"
                                   fill="#FF5C00"
-                                  animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0.4, 0.8] }}
+                                  animate={{ scale: [1, 1.4, 1], opacity: [0.8, 0.3, 0.8] }}
                                   transition={{ duration: 1.5, repeat: Infinity }}
                                 />
                               </svg>
                             </div>
                           </div>
 
-                          {/* Order Book Preview */}
-                          <div className="mb-3 rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <div className="flex justify-between text-[7px] font-mono text-white/40 mb-1">
-                              <span>Best Ask</span>
-                              <span>Best Bid</span>
-                            </div>
-                            <div className="flex justify-between text-[9px] font-bold">
-                              <span className="text-red-400">95,843.50</span>
-                              <span className="text-emerald-400">95,841.00</span>
-                            </div>
+                          {/* Portfolio Stats */}
+                          <div className="grid grid-cols-3 gap-1.5 mb-3">
+                            {[
+                              { label: 'P&L', val: '+●●%', color: 'text-emerald-400' },
+                              { label: 'Trades', val: '●●', color: 'text-white' },
+                              { label: 'Win Rate', val: '●●%', color: 'text-primary' },
+                            ].map((stat, i) => (
+                              <div key={i} className="p-2 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <div className="text-[6px] text-white/40 mb-0.5">{stat.label}</div>
+                                <div className={`text-[9px] font-bold ${stat.color}`}>{stat.val}</div>
+                              </div>
+                            ))}
                           </div>
 
-                          {/* Trading Buttons */}
+                          {/* Action Buttons */}
                           <div className="grid grid-cols-2 gap-2">
                             <motion.button
-                              className="py-2.5 rounded-xl text-[9px] font-black flex items-center justify-center gap-1.5"
+                              className="py-2 rounded-xl text-[9px] font-bold flex items-center justify-center gap-1"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.15))',
-                                border: '1px solid rgba(16,185,129,0.4)',
-                                boxShadow: '0 0 20px rgba(16,185,129,0.2), inset 0 0 10px rgba(16,185,129,0.1)',
+                                background: 'rgba(16,185,129,0.15)',
+                                border: '1px solid rgba(16,185,129,0.3)',
                               }}
-                              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(16,185,129,0.35)' }}
+                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span className="text-emerald-400">BUY</span>
-                              <span className="text-[10px]">📈</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                              <span className="text-emerald-400">Long</span>
                             </motion.button>
                             <motion.button
-                              className="py-2.5 rounded-xl text-[9px] font-black flex items-center justify-center gap-1.5"
+                              className="py-2 rounded-xl text-[9px] font-bold flex items-center justify-center gap-1"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.15))',
-                                border: '1px solid rgba(239,68,68,0.4)',
-                                boxShadow: '0 0 20px rgba(239,68,68,0.2), inset 0 0 10px rgba(239,68,68,0.1)',
+                                background: 'rgba(239,68,68,0.15)',
+                                border: '1px solid rgba(239,68,68,0.3)',
                               }}
-                              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(239,68,68,0.35)' }}
+                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <span className="text-red-400">SELL</span>
-                              <span className="text-[10px]">📉</span>
+                              <div className="w-2 h-2 rounded-full bg-red-400" />
+                              <span className="text-red-400">Short</span>
                             </motion.button>
                           </div>
                         </div>
