@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Menu, X, ChevronRight, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 
 const navLinks = [
   { label: 'Start Challenge', href: '#challenge' },
@@ -15,6 +15,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useCustomAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -71,20 +72,33 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <button onClick={() => base44.auth.redirectToLogin('/dashboard')}
-              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Login
-            </button>
-            <a href="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
-              Register
-            </a>
-            <button
-              onClick={() => scrollTo('#challenge')}
-              className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring"
-            >
-              Start Challenge
-              <ChevronRight className="inline w-4 h-4 ml-1" />
-            </button>
+            {user ? (
+              <>
+                <a href="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <LayoutDashboard className="w-4 h-4" /> Dashboard
+                </a>
+                <a href="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+                  <User className="w-4 h-4" /> {user.username || user.full_name}
+                </a>
+                <button onClick={logout}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-red-400 transition-colors">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <a href="/login" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Login
+                </a>
+                <a href="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
+                  Register
+                </a>
+                <button onClick={() => scrollTo('#challenge')}
+                  className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring">
+                  Start Challenge <ChevronRight className="inline w-4 h-4 ml-1" />
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Toggle */}
@@ -119,19 +133,18 @@ export default function Navbar() {
               ))}
             </div>
             <div className="mt-8 space-y-3">
-              <button onClick={() => base44.auth.redirectToLogin('/dashboard')}
-                className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
-                Login
-              </button>
-              <a href="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">
-                Register
-              </a>
-              <button
-                onClick={() => scrollTo('#challenge')}
-                className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full"
-              >
-                Start Challenge
-              </button>
+              {user ? (
+                <>
+                  <a href="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full">Dashboard</a>
+                  <button onClick={logout} className="block w-full py-3 text-sm text-center text-red-400 border border-red-400/30 rounded-full">Logout</button>
+                </>
+              ) : (
+                <>
+                  <a href="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</a>
+                  <a href="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Register</a>
+                  <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
+                </>
+              )}
             </div>
           </motion.div>
         )}

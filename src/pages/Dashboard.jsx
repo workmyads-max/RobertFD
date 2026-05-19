@@ -54,6 +54,7 @@ import TradingBackground from '../components/dashboard/TradingBackground';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -61,15 +62,13 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user } = useCustomAuth();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => base44.entities.Notification.filter({ is_active: true }),
     refetchInterval: 30000,
+    enabled: !!user,
   });
 
   const bannerNotification = notifications.find(n =>

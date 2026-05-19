@@ -135,6 +135,37 @@ function getEmailTemplate(type, data) {
       </div>
     `,
 
+    login_alert: `
+      <h1>Security Alert</h1>
+      <p class="subtitle">New login detected on your account</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(245,158,11,0.3); background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04));">
+          <p style="color: rgba(255,255,255,0.8); margin-bottom: 16px;">Hi <strong>${data.name || 'Trader'}</strong>, your account was accessed successfully.</p>
+          <div class="info-box">
+            <p>🕐 <strong>Time:</strong> ${data.time || new Date().toLocaleString()}</p>
+            <p>🌐 <strong>IP Address:</strong> ${data.ip || 'Unknown'}</p>
+            <p>💻 <strong>Device:</strong> ${data.device || 'Unknown'}</p>
+          </div>
+          <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 16px;">If this wasn't you, please change your password immediately and contact support.</p>
+        </div>
+      </div>
+    `,
+
+    welcome: `
+      <h1>Welcome to Funded Firms!</h1>
+      <p class="subtitle">Your account is now active</p>
+      <div class="content">
+        <p style="color: rgba(255,255,255,0.8); font-size: 15px; margin-bottom: 24px;">
+          Welcome <strong>${data.name || 'Trader'}</strong>! Your email has been verified and your account is now active.
+        </p>
+        <div class="card">
+          <p style="color: rgba(255,255,255,0.7);">🚀 You're now part of the Funded Firms elite trading community.</p>
+          <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 12px;">Start your challenge today and get funded within days.</p>
+        </div>
+        <a href="${data.dashboard_url || 'https://fundedfirms.com/dashboard'}" class="button">Go to Dashboard</a>
+      </div>
+    `,
+
     funded_approval: `
       <h1>You're Funded!</h1>
       <p class="subtitle">Welcome to the funded trader program</p>
@@ -215,6 +246,8 @@ Deno.serve(async (req) => {
       account_credentials: '🔑 Account Credentials',
       affiliate_commission: '💵 Commission Earned',
       breach_alert: '⚠️ Account Breach Alert',
+      login_alert: '🔐 New Login to Your Account',
+      welcome: '🎉 Welcome to Funded Firms - Account Activated',
     };
 
     await base44.integrations.Core.SendEmail({

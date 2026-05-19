@@ -1,0 +1,81 @@
+{
+  "name": "UserAccount",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "User email address"
+    },
+    "username": {
+      "type": "string",
+      "description": "Unique username"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full display name"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "Bcrypt hashed password"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Email verified"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin"
+      ],
+      "default": "user"
+    },
+    "last_login_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "login_attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "locked_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "otp_code": {
+      "type": "string"
+    },
+    "otp_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "otp_type": {
+      "type": "string",
+      "enum": [
+        "registration",
+        "login",
+        "password_reset"
+      ]
+    },
+    "otp_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reset_token": {
+      "type": "string"
+    },
+    "reset_token_expires": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "email",
+    "password_hash"
+  ]
+}
