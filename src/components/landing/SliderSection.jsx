@@ -6,21 +6,21 @@ function DashboardSlide() {
   return (
     <div className="glass rounded-2xl overflow-hidden relative h-full">
       <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(255,92,0,0.08)' }} />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(204,255,0,0.06)' }} />
       </div>
 
       <div className="relative z-10 p-5 h-full flex flex-col">
         {/* Window chrome */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex gap-1.5">
-            <motion.div className="w-2.5 h-2.5 rounded-full bg-red-500"
+            <motion.div className="w-2.5 h-2.5 rounded-full" style={{ background: '#ef4444' }}
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }} />
-            <motion.div className="w-2.5 h-2.5 rounded-full bg-yellow-500"
+            <motion.div className="w-2.5 h-2.5 rounded-full" style={{ background: '#eab308' }}
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity, delay: 0.2 }} />
-            <motion.div className="w-2.5 h-2.5 rounded-full bg-emerald-500"
+            <motion.div className="w-2.5 h-2.5 rounded-full" style={{ background: '#10b981' }}
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity, delay: 0.4 }} />
           </div>
@@ -30,9 +30,9 @@ function DashboardSlide() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-4">
           {[
-            { label: 'Balance', value: '$100,000', Icon: DollarSign, color: 'text-primary' },
-            { label: 'Today P&L', value: '+$4,280', Icon: TrendingUp, color: 'text-emerald-400' },
-            { label: 'Win Rate', value: '74.6%', Icon: Award, color: 'text-accent' },
+            { label: 'Balance', value: '$100,000', Icon: DollarSign, color: '#FF5C00' },
+            { label: 'Today P&L', value: '+$4,280', Icon: TrendingUp, color: '#10b981' },
+            { label: 'Win Rate', value: '74.6%', Icon: Award, color: '#CCFF00' },
           ].map(({ label, value, Icon, color }, idx) => (
             <motion.div key={label}
               initial={{ opacity: 0, y: 10 }}
@@ -40,16 +40,16 @@ function DashboardSlide() {
               transition={{ delay: idx * 0.1 }}
               className="rounded-xl p-2.5 group/stat hover:scale-105 transition-transform"
               style={{
-                background: `linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,92,0,0.02))`,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,92,0,0.02))',
                 border: '1px solid rgba(255,255,255,0.08)',
               }}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-mono text-muted-foreground uppercase">{label}</span>
                 <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
-                  <Icon className={`w-3 h-3 ${color}`} />
+                  <Icon className="w-3 h-3" style={{ color }} />
                 </motion.div>
               </div>
-              <motion.div className={`text-xs font-black ${color}`}
+              <motion.div className="text-xs font-black" style={{ color }}
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 3, repeat: Infinity, delay: idx * 0.2 }}>
                 {value}
@@ -65,7 +65,7 @@ function DashboardSlide() {
           transition={{ delay: 0.3 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-foreground">Equity Curve</span>
-            <motion.span className="text-[10px] font-mono text-emerald-400"
+            <motion.span className="text-[10px] font-mono" style={{ color: '#10b981' }}
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}>
               +4.28%
@@ -95,7 +95,7 @@ function DashboardSlide() {
           transition={{ delay: 0.4 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-foreground">Challenge Progress</span>
-            <motion.span className="text-[10px] font-mono text-primary"
+            <motion.span className="text-[10px] font-mono" style={{ color: '#FF5C00' }}
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Infinity }}>
               Phase 1
@@ -137,16 +137,16 @@ function RiskShieldSlide() {
   return (
     <div className="glass rounded-2xl overflow-hidden relative h-full">
       <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(204,255,0,0.06)' }} />
+        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(255,92,0,0.08)' }} />
       </div>
 
       <div className="relative z-10 p-6 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-6">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(239,68,68,0.5)' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(234,179,8,0.5)' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(16,185,129,0.5)' }} />
           </div>
           <span className="text-[10px] font-mono text-muted-foreground">Risk Shield</span>
         </div>
@@ -161,7 +161,8 @@ function RiskShieldSlide() {
               style={{ borderColor: 'rgba(16,185,129,0.3)' }}
               animate={{ scale: [1, 1.15, 1] }}
               transition={{ duration: 3, repeat: Infinity }} />
-            <motion.div className="absolute inset-3 rounded-2xl border border-primary/30"
+            <motion.div className="absolute inset-3 rounded-2xl border"
+              style={{ borderColor: 'rgba(255,92,0,0.3)' }}
               animate={{ scale: [1.1, 1, 1.1] }}
               transition={{ duration: 3, repeat: Infinity, delay: 0.1 }} />
 
@@ -172,7 +173,7 @@ function RiskShieldSlide() {
                 border: '2px solid rgba(16,185,129,0.4)',
                 boxShadow: '0 0 30px rgba(16,185,129,0.2), inset 0 0 30px rgba(16,185,129,0.1)',
               }}>
-              <Shield className="w-14 h-14 text-emerald-400" />
+              <Shield className="w-14 h-14" style={{ color: '#10b981' }} />
             </div>
           </motion.div>
         </div>
@@ -180,9 +181,9 @@ function RiskShieldSlide() {
         {/* Protection Features */}
         <div className="space-y-2">
           {[
-            { icon: Lock, label: 'Account Protection', color: 'text-blue-400' },
-            { icon: Flame, label: 'Stop Loss Enforcement', color: 'text-red-400' },
-            { icon: ZapIcon, label: 'Auto Risk Limits', color: 'text-yellow-400' },
+            { icon: Lock, label: 'Account Protection', color: '#3b82f6' },
+            { icon: Flame, label: 'Stop Loss Enforcement', color: '#ef4444' },
+            { icon: ZapIcon, label: 'Auto Risk Limits', color: '#eab308' },
           ].map((item, i) => {
             const Icon = item.icon;
             return (
@@ -192,9 +193,9 @@ function RiskShieldSlide() {
                 transition={{ delay: 0.2 + i * 0.1 }}
                 className="flex items-center gap-3 p-2.5 rounded-lg"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <Icon className={`w-4 h-4 ${item.color} flex-shrink-0`} />
+                <Icon className="w-4 h-4 flex-shrink-0" style={{ color: item.color }} />
                 <span className="text-xs font-medium text-foreground">{item.label}</span>
-                <motion.div className="w-1 h-1 rounded-full bg-emerald-400 ml-auto"
+                <motion.div className="w-1 h-1 rounded-full ml-auto" style={{ color: '#10b981' }}
                   animate={{ scale: [1, 1.5, 1] }}
                   transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} />
               </motion.div>
@@ -254,27 +255,28 @@ function PlatformSlide({ image }) {
       <div className="relative z-10 p-6 h-full flex flex-col">
         {/* Window chrome with animated dots */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="flex gap-1.5">
-            {[
-              { color: 'bg-red-500', delay: 0 },
-              { color: 'bg-yellow-500', delay: 0.2 },
-              { color: 'bg-emerald-500', delay: 0.4 },
-            ].map((dot, i) => (
-              <motion.div
-                key={i}
-                className={`w-2.5 h-2.5 rounded-full ${dot.color}`}
-                animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity, delay: dot.delay }}
-              />
-            ))}
-          </div>
-          <motion.span
-            className="flex-1 text-center text-[10px] font-mono text-muted-foreground"
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            Multi-Platform Trading
-          </motion.span>
+        <div className="flex gap-1.5">
+          {[
+            { color: '#ef4444', delay: 0 },
+            { color: '#eab308', delay: 0.2 },
+            { color: '#10b981', delay: 0.4 },
+          ].map((dot, i) => (
+            <motion.div
+              key={i}
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: dot.color }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity, delay: dot.delay }}
+            />
+          ))}
+        </div>
+        <motion.span
+          className="flex-1 text-center text-[10px] font-mono text-muted-foreground"
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          Multi-Platform Trading
+        </motion.span>
         </div>
 
         {/* 3D Platform Cards */}
@@ -282,7 +284,7 @@ function PlatformSlide({ image }) {
           {[
             { name: 'MetaTrader 5', icon: '📊', color: '#FF5C00', features: ['Advanced Charting', 'Expert Advisors', 'Mobile Trading'] },
             { name: 'TradeLocker', icon: '🔐', color: '#CCFF00', features: ['Risk Management', 'One-Click Trading', 'Real-Time Data'] },
-            { name: 'Web Terminal', icon: '🌐', color: '#00F5A0', features: ['No Download', 'Instant Access', 'Full Features'] },
+            { name: 'Web Terminal', icon: '🌐', color: '#00f5a0', features: ['No Download', 'Instant Access', 'Full Features'] },
           ].map((platform, idx) => (
             <motion.div
               key={platform.name}
