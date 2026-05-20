@@ -269,39 +269,35 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
-      // Generate a session token using service role for existing user
-      // Use 'recovery' type which works for existing confirmed users
-      const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
+      // Use generateLink (non-admin) for existing users - this creates a recovery link
+      const { data: linkData, error: linkError } = await adminSupabase.auth.generateLink({
         type: 'recovery',
         email: account.email,
         options: {
           redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
-        }
+        },
       });
 
-      if (sessionError) {
-        console.error('Session generation error:', sessionError.message);
+      if (linkError) {
+        console.error('GenerateLink error:', linkError.message);
         return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
       }
 
       // Extract tokens from the recovery link
-      const url = new URL(sessionData.properties.action_link);
+      const url = new URL(linkData.properties.action_link);
       const hashParams = new URLSearchParams(url.hash.substring(1));
       const access_token = hashParams.get('access_token');
       const refresh_token = hashParams.get('refresh_token');
 
       if (!access_token || !refresh_token) {
-        console.error('Failed to extract tokens from session link');
+        console.error('Failed to extract tokens from recovery link');
         return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
       }
 
       return Response.json({
         success: true,
         email: account.email,
-        session: {
-          access_token,
-          refresh_token,
-        },
+        session: { access_token, refresh_token },
         user: {
           id: account.id,
           email: account.email,
