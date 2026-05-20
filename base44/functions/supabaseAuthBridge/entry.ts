@@ -270,8 +270,9 @@ Deno.serve(async (req) => {
       }).catch(() => {});
 
       // Generate a session token using service role (no password needed)
+      // Use 'magiclink' type for existing users
       const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
-        type: 'signup',
+        type: 'magiclink',
         email: account.email,
         options: {
           redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
