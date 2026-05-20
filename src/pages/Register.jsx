@@ -65,19 +65,7 @@ export default function Register() {
     setLoading(false);
   };
 
-  const handleOTPSuccess = async (result) => {
-    // Use session tokens returned from backend if available
-    if (result?.supabaseSession?.access_token) {
-      const { supabase } = await import('@/lib/supabaseClient');
-      await supabase.auth.setSession({
-        access_token: result.supabaseSession.access_token,
-        refresh_token: result.supabaseSession.refresh_token,
-      });
-      setStep('done');
-      setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
-      return;
-    }
-    // Fallback: try signInWithPassword
+  const handleOTPSuccess = async () => {
     const { supabase } = await import('@/lib/supabaseClient');
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: fields.email, password: fields.password });
     if (signInError || !data?.session) {
