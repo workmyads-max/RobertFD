@@ -288,26 +288,9 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch((e) => console.log('Login alert failed (non-blocking):', e.message));
 
-      // Use signInWithOtp to create a session for the verified user
-      console.log('[STEP 6] Creating session with signInWithOtp for email:', account.email);
+      // Generate a magic link to extract tokens
+      console.log('[STEP 6] Generating magic link for session...');
       
-      const { data: sessionData, error: sessionError } = await adminSupabase.auth.signInWithOtp({
-        email: account.email,
-        options: {
-          shouldCreateUser: false, // Don't create user, just sign in
-        },
-      });
-
-      if (sessionError) {
-        console.error('[ERROR STEP 6] signInWithOtp error:', JSON.stringify(sessionError));
-        return Response.json({ error: 'Failed to create session: ' + sessionError.message, status: 500 });
-      }
-      
-      // signInWithOtp sends an OTP email, but we already verified the user
-      // So we need to use a different approach - generate an impersonation session
-      console.log('[STEP 7] Generating admin session...');
-      
-      // Generate a recovery link and extract tokens
       const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
         type: 'magiclink',
         email: account.email,
@@ -317,31 +300,31 @@ Deno.serve(async (req) => {
       });
 
       if (linkError) {
-        console.error('[ERROR STEP 7] GenerateLink error:', JSON.stringify(linkError));
-        return Response.json({ error: 'Failed to create session: ' + linkError.message, status: 500 });
+        console.error('[ERROR STEP 6] GenerateLink error:', JSON.stringify(linkError));
+        return Response.json({ error: 'Failed to create session: ' + linkError.message }, { status: 500 });
       }
-      console.log('[STEP 8] GenerateLink success');
+      console.log('[STEP 7] GenerateLink success');
 
-      // Extract tokens from the magic link
-      console.log('[STEP 9] Extracting tokens from action_link');
+      // Extract tokens from the magic link URL
+      console.log('[STEP 8] Extracting tokens from action_link');
       try {
         const url = new URL(linkData.properties.action_link);
         const hashParams = new URLSearchParams(url.hash.substring(1));
         const access_token = hashParams.get('access_token');
         const refresh_token = hashParams.get('refresh_token');
-        console.log('[STEP 10] Tokens extracted:', { has_access: !!access_token, has_refresh: !!refresh_token });
+        console.log('[STEP 9] Tokens extracted:', { has_access: !!access_token, has_refresh: !!refresh_token });
 
         if (!access_token || !refresh_token) {
-          console.error('[ERROR STEP 10] Missing tokens in URL hash');
+          console.error('[ERROR STEP 9] Missing tokens in URL hash');
           return Response.json({ error: 'Failed to create session: Missing tokens.' }, { status: 500 });
         }
 
         // Clear OTP only after successful session creation
-        console.log('[STEP 11] Clearing OTP and updating last_login_at...');
+        console.log('[STEP 10] Clearing OTP and updating last_login_at...');
         await sr.entities.UserAccount.update(account.id, {
           otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
         });
-        console.log('[STEP 12] OTP cleared successfully');
+        console.log('[STEP 11] OTP cleared successfully');
 
         console.log('[SUCCESS] Login complete, returning session');
         return Response.json({
@@ -358,7 +341,7 @@ Deno.serve(async (req) => {
           },
         });
       } catch (extractError) {
-        console.error('[ERROR STEP 9-10] Token extraction failed:', extractError.message);
+        console.error('[ERROR STEP 8-9] Token extraction failed:', extractError.message);
         return Response.json({ error: 'Failed to extract tokens: ' + extractError.message }, { status: 500 });
       }
     }
