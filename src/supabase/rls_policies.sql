@@ -183,7 +183,7 @@ CREATE POLICY "messages_select" ON public.support_messages
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.support_tickets t
-      WHERE t.id = ticket_id
+      WHERE t.id::text = ticket_id::text
       AND (t.user_email = public.auth_email() OR public.is_admin())
     )
   );
@@ -192,7 +192,7 @@ CREATE POLICY "messages_insert" ON public.support_messages
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.support_tickets t
-      WHERE t.id = ticket_id
+      WHERE t.id::text = ticket_id::text
       AND (t.user_email = public.auth_email() OR public.is_admin())
     )
   );
