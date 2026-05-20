@@ -133,11 +133,12 @@ Deno.serve(async (req) => {
         authUserId = createData.user.id;
       }
 
-      // Upsert UserAccount entity
+      // Upsert UserAccount entity with auth_user_id
       if (existingAccount) {
         await sr.entities.UserAccount.update(existingAccount.id, {
           username: username.toLowerCase(), full_name, password_hash,
           otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
+          auth_user_id: authUserId,
         });
       } else {
         await sr.entities.UserAccount.create({
@@ -145,6 +146,7 @@ Deno.serve(async (req) => {
           is_verified: false, is_active: true, role: 'user',
           otp_code, otp_expires_at, otp_type: 'registration',
           otp_sent_at: new Date().toISOString(), login_attempts: 0,
+          auth_user_id: authUserId,
         });
       }
 
@@ -250,19 +252,14 @@ Deno.serve(async (req) => {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
-      // Generate a real Supabase session via admin API (bypasses signInWithPassword)
+      // Generate Supabase session using stored auth_user_id
       let supabaseSession = null;
       try {
-        // Look up Supabase auth user by searching with filter
-        const { data: listData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
-        const authUser = listData?.users?.find(u => u.email === account.email.toLowerCase());
-        console.log('Auth user found:', authUser?.id, 'email:', authUser?.email);
-        if (authUser) {
-          if (!authUser.email_confirmed_at) {
-            await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
-          }
-          const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUser.id);
-          console.log('Session created:', !!sessionData?.session, 'error:', sessionError?.message);
+        const authUserId = account.auth_user_id;
+        if (authUserId) {
+          // Use admin createSession with the stored user ID
+          const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUserId);
+          console.log('Session result:', { hasSession: !!sessionData?.session, error: sessionError?.message });
           if (!sessionError && sessionData?.session) {
             supabaseSession = {
               access_token: sessionData.session.access_token,
@@ -270,10 +267,10 @@ Deno.serve(async (req) => {
             };
           }
         } else {
-          console.log('No auth user found for email:', account.email);
+          console.log('No auth_user_id stored for this account');
         }
       } catch (e) {
-        console.error('Session generation error:', e.message);
+        console.error('Session generation error:', e.message, e.stack);
       }
 
       // Non-blocking login alert

@@ -72,6 +72,10 @@
     "reset_token_expires": {
       "type": "string",
       "format": "date-time"
+    },
+    "auth_user_id": {
+      "type": "string",
+      "description": "Supabase auth.users ID"
     }
   },
   "required": [
