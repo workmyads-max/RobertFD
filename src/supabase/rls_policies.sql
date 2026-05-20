@@ -1,390 +1,325 @@
--- ==================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
--- ==================================================
--- Production-grade security for Funded Firms CRM
--- ==================================================
+-- ============================================================
+-- PRODUCTION RLS POLICIES — Supabase-Native Auth
+-- Uses auth.uid() and auth.jwt() from real Supabase sessions
+-- All frontend queries now carry valid JWTs → RLS works
+-- ============================================================
 
--- Enable RLS on all tables
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.affiliate_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.kyc_verifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.challenge_accounts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.withdrawal_requests ENABLE ROW LEVEL SECURITY;
+-- ── Enable RLS on all tables ──────────────────────────────────
+ALTER TABLE public.profiles              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.challenge_accounts    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.withdrawal_requests   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.affiliate_profiles    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.affiliate_commissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.support_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.trading_journal_entries ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.trade_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payment_gateways ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payment_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.trading_platform_providers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.violation_appeals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.risk_flags ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.device_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.otps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.social_media_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.affiliate_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_feature_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kyc_verifications     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.support_tickets       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.support_messages      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificates          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trade_records         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_logs          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.platform_settings     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_gateways      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.risk_flags            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.violation_appeals     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.device_logs           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs            ENABLE ROW LEVEL SECURITY;
 
--- ==================================================
--- PROFILES
--- ==================================================
+-- ── Helper functions ──────────────────────────────────────────
 
--- Users can view their own profile
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT USING (auth.jwt() ->> 'email' = email);
-
--- Users can update their own profile
-CREATE POLICY "Users can update own profile" ON public.profiles
-  FOR UPDATE USING (auth.jwt() ->> 'email' = email);
-
--- Admins can view all profiles
-CREATE POLICY "Admins can view all profiles" ON public.profiles
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
+-- Returns the email of the currently authenticated Supabase user
+CREATE OR REPLACE FUNCTION public.auth_email()
+RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER AS $$
+  SELECT COALESCE(
+    auth.jwt() ->> 'email',
+    (SELECT email FROM auth.users WHERE id = auth.uid())
   );
+$$;
 
--- Admins can update all profiles
-CREATE POLICY "Admins can update all profiles" ON public.profiles
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- CHALLENGE ACCOUNTS
--- ==================================================
-
--- Users can view their own accounts
-CREATE POLICY "Users can view own accounts" ON public.challenge_accounts
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all accounts
-CREATE POLICY "Admins can view all accounts" ON public.challenge_accounts
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all accounts
-CREATE POLICY "Admins can update all accounts" ON public.challenge_accounts
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- ORDERS
--- ==================================================
-
--- Users can view their own orders
-CREATE POLICY "Users can view own orders" ON public.orders
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all orders
-CREATE POLICY "Admins can view all orders" ON public.orders
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all orders
-CREATE POLICY "Admins can update all orders" ON public.orders
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- WITHDRAWAL REQUESTS
--- ==================================================
-
--- Users can view their own withdrawal requests
-CREATE POLICY "Users can view own withdrawals" ON public.withdrawal_requests
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Users can create withdrawal requests
-CREATE POLICY "Users can create withdrawals" ON public.withdrawal_requests
-  FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all withdrawals
-CREATE POLICY "Admins can view all withdrawals" ON public.withdrawal_requests
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all withdrawals
-CREATE POLICY "Admins can update all withdrawals" ON public.withdrawal_requests
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- AFFILIATE PROFILES
--- ==================================================
-
--- Users can view their own affiliate profile
-CREATE POLICY "Users can view own affiliate profile" ON public.affiliate_profiles
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all affiliate profiles
-CREATE POLICY "Admins can view all affiliate profiles" ON public.affiliate_profiles
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all affiliate profiles
-CREATE POLICY "Admins can update all affiliate profiles" ON public.affiliate_profiles
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- AFFILIATE COMMISSIONS
--- ==================================================
-
--- Users can view their own commissions
-CREATE POLICY "Users can view own commissions" ON public.affiliate_commissions
-  FOR SELECT USING (auth.jwt() ->> 'email' = affiliate_email);
-
--- Admins can view all commissions
-CREATE POLICY "Admins can view all commissions" ON public.affiliate_commissions
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all commissions
-CREATE POLICY "Admins can update all commissions" ON public.affiliate_commissions
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- KYC VERIFICATIONS
--- ==================================================
-
--- Users can view their own KYC
-CREATE POLICY "Users can view own KYC" ON public.kyc_verifications
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Users can create/update their KYC
-CREATE POLICY "Users can manage own KYC" ON public.kyc_verifications
-  FOR ALL USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all KYC
-CREATE POLICY "Admins can view all KYC" ON public.kyc_verifications
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all KYC
-CREATE POLICY "Admins can update all KYC" ON public.kyc_verifications
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- TRADE RECORDS
--- ==================================================
-
--- Users can view their own trades
-CREATE POLICY "Users can view own trades" ON public.trade_records
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all trades
-CREATE POLICY "Admins can view all trades" ON public.trade_records
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- COUPONS
--- ==================================================
-
--- Anyone can view active coupons
-CREATE POLICY "Anyone can view active coupons" ON public.coupons
-  FOR SELECT USING (is_active = true);
-
--- Admins can manage all coupons
-CREATE POLICY "Admins can manage coupons" ON public.coupons
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- CERTIFICATES
--- ==================================================
-
--- Users can view their own certificates
-CREATE POLICY "Users can view own certificates" ON public.certificates
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Anyone can view verified certificates (for public verification)
-CREATE POLICY "Anyone can view verified certificates" ON public.certificates
-  FOR SELECT USING (is_verified = true);
-
--- Admins can manage all certificates
-CREATE POLICY "Admins can manage certificates" ON public.certificates
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- NOTIFICATIONS
--- ==================================================
-
--- Anyone can view active notifications
-CREATE POLICY "Anyone can view active notifications" ON public.notifications
-  FOR SELECT USING (is_active = true);
-
--- Admins can manage notifications
-CREATE POLICY "Admins can manage notifications" ON public.notifications
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- SUPPORT TICKETS
--- ==================================================
-
--- Users can view their own tickets
-CREATE POLICY "Users can view own tickets" ON public.support_tickets
-  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
-
--- Users can create tickets
-CREATE POLICY "Users can create tickets" ON public.support_tickets
-  FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
-
--- Users can update their own tickets
-CREATE POLICY "Users can update own tickets" ON public.support_tickets
-  FOR UPDATE USING (auth.jwt() ->> 'email' = user_email);
-
--- Admins can view all tickets
-CREATE POLICY "Admins can view all tickets" ON public.support_tickets
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can update all tickets
-CREATE POLICY "Admins can update all tickets" ON public.support_tickets
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- SUPPORT MESSAGES
--- ==================================================
-
--- Users can view messages on their tickets
-CREATE POLICY "Users can view own ticket messages" ON public.support_messages
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.support_tickets 
-      WHERE id = ticket_id AND user_email = auth.jwt() ->> 'email'
-    )
-  );
-
--- Users can create messages on their tickets
-CREATE POLICY "Users can create ticket messages" ON public.support_messages
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.support_tickets 
-      WHERE id = ticket_id AND user_email = auth.jwt() ->> 'email'
-    )
-  );
-
--- Admins can view all messages
-CREATE POLICY "Admins can view all messages" ON public.support_messages
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can create messages
-CREATE POLICY "Admins can create messages" ON public.support_messages
-  FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- PAYMENT GATEWAYS (Admin Only)
--- ==================================================
-
--- Admins can view payment gateways
-CREATE POLICY "Admins can view payment gateways" ON public.payment_gateways
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can manage payment gateways
-CREATE POLICY "Admins can manage payment gateways" ON public.payment_gateways
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- TRADING PLATFORM PROVIDERS (Admin Only)
--- ==================================================
-
--- Admins can view providers
-CREATE POLICY "Admins can view providers" ON public.trading_platform_providers
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- Admins can manage providers
-CREATE POLICY "Admins can manage providers" ON public.trading_platform_providers
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- AUDIT LOGS (Admin Only)
--- ==================================================
-
--- Admins can view audit logs
-CREATE POLICY "Admins can view audit logs" ON public.audit_logs
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE email = auth.jwt() ->> 'email' AND role = 'admin')
-  );
-
--- ==================================================
--- HELPER FUNCTIONS
--- ==================================================
-
--- Function to check if current user is admin
+-- Returns true if the current user has admin role
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.profiles 
-    WHERE email = auth.jwt() ->> 'email' AND role = 'admin'
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER AS $$
+  SELECT COALESCE(
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin',
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin',
+    false
   );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- Function to get current user email
-CREATE OR REPLACE FUNCTION public.current_user_email()
-RETURNS TEXT AS $$
+-- ── DROP all old policies to avoid conflicts ──────────────────
+DO $$ DECLARE r RECORD;
 BEGIN
-  RETURN auth.jwt() ->> 'email';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+  FOR r IN SELECT schemaname, tablename, policyname FROM pg_policies WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', r.policyname, r.schemaname, r.tablename);
+  END LOOP;
+END $$;
 
--- Function to create audit log entry
+-- ============================================================
+-- PROFILES
+-- ============================================================
+CREATE POLICY "profiles_select_own" ON public.profiles
+  FOR SELECT USING (email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "profiles_insert_own" ON public.profiles
+  FOR INSERT WITH CHECK (email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "profiles_update_own" ON public.profiles
+  FOR UPDATE USING (email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "profiles_delete_admin" ON public.profiles
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- CHALLENGE ACCOUNTS
+-- ============================================================
+CREATE POLICY "accounts_select_own" ON public.challenge_accounts
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "accounts_insert_admin" ON public.challenge_accounts
+  FOR INSERT WITH CHECK (public.is_admin());
+
+CREATE POLICY "accounts_update_admin" ON public.challenge_accounts
+  FOR UPDATE USING (public.is_admin());
+
+CREATE POLICY "accounts_delete_admin" ON public.challenge_accounts
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- ORDERS
+-- ============================================================
+CREATE POLICY "orders_select_own" ON public.orders
+  FOR SELECT USING (email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "orders_insert_own" ON public.orders
+  FOR INSERT WITH CHECK (email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "orders_update_admin" ON public.orders
+  FOR UPDATE USING (public.is_admin());
+
+CREATE POLICY "orders_delete_admin" ON public.orders
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- WITHDRAWAL REQUESTS
+-- ============================================================
+CREATE POLICY "withdrawals_select_own" ON public.withdrawal_requests
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "withdrawals_insert_own" ON public.withdrawal_requests
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "withdrawals_update_admin" ON public.withdrawal_requests
+  FOR UPDATE USING (public.is_admin());
+
+CREATE POLICY "withdrawals_delete_admin" ON public.withdrawal_requests
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- AFFILIATE PROFILES
+-- ============================================================
+CREATE POLICY "affiliates_select_own" ON public.affiliate_profiles
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "affiliates_insert_own" ON public.affiliate_profiles
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "affiliates_update_own" ON public.affiliate_profiles
+  FOR UPDATE USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "affiliates_delete_admin" ON public.affiliate_profiles
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- AFFILIATE COMMISSIONS
+-- ============================================================
+CREATE POLICY "commissions_select_own" ON public.affiliate_commissions
+  FOR SELECT USING (affiliate_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "commissions_insert_admin" ON public.affiliate_commissions
+  FOR INSERT WITH CHECK (public.is_admin());
+
+CREATE POLICY "commissions_update_admin" ON public.affiliate_commissions
+  FOR UPDATE USING (public.is_admin());
+
+CREATE POLICY "commissions_delete_admin" ON public.affiliate_commissions
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- KYC VERIFICATIONS
+-- ============================================================
+CREATE POLICY "kyc_select_own" ON public.kyc_verifications
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "kyc_insert_own" ON public.kyc_verifications
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "kyc_update_own" ON public.kyc_verifications
+  FOR UPDATE USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "kyc_delete_admin" ON public.kyc_verifications
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- SUPPORT TICKETS
+-- ============================================================
+CREATE POLICY "tickets_select_own" ON public.support_tickets
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "tickets_insert_own" ON public.support_tickets
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "tickets_update_own" ON public.support_tickets
+  FOR UPDATE USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "tickets_delete_admin" ON public.support_tickets
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- SUPPORT MESSAGES
+-- ============================================================
+CREATE POLICY "messages_select" ON public.support_messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.support_tickets t
+      WHERE t.id = ticket_id
+      AND (t.user_email = public.auth_email() OR public.is_admin())
+    )
+  );
+
+CREATE POLICY "messages_insert" ON public.support_messages
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.support_tickets t
+      WHERE t.id = ticket_id
+      AND (t.user_email = public.auth_email() OR public.is_admin())
+    )
+  );
+
+-- ============================================================
+-- CERTIFICATES
+-- ============================================================
+CREATE POLICY "certs_select_own" ON public.certificates
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "certs_insert_admin" ON public.certificates
+  FOR INSERT WITH CHECK (public.is_admin());
+
+CREATE POLICY "certs_update_admin" ON public.certificates
+  FOR UPDATE USING (public.is_admin());
+
+-- ============================================================
+-- TRADE RECORDS
+-- ============================================================
+CREATE POLICY "trades_select_own" ON public.trade_records
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "trades_insert_admin" ON public.trade_records
+  FOR INSERT WITH CHECK (public.is_admin());
+
+CREATE POLICY "trades_update_admin" ON public.trade_records
+  FOR UPDATE USING (public.is_admin());
+
+CREATE POLICY "trades_delete_admin" ON public.trade_records
+  FOR DELETE USING (public.is_admin());
+
+-- ============================================================
+-- PAYMENT LOGS (admin only)
+-- ============================================================
+CREATE POLICY "payment_logs_admin" ON public.payment_logs
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- COUPONS (read for all authenticated, write admin only)
+-- ============================================================
+CREATE POLICY "coupons_select_auth" ON public.coupons
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "coupons_write_admin" ON public.coupons
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- NOTIFICATIONS (read for authenticated users, write admin)
+-- ============================================================
+CREATE POLICY "notifications_select_auth" ON public.notifications
+  FOR SELECT USING (auth.uid() IS NOT NULL AND is_active = true);
+
+CREATE POLICY "notifications_write_admin" ON public.notifications
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- PLATFORM SETTINGS (read all auth, write admin)
+-- ============================================================
+CREATE POLICY "settings_select_auth" ON public.platform_settings
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "settings_write_admin" ON public.platform_settings
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- PAYMENT GATEWAYS (admin only — contains API keys)
+-- ============================================================
+CREATE POLICY "gateways_admin" ON public.payment_gateways
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- RISK FLAGS (admin only)
+-- ============================================================
+CREATE POLICY "risk_flags_select_own" ON public.risk_flags
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "risk_flags_write_admin" ON public.risk_flags
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- VIOLATION APPEALS
+-- ============================================================
+CREATE POLICY "appeals_select_own" ON public.violation_appeals
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "appeals_insert_own" ON public.violation_appeals
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "appeals_update_admin" ON public.violation_appeals
+  FOR UPDATE USING (public.is_admin());
+
+-- ============================================================
+-- DEVICE LOGS
+-- ============================================================
+CREATE POLICY "device_logs_select_own" ON public.device_logs
+  FOR SELECT USING (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "device_logs_insert" ON public.device_logs
+  FOR INSERT WITH CHECK (user_email = public.auth_email() OR public.is_admin());
+
+CREATE POLICY "device_logs_admin" ON public.device_logs
+  FOR UPDATE USING (public.is_admin());
+
+-- ============================================================
+-- AUDIT LOGS (admin read only)
+-- ============================================================
+CREATE POLICY "audit_logs_admin" ON public.audit_logs
+  FOR SELECT USING (public.is_admin());
+
+CREATE POLICY "audit_logs_insert" ON public.audit_logs
+  FOR INSERT WITH CHECK (true); -- inserted by triggers/backend only
+
+-- ============================================================
+-- AUDIT LOG FUNCTION (fixed — no duplicate ip_address column)
+-- ============================================================
 CREATE OR REPLACE FUNCTION public.log_audit(
   p_action TEXT,
   p_entity_type TEXT,
-  p_entity_id UUID,
-  p_old_data JSONB,
-  p_new_data JSONB
-)
-RETURNS VOID AS $$
+  p_entity_id TEXT DEFAULT NULL,
+  p_old_data JSONB DEFAULT NULL,
+  p_new_data JSONB DEFAULT NULL
+) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   INSERT INTO public.audit_logs (
     user_email, action, entity_type, entity_id, old_data, new_data, ip_address, user_agent
   ) VALUES (
-    auth.jwt() ->> 'email',
+    public.auth_email(),
     p_action,
     p_entity_type,
     p_entity_id,
@@ -394,53 +329,42 @@ BEGIN
     current_setting('request.headers', true)::json->>'user-agent'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- ==================================================
--- TRIGGERS
--- ==================================================
+-- ============================================================
+-- REALTIME — enable for key tables
+-- ============================================================
+ALTER PUBLICATION supabase_realtime ADD TABLE public.challenge_accounts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.trade_records;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.withdrawal_requests;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.support_tickets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.support_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.affiliate_commissions;
 
--- Trigger to auto-create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
-  
-  -- Auto-create affiliate profile
-  INSERT INTO public.affiliate_profiles (user_email, referral_code)
-  VALUES (
-    NEW.email,
-    'RF' || upper(substring(md5(random()::text) from 1 for 8))
-  );
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-
--- Trigger to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
+-- ============================================================
+-- UPDATED_AT auto-trigger (idempotent)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
--- Apply updated_at trigger to all tables with updated_at
-CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_affiliate_profiles_updated_at BEFORE UPDATE ON public.affiliate_profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_kyc_verifications_updated_at BEFORE UPDATE ON public.kyc_verifications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_challenge_accounts_updated_at BEFORE UPDATE ON public.challenge_accounts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_withdrawal_requests_updated_at BEFORE UPDATE ON public.withdrawal_requests FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_coupons_updated_at BEFORE UPDATE ON public.coupons FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_payment_gateways_updated_at BEFORE UPDATE ON public.payment_gateways FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_platform_settings_updated_at BEFORE UPDATE ON public.platform_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_social_media_settings_updated_at BEFORE UPDATE ON public.social_media_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_affiliate_settings_updated_at BEFORE UPDATE ON public.affiliate_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DO $$ DECLARE t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'profiles','challenge_accounts','orders','withdrawal_requests',
+    'affiliate_profiles','kyc_verifications','support_tickets','certificates'
+  ] LOOP
+    EXECUTE format(
+      'DROP TRIGGER IF EXISTS trg_%s_updated_at ON public.%I;
+       CREATE TRIGGER trg_%s_updated_at BEFORE UPDATE ON public.%I
+       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();',
+      t, t, t, t
+    );
+  END LOOP;
+END $$;
