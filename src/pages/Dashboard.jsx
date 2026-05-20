@@ -78,9 +78,8 @@ export default function Dashboard() {
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
   );
 
-  const popupNotification = notifications.find(n =>
-    n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all')
-  );
+  // Disabled popup notifications for now
+  const popupNotification = null;
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
 
