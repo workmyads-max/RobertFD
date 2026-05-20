@@ -259,29 +259,15 @@ Deno.serve(async (req) => {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
-      // Use Supabase Auth Admin to generate a real signed session token
-      // This gives the frontend a proper Supabase JWT that satisfies RLS
-      const { data: tokenData, error: tokenError } = await adminSupabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: account.email,
-        options: { redirectTo: `${Deno.env.get('BASE44_APP_URL') || 'https://app.xfunded.com'}/dashboard` },
-      });
-
-      if (tokenError) {
-        console.error('Token generation failed:', tokenError.message);
-      }
-
       // Send login alert (non-blocking)
       base44.functions.invoke('emailService', {
         action: 'send_notification', to: account.email, type: 'login_alert',
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
+      // Frontend will call supabase.auth.signInWithPassword() to get the real JWT session
       return Response.json({
         success: true,
-        // Return magic link hash so frontend can exchange it for a real Supabase session
-        access_token: tokenData?.properties?.hashed_token || null,
-        action_link: tokenData?.properties?.action_link || null,
         user: {
           id: account.id,
           email: account.email,
