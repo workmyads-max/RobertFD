@@ -239,19 +239,24 @@ Deno.serve(async (req) => {
       // Generate a real Supabase session via admin API (bypasses signInWithPassword)
       let supabaseSession = null;
       try {
-        const { data: { users }, error: listError } = await adminSupabase.auth.admin.listUsers();
-        const authUser = !listError && users ? users.find(u => u.email === account.email) : null;
+        // Look up Supabase auth user by searching with filter
+        const { data: listData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
+        const authUser = listData?.users?.find(u => u.email === account.email.toLowerCase());
+        console.log('Auth user found:', authUser?.id, 'email:', authUser?.email);
         if (authUser) {
           if (!authUser.email_confirmed_at) {
             await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
           }
           const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUser.id);
+          console.log('Session created:', !!sessionData?.session, 'error:', sessionError?.message);
           if (!sessionError && sessionData?.session) {
             supabaseSession = {
               access_token: sessionData.session.access_token,
               refresh_token: sessionData.session.refresh_token,
             };
           }
+        } else {
+          console.log('No auth user found for email:', account.email);
         }
       } catch (e) {
         console.error('Session generation error:', e.message);
