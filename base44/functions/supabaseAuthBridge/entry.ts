@@ -269,8 +269,8 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
-      // Use generateLink (non-admin) for existing users - this creates a recovery link
-      const { data: linkData, error: linkError } = await adminSupabase.auth.generateLink({
+      // Use generateLink from admin namespace for existing users - this creates a recovery link
+      const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
         type: 'recovery',
         email: account.email,
         options: {
