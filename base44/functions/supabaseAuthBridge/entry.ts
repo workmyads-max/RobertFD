@@ -78,64 +78,78 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       }
 
-      const { data: existingList } = await adminSupabase.auth.admin.listUsers();
-      const existingUser = existingList?.users?.find(u => u.email === email.toLowerCase());
+      // Use getUserByEmail (admin) — simpler and avoids pagination issues
+      let existingUser = null;
+      try {
+        const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+        existingUser = euData?.users?.find(u => u.email === email.toLowerCase()) || null;
+        console.log('existingUser lookup:', existingUser?.id, existingUser?.email);
+      } catch(e) {
+        console.log('listUsers failed, continuing as new user:', e.message);
+      }
 
       const otp_code = generateOTP();
       const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       const password_hash = await hashPassword(password);
 
-      if (existingUser) {
-        if (!existingUser.email_confirmed_at) {
-          await adminSupabase.auth.admin.updateUserById(existingUser.id, {
-            user_metadata: { full_name, username: username.toLowerCase(), otp_code, otp_expires_at, otp_type: 'registration' },
-            password,
-          });
-          const accounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
-          if (accounts[0]) {
-            await sr.entities.UserAccount.update(accounts[0].id, {
-              username: username.toLowerCase(), full_name, password_hash, otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
-            });
-          }
-          await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
-          return Response.json({ success: true, userId: existingUser.id, message: 'OTP sent.' });
-        }
-        return Response.json({ error: 'This email is already registered.' }, { status: 409 });
-      }
-
+      // Check username taken
       const existingUsername = await sr.entities.UserAccount.filter({ username: username.toLowerCase() });
       if (existingUsername.length > 0) {
         return Response.json({ error: 'This username is already taken.' }, { status: 409 });
       }
 
-      const { data: newAuthUser, error: createError } = await adminSupabase.auth.admin.createUser({
-        email: email.toLowerCase(),
-        password,
-        email_confirm: false,
-        user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
-        app_metadata: { role: 'user' },
-      });
-      if (createError) {
-        return Response.json({ error: createError.message }, { status: 400 });
+      // Check UserAccount entity for existing email
+      const existingAccounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
+      const existingAccount = existingAccounts[0];
+      if (existingAccount?.is_verified) {
+        return Response.json({ error: 'This email is already registered.' }, { status: 409 });
       }
 
-      await sr.entities.UserAccount.create({
-        email: email.toLowerCase(),
-        username: username.toLowerCase(),
-        full_name,
-        password_hash,
-        is_verified: false,
-        is_active: true,
-        role: 'user',
-        otp_code,
-        otp_expires_at,
-        otp_type: 'registration',
-        otp_sent_at: new Date().toISOString(),
-        login_attempts: 0,
-      });
+      let authUserId;
+
+      if (existingUser) {
+        // Auth user exists but unconfirmed — update it
+        if (existingUser.email_confirmed_at) {
+          return Response.json({ error: 'This email is already registered.' }, { status: 409 });
+        }
+        await adminSupabase.auth.admin.updateUserById(existingUser.id, {
+          password,
+          user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+        });
+        authUserId = existingUser.id;
+      } else {
+        // Try to create new auth user
+        const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
+          email: email.toLowerCase(),
+          password,
+          email_confirm: false,
+          user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+          app_metadata: { role: 'user' },
+        });
+        if (createError) {
+          console.error('createUser error:', createError.message);
+          return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+        }
+        authUserId = createData.user.id;
+      }
+
+      // Upsert UserAccount entity
+      if (existingAccount) {
+        await sr.entities.UserAccount.update(existingAccount.id, {
+          username: username.toLowerCase(), full_name, password_hash,
+          otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
+        });
+      } else {
+        await sr.entities.UserAccount.create({
+          email: email.toLowerCase(), username: username.toLowerCase(), full_name, password_hash,
+          is_verified: false, is_active: true, role: 'user',
+          otp_code, otp_expires_at, otp_type: 'registration',
+          otp_sent_at: new Date().toISOString(), login_attempts: 0,
+        });
+      }
 
       await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
-      return Response.json({ success: true, userId: newAuthUser.user.id, message: 'OTP sent to email.' });
+      return Response.json({ success: true, userId: authUserId, message: 'OTP sent to email.' });
     }
 
     // ─── VERIFY REGISTRATION OTP ───────────────────────────────────
