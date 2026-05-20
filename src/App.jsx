@@ -8,8 +8,8 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
-import Register from './pages/Register';
-import LoginPage from './components/auth/LoginPage';
+import Register from './pages/Register.jsx';
+import LoginPage from './components/auth/LoginPage.jsx';
 
 // Add page imports here
 
