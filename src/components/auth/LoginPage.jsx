@@ -55,24 +55,51 @@ export default function LoginPage() {
 
   const handleOTPSuccess = async (res) => {
     const { supabase } = await import('@/lib/supabaseClient');
+    console.log('OTP success, setting session:', { hasSession: !!res?.supabaseSession?.access_token });
+    
     if (res?.supabaseSession?.access_token) {
       const { error: sessionError } = await supabase.auth.setSession({
         access_token: res.supabaseSession.access_token,
         refresh_token: res.supabaseSession.refresh_token,
       });
       if (sessionError) {
+        console.error('Session set error:', sessionError);
         setError(`Login failed: ${sessionError.message}`);
         setStep('login');
         return;
       }
-      // Wait for auth state to propagate before redirecting
-      await new Promise(resolve => {
+      console.log('Session set successfully, waiting for auth state...');
+      
+      // Wait for auth state to propagate
+      await new Promise((resolve) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session) { subscription.unsubscribe(); resolve(); }
+          console.log('Auth state changed:', event, !!session);
+          if (session) {
+            subscription.unsubscribe();
+            resolve();
+          }
         });
-        setTimeout(resolve, 2000); // fallback
+        // Fallback timeout
+        setTimeout(() => {
+          console.log('Auth state timeout fallback');
+          subscription.unsubscribe();
+          resolve();
+        }, 3000);
       });
+      
+      // Verify session exists before redirect
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Final session check:', !!session);
+      if (!session) {
+        setError('Session could not be established. Please try again.');
+        setStep('login');
+        return;
+      }
+    } else {
+      console.warn('No supabaseSession in response');
     }
+    
+    console.log('Redirecting to dashboard...');
     window.location.href = '/dashboard';
   };
 

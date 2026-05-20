@@ -260,15 +260,22 @@ Deno.serve(async (req) => {
       let supabaseSession = null;
       try {
         const authUserId = account.auth_user_id;
+        console.log('Attempting to create session for auth_user_id:', authUserId);
         if (authUserId) {
           // Use admin createSession with the stored user ID
           const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUserId);
-          console.log('Session result:', { hasSession: !!sessionData?.session, error: sessionError?.message });
-          if (!sessionError && sessionData?.session) {
+          console.log('Session result:', { 
+            hasSession: !!sessionData?.session, 
+            hasAccessToken: !!sessionData?.session?.access_token,
+            error: sessionError?.message 
+          });
+          if (!sessionError && sessionData?.session?.access_token) {
             supabaseSession = {
               access_token: sessionData.session.access_token,
               refresh_token: sessionData.session.refresh_token,
             };
+          } else {
+            console.error('Session creation failed:', sessionError);
           }
         } else {
           console.log('No auth_user_id stored for this account');
