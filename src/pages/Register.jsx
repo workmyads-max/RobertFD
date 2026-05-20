@@ -66,8 +66,12 @@ export default function Register() {
   };
 
   const handleOTPSuccess = async (_user) => {
-    const { error: signInError } = await signInToSupabase(fields.email, fields.password);
-    if (signInError) console.error('Supabase sign-in after registration failed:', signInError.message);
+    const { data, error: signInError } = await signInToSupabase(fields.email, fields.password);
+    if (signInError || !data?.session) {
+      setError(`Account created but sign-in failed: ${signInError?.message || 'Please log in manually.'}`);
+      setTimeout(() => { window.location.href = '/login'; }, 2000);
+      return;
+    }
     setStep('done');
     setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
   };

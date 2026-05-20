@@ -54,8 +54,12 @@ export default function LoginPage() {
   };
 
   const handleOTPSuccess = async (_user) => {
-    const { error: signInError } = await signInToSupabase(email, password);
-    if (signInError) console.error('Supabase sign-in failed:', signInError.message);
+    const { data, error: signInError } = await signInToSupabase(email, password);
+    if (signInError || !data?.session) {
+      setError(`Login failed after OTP: ${signInError?.message || 'No session returned. Please try again.'}`);
+      setStep('login');
+      return;
+    }
     window.location.href = '/dashboard';
   };
 

@@ -259,6 +259,12 @@ Deno.serve(async (req) => {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
+      // Ensure email is confirmed in Supabase Auth (in case it was missed during registration)
+      const { data: { user: authUser } } = await adminSupabase.auth.admin.getUserByEmail(account.email);
+      if (authUser && !authUser.email_confirmed_at) {
+        await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
+      }
+
       // Send login alert (non-blocking)
       base44.functions.invoke('emailService', {
         action: 'send_notification', to: account.email, type: 'login_alert',
