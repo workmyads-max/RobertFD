@@ -194,7 +194,16 @@ Deno.serve(async (req) => {
       try {
         // Use INSERT ... ON CONFLICT DO UPDATE with a stable external_id column approach
         // First try to find existing by title+type, then upsert
-        const { error } = await supabase.from('notifications').upsert({
+        // Use external_id (Base44 id) to avoid duplicates on re-sync
+        // First check if already exists
+        const { data: existingNotif } = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('title', notif.title)
+          .eq('type', notif.type || 'announcement')
+          .maybeSingle();
+
+        const notifPayload = {
           title: notif.title,
           message: notif.message,
           type: notif.type || 'announcement',
@@ -207,7 +216,14 @@ Deno.serve(async (req) => {
           scheduled_at: notif.scheduled_at,
           expires_at: notif.expires_at,
           updated_at: notif.updated_date,
-        });
+        };
+
+        let error;
+        if (existingNotif?.id) {
+          ({ error } = await supabase.from('notifications').update(notifPayload).eq('id', existingNotif.id));
+        } else {
+          ({ error } = await supabase.from('notifications').insert(notifPayload));
+        }
         
         if (error) {
           console.error(`Failed to sync notification ${notif.id}:`, error);
@@ -273,7 +289,7 @@ Deno.serve(async (req) => {
           wallets: gw.wallets || [],
           notes: gw.notes,
           updated_at: gw.updated_date,
-        }, { onConflict: 'id' });
+        }, { onConflict: 'name' });
         
         if (error) {
           console.error(`Failed to sync gateway ${gw.name}:`, error);
@@ -587,7 +603,15 @@ Deno.serve(async (req) => {
     stats.affiliate_commissions.total = commissions.length;
     for (const commission of commissions) {
       try {
-        const { error } = await supabase.from('affiliate_commissions').upsert({
+        // Check if commission already exists by affiliate_email + order_id combo
+        const { data: existingComm } = await supabase
+          .from('affiliate_commissions')
+          .select('id')
+          .eq('affiliate_email', commission.affiliate_email)
+          .eq('order_id', commission.order_id || '')
+          .maybeSingle();
+
+        const commPayload = {
           affiliate_email: commission.affiliate_email,
           referred_email: commission.referred_email,
           commission_type: commission.commission_type || 'challenge_purchase',
@@ -603,7 +627,14 @@ Deno.serve(async (req) => {
           paid_at: commission.paid_at,
           approved_by: commission.approved_by,
           updated_at: commission.updated_date,
-        }, { onConflict: 'id' });
+        };
+
+        let error;
+        if (existingComm?.id) {
+          ({ error } = await supabase.from('affiliate_commissions').update(commPayload).eq('id', existingComm.id));
+        } else {
+          ({ error } = await supabase.from('affiliate_commissions').insert(commPayload));
+        }
         
         if (error) {
           console.error(`Failed to sync commission:`, error);

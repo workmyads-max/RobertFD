@@ -390,7 +390,6 @@ BEGIN
     p_entity_id,
     p_old_data,
     p_new_data,
-    p_new_data,
     current_setting('request.headers', true)::json->>'x-forwarded-for',
     current_setting('request.headers', true)::json->>'user-agent'
   );

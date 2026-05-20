@@ -15,7 +15,8 @@ export const CustomAuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
+    if (token) saveSession(userData, token);
     setUser(userData);
   };
 

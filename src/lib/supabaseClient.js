@@ -1,10 +1,12 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import { createClient } from '@supabase/supabase-js';
 
-// Frontend client (publishable key only - safe for browser)
+// Frontend client — use your Supabase project's anon/public key
+// Get it from: Supabase Dashboard → Project Settings → API → Project API keys → anon public
+// ⚠️ IMPORTANT: Replace SUPABASE_ANON_KEY_HERE with your actual anon key before deploying
 const supabaseUrl = 'https://wpzgwvimupbbuflsbkvc.supabase.co';
-const supabasePublishableKey = 'sb_publishable_WtyPv8akefzovYvz9hacAg__hvfbUOg';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUPABASE_ANON_KEY_HERE';
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,

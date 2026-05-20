@@ -1,18 +1,34 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Simple hash using Web Crypto API
-async function hashPassword(password) {
+// Secure password hashing with per-user random salt using Web Crypto API
+// Format: salt:hash (both hex-encoded)
+async function hashPassword(password, existingSalt = null) {
   const encoder = new TextEncoder();
-  const salt = 'ff_salt_2026_'; // static salt prefix
-  const data = encoder.encode(salt + password);
+  // Generate a random 16-byte salt if not provided
+  const saltBytes = existingSalt
+    ? Uint8Array.from(existingSalt.match(/.{2}/g).map(b => parseInt(b, 16)))
+    : crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const data = encoder.encode(saltHex + password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${saltHex}:${hashHex}`;
 }
 
-async function verifyPassword(password, hash) {
-  const computed = await hashPassword(password);
-  return computed === hash;
+async function verifyPassword(password, storedHash) {
+  // Support legacy static-salt hashes (no colon separator)
+  if (!storedHash.includes(':')) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode('ff_salt_2026_' + password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const computed = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return computed === storedHash;
+  }
+  const [saltHex] = storedHash.split(':');
+  const newHash = await hashPassword(password, saltHex);
+  return newHash === storedHash;
 }
 
 function generateOTP() {
