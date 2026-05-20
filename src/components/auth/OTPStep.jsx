@@ -52,12 +52,20 @@ export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login', 
 
     setLoading(true);
     setError('');
+    console.log('Verifying OTP:', { userId, purpose, otp: code });
     const action = purpose === 'registration' ? 'verify_registration' : 'verify_login';
-    const res = await callAuth(action, { userId, otp: code });
-    setLoading(false);
+    try {
+      const res = await callAuth(action, { userId, otp: code });
+      console.log('OTP response:', res);
+      setLoading(false);
 
-    if (res.error) { setError(res.error); return; }
-    onSuccess(res);
+      if (res.error) { setError(res.error); return; }
+      onSuccess(res);
+    } catch (err) {
+      console.error('OTP verification failed:', err);
+      setError(err.message || 'Verification failed. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handleResend = async () => {

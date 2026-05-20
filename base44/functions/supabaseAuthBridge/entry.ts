@@ -241,10 +241,14 @@ Deno.serve(async (req) => {
       const ipAddress = req.headers.get('x-forwarded-for') || 'Unknown';
       const userAgent = req.headers.get('user-agent') || 'Unknown';
 
+      console.log('verify_login request:', { userId, otp, timestamp: new Date().toISOString() });
+      
       const accounts = await sr.entities.UserAccount.filter({ id: userId });
       const account = accounts[0];
+      console.log('Account lookup result:', { found: !!account, accountEmail: account?.email, otp_type: account?.otp_type, otp_expires: account?.otp_expires_at, otp_code: account?.otp_code });
+      
       if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
-      if (account.otp_type !== 'login') return Response.json({ error: 'Invalid OTP type.' }, { status: 400 });
+      if (account.otp_type !== 'login') return Response.json({ error: 'Invalid OTP type. Please log in again.' }, { status: 400 });
       if (new Date() > new Date(account.otp_expires_at)) return Response.json({ error: 'OTP expired. Please log in again.' }, { status: 400 });
       if (account.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
 
