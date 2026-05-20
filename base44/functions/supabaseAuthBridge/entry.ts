@@ -47,6 +47,7 @@ async function verifyPassword(password, storedHash) {
 
 async function sendOTPEmail(sr, to, name, code, purpose) {
   try {
+    // Use asServiceRole explicitly for emailService
     await sr.functions.invoke('emailService', {
       action: 'send_notification',
       to,
@@ -55,6 +56,7 @@ async function sendOTPEmail(sr, to, name, code, purpose) {
     });
   } catch (e) {
     console.error('OTP email failed:', e.message);
+    // Don't fail registration if email fails - OTP will still work
   }
 }
 
