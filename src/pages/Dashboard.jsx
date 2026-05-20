@@ -65,7 +65,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const { user } = useCustomAuth();
+  const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -82,7 +82,7 @@ export default function Dashboard() {
     n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all')
   );
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isUserAdmin || user?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
