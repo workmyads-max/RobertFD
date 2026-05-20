@@ -269,14 +269,28 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
-      // Create session directly by signing in with password (service role)
-      const { data: sessionData, error: signInError } = await adminSupabase.auth.admin.signInWithPassword(
-        account.email,
-        password
-      );
+      // Generate a session token using service role (no password needed)
+      const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
+        type: 'signup',
+        email: account.email,
+        options: {
+          redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
+        }
+      });
 
-      if (signInError || !sessionData.session) {
-        console.error('Session creation error:', signInError?.message || 'No session returned');
+      if (sessionError) {
+        console.error('Session generation error:', sessionError.message);
+        return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
+      }
+
+      // Extract tokens from the action link
+      const url = new URL(sessionData.properties.action_link);
+      const hashParams = new URLSearchParams(url.hash.substring(1));
+      const access_token = hashParams.get('access_token');
+      const refresh_token = hashParams.get('refresh_token');
+
+      if (!access_token || !refresh_token) {
+        console.error('Failed to extract tokens from session link');
         return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
       }
 
@@ -284,8 +298,8 @@ Deno.serve(async (req) => {
         success: true,
         email: account.email,
         session: {
-          access_token: sessionData.session.access_token,
-          refresh_token: sessionData.session.refresh_token,
+          access_token,
+          refresh_token,
         },
         user: {
           id: account.id,
