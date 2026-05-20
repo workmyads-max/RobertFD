@@ -263,30 +263,6 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
       }
 
-      // Generate a Supabase JWT token using admin client
-      const adminSupabase = getAdminClient();
-      let sessionToken = null;
-      let refreshToken = null;
-      
-      try {
-        const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
-          type: 'magiclink',
-          email: account.email,
-          options: { redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard` }
-        });
-        
-        if (!sessionError && sessionData?.properties?.email_action_link) {
-          // Extract token from magic link
-          const url = new URL(sessionData.properties.email_action_link);
-          const token = url.searchParams.get('token');
-          if (token) {
-            sessionToken = token;
-          }
-        }
-      } catch (e) {
-        console.log('Magic link generation fallback:', e.message);
-      }
-
       // Non-blocking login alert
       sr.functions.invoke('emailService', {
         action: 'send_notification', to: account.email, type: 'login_alert',
@@ -296,7 +272,7 @@ Deno.serve(async (req) => {
       return Response.json({
         success: true,
         email: account.email,
-        sessionToken: sessionToken,
+        // Frontend will sign in with password - user's password is already set in Supabase auth
         user: {
           id: account.id,
           email: account.email,

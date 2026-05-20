@@ -63,21 +63,21 @@ export default function LoginPage() {
         return;
       }
       
-      // Use session token from backend
-      if (res?.sessionToken) {
-        const { supabase } = await import('@/lib/supabaseClient');
-        const { error } = await supabase.auth.verifyOtp({
-          email: res.email,
-          token: res.sessionToken,
-          type: 'magiclink'
-        });
-        
-        if (error) {
-          console.error('Token verification error:', error);
-        }
+      // Sign in with password to establish Supabase session
+      const { supabase } = await import('@/lib/supabaseClient');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: res.email,
+        password: password // Use the password from form state
+      });
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        setError(`Login failed: ${error.message}`);
+        setStep('login');
+        return;
       }
       
-      console.log('Redirecting to dashboard...');
+      console.log('Signed in successfully, redirecting to dashboard...');
       window.location.href = '/dashboard';
     } catch (err) {
       console.error('OTP success handler error:', err);
