@@ -181,17 +181,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Create a real Supabase session so RLS works immediately
-      const { data: sessionData, error: signInError } = await adminSupabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: authUser.email,
-      });
-
-      // Sign in directly to get a proper session token
-      const { data: signInData } = await adminSupabase.auth.signInWithPassword
-        ? { data: null } // fallback
-        : { data: null };
-
       // Return user data — frontend will sign in with password to get real session
       await sendOTPEmail(base44, authUser.email, meta.full_name, '', 'welcome');
       try {

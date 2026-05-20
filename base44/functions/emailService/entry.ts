@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 // Supabase admin client for backend
-const supabaseUrl = 'https://wpzgwvimupbbuflsbkvc.supabase.co';
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://wpzgwvimupbbuflsbkvc.supabase.co';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
