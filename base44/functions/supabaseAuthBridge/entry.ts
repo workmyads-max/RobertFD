@@ -236,13 +236,25 @@ Deno.serve(async (req) => {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
-      // Ensure email is confirmed in Supabase Auth
+      // Generate a real Supabase session via admin API (bypasses signInWithPassword)
+      let supabaseSession = null;
       try {
         const { data: { user: authUser } } = await adminSupabase.auth.admin.getUserByEmail(account.email);
-        if (authUser && !authUser.email_confirmed_at) {
-          await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
+        if (authUser) {
+          if (!authUser.email_confirmed_at) {
+            await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
+          }
+          const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUser.id);
+          if (!sessionError && sessionData?.session) {
+            supabaseSession = {
+              access_token: sessionData.session.access_token,
+              refresh_token: sessionData.session.refresh_token,
+            };
+          }
         }
-      } catch (_) {}
+      } catch (e) {
+        console.error('Session generation error:', e.message);
+      }
 
       // Non-blocking login alert
       sr.functions.invoke('emailService', {
@@ -252,6 +264,7 @@ Deno.serve(async (req) => {
 
       return Response.json({
         success: true,
+        supabaseSession,
         user: {
           id: account.id,
           email: account.email,

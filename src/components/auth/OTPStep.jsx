@@ -57,7 +57,7 @@ export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login', 
     setLoading(false);
 
     if (res.error) { setError(res.error); return; }
-    onSuccess(res.user, res.token);
+    onSuccess(res);
   };
 
   const handleResend = async () => {

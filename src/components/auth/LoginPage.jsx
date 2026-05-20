@@ -53,10 +53,27 @@ export default function LoginPage() {
     setStep('otp');
   };
 
-  const handleOTPSuccess = async (_user) => {
-    const { data, error: signInError } = await signInToSupabase(email, password);
+  const handleOTPSuccess = async (result) => {
+    // Use the session tokens returned directly from the backend (bypasses signInWithPassword)
+    if (result?.supabaseSession?.access_token) {
+      const { supabase } = await import('@/lib/supabaseClient');
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.supabaseSession.access_token,
+        refresh_token: result.supabaseSession.refresh_token,
+      });
+      if (sessionError) {
+        setError(`Login failed: ${sessionError.message}`);
+        setStep('login');
+        return;
+      }
+      window.location.href = '/dashboard';
+      return;
+    }
+    // Fallback: try signInWithPassword
+    const { supabase } = await import('@/lib/supabaseClient');
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError || !data?.session) {
-      setError(`Login failed after OTP: ${signInError?.message || 'No session returned. Please try again.'}`);
+      setError(`Login failed: ${signInError?.message || 'No session returned.'}`);
       setStep('login');
       return;
     }
