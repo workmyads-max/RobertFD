@@ -239,7 +239,8 @@ Deno.serve(async (req) => {
       // Generate a real Supabase session via admin API (bypasses signInWithPassword)
       let supabaseSession = null;
       try {
-        const { data: { user: authUser } } = await adminSupabase.auth.admin.getUserByEmail(account.email);
+        const { data: { users }, error: listError } = await adminSupabase.auth.admin.listUsers();
+        const authUser = !listError && users ? users.find(u => u.email === account.email) : null;
         if (authUser) {
           if (!authUser.email_confirmed_at) {
             await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
