@@ -257,31 +257,36 @@ Deno.serve(async (req) => {
       });
 
       // Generate Supabase session using stored auth_user_id
+      const authUserId = account.auth_user_id;
+      console.log('Attempting to create session for auth_user_id:', authUserId);
+      
+      if (!authUserId) {
+        return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
+      }
+
       let supabaseSession = null;
       try {
-        const authUserId = account.auth_user_id;
-        console.log('Attempting to create session for auth_user_id:', authUserId);
-        if (authUserId) {
-          // Use admin createSession with the stored user ID
-          const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUserId);
-          console.log('Session result:', { 
-            hasSession: !!sessionData?.session, 
-            hasAccessToken: !!sessionData?.session?.access_token,
-            error: sessionError?.message 
-          });
-          if (!sessionError && sessionData?.session?.access_token) {
-            supabaseSession = {
-              access_token: sessionData.session.access_token,
-              refresh_token: sessionData.session.refresh_token,
-            };
-          } else {
-            console.error('Session creation failed:', sessionError);
-          }
-        } else {
-          console.log('No auth_user_id stored for this account');
+        const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.createSession(authUserId);
+        console.log('Session result:', { 
+          hasSession: !!sessionData?.session, 
+          hasAccessToken: !!sessionData?.session?.access_token,
+          error: sessionError?.message 
+        });
+        if (sessionError) {
+          console.error('Session creation failed:', sessionError);
+          return Response.json({ error: `Session failed: ${sessionError.message}` }, { status: 500 });
         }
+        if (!sessionData?.session?.access_token) {
+          console.error('No access token in session response');
+          return Response.json({ error: 'Session creation failed. Please try again.' }, { status: 500 });
+        }
+        supabaseSession = {
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        };
       } catch (e) {
         console.error('Session generation error:', e.message, e.stack);
+        return Response.json({ error: `Session error: ${e.message}` }, { status: 500 });
       }
 
       // Non-blocking login alert
