@@ -299,8 +299,19 @@ Deno.serve(async (req) => {
       // Create a session by updating the user's password and signing in
       // This is the only reliable way to get session tokens for an existing user
       const tempPassword = 'TempPass_' + Math.random().toString(36).slice(-8);
+      
+      // Ensure auth user metadata has correct role (especially for admin)
       await adminSupabase.auth.admin.updateUserById(authUserId, {
         password: tempPassword,
+        user_metadata: {
+          ...(authUser.user_metadata || {}),
+          role: account.role || 'user',
+          full_name: account.full_name,
+        },
+        app_metadata: {
+          ...(authUser.app_metadata || {}),
+          role: account.role || 'user',
+        },
       });
       
       // Now sign in with the temp password
