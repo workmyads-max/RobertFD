@@ -63,29 +63,21 @@ export default function LoginPage() {
         return;
       }
       
-      // If session_url is provided, use it to sign in
-      if (res.session_url) {
-        console.log('Using session URL, redirecting...');
-        window.location.href = res.session_url;
+      // Use session tokens if provided
+      if (res.session?.access_token) {
+        console.log('Setting session tokens...');
+        const { supabase } = await import('@/lib/supabaseClient');
+        await supabase.auth.setSession({
+          access_token: res.session.access_token,
+          refresh_token: res.session.refresh_token,
+        });
+        console.log('Redirecting to dashboard...');
+        window.location.href = '/dashboard';
         return;
       }
       
-      // Fallback: sign in with password (for backward compatibility)
-      const { supabase } = await import('@/lib/supabaseClient');
-      const { error } = await supabase.auth.signInWithPassword({
-        email: res.email,
-        password: password
-      });
-      
-      if (error) {
-        console.error('Sign in error:', error);
-        setError(`Login failed: ${error.message}`);
-        setStep('login');
-        return;
-      }
-      
-      console.log('Signed in successfully, redirecting to dashboard...');
-      window.location.href = '/dashboard';
+      setError('Login verification failed. Please try again.');
+      setStep('login');
     } catch (err) {
       console.error('OTP success handler error:', err);
       setError(err.message || 'An error occurred. Please try again.');
