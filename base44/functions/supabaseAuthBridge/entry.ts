@@ -269,10 +269,30 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
+      // Create a Supabase session directly using service role
+      const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: account.email,
+        options: {
+          data: {
+            id: account.id,
+            email: account.email,
+            username: account.username,
+            full_name: account.full_name,
+            role: account.role,
+          }
+        }
+      });
+
+      if (sessionError) {
+        console.error('Session generation error:', sessionError.message);
+        return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
+      }
+
       return Response.json({
         success: true,
         email: account.email,
-        // Frontend will sign in with password - user's password is already set in Supabase auth
+        session_url: sessionData.properties.action_link,
         user: {
           id: account.id,
           email: account.email,

@@ -63,11 +63,18 @@ export default function LoginPage() {
         return;
       }
       
-      // Sign in with password to establish Supabase session
+      // If session_url is provided, use it to sign in
+      if (res.session_url) {
+        console.log('Using session URL, redirecting...');
+        window.location.href = res.session_url;
+        return;
+      }
+      
+      // Fallback: sign in with password (for backward compatibility)
       const { supabase } = await import('@/lib/supabaseClient');
       const { error } = await supabase.auth.signInWithPassword({
         email: res.email,
-        password: password // Use the password from form state
+        password: password
       });
       
       if (error) {
