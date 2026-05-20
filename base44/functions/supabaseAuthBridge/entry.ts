@@ -1,17 +1,7 @@
 /**
- * supabaseAuthBridge — Backend auth bridge using Supabase Auth Admin API.
- *
- * Routes:
- *   register   — create user in Supabase Auth + send OTP email
- *   verify_registration — verify OTP and confirm user
- *   login      — validate password, send OTP email for 2FA
- *   verify_login — verify OTP, return Supabase session
- *   resend_otp — resend the current OTP
- *
- * This ensures:
- *  - Real Supabase JWTs are issued → RLS works
- *  - Realtime subscriptions authenticate correctly
- *  - No auth/RLS mismatch
+ * supabaseAuthBridge — Public auth endpoint.
+ * Uses asServiceRole for all operations so no user JWT is needed.
+ * This allows unauthenticated users (login/register pages) to call this function.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
@@ -19,7 +9,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-// Admin client — bypasses RLS, used only in backend
 function getAdminClient() {
   return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -30,7 +19,6 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Secure per-user random-salt SHA-256 hash (format: saltHex:hashHex)
 async function hashPassword(password, existingSalt = null) {
   const encoder = new TextEncoder();
   const saltBytes = existingSalt
@@ -45,7 +33,6 @@ async function hashPassword(password, existingSalt = null) {
 
 async function verifyPassword(password, storedHash) {
   if (!storedHash) return false;
-  // Legacy static-salt support
   if (!storedHash.includes(':')) {
     const encoder = new TextEncoder();
     const data = encoder.encode('ff_salt_2026_' + password);
@@ -58,9 +45,9 @@ async function verifyPassword(password, storedHash) {
   return recomputed === storedHash;
 }
 
-async function sendOTPEmail(base44, to, name, code, purpose) {
+async function sendOTPEmail(sr, to, name, code, purpose) {
   try {
-    await base44.functions.invoke('emailService', {
+    await sr.functions.invoke('emailService', {
       action: 'send_notification',
       to,
       type: 'otp',
@@ -73,7 +60,10 @@ async function sendOTPEmail(base44, to, name, code, purpose) {
 
 Deno.serve(async (req) => {
   try {
+    // createClientFromRequest is fine — we use asServiceRole for all ops
+    // so no user JWT is required (works for unauthenticated login/register calls)
     const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole; // shorthand — all entity/function calls go through service role
     const adminSupabase = getAdminClient();
     const body = await req.json();
     const { action } = body;
@@ -88,7 +78,6 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       }
 
-      // Check if email already exists in Supabase Auth
       const { data: existingList } = await adminSupabase.auth.admin.listUsers();
       const existingUser = existingList?.users?.find(u => u.email === email.toLowerCase());
 
@@ -97,32 +86,28 @@ Deno.serve(async (req) => {
       const password_hash = await hashPassword(password);
 
       if (existingUser) {
-        // If unconfirmed, update and resend
         if (!existingUser.email_confirmed_at) {
           await adminSupabase.auth.admin.updateUserById(existingUser.id, {
             user_metadata: { full_name, username: username.toLowerCase(), otp_code, otp_expires_at, otp_type: 'registration' },
             password,
           });
-          // Also update UserAccount entity
-          const accounts = await base44.asServiceRole.entities.UserAccount.filter({ email: email.toLowerCase() });
+          const accounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
           if (accounts[0]) {
-            await base44.asServiceRole.entities.UserAccount.update(accounts[0].id, {
+            await sr.entities.UserAccount.update(accounts[0].id, {
               username: username.toLowerCase(), full_name, password_hash, otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
             });
           }
-          await sendOTPEmail(base44, email, full_name, otp_code, 'Email Verification');
+          await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
           return Response.json({ success: true, userId: existingUser.id, message: 'OTP sent.' });
         }
         return Response.json({ error: 'This email is already registered.' }, { status: 409 });
       }
 
-      // Check username uniqueness
-      const existingUsername = await base44.asServiceRole.entities.UserAccount.filter({ username: username.toLowerCase() });
+      const existingUsername = await sr.entities.UserAccount.filter({ username: username.toLowerCase() });
       if (existingUsername.length > 0) {
         return Response.json({ error: 'This username is already taken.' }, { status: 409 });
       }
 
-      // Create user in Supabase Auth (email_confirm=false means they need OTP)
       const { data: newAuthUser, error: createError } = await adminSupabase.auth.admin.createUser({
         email: email.toLowerCase(),
         password,
@@ -134,8 +119,7 @@ Deno.serve(async (req) => {
         return Response.json({ error: createError.message }, { status: 400 });
       }
 
-      // Mirror to Base44 UserAccount entity for admin queries
-      await base44.asServiceRole.entities.UserAccount.create({
+      await sr.entities.UserAccount.create({
         email: email.toLowerCase(),
         username: username.toLowerCase(),
         full_name,
@@ -150,7 +134,7 @@ Deno.serve(async (req) => {
         login_attempts: 0,
       });
 
-      await sendOTPEmail(base44, email, full_name, otp_code, 'Email Verification');
+      await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
       return Response.json({ success: true, userId: newAuthUser.user.id, message: 'OTP sent to email.' });
     }
 
@@ -167,24 +151,20 @@ Deno.serve(async (req) => {
       if (new Date() > new Date(meta.otp_expires_at)) return Response.json({ error: 'OTP expired. Request a new one.' }, { status: 400 });
       if (meta.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
 
-      // Confirm the user in Supabase Auth — now they have a real confirmed account
       await adminSupabase.auth.admin.updateUserById(userId, {
         email_confirm: true,
         user_metadata: { ...meta, otp_code: null, otp_expires_at: null, otp_type: null },
       });
 
-      // Mirror update to UserAccount entity
-      const accounts = await base44.asServiceRole.entities.UserAccount.filter({ email: authUser.email });
+      const accounts = await sr.entities.UserAccount.filter({ email: authUser.email });
       if (accounts[0]) {
-        await base44.asServiceRole.entities.UserAccount.update(accounts[0].id, {
+        await sr.entities.UserAccount.update(accounts[0].id, {
           is_verified: true, otp_code: null, otp_expires_at: null, otp_type: null,
         });
       }
 
-      // Return user data — frontend will sign in with password to get real session
-      await sendOTPEmail(base44, authUser.email, meta.full_name, '', 'welcome');
       try {
-        await base44.functions.invoke('emailService', {
+        await sr.functions.invoke('emailService', {
           action: 'send_notification', to: authUser.email, type: 'registration',
           data: { name: meta.full_name, email: authUser.email, role: 'Trader' },
         });
@@ -192,7 +172,7 @@ Deno.serve(async (req) => {
 
       return Response.json({
         success: true,
-        autoSignIn: true, // tells frontend to sign in with stored password
+        autoSignIn: true,
         user: {
           id: authUser.id,
           email: authUser.email,
@@ -208,12 +188,10 @@ Deno.serve(async (req) => {
       const { email, password } = body;
       if (!email || !password) return Response.json({ error: 'Email and password are required.' }, { status: 400 });
 
-      // Verify via UserAccount (we store password hash + lockout logic there)
-      const accounts = await base44.asServiceRole.entities.UserAccount.filter({ email: email.toLowerCase() });
+      const accounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Invalid email or password.' }, { status: 401 });
 
-      // Check lockout
       if (account.locked_until && new Date() < new Date(account.locked_until)) {
         const mins = Math.ceil((new Date(account.locked_until) - new Date()) / 60000);
         return Response.json({ error: `Account locked. Try again in ${mins} minute(s).` }, { status: 429 });
@@ -224,54 +202,54 @@ Deno.serve(async (req) => {
         const attempts = (account.login_attempts || 0) + 1;
         const updates = { login_attempts: attempts };
         if (attempts >= 5) updates.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-        await base44.asServiceRole.entities.UserAccount.update(account.id, updates);
+        await sr.entities.UserAccount.update(account.id, updates);
         return Response.json({ error: 'Invalid email or password.' }, { status: 401 });
       }
       if (!account.is_verified) {
         return Response.json({ error: 'Please verify your email first.', needsVerification: true, userId: account.id }, { status: 403 });
       }
 
-      // Issue 2FA OTP
       const otp_code = generateOTP();
       const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await base44.asServiceRole.entities.UserAccount.update(account.id, {
+      await sr.entities.UserAccount.update(account.id, {
         login_attempts: 0, locked_until: null, otp_code, otp_expires_at, otp_type: 'login', otp_sent_at: new Date().toISOString(),
       });
 
-      await sendOTPEmail(base44, account.email, account.full_name, otp_code, 'Login Verification');
+      await sendOTPEmail(sr, account.email, account.full_name, otp_code, 'Login Verification');
       return Response.json({ success: true, userId: account.id, email: account.email, message: 'OTP sent.' });
     }
 
-    // ─── VERIFY LOGIN OTP → return Supabase session ────────────────
+    // ─── VERIFY LOGIN OTP ──────────────────────────────────────────
     if (action === 'verify_login') {
-      const { userId, otp, password } = body;
+      const { userId, otp } = body;
       const ipAddress = req.headers.get('x-forwarded-for') || 'Unknown';
       const userAgent = req.headers.get('user-agent') || 'Unknown';
 
-      const accounts = await base44.asServiceRole.entities.UserAccount.filter({ id: userId });
+      const accounts = await sr.entities.UserAccount.filter({ id: userId });
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
       if (account.otp_type !== 'login') return Response.json({ error: 'Invalid OTP type.' }, { status: 400 });
       if (new Date() > new Date(account.otp_expires_at)) return Response.json({ error: 'OTP expired. Please log in again.' }, { status: 400 });
       if (account.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
 
-      await base44.asServiceRole.entities.UserAccount.update(account.id, {
+      await sr.entities.UserAccount.update(account.id, {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
-      // Ensure email is confirmed in Supabase Auth (in case it was missed during registration)
-      const { data: { user: authUser } } = await adminSupabase.auth.admin.getUserByEmail(account.email);
-      if (authUser && !authUser.email_confirmed_at) {
-        await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
-      }
+      // Ensure email is confirmed in Supabase Auth
+      try {
+        const { data: { user: authUser } } = await adminSupabase.auth.admin.getUserByEmail(account.email);
+        if (authUser && !authUser.email_confirmed_at) {
+          await adminSupabase.auth.admin.updateUserById(authUser.id, { email_confirm: true });
+        }
+      } catch (_) {}
 
-      // Send login alert (non-blocking)
-      base44.functions.invoke('emailService', {
+      // Non-blocking login alert
+      sr.functions.invoke('emailService', {
         action: 'send_notification', to: account.email, type: 'login_alert',
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
-      // Frontend will call supabase.auth.signInWithPassword() to get the real JWT session
       return Response.json({
         success: true,
         user: {
@@ -288,7 +266,7 @@ Deno.serve(async (req) => {
     // ─── RESEND OTP ────────────────────────────────────────────────
     if (action === 'resend_otp') {
       const { userId } = body;
-      const accounts = await base44.asServiceRole.entities.UserAccount.filter({ id: userId });
+      const accounts = await sr.entities.UserAccount.filter({ id: userId });
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
       if (account.otp_sent_at && new Date() - new Date(account.otp_sent_at) < 60000) {
@@ -296,10 +274,10 @@ Deno.serve(async (req) => {
       }
       const otp_code = generateOTP();
       const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await base44.asServiceRole.entities.UserAccount.update(account.id, {
+      await sr.entities.UserAccount.update(account.id, {
         otp_code, otp_expires_at, otp_sent_at: new Date().toISOString(),
       });
-      await sendOTPEmail(base44, account.email, account.full_name, otp_code,
+      await sendOTPEmail(sr, account.email, account.full_name, otp_code,
         account.otp_type === 'registration' ? 'Email Verification' : 'Login Verification');
       return Response.json({ success: true, message: 'New OTP sent.' });
     }
