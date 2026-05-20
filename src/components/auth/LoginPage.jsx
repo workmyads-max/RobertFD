@@ -63,13 +63,18 @@ export default function LoginPage() {
         return;
       }
       
-      // Use Supabase magic link to create session without password
-      const { supabase } = await import('@/lib/supabaseClient');
-      const { error } = await supabase.auth.signInWithOtp({ email: res.email });
-      
-      if (error) {
-        console.error('Magic link error:', error);
-        // Fallback: just redirect, user is authenticated via backend
+      // Use session token from backend
+      if (res?.sessionToken) {
+        const { supabase } = await import('@/lib/supabaseClient');
+        const { error } = await supabase.auth.verifyOtp({
+          email: res.email,
+          token: res.sessionToken,
+          type: 'magiclink'
+        });
+        
+        if (error) {
+          console.error('Token verification error:', error);
+        }
       }
       
       console.log('Redirecting to dashboard...');

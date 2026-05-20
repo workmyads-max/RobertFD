@@ -256,7 +256,6 @@ Deno.serve(async (req) => {
         otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
       });
 
-      // Generate Supabase session by signing in with magic link
       const authUserId = account.auth_user_id;
       console.log('Attempting to create session for auth_user_id:', authUserId);
       
@@ -264,8 +263,29 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
       }
 
-      // Frontend will sign in with password to establish Supabase session
-      // This is the simplest and most reliable approach
+      // Generate a Supabase JWT token using admin client
+      const adminSupabase = getAdminClient();
+      let sessionToken = null;
+      let refreshToken = null;
+      
+      try {
+        const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email: account.email,
+          options: { redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard` }
+        });
+        
+        if (!sessionError && sessionData?.properties?.email_action_link) {
+          // Extract token from magic link
+          const url = new URL(sessionData.properties.email_action_link);
+          const token = url.searchParams.get('token');
+          if (token) {
+            sessionToken = token;
+          }
+        }
+      } catch (e) {
+        console.log('Magic link generation fallback:', e.message);
+      }
 
       // Non-blocking login alert
       sr.functions.invoke('emailService', {
@@ -275,8 +295,8 @@ Deno.serve(async (req) => {
 
       return Response.json({
         success: true,
-        // Frontend will sign in with password to get Supabase session
         email: account.email,
+        sessionToken: sessionToken,
         user: {
           id: account.id,
           email: account.email,
