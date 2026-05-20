@@ -29,8 +29,13 @@ export function clearSession() {
 
 // All auth calls now go through the Supabase-native bridge
 export async function callAuth(action, payload) {
-  const res = await base44.functions.invoke('supabaseAuthBridge', { action, ...payload });
-  return res.data;
+  try {
+    const res = await base44.functions.invoke('supabaseAuthBridge', { action, ...payload });
+    return res.data || {};
+  } catch (error) {
+    console.error('callAuth error:', error);
+    return { error: error.message || 'Request failed' };
+  }
 }
 
 /**

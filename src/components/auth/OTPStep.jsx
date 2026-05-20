@@ -60,6 +60,7 @@ export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login', 
       setLoading(false);
 
       if (res.error) { setError(res.error); return; }
+      if (!res.success) { setError('Verification failed. Please try again.'); return; }
       onSuccess(res);
     } catch (err) {
       console.error('OTP verification failed:', err);
