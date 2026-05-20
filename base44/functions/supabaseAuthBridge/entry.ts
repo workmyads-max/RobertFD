@@ -96,122 +96,71 @@ Deno.serve(async (req) => {
       if (existingAccount && existingAccount.is_verified) {
         return Response.json({ error: 'This email is already registered.' }, { status: 409 });
       }
-      // If account exists but unverified, we'll reuse it
 
       let authUserId;
       let isNewAccount = false;
 
-      if (existingAccount) {
-        // UserAccount entity exists (unverified) - reuse it
-        authUserId = existingAccount.auth_user_id;
+      // Always try fresh creation first - handle 409 by cleaning up and retrying
+      console.log('Attempting to create auth user for:', email.toLowerCase());
+      const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
+        email: email.toLowerCase(),
+        password,
+        email_confirm: false,
+        user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+        app_metadata: { role: 'user' },
+      });
+
+      if (createError && createError.status === 409) {
+        console.log('Email exists in auth (409), attempting cleanup and retry...');
+        // Email is reserved in Supabase auth - find and delete it
+        const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+        const conflictingUser = euData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
         
-        // If auth_user_id is missing, we need to create the auth user
-        if (!authUserId) {
-          console.log('Creating missing auth user for existing account');
-          const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
+        if (conflictingUser) {
+          console.log('Found conflicting auth user:', conflictingUser.id);
+          await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
+          console.log('Deleted conflicting user, retrying creation...');
+          
+          // Retry creation
+          const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
             email: email.toLowerCase(),
             password,
             email_confirm: false,
             user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
             app_metadata: { role: 'user' },
           });
-          // Handle 409 - email already exists in auth (deleted but reserved)
-          if (createError && createError.status === 409) {
-            console.log('Email reserved in auth, deleting and recreating...');
-            // Try to find and delete the conflicting auth user
-            const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
-            const conflictingUser = euData?.users?.find(u => u.email === email.toLowerCase());
-            if (conflictingUser) {
-              await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
-              // Retry creation
-              const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
-                email: email.toLowerCase(),
-                password,
-                email_confirm: false,
-                user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
-                app_metadata: { role: 'user' },
-              });
-              if (retryError) {
-                console.error('Retry createUser error:', retryError.message);
-                return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-              }
-              authUserId = retryData.user.id;
-              isNewAccount = true;
-            } else {
-              return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-            }
-          } else if (createError) {
-            console.error('createUser error:', createError.message);
-            return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-          } else {
-            authUserId = createData.user.id;
-            isNewAccount = true;
+          
+          if (retryError) {
+            console.error('Retry createUser failed:', retryError.message);
+            return Response.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
           }
-        }
-        
-        // Update existing account
-        await sr.entities.UserAccount.update(existingAccount.id, {
-          username: username.toLowerCase(), full_name, password_hash,
-          otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
-          auth_user_id: authUserId,
-        });
-        
-        // Update auth user metadata
-        await adminSupabase.auth.admin.updateUserById(authUserId, {
-          password,
-          user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
-        });
-      } else {
-        // Brand new account - create both auth user and UserAccount entity
-        console.log('Creating new auth user');
-        const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
-          email: email.toLowerCase(),
-          password,
-          email_confirm: false,
-          user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
-          app_metadata: { role: 'user' },
-        });
-        // Handle 409 - email already exists in auth (deleted but reserved)
-        if (createError && createError.status === 409) {
-          console.log('Email reserved in auth, deleting and recreating...');
-          const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
-          const conflictingUser = euData?.users?.find(u => u.email === email.toLowerCase());
-          if (conflictingUser) {
-            await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
-            // Retry creation
-            const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
-              email: email.toLowerCase(),
-              password,
-              email_confirm: false,
-              user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
-              app_metadata: { role: 'user' },
-            });
-            if (retryError) {
-              console.error('Retry createUser error:', retryError.message);
-              return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-            }
-            authUserId = retryData.user.id;
-            isNewAccount = true;
-          } else {
-            return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-          }
-        } else if (createError) {
-          console.error('createUser error:', createError.message);
-          return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
-        } else {
-          authUserId = createData.user.id;
+          authUserId = retryData.user.id;
           isNewAccount = true;
+        } else {
+          console.error('Could not find conflicting user to delete');
+          return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
         }
-        
-        // Create UserAccount entity
-        await sr.entities.UserAccount.create({
-          email: email.toLowerCase(), username: username.toLowerCase(), full_name, password_hash,
-          is_verified: false, is_active: true, role: 'user',
-          otp_code, otp_expires_at, otp_type: 'registration',
-          otp_sent_at: new Date().toISOString(), login_attempts: 0,
-          auth_user_id: authUserId,
-        });
+      } else if (createError) {
+        console.error('createUser error:', createError.message);
+        return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+      } else {
+        authUserId = createData.user.id;
+        isNewAccount = true;
       }
+
+      // Delete old unverified record if it exists
+      if (existingAccount) {
+        await sr.entities.UserAccount.delete(existingAccount.id);
+      }
+
+      // Create fresh UserAccount entity
+      await sr.entities.UserAccount.create({
+        email: email.toLowerCase(), username: username.toLowerCase(), full_name, password_hash,
+        is_verified: false, is_active: true, role: 'user',
+        otp_code, otp_expires_at, otp_type: 'registration',
+        otp_sent_at: new Date().toISOString(), login_attempts: 0,
+        auth_user_id: authUserId,
+      });
 
       await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
       return Response.json({ success: true, userId: authUserId, message: 'OTP sent to email.' });
