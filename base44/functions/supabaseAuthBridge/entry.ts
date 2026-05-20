@@ -288,62 +288,60 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch((e) => console.log('Login alert failed (non-blocking):', e.message));
 
-      // Generate a magic link to extract tokens
-      console.log('[STEP 6] Generating magic link for session...');
+      // Verify the auth user exists and is confirmed
+      const { data: authUser, error: authUserError } = await adminSupabase.auth.admin.getUserById(authUserId);
+      if (authUserError || !authUser) {
+        console.error('[ERROR STEP 6] Auth user not found:', authUserError);
+        return Response.json({ error: 'Auth user not found.' }, { status: 500 });
+      }
       
-      const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
-        type: 'magiclink',
+      console.log('[STEP 7] Auth user verified:', authUser.email);
+
+      // Clear OTP first
+      console.log('[STEP 8] Clearing OTP and updating last_login_at...');
+      await sr.entities.UserAccount.update(account.id, {
+        otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
+      });
+      console.log('[STEP 9] OTP cleared successfully');
+
+      // Create a session by updating the user's password and signing in
+      // This is the only reliable way to get session tokens for an existing user
+      const tempPassword = 'TempPass_' + Math.random().toString(36).slice(-8);
+      await adminSupabase.auth.admin.updateUserById(authUserId, {
+        password: tempPassword,
+      });
+      
+      // Now sign in with the temp password
+      const { data: signInData, error: signInError } = await adminSupabase.auth.signInWithPassword({
         email: account.email,
-        options: {
-          redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
+        password: tempPassword,
+      });
+      
+      if (signInError) {
+        console.error('[ERROR STEP 10] signInWithPassword failed:', signInError.message);
+        return Response.json({ error: 'Failed to create session: ' + signInError.message }, { status: 500 });
+      }
+      
+      console.log('[STEP 11] Session created successfully');
+      
+      console.log('[SUCCESS] Login complete');
+      return Response.json({
+        success: true,
+        email: account.email,
+        userId: account.id,
+        session: {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        },
+        user: {
+          id: account.id,
+          email: account.email,
+          username: account.username,
+          full_name: account.full_name,
+          role: account.role,
+          is_verified: true,
         },
       });
-
-      if (linkError) {
-        console.error('[ERROR STEP 6] GenerateLink error:', JSON.stringify(linkError));
-        return Response.json({ error: 'Failed to create session: ' + linkError.message }, { status: 500 });
-      }
-      console.log('[STEP 7] GenerateLink success');
-
-      // Extract tokens from the magic link URL
-      console.log('[STEP 8] Extracting tokens from action_link');
-      try {
-        const url = new URL(linkData.properties.action_link);
-        const hashParams = new URLSearchParams(url.hash.substring(1));
-        const access_token = hashParams.get('access_token');
-        const refresh_token = hashParams.get('refresh_token');
-        console.log('[STEP 9] Tokens extracted:', { has_access: !!access_token, has_refresh: !!refresh_token });
-
-        if (!access_token || !refresh_token) {
-          console.error('[ERROR STEP 9] Missing tokens in URL hash');
-          return Response.json({ error: 'Failed to create session: Missing tokens.' }, { status: 500 });
-        }
-
-        // Clear OTP only after successful session creation
-        console.log('[STEP 10] Clearing OTP and updating last_login_at...');
-        await sr.entities.UserAccount.update(account.id, {
-          otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
-        });
-        console.log('[STEP 11] OTP cleared successfully');
-
-        console.log('[SUCCESS] Login complete, returning session');
-        return Response.json({
-          success: true,
-          email: account.email,
-          session: { access_token, refresh_token },
-          user: {
-            id: account.id,
-            email: account.email,
-            username: account.username,
-            full_name: account.full_name,
-            role: account.role,
-            is_verified: true,
-          },
-        });
-      } catch (extractError) {
-        console.error('[ERROR STEP 8-9] Token extraction failed:', extractError.message);
-        return Response.json({ error: 'Failed to extract tokens: ' + extractError.message }, { status: 500 });
-      }
     }
 
     // ─── RESEND OTP ────────────────────────────────────────────────

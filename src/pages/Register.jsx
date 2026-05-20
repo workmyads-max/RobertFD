@@ -66,25 +66,8 @@ export default function Register() {
   };
 
   const handleOTPSuccess = async (res) => {
-    const { supabase } = await import('@/lib/supabaseClient');
-    if (res?.supabaseSession?.access_token) {
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: res.supabaseSession.access_token,
-        refresh_token: res.supabaseSession.refresh_token,
-      });
-      if (sessionError) {
-        setError(`Account created but sign-in failed: ${sessionError.message}`);
-        setTimeout(() => { window.location.href = '/login'; }, 2000);
-        return;
-      }
-      // Wait for auth state to propagate before redirecting
-      await new Promise(resolve => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session) { subscription.unsubscribe(); resolve(); }
-        });
-        setTimeout(resolve, 2000); // fallback
-      });
-    }
+    console.log('Registration OTP verified:', res);
+    // Registration successful - redirect to dashboard
     setStep('done');
     setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
   };
