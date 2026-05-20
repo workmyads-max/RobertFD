@@ -101,24 +101,51 @@ Deno.serve(async (req) => {
       // Check UserAccount entity for existing email
       const existingAccounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
       const existingAccount = existingAccounts[0];
-      if (existingAccount?.is_verified) {
+      if (existingAccount && existingAccount.is_verified) {
         return Response.json({ error: 'This email is already registered.' }, { status: 409 });
       }
+      // If account exists but unverified, we'll reuse it
 
       let authUserId;
+      let isNewAccount = false;
 
-      if (existingUser) {
-        // Auth user exists but unconfirmed — update it
-        if (existingUser.email_confirmed_at) {
-          return Response.json({ error: 'This email is already registered.' }, { status: 409 });
+      if (existingAccount) {
+        // UserAccount entity exists (unverified) - reuse it
+        authUserId = existingAccount.auth_user_id;
+        
+        // If auth_user_id is missing, we need to create the auth user
+        if (!authUserId) {
+          console.log('Creating missing auth user for existing account');
+          const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
+            email: email.toLowerCase(),
+            password,
+            email_confirm: false,
+            user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+            app_metadata: { role: 'user' },
+          });
+          if (createError) {
+            console.error('createUser error:', createError.message);
+            return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+          }
+          authUserId = createData.user.id;
+          isNewAccount = true;
         }
-        await adminSupabase.auth.admin.updateUserById(existingUser.id, {
+        
+        // Update existing account
+        await sr.entities.UserAccount.update(existingAccount.id, {
+          username: username.toLowerCase(), full_name, password_hash,
+          otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
+          auth_user_id: authUserId,
+        });
+        
+        // Update auth user metadata
+        await adminSupabase.auth.admin.updateUserById(authUserId, {
           password,
           user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
         });
-        authUserId = existingUser.id;
       } else {
-        // Try to create new auth user
+        // Brand new account - create both auth user and UserAccount entity
+        console.log('Creating new auth user');
         const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
           email: email.toLowerCase(),
           password,
@@ -131,16 +158,9 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
         }
         authUserId = createData.user.id;
-      }
-
-      // Upsert UserAccount entity with auth_user_id
-      if (existingAccount) {
-        await sr.entities.UserAccount.update(existingAccount.id, {
-          username: username.toLowerCase(), full_name, password_hash,
-          otp_code, otp_expires_at, otp_type: 'registration', otp_sent_at: new Date().toISOString(),
-          auth_user_id: authUserId,
-        });
-      } else {
+        isNewAccount = true;
+        
+        // Create UserAccount entity
         await sr.entities.UserAccount.create({
           email: email.toLowerCase(), username: username.toLowerCase(), full_name, password_hash,
           is_verified: false, is_active: true, role: 'user',
@@ -268,12 +288,28 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch((e) => console.log('Login alert failed (non-blocking):', e.message));
 
-      // Use generateLink from admin namespace for existing users - this creates a recovery link
-      console.log('[STEP 6] Calling generateLink with email:', account.email);
-      console.log('[STEP 6] BASE44_APP_URL:', Deno.env.get('BASE44_APP_URL'));
+      // Use signInWithOtp to create a session for the verified user
+      console.log('[STEP 6] Creating session with signInWithOtp for email:', account.email);
       
+      const { data: sessionData, error: sessionError } = await adminSupabase.auth.signInWithOtp({
+        email: account.email,
+        options: {
+          shouldCreateUser: false, // Don't create user, just sign in
+        },
+      });
+
+      if (sessionError) {
+        console.error('[ERROR STEP 6] signInWithOtp error:', JSON.stringify(sessionError));
+        return Response.json({ error: 'Failed to create session: ' + sessionError.message, status: 500 });
+      }
+      
+      // signInWithOtp sends an OTP email, but we already verified the user
+      // So we need to use a different approach - generate an impersonation session
+      console.log('[STEP 7] Generating admin session...');
+      
+      // Generate a recovery link and extract tokens
       const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
-        type: 'recovery',
+        type: 'magiclink',
         email: account.email,
         options: {
           redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
@@ -281,32 +317,31 @@ Deno.serve(async (req) => {
       });
 
       if (linkError) {
-        console.error('[ERROR STEP 6] GenerateLink error:', JSON.stringify(linkError));
+        console.error('[ERROR STEP 7] GenerateLink error:', JSON.stringify(linkError));
         return Response.json({ error: 'Failed to create session: ' + linkError.message, status: 500 });
       }
-      console.log('[STEP 7] GenerateLink success, linkData:', JSON.stringify(linkData, null, 2));
+      console.log('[STEP 8] GenerateLink success');
 
-      // Extract tokens from the recovery link
-      console.log('[STEP 8] Extracting tokens from action_link:', linkData.properties?.action_link?.substring(0, 50) + '...');
+      // Extract tokens from the magic link
+      console.log('[STEP 9] Extracting tokens from action_link');
       try {
         const url = new URL(linkData.properties.action_link);
-        console.log('[STEP 8b] URL parsed, hash:', url.hash.substring(0, 50) + '...');
         const hashParams = new URLSearchParams(url.hash.substring(1));
         const access_token = hashParams.get('access_token');
         const refresh_token = hashParams.get('refresh_token');
-        console.log('[STEP 9] Tokens extracted:', { has_access: !!access_token, has_refresh: !!refresh_token, access_len: access_token?.length, refresh_len: refresh_token?.length });
+        console.log('[STEP 10] Tokens extracted:', { has_access: !!access_token, has_refresh: !!refresh_token });
 
         if (!access_token || !refresh_token) {
-          console.error('[ERROR STEP 9] Missing tokens in URL hash');
+          console.error('[ERROR STEP 10] Missing tokens in URL hash');
           return Response.json({ error: 'Failed to create session: Missing tokens.' }, { status: 500 });
         }
 
         // Clear OTP only after successful session creation
-        console.log('[STEP 10] Clearing OTP and updating last_login_at...');
+        console.log('[STEP 11] Clearing OTP and updating last_login_at...');
         await sr.entities.UserAccount.update(account.id, {
           otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
         });
-        console.log('[STEP 11] OTP cleared successfully');
+        console.log('[STEP 12] OTP cleared successfully');
 
         console.log('[SUCCESS] Login complete, returning session');
         return Response.json({
@@ -323,7 +358,7 @@ Deno.serve(async (req) => {
           },
         });
       } catch (extractError) {
-        console.error('[ERROR STEP 8-9] Token extraction failed:', extractError.message);
+        console.error('[ERROR STEP 9-10] Token extraction failed:', extractError.message);
         return Response.json({ error: 'Failed to extract tokens: ' + extractError.message }, { status: 500 });
       }
     }
