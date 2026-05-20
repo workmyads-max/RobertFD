@@ -78,16 +78,6 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       }
 
-      // Use getUserByEmail (admin) — simpler and avoids pagination issues
-      let existingUser = null;
-      try {
-        const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
-        existingUser = euData?.users?.find(u => u.email === email.toLowerCase()) || null;
-        console.log('existingUser lookup:', existingUser?.id, existingUser?.email);
-      } catch(e) {
-        console.log('listUsers failed, continuing as new user:', e.message);
-      }
-
       const otp_code = generateOTP();
       const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       const password_hash = await hashPassword(password);
@@ -123,12 +113,38 @@ Deno.serve(async (req) => {
             user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
             app_metadata: { role: 'user' },
           });
-          if (createError) {
+          // Handle 409 - email already exists in auth (deleted but reserved)
+          if (createError && createError.status === 409) {
+            console.log('Email reserved in auth, deleting and recreating...');
+            // Try to find and delete the conflicting auth user
+            const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+            const conflictingUser = euData?.users?.find(u => u.email === email.toLowerCase());
+            if (conflictingUser) {
+              await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
+              // Retry creation
+              const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
+                email: email.toLowerCase(),
+                password,
+                email_confirm: false,
+                user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+                app_metadata: { role: 'user' },
+              });
+              if (retryError) {
+                console.error('Retry createUser error:', retryError.message);
+                return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+              }
+              authUserId = retryData.user.id;
+              isNewAccount = true;
+            } else {
+              return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+            }
+          } else if (createError) {
             console.error('createUser error:', createError.message);
             return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+          } else {
+            authUserId = createData.user.id;
+            isNewAccount = true;
           }
-          authUserId = createData.user.id;
-          isNewAccount = true;
         }
         
         // Update existing account
@@ -153,12 +169,37 @@ Deno.serve(async (req) => {
           user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
           app_metadata: { role: 'user' },
         });
-        if (createError) {
+        // Handle 409 - email already exists in auth (deleted but reserved)
+        if (createError && createError.status === 409) {
+          console.log('Email reserved in auth, deleting and recreating...');
+          const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+          const conflictingUser = euData?.users?.find(u => u.email === email.toLowerCase());
+          if (conflictingUser) {
+            await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
+            // Retry creation
+            const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
+              email: email.toLowerCase(),
+              password,
+              email_confirm: false,
+              user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+              app_metadata: { role: 'user' },
+            });
+            if (retryError) {
+              console.error('Retry createUser error:', retryError.message);
+              return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+            }
+            authUserId = retryData.user.id;
+            isNewAccount = true;
+          } else {
+            return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+          }
+        } else if (createError) {
           console.error('createUser error:', createError.message);
           return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+        } else {
+          authUserId = createData.user.id;
+          isNewAccount = true;
         }
-        authUserId = createData.user.id;
-        isNewAccount = true;
         
         // Create UserAccount entity
         await sr.entities.UserAccount.create({
