@@ -252,10 +252,6 @@ Deno.serve(async (req) => {
       if (new Date() > new Date(account.otp_expires_at)) return Response.json({ error: 'OTP expired. Please log in again.' }, { status: 400 });
       if (account.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
 
-      await sr.entities.UserAccount.update(account.id, {
-        otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
-      });
-
       const authUserId = account.auth_user_id;
       console.log('Attempting to create session for auth_user_id:', authUserId);
       
@@ -293,6 +289,11 @@ Deno.serve(async (req) => {
         console.error('Failed to extract tokens from recovery link');
         return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
       }
+
+      // Clear OTP only after successful session creation
+      await sr.entities.UserAccount.update(account.id, {
+        otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
+      });
 
       return Response.json({
         success: true,
