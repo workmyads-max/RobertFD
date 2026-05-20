@@ -31,7 +31,12 @@ export function clearSession() {
 export async function callAuth(action, payload) {
   try {
     const res = await base44.functions.invoke('supabaseAuthBridge', { action, ...payload });
-    return res.data || {};
+    const data = res.data || {};
+    // Check if response contains an error field
+    if (data.error) {
+      console.error('Auth error from server:', data.error);
+    }
+    return data;
   } catch (error) {
     console.error('callAuth error:', error);
     return { error: error.message || 'Request failed' };
