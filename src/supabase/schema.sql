@@ -763,23 +763,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to check if user is admin
+-- CRITICAL: JWT metadata ONLY - no public.profiles query to avoid recursive RLS
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE email = (auth.jwt() ->> 'email')::TEXT AND role = 'admin'
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT COALESCE(
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin',
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin',
+    false
+  );
+$$;
 
 -- Function to get current user email
+-- CRITICAL: JWT ONLY - no table queries
 CREATE OR REPLACE FUNCTION public.current_user_email()
-RETURNS TEXT AS $$
-BEGIN
-    RETURN (auth.jwt() ->> 'email')::TEXT;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT auth.jwt() ->> 'email';
+$$;
 
 -- ==================================================
 -- ROW LEVEL SECURITY (RLS)

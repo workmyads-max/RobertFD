@@ -29,17 +29,16 @@ ALTER TABLE public.audit_logs            ENABLE ROW LEVEL SECURITY;
 -- ── Helper functions ──────────────────────────────────────────
 
 -- Returns the email of the currently authenticated Supabase user
+-- CRITICAL: JWT ONLY - no table fallback to avoid "Database error querying schema" during auth
 CREATE OR REPLACE FUNCTION public.auth_email()
-RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER AS $$
-  SELECT COALESCE(
-    auth.jwt() ->> 'email',
-    (SELECT email FROM auth.users WHERE id = auth.uid())
-  );
+RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT auth.jwt() ->> 'email';
 $$;
 
 -- Returns true if the current user has admin role
+-- CRITICAL: JWT metadata ONLY - no public.profiles query to avoid recursive RLS
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER AS $$
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT COALESCE(
     (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin',
     (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin',
@@ -314,7 +313,7 @@ CREATE OR REPLACE FUNCTION public.log_audit(
   p_entity_id TEXT DEFAULT NULL,
   p_old_data JSONB DEFAULT NULL,
   p_new_data JSONB DEFAULT NULL
-) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   INSERT INTO public.audit_logs (
     user_email, action, entity_type, entity_id, old_data, new_data, ip_address, user_agent
@@ -322,7 +321,7 @@ BEGIN
     public.auth_email(),
     p_action,
     p_entity_type,
-    p_entity_id,
+    p_entity_id::uuid,
     p_old_data,
     p_new_data,
     current_setting('request.headers', true)::json->>'x-forwarded-for',
@@ -347,7 +346,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.affiliate_commissions;
 -- UPDATED_AT auto-trigger (idempotent)
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
