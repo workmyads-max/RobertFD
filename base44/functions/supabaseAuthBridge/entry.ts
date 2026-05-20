@@ -269,10 +269,10 @@ Deno.serve(async (req) => {
         data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
       }).catch(() => {});
 
-      // Generate a session token using service role (no password needed)
-      // Use 'magiclink' type for existing users
+      // Generate a session token using service role for existing user
+      // Use 'recovery' type which works for existing confirmed users
       const { data: sessionData, error: sessionError } = await adminSupabase.auth.admin.generateLink({
-        type: 'magiclink',
+        type: 'recovery',
         email: account.email,
         options: {
           redirectTo: `${Deno.env.get('BASE44_APP_URL')}/dashboard`,
@@ -284,7 +284,7 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Failed to create session. Please contact support.' }, { status: 500 });
       }
 
-      // Extract tokens from the action link
+      // Extract tokens from the recovery link
       const url = new URL(sessionData.properties.action_link);
       const hashParams = new URLSearchParams(url.hash.substring(1));
       const access_token = hashParams.get('access_token');
