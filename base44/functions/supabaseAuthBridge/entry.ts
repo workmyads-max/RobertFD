@@ -264,32 +264,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
       }
 
-      let supabaseSession = null;
-      try {
-        // Use signInWithOtp with the user's email to generate a session
-        const { data: sessionData, error: sessionError } = await adminSupabase.auth.signInWithOtp({
-          email: account.email,
-        });
-        
-        console.log('Session result:', { 
-          hasSession: !!sessionData?.session, 
-          hasAccessToken: !!sessionData?.session?.access_token,
-          error: sessionError?.message 
-        });
-        
-        if (sessionError) {
-          console.error('Session creation failed:', sessionError);
-          return Response.json({ error: `Session failed: ${sessionError.message}` }, { status: 500 });
-        }
-        
-        // signInWithOtp sends an email, but we already verified OTP, so we just need the session
-        // For already-verified users, we can use the refresh token exchange
-        // Since we can't create sessions directly, we'll return success and let the frontend handle sign-in
-        supabaseSession = null; // Will use password-based sign-in on frontend
-      } catch (e) {
-        console.error('Session generation error:', e.message, e.stack);
-        return Response.json({ error: `Session error: ${e.message}` }, { status: 500 });
-      }
+      // Frontend will sign in with password to establish Supabase session
+      // This is the simplest and most reliable approach
 
       // Non-blocking login alert
       sr.functions.invoke('emailService', {
