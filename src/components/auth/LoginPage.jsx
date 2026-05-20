@@ -53,13 +53,19 @@ export default function LoginPage() {
     setStep('otp');
   };
 
-  const handleOTPSuccess = async () => {
+  const handleOTPSuccess = async (res) => {
     const { supabase } = await import('@/lib/supabaseClient');
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError || !data?.session) {
-      setError(`Login failed: ${signInError?.message || 'No session returned.'}`);
-      setStep('login');
-      return;
+    // Use the session tokens returned by the bridge — avoids signInWithPassword RLS issue
+    if (res?.supabaseSession?.access_token) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: res.supabaseSession.access_token,
+        refresh_token: res.supabaseSession.refresh_token,
+      });
+      if (sessionError) {
+        setError(`Login failed: ${sessionError.message}`);
+        setStep('login');
+        return;
+      }
     }
     window.location.href = '/dashboard';
   };

@@ -65,13 +65,19 @@ export default function Register() {
     setLoading(false);
   };
 
-  const handleOTPSuccess = async () => {
+  const handleOTPSuccess = async (res) => {
     const { supabase } = await import('@/lib/supabaseClient');
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: fields.email, password: fields.password });
-    if (signInError || !data?.session) {
-      setError(`Account created but sign-in failed: ${signInError?.message || 'Please log in manually.'}`);
-      setTimeout(() => { window.location.href = '/login'; }, 2000);
-      return;
+    // Use the session tokens returned by the bridge — avoids signInWithPassword RLS issue
+    if (res?.supabaseSession?.access_token) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: res.supabaseSession.access_token,
+        refresh_token: res.supabaseSession.refresh_token,
+      });
+      if (sessionError) {
+        setError(`Account created but sign-in failed: ${sessionError.message}`);
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
+        return;
+      }
     }
     setStep('done');
     setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
