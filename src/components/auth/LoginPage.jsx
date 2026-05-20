@@ -55,20 +55,29 @@ export default function LoginPage() {
 
   const handleOTPSuccess = async (res) => {
     const { supabase } = await import('@/lib/supabaseClient');
-    console.log('OTP success, setting session:', { hasSession: !!res?.supabaseSession?.access_token });
+    console.log('OTP success, signing in with password:', { email: res?.email });
     
-    if (res?.supabaseSession?.access_token) {
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: res.supabaseSession.access_token,
-        refresh_token: res.supabaseSession.refresh_token,
+    if (res?.email) {
+      // Sign in with password to get a valid Supabase session
+      const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: res.email,
+        password: password, // Use the password from state
       });
-      if (sessionError) {
-        console.error('Session set error:', sessionError);
-        setError(`Login failed: ${sessionError.message}`);
+      
+      if (signInError) {
+        console.error('Sign in error:', signInError);
+        setError(`Login failed: ${signInError.message}`);
         setStep('login');
         return;
       }
-      console.log('Session set successfully, waiting for auth state...');
+      
+      if (!sessionData?.session) {
+        setError('Session could not be established. Please try again.');
+        setStep('login');
+        return;
+      }
+      
+      console.log('Signed in successfully, waiting for auth state...');
       
       // Wait for auth state to propagate
       await new Promise((resolve) => {
@@ -79,7 +88,6 @@ export default function LoginPage() {
             resolve();
           }
         });
-        // Fallback timeout
         setTimeout(() => {
           console.log('Auth state timeout fallback');
           subscription.unsubscribe();
@@ -96,7 +104,7 @@ export default function LoginPage() {
         return;
       }
     } else {
-      console.warn('No supabaseSession in response');
+      console.warn('No email in response');
     }
     
     console.log('Redirecting to dashboard...');
