@@ -1,0 +1,69 @@
+{
+  "name": "StaffActivityLog",
+  "type": "object",
+  "properties": {
+    "staff_email": {
+      "type": "string"
+    },
+    "staff_name": {
+      "type": "string"
+    },
+    "role_name": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "description": "e.g. approve_withdrawal, suspend_account, edit_challenge"
+    },
+    "action_category": {
+      "type": "string",
+      "enum": [
+        "auth",
+        "users",
+        "challenges",
+        "payouts",
+        "kyc",
+        "risk",
+        "affiliates",
+        "support",
+        "settings",
+        "staff",
+        "system"
+      ]
+    },
+    "target_entity": {
+      "type": "string",
+      "description": "e.g. WithdrawalRequest, ChallengeAccount"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "target_user_email": {
+      "type": "string",
+      "description": "Affected user if applicable"
+    },
+    "details": {
+      "type": "object",
+      "description": "Additional context JSON"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "blocked"
+      ],
+      "default": "success"
+    }
+  },
+  "required": [
+    "staff_email",
+    "action"
+  ]
+}

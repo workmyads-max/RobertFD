@@ -8,6 +8,7 @@ import {
 import { base44 } from '@/api/base44Client';
 
 import { useFeatureVisibility } from '../../hooks/useFeatureVisibility';
+import { useStaffPermissions } from '../../hooks/useStaffPermissions';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -33,6 +34,7 @@ const navItems = [
 
 export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount = 0, collapsed = false, setCollapsed }) {
   const { isEnabled } = useFeatureVisibility();
+  const { hasPermission, isAdminLevel } = useStaffPermissions();
   // Force dark mode only
   React.useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -235,7 +237,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               </div>
             )}
             {collapsed && <div className="my-2 mx-2 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />}
-            {[{ id: 'admin-visibility', label: 'Platform Visibility', icon: Zap }].map(item => {
+            {[{ id: 'admin-visibility', label: 'Platform Visibility', icon: Zap, permission: 'manage_settings' }].filter(item => isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (
@@ -257,30 +259,32 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             })}
             {[
               { id: 'admin-overview', label: 'Admin Overview', icon: Shield },
-              { id: 'admin-orders', label: 'Orders', icon: ShoppingBag },
-              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet },
-              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign },
-              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon },
-              { id: 'admin-users', label: 'User Management', icon: Users },
-              { id: 'admin-notifications', label: 'Notifications', icon: Bell },
-              { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet },
-              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },
-              { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle },
-              { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity },
-              { id: 'admin-mt5-config', label: 'MT5 Config', icon: Globe },
-              { id: 'admin-platforms', label: 'Platforms API', icon: Cpu },
-              { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
-              { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders },
-              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield },
-              { id: 'admin-risk-center', label: 'Risk Center', icon: Shield },
-              { id: 'admin-funded-review', label: 'Funded Review Queue', icon: ShieldCheck },
-              { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle },
-              { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag },
-              { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield },
-              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users },
-              { id: 'admin-social', label: 'Social Media', icon: Share2 },
-              { id: 'admin-email-logs', label: 'Email Logs', icon: Mail },
-            ].map(item => {
+              { id: 'admin-orders', label: 'Orders', icon: ShoppingBag, permission: 'manage_payments' },
+              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet, permission: 'manage_challenges' },
+              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign, permission: 'manage_payouts' },
+              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon, permission: 'manage_support' },
+              { id: 'admin-users', label: 'User Management', icon: Users, permission: 'manage_users' },
+              { id: 'admin-notifications', label: 'Notifications', icon: Bell, permission: 'manage_notifications' },
+              { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet, permission: 'manage_payments' },
+              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck, permission: 'manage_kyc' },
+              { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle, permission: 'manage_support' },
+              { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity, permission: 'manage_settings' },
+              { id: 'admin-mt5-config', label: 'MT5 Config', icon: Globe, permission: 'manage_settings' },
+              { id: 'admin-platforms', label: 'Platforms API', icon: Cpu, permission: 'manage_settings' },
+              { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap, permission: 'manage_challenges' },
+              { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders, permission: 'manage_settings' },
+              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-risk-center', label: 'Risk Center', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-funded-review', label: 'Funded Review Queue', icon: ShieldCheck, permission: 'manage_risk' },
+              { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle, permission: 'manage_risk' },
+              { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag, permission: 'manage_coupons' },
+              { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users, permission: 'manage_affiliates' },
+              { id: 'admin-social', label: 'Social Media', icon: Share2, permission: 'manage_settings' },
+              { id: 'admin-email-logs', label: 'Email Logs', icon: Mail, permission: 'manage_audit_logs' },
+              { id: 'admin-staff', label: 'Staff Management', icon: Users, permission: 'manage_staff' },
+              { id: 'admin-roles', label: 'Roles & Permissions', icon: Shield, permission: 'manage_staff' },
+            ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (

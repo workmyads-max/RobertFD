@@ -1,0 +1,42 @@
+{
+  "name": "StaffRole",
+  "type": "object",
+  "properties": {
+    "role_key": {
+      "type": "string",
+      "description": "Unique identifier e.g. custom_risk_ops"
+    },
+    "role_name": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of permission keys"
+    },
+    "is_system_role": {
+      "type": "boolean",
+      "default": false,
+      "description": "System roles cannot be deleted"
+    },
+    "color": {
+      "type": "string",
+      "default": "#8b5cf6",
+      "description": "Badge color hex"
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "role_key",
+    "role_name",
+    "permissions"
+  ]
+}

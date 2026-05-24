@@ -1,0 +1,79 @@
+{
+  "name": "StaffMember",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Staff member email"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "role_name": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "super_admin",
+        "admin",
+        "risk_manager",
+        "finance_team",
+        "support_team",
+        "kyc_team",
+        "affiliate_manager",
+        "custom"
+      ],
+      "default": "support_team"
+    },
+    "custom_role_id": {
+      "type": "string",
+      "description": "Reference to StaffRole if role_name=custom"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicit permission overrides for this staff member"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_suspended": {
+      "type": "boolean",
+      "default": false
+    },
+    "suspended_reason": {
+      "type": "string"
+    },
+    "suspended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "invited_by": {
+      "type": "string",
+      "description": "Email of admin who invited"
+    },
+    "last_login_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_ip": {
+      "type": "string"
+    },
+    "last_device": {
+      "type": "string"
+    },
+    "auth_user_id": {
+      "type": "string",
+      "description": "Supabase auth.users ID"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "role_name"
+  ]
+}

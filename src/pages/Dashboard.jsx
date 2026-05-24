@@ -34,6 +34,8 @@ import AdminMatchTrader from '../components/admin/AdminMatchTrader';
 import AdminMT5Configuration from '../components/admin/AdminMT5Configuration';
 import AdminRiskDetection from '../components/admin/AdminRiskDetection';
 import AdminRiskCenter from '../components/admin/AdminRiskCenter';
+import AdminStaffManagement from '../components/admin/AdminStaffManagement';
+import AdminRolesPermissions from '../components/admin/AdminRolesPermissions';
 import AdminFundedReview from '../components/admin/AdminFundedReview';
 import UserWarningPanel from '../components/dashboard/UserWarningPanel';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
@@ -170,6 +172,8 @@ export default function Dashboard() {
       case 'admin-affiliate': return isAdmin ? <AdminAffiliate /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-social': return isAdmin ? <AdminSocialMedia /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-email-logs': return isAdmin ? <EmailLogsDashboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-staff': return isAdmin ? <AdminStaffManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-roles': return isAdmin ? <AdminRolesPermissions /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };
