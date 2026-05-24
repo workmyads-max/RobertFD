@@ -3,12 +3,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event } = await req.json();
+    const body = await req.json();
 
-    // Only process update events for funded/passed accounts
-    if (event.type !== 'update') return Response.json({ ok: true });
+    // Support both direct calls {account_id, certificate_type} and automation event {event: {type, data}}
+    let account;
+    if (body.event) {
+      if (body.event.type !== 'update') return Response.json({ ok: true });
+      account = body.event.data;
+    } else if (body.account_id) {
+      // Direct call — look up account
+      const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ account_id: body.account_id });
+      account = accounts[0];
+      if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
+    } else {
+      return Response.json({ error: 'Provide account_id or event payload' }, { status: 400 });
+    }
 
-    const account = event.data;
+    if (!account) return Response.json({ error: 'Account data missing' }, { status: 400 });
     if (!['funded', 'passed'].includes(account.status)) {
       return Response.json({ ok: true });
     }
