@@ -194,32 +194,37 @@ export default function AdminMT5Configuration() {
         <div className="flex items-center gap-3 mb-4">
           <Key className="w-4 h-4 text-violet-400" />
           <h3 className="text-sm font-black text-white">Required API Secrets</h3>
+          <span className="ml-auto text-[10px] font-mono text-amber-400 bg-amber-400/10 px-2 py-1 rounded-lg border border-amber-400/20">
+            ⚠️ Must be set in Base44 Dashboard → Settings → Secrets
+          </span>
         </div>
-        <div className="grid md:grid-cols-2 gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white/60 font-mono">MT5_API_BASE_URL</span>
-            <span className="text-white/30 ml-auto">MT5 API endpoint</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white/60 font-mono">MT5_API_KEY</span>
-            <span className="text-white/30 ml-auto">API authentication</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white/60 font-mono">MT5_SERVER_NAME</span>
-            <span className="text-white/30 ml-auto">Client server address</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-white/60 font-mono">MATCH_TRADER_API_KEY</span>
-            <span className="text-white/30 ml-auto">For Match Trader platform</span>
+
+        <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="text-[10px] font-mono text-violet-400 mb-3 uppercase tracking-widest">Step: Go to Base44 Dashboard → Settings → Environment Variables → Add these:</div>
+          <div className="space-y-3">
+            {[
+              { name: 'MT5_API_BASE_URL', desc: 'Your broker MT5 REST API URL', example: 'https://api.yourbroker.com' },
+              { name: 'MT5_API_KEY', desc: 'Your MT5 API key', example: 'sk-xxxxxxxxxxxxxxxx' },
+              { name: 'MT5_SERVER_NAME', desc: 'MT5 server name shown to traders', example: 'YourBroker-Live' },
+            ].map(s => (
+              <div key={s.name} className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-mono font-bold text-white">{s.name}</div>
+                  <div className="text-[10px] text-white/40">{s.desc}</div>
+                  <div className="text-[10px] font-mono text-white/25">e.g. {s.example}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <p className="text-[10px] text-white/40 mt-4">
-          ⚠️ These secrets must be configured in Dashboard → Settings → Secrets before MT5 provisioning will work.
-        </p>
+
+        <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+          <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-emerald-300/80">
+            Once these 3 secrets are set, <strong>everything works automatically</strong> — account provisioning, balance sync every 5 min, DD breach detection, phase progression, and funded account creation all use these credentials.
+          </p>
+        </div>
       </div>
     </div>
   );
