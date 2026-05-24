@@ -184,6 +184,7 @@ export default function Dashboard() {
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
+      {user && <UserWarningPanel user={user} />}
 
 
       <div className="flex flex-1 overflow-hidden relative z-10">
