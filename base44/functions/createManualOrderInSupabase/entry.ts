@@ -53,7 +53,9 @@ Deno.serve(async (req) => {
       payment_method: orderData.payment_method || 'manual',
       payment_gateway: orderData.payment_gateway || 'manual',
       payment_address: orderData.payment_address,
-      payment_status: orderData.payment_status || 'pending',
+      payment_status: ['usdt_trc20', 'bitcoin'].includes(orderData.payment_method)
+        ? 'awaiting_confirmation'  // Manual crypto always needs admin review
+        : (orderData.payment_status || 'pending'),
       full_name: orderData.full_name,
       username: orderData.username,
       email: email,

@@ -1,11 +1,45 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+async function verifyConfirmoSignature(body, signature, secret) {
+  if (!signature || !secret) return false;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const rawSig = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+  const expected = Array.from(new Uint8Array(rawSig)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return expected === signature;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
     const body = await req.text();
-    const event = JSON.parse(body);
+    const signature = req.headers.get('X-Confirmo-Signature') || req.headers.get('x-confirmo-signature');
+
+    // Verify Confirmo signature if webhook secret is configured
+    const gateways = await base44.asServiceRole.entities.PaymentGateway.filter({ provider: 'confirmo', is_active: true });
+    const webhookSecret = gateways[0]?.webhook_secret;
+    if (webhookSecret) {
+      const isValid = await verifyConfirmoSignature(body, signature, webhookSecret);
+      if (!isValid) {
+        console.error('[SECURITY] Invalid Confirmo signature');
+        await base44.asServiceRole.entities.PaymentLog.create({
+          gateway: 'confirmo', event_type: 'signature_failure',
+          event_data: { signature, body_preview: body.slice(0, 200) }, status: 'failed',
+          notes: 'HMAC signature verification failed',
+        });
+        return Response.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    }
+
+    let event;
+    try { event = JSON.parse(body); } catch { return Response.json({ error: 'Invalid JSON' }, { status: 400 }); }
+
+    // Idempotency
+    const existing = await base44.asServiceRole.entities.PaymentLog.filter({ transaction_id: event.invoice_id, processed: true });
+    if (existing.length > 0) return Response.json({ received: true, duplicate: true });
 
     // Log webhook event
     await base44.asServiceRole.entities.PaymentLog.create({

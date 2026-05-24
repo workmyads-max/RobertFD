@@ -266,6 +266,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-users', label: 'User Management', icon: Users, permission: 'manage_users' },
               { id: 'admin-notifications', label: 'Notifications', icon: Bell, permission: 'manage_notifications' },
               { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet, permission: 'manage_payments' },
+              { id: 'admin-payment-review', label: 'Payment Review Queue', icon: Shield, permission: 'manage_payments' },
               { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck, permission: 'manage_kyc' },
               { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle, permission: 'manage_support' },
               { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity, permission: 'manage_settings' },

@@ -39,6 +39,7 @@ import AdminRolesPermissions from '../components/admin/AdminRolesPermissions';
 import AdminFundedReview from '../components/admin/AdminFundedReview';
 import UserWarningPanel from '../components/dashboard/UserWarningPanel';
 import AdminWithdrawals from '../components/admin/AdminWithdrawals';
+import AdminPaymentReview from '../components/admin/AdminPaymentReview';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminKYC from '../components/admin/AdminKYC';
@@ -152,6 +153,7 @@ export default function Dashboard() {
       case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-wallets': return isAdmin ? <AdminPaymentControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-payment-review': return isAdmin ? <AdminPaymentReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-kyc': return isAdmin ? <AdminKYC /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
