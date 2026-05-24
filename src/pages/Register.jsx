@@ -157,7 +157,7 @@ export default function Register() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <a href="/login" className="text-primary font-semibold hover:underline">Sign in</a>
+        <a href="/login" onClick={(e) => { e.preventDefault(); window.location.href = '/login'; }} className="text-primary font-semibold hover:underline">Sign in</a>
       </p>
     </AuthCard>
   );
