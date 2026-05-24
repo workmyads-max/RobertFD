@@ -4,6 +4,7 @@ import { TrendingUp, DollarSign, BarChart3, Award, Target, Activity, Zap, Plus, 
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
 
 function StatCard({ label, value, sub, color, icon: Icon, i }) {
   return (
@@ -41,11 +42,12 @@ function StatCard({ label, value, sub, color, icon: Icon, i }) {
 
 export default function DashboardOverview({ user, onStartChallenge, onNavigate }) {
   const location = useUserLocation();
+  const { syncing, lastSync, syncError } = useSyncOnLogin();
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 15000,
+    refetchInterval: 30000, // 30 sec - data already synced on load
   });
 
   const { data: pendingOrders = [] } = useQuery({
@@ -92,6 +94,9 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
           <div className="text-muted-foreground text-sm mt-2 font-mono space-y-1">
             <div>📍 Company: <span className="text-primary">Robert Funds</span> • 🌍 IP: <span className="text-foreground">{location.loading ? 'Loading...' : location.ip}</span> • <span>{location.flag}</span> {location.loading ? 'Loading...' : location.country}</div>
             <div>📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • 🕐 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} GMT+4</div>
+            {syncing && <div className="text-xs text-primary mt-1">🔄 Syncing MT5 data...</div>}
+            {lastSync && <div className="text-xs text-emerald-400 mt-1">✅ Synced {lastSync.syncedCount} account{lastSync.syncedCount !== 1 ? 's' : ''} at {lastSync.timestamp.toLocaleTimeString()}</div>}
+            {syncError && <div className="text-xs text-red-400 mt-1">⚠️ Sync error: {syncError}</div>}
           </div>
         </div>
         <div className="hidden md:flex flex-col gap-2">
