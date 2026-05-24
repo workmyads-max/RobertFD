@@ -63,22 +63,44 @@ export default function LoginPage() {
         return;
       }
       
-      // Use session tokens if provided
-      if (res.session?.access_token) {
+      // Primary method: Use session tokens from supabaseAuthBridge
+      if (res.session?.access_token && res.session?.refresh_token) {
         console.log('Setting session tokens...');
         const { supabase } = await import('@/lib/supabaseClient');
-        await supabase.auth.setSession({
+        
+        // Remove existing session first to avoid conflicts
+        await supabase.auth.signOut();
+        
+        const { error } = await supabase.auth.setSession({
           access_token: res.session.access_token,
           refresh_token: res.session.refresh_token,
         });
-        console.log('Redirecting to dashboard...');
+        
+        if (error) {
+          console.error('Failed to set session:', error);
+          setError('Session setup failed. Please try again.');
+          setStep('login');
+          return;
+        }
+        
+        // Verify session was set
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.error('Session not persisted after setSession');
+          setError('Session could not be saved. Please try again.');
+          setStep('login');
+          return;
+        }
+        
+        console.log('Session verified, redirecting to dashboard...');
         window.location.href = '/dashboard';
         return;
       }
       
-      // Fallback redirect
-      console.log('Login successful, redirecting...');
-      window.location.href = '/dashboard';
+      // Fallback should not happen - supabaseAuthBridge always returns session
+      console.error('No session tokens returned from supabaseAuthBridge');
+      setError('Login successful but authentication failed. Please contact support.');
+      setStep('login');
       return;
     } catch (err) {
       console.error('OTP success handler error:', err);
