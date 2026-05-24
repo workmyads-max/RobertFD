@@ -158,7 +158,9 @@ Deno.serve(async (req) => {
               if (!t.open_time || !t.close_time) return false;
               const open = new Date(t.open_time);
               const close = new Date(t.close_time);
-              return close.getDate() !== open.getDate();
+              // Fixed: true overnight = held >8 hours AND crossed UTC midnight
+              const durationHours = (close - open) / 3600000;
+              return durationHours > 8 && close.getUTCDate() !== open.getUTCDate();
             });
             if (overnightTrades.length > 2) {
               violations.push({ type: 'overnight_violation', severity: 'high', detail: `${overnightTrades.length} overnight positions on Standard account` });
@@ -191,15 +193,14 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ── CREATE RISK FLAGS FOR NEW VIOLATIONS ──────────────────────────────
+        // ── CREATE RISK FLAGS — parallel duplicate checks (eliminates inner N+1) ─
+        const existingFlagsList = flagsByAccount[account.account_id] || [];
+        const existingFlagTypes = new Set(existingFlagsList.map(f => f.flag_type));
+
         const newFlags = [];
-        for (const v of violations) {
-          const existingFlags = await sr.entities.RiskFlag.filter({
-            account_id: account.account_id,
-            flag_type: v.type,
-            status: 'active',
-          });
-          if (existingFlags.length === 0) {
+        const flagCreatePromises = violations
+          .filter(v => !existingFlagTypes.has(v.type))
+          .map(async v => {
             const flag = await sr.entities.RiskFlag.create({
               user_email: account.user_email,
               account_id: account.account_id,
@@ -211,7 +212,6 @@ Deno.serve(async (req) => {
             });
             newFlags.push(flag);
 
-            // Send user warning if high/critical
             if (v.severity === 'high' || v.severity === 'critical') {
               await sr.entities.Notification.create({
                 title: `⚠️ Risk Warning — ${v.type.replace(/_/g, ' ').toUpperCase()}`,
@@ -223,8 +223,11 @@ Deno.serve(async (req) => {
                 target: 'challenge',
               });
             }
-          }
-        }
+          });
+
+        await Promise.all(flagCreatePromises);
+
+        const _unused = 0; // close violations loop replacement
 
         results.push({
           account_id: account.account_id,

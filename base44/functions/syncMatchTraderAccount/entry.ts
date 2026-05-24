@@ -1,13 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const MT_BASE = 'https://broker-api-demo.match-trader.com';
-const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY') || 'EWpgx-jtNvPTvPJXQMfa6Eppx-sRuXWPtkEr6iPMXeo=';
+const MT_BASE = Deno.env.get('MATCH_TRADER_BASE_URL') || 'https://broker-api-demo.match-trader.com';
+const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY');
 
-const mtHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${MT_API_KEY}`,
-  'api-key': MT_API_KEY,
-};
+// Headers built lazily inside handler to pick up runtime env value
+function getMtHeaders() {
+  const key = Deno.env.get('MATCH_TRADER_API_KEY');
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}`, 'api-key': key };
+}
 
 Deno.serve(async (req) => {
   try {
@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
     if (!mt_login) return Response.json({ error: 'mt_login required' }, { status: 400 });
 
     // Fetch account info from MT
+    const mtHeaders = getMtHeaders();
     const [infoRes, posRes, histRes] = await Promise.all([
       fetch(`${MT_BASE}/accounts/${mt_login}`, { headers: mtHeaders }),
       fetch(`${MT_BASE}/accounts/${mt_login}/positions`, { headers: mtHeaders }),

@@ -399,42 +399,42 @@ async function logEmailToSupabase(emailData) {
 }
 
 /**
- * Send email via SendGrid HTTP API
+ * Send email via real SMTP (Namecheap / any SMTP provider)
  */
 async function sendEmailViaSMTP(to, subject, body) {
   try {
-    const apiKey = Deno.env.get('SMTP_PASSWORD'); // SendGrid API key stored here
+    const host = Deno.env.get('SMTP_HOST');
+    const port = parseInt(Deno.env.get('SMTP_PORT') || '587');
+    const username = Deno.env.get('SMTP_USERNAME');
+    const password = Deno.env.get('SMTP_PASSWORD');
     const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
     const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
 
-    if (!apiKey) {
-      throw new Error('SendGrid API key not configured');
+    if (!host || !username || !password) {
+      console.error('SMTP not configured — missing SMTP_HOST, SMTP_USERNAME, or SMTP_PASSWORD');
+      return false;
     }
 
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: fromEmail, name: fromName },
-        subject: subject,
-        content: [{ type: 'text/html', value: body }],
-      }),
+    const nodemailer = (await import('npm:nodemailer@6.9.9')).default;
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user: username, pass: password },
+      tls: { rejectUnauthorized: false },
     });
 
-    if (response.status === 202) {
-      console.log('Email sent successfully via SendGrid API');
-      return true;
-    }
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject,
+      html: body,
+    });
 
-    const errorText = await response.text();
-    console.error('SendGrid API error:', response.status, errorText);
-    return false;
+    console.log(`Email sent via SMTP to ${to}`);
+    return true;
   } catch (error) {
-    console.error('Email send failed:', error.message);
+    console.error('SMTP send failed:', error.message);
     return false;
   }
 }

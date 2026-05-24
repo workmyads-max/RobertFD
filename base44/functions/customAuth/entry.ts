@@ -153,8 +153,17 @@ Deno.serve(async (req) => {
       if (new Date() > new Date(account.otp_expires_at)) {
         return Response.json({ error: 'OTP has expired. Please request a new one.' }, { status: 400 });
       }
+      // Track OTP attempts to prevent brute-force
+      const regAttempts = (account.login_attempts || 0) + 1;
       if (account.otp_code !== otp) {
-        return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
+        await base44.asServiceRole.entities.UserAccount.update(account.id, { login_attempts: regAttempts });
+        if (regAttempts >= 5) {
+          await base44.asServiceRole.entities.UserAccount.update(account.id, {
+            locked_until: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          });
+          return Response.json({ error: 'Too many failed attempts. Account locked for 15 minutes.' }, { status: 429 });
+        }
+        return Response.json({ error: `Invalid OTP code. ${5 - regAttempts} attempt(s) remaining.` }, { status: 400 });
       }
 
       await base44.asServiceRole.entities.UserAccount.update(account.id, {
@@ -259,8 +268,18 @@ Deno.serve(async (req) => {
       if (new Date() > new Date(account.otp_expires_at)) {
         return Response.json({ error: 'OTP has expired. Please try logging in again.' }, { status: 400 });
       }
+      // Track OTP attempts to prevent brute-force
+      const loginAttempts = (account.login_attempts || 0) + 1;
       if (account.otp_code !== otp) {
-        return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
+        await base44.asServiceRole.entities.UserAccount.update(account.id, { login_attempts: loginAttempts });
+        if (loginAttempts >= 5) {
+          await base44.asServiceRole.entities.UserAccount.update(account.id, {
+            locked_until: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            otp_code: null, otp_expires_at: null, otp_type: null,
+          });
+          return Response.json({ error: 'Too many failed OTP attempts. Please log in again.' }, { status: 429 });
+        }
+        return Response.json({ error: `Invalid OTP code. ${5 - loginAttempts} attempt(s) remaining.` }, { status: 400 });
       }
 
       await base44.asServiceRole.entities.UserAccount.update(account.id, {
@@ -271,7 +290,19 @@ Deno.serve(async (req) => {
       });
 
       const sessionToken = generateToken();
-      
+      const tokenHash = await hashPassword(sessionToken); // store hash, never raw token
+      const sessionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+
+      // Store session token hash for validation/revocation
+      await base44.asServiceRole.entities.UserSession.create({
+        user_id: account.id,
+        token_hash: tokenHash,
+        expires_at: sessionExpires,
+        ip_address: ipAddress,
+        user_agent: userAgent.substring(0, 200),
+        is_revoked: false,
+      });
+
       // Send login alert email (non-blocking)
       sendEmail(base44, account.email, 'login_alert', {
         name: account.full_name,
@@ -324,10 +355,28 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'New OTP sent.' });
     }
 
-    // ─── GET USER BY TOKEN ───────────────────────────────────────
+    // ─── GET USER BY TOKEN (validates session token) ────────────
     if (action === 'get_me') {
-      const { userId } = body;
+      const { userId, token } = body;
       if (!userId) return Response.json({ error: 'Not authenticated.' }, { status: 401 });
+
+      // If token provided, validate it against stored session
+      if (token) {
+        const sessions = await base44.asServiceRole.entities.UserSession.filter({
+          user_id: userId, is_revoked: false,
+        });
+        const now = new Date();
+        let validSession = null;
+        for (const s of sessions) {
+          if (new Date(s.expires_at) > now) {
+            const isMatch = await verifyPassword(token, s.token_hash);
+            if (isMatch) { validSession = s; break; }
+          }
+        }
+        if (!validSession) {
+          return Response.json({ error: 'Session expired or invalid. Please log in again.' }, { status: 401 });
+        }
+      }
 
       const accounts = await base44.asServiceRole.entities.UserAccount.filter({ id: userId });
       const account = accounts[0];
@@ -344,6 +393,24 @@ Deno.serve(async (req) => {
           last_login_at: account.last_login_at,
         }
       });
+    }
+
+    // ─── LOGOUT (revoke session token) ──────────────────────────
+    if (action === 'logout') {
+      const { userId, token } = body;
+      if (userId && token) {
+        const sessions = await base44.asServiceRole.entities.UserSession.filter({
+          user_id: userId, is_revoked: false,
+        });
+        for (const s of sessions) {
+          const isMatch = await verifyPassword(token, s.token_hash);
+          if (isMatch) {
+            await base44.asServiceRole.entities.UserSession.update(s.id, { is_revoked: true });
+            break;
+          }
+        }
+      }
+      return Response.json({ success: true, message: 'Logged out.' });
     }
 
     return Response.json({ error: 'Unknown action.' }, { status: 400 });

@@ -290,6 +290,23 @@ Deno.serve(async (req) => {
       if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { role_id, updates } = body;
+
+      // Privilege ceiling: cannot grant permissions the caller does not have
+      if (updates.permissions) {
+        const callerPerms = await getStaffPermissions(sr, user.email);
+        // Classic admin has all permissions — skip ceiling check
+        const accounts = await sr.entities.UserAccount.filter({ email: user.email });
+        const isClassicAdmin = accounts[0]?.role === 'admin';
+        if (!isClassicAdmin && Array.isArray(callerPerms)) {
+          const forbidden = updates.permissions.filter(p => !callerPerms.includes(p));
+          if (forbidden.length > 0) {
+            return Response.json({
+              error: `Cannot grant permissions you do not hold: ${forbidden.join(', ')}`
+            }, { status: 403 });
+          }
+        }
+      }
+
       const role = await sr.entities.StaffRole.update(role_id, updates);
 
       await logActivity(sr, {

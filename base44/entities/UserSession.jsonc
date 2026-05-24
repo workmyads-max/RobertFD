@@ -1,0 +1,35 @@
+{
+  "name": "UserSession",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "UserAccount ID"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of session token (never store raw token)"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Session expiry timestamp"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "is_revoked": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if manually revoked (logout, password change, security event)"
+    }
+  },
+  "required": [
+    "user_id",
+    "token_hash",
+    "expires_at"
+  ]
+}
