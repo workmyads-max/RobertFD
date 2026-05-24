@@ -1,21 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const MT_BASE = Deno.env.get('MATCH_TRADER_BASE_URL') || 'https://broker-api-demo.match-trader.com';
-const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY');
-
-const mtHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${MT_API_KEY}`,
-  'api-key': MT_API_KEY,
-};
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Get all active Match Trader accounts that have an mt_login
-    const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ platform: 'match_trader' });
-    const activeAccounts = accounts.filter(a => a.mt_login && ['active', 'funded', 'passed'].includes(a.status));
+    // Get all active MT5 and Match Trader accounts that have an mt_login
+    const MT5_BASE = Deno.env.get('MT5_API_BASE_URL');
+    const MT5_API_KEY = Deno.env.get('MT5_API_KEY');
+    const MT_BASE = Deno.env.get('MATCH_TRADER_BASE_URL');
+    const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY');
+
+    const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
+    const activeAccounts = allAccounts.filter(a =>
+      a.mt_login &&
+      ['active', 'funded', 'passed'].includes(a.status) &&
+      ['mt5', 'match_trader'].includes(a.platform)
+    );
 
     const results = [];
     const BATCH_SIZE = 50;
@@ -25,16 +25,24 @@ Deno.serve(async (req) => {
 
       const batchResults = await Promise.all(batch.map(async (acc) => {
         try {
+          const isMT5 = acc.platform === 'mt5';
+          const apiBase = isMT5 ? MT5_BASE : MT_BASE;
+          const apiKey = isMT5 ? MT5_API_KEY : MT_API_KEY;
+
+          if (!apiBase || !apiKey) {
+            return { account_id: acc.account_id, ok: false, error: `Missing API config for platform: ${acc.platform}` };
+          }
+
           const headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${MT_API_KEY}`,
-            'api-key': MT_API_KEY,
+            'Authorization': `Bearer ${apiKey}`,
+            'api-key': apiKey,
           };
 
           const [infoRes, posRes, histRes] = await Promise.all([
-            fetch(`${MT_BASE}/accounts/${acc.mt_login}`, { headers }),
-            fetch(`${MT_BASE}/accounts/${acc.mt_login}/positions`, { headers }),
-            fetch(`${MT_BASE}/accounts/${acc.mt_login}/deals?limit=100`, { headers }),
+            fetch(`${apiBase}/accounts/${acc.mt_login}`, { headers }),
+            fetch(`${apiBase}/accounts/${acc.mt_login}/positions`, { headers }),
+            fetch(`${apiBase}/accounts/${acc.mt_login}/deals?limit=100`, { headers }),
           ]);
 
           let mtData = {};
@@ -55,7 +63,7 @@ Deno.serve(async (req) => {
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
           // Auto-breach detection: fail account if DD exceeded
-          const maxAllowedDD = 10; // default 10%
+          const maxAllowedDD = acc.challenge_type === 'instant_light' ? 6 : 10;
           const updates = {
             balance,
             equity,
