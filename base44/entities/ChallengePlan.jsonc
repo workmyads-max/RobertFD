@@ -88,6 +88,11 @@
       "type": "boolean",
       "default": true
     },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Visible in user marketplace (admin can hide without deactivating)"
+    },
     "is_popular": {
       "type": "boolean",
       "default": false

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Edit2, Trash2, Plus, Save, X, Search, Loader2, CheckCircle, Eye, EyeOff, Star } from 'lucide-react';
+import { Zap, Edit2, Trash2, Plus, Save, X, Search, Loader2, CheckCircle, Eye, EyeOff, Star, Globe, GlobeLock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -30,6 +30,7 @@ const EMPTY_FORM = {
   weekend_holding: false,
   hedging: false,
   is_active: true,
+  is_visible: true,
   is_popular: false,
   sort_order: 0,
 };
@@ -202,6 +203,12 @@ export default function AdminChallenges() {
                               Inactive
                             </span>
                           )}
+                          {ch.is_visible === false && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono text-blue-400"
+                              style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                              Hidden
+                            </span>
+                          )}
                           {ch.is_popular && (
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-mono text-yellow-400"
                               style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)' }}>
@@ -238,6 +245,13 @@ export default function AdminChallenges() {
                       </div>
 
                       <div className="flex gap-1.5 flex-shrink-0 ml-4 items-center">
+                        {/* Quick toggle: Marketplace visibility */}
+                        <button
+                          onClick={() => quickUpdateMutation.mutate({ id: ch.id, data: { is_visible: ch.is_visible === false ? true : false } })}
+                          title={ch.is_visible !== false ? 'Hide from marketplace' : 'Show in marketplace'}
+                          className={`p-2 rounded-lg transition-colors ${ch.is_visible !== false ? 'text-blue-400 hover:bg-blue-500/20' : 'text-muted-foreground hover:bg-white/10'}`}>
+                          {ch.is_visible !== false ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
+                        </button>
                         {/* Quick toggle: Active */}
                         <button
                           onClick={() => quickUpdateMutation.mutate({ id: ch.id, data: { is_active: !ch.is_active } })}
@@ -327,7 +341,8 @@ function ChallengeForm({ formData, setFormData, onSave, onCancel, isPending }) {
           { key: 'overnight_holding', label: 'Overnight Holding' },
           { key: 'weekend_holding', label: 'Weekend Holding' },
           { key: 'hedging', label: 'Hedging' },
-          { key: 'is_active', label: 'Active (visible)' },
+          { key: 'is_active', label: 'Active (purchasable)' },
+          { key: 'is_visible', label: 'Visible in Marketplace' },
           { key: 'is_popular', label: 'Mark as Popular' },
         ].map(r => (
           <label key={r.key} className="flex items-center gap-2 cursor-pointer">

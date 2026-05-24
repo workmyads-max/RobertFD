@@ -1,0 +1,119 @@
+{
+  "name": "FundedAccountReview",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Challenge account ID under review"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "trader_name": {
+      "type": "string"
+    },
+    "phase_passed": {
+      "type": "string",
+      "enum": [
+        "phase1",
+        "phase2"
+      ],
+      "description": "Which phase triggered this review"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "under_review",
+        "approved",
+        "rejected",
+        "suspended"
+      ],
+      "default": "pending_review"
+    },
+    "risk_score": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100 risk score (higher = riskier)"
+    },
+    "red_flags_count": {
+      "type": "number",
+      "default": 0
+    },
+    "consistency_score": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100 consistency (higher = better)"
+    },
+    "account_size": {
+      "type": "number"
+    },
+    "challenge_type": {
+      "type": "string"
+    },
+    "total_trades": {
+      "type": "number",
+      "default": 0
+    },
+    "win_rate": {
+      "type": "number",
+      "default": 0
+    },
+    "max_dd_used": {
+      "type": "number",
+      "default": 0
+    },
+    "trading_days": {
+      "type": "number",
+      "default": 0
+    },
+    "gross_pnl": {
+      "type": "number",
+      "default": 0
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "internal_risk_notes": {
+      "type": "string"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "escalated": {
+      "type": "boolean",
+      "default": false
+    },
+    "escalation_reason": {
+      "type": "string"
+    },
+    "funded_account_id": {
+      "type": "string",
+      "description": "Set after funded account is provisioned"
+    },
+    "funded_mt5_login": {
+      "type": "string"
+    },
+    "funded_mt5_password": {
+      "type": "string"
+    },
+    "funded_mt5_server": {
+      "type": "string"
+    },
+    "funded_provisioned_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "account_id",
+    "user_email"
+  ]
+}
