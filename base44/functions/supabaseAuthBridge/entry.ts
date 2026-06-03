@@ -366,6 +366,53 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'New OTP sent.' });
     }
 
+    // ─── FORGOT PASSWORD ───────────────────────────────────────────
+    if (action === 'forgot_password') {
+      const { email } = body;
+      if (!email) return Response.json({ error: 'Email is required.' }, { status: 400 });
+
+      const accounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
+      const account = accounts[0];
+      // Always return success to prevent email enumeration
+      if (!account) return Response.json({ success: true, message: 'If this email exists, an OTP has been sent.' });
+
+      const otp_code = generateOTP();
+      const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await sr.entities.UserAccount.update(account.id, {
+        otp_code, otp_expires_at, otp_type: 'password_reset', otp_sent_at: new Date().toISOString(),
+      });
+
+      await sendOTPEmail(sr, account.email, account.full_name || 'Trader', otp_code, 'Password Reset');
+      return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.' });
+    }
+
+    // ─── RESET PASSWORD WITH OTP ───────────────────────────────────
+    if (action === 'reset_password_otp') {
+      const { userId, otp, newPassword } = body;
+      if (!userId || !otp || !newPassword) return Response.json({ error: 'All fields required.' }, { status: 400 });
+      if (newPassword.length < 8) return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+
+      const accounts = await sr.entities.UserAccount.filter({ id: userId });
+      const account = accounts[0];
+      if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
+      if (account.otp_type !== 'password_reset') return Response.json({ error: 'Invalid OTP type.' }, { status: 400 });
+      if (new Date() > new Date(account.otp_expires_at)) return Response.json({ error: 'OTP expired. Please request a new one.' }, { status: 400 });
+      if (account.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
+
+      const password_hash = await hashPassword(newPassword);
+      await sr.entities.UserAccount.update(account.id, {
+        password_hash, otp_code: null, otp_expires_at: null, otp_type: null,
+        login_attempts: 0, locked_until: null,
+      });
+
+      // Also update password in Supabase auth so session works
+      if (account.auth_user_id) {
+        await adminSupabase.auth.admin.updateUserById(account.auth_user_id, { password: newPassword });
+      }
+
+      return Response.json({ success: true, message: 'Password reset successfully. You can now log in.' });
+    }
+
     return Response.json({ error: 'Unknown action.' }, { status: 400 });
 
   } catch (error) {

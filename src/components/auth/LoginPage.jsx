@@ -4,6 +4,7 @@ import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff, Shield } from 'lucide-rea
 import XFLogo from '@/components/shared/XFLogo';
 import { callAuth } from '@/lib/customAuth';
 import OTPStep from './OTPStep';
+import ForgotPassword from './ForgotPassword';
 
 const AuthCard = ({ children }) => (
   <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -41,6 +42,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState(null);
+  const [showForgot, setShowForgot] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -117,6 +119,14 @@ export default function LoginPage() {
     );
   }
 
+  if (showForgot) {
+    return (
+      <AuthCard>
+        <ForgotPassword onBack={() => setShowForgot(false)} />
+      </AuthCard>
+    );
+  }
+
   return (
     <AuthCard>
       <div className="text-center mb-8">
@@ -136,7 +146,13 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase tracking-wider">Password</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Password</label>
+            <button type="button" onClick={() => setShowForgot(true)}
+              className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
+              Forgot password?
+            </button>
+          </div>
           <div className="relative group">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
