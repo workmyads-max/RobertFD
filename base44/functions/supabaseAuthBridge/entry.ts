@@ -1,7 +1,8 @@
 /**
- * supabaseAuthBridge — Public auth endpoint.
+ * supabaseAuthBridge — Public auth endpoint. v2
  * Uses asServiceRole for all operations so no user JWT is needed.
  * This allows unauthenticated users (login/register pages) to call this function.
+ * Actions: register, verify_registration, login, verify_login, resend_otp, forgot_password, reset_password_otp
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
