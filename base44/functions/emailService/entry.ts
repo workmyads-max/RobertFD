@@ -421,7 +421,8 @@ async function sendEmailViaSMTP(to, subject, body) {
       port,
       secure: port === 465,
       auth: { user: username, pass: password },
-      tls: { rejectUnauthorized: false },
+      tls: { rejectUnauthorized: false, ciphers: 'SSLv3' },
+      requireTLS: port === 587,
     });
 
     await transporter.sendMail({
