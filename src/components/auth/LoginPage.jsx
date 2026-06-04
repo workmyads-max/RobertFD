@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
 import XFLogo from '@/components/shared/XFLogo';
 import { callAuth } from '@/lib/customAuth';
+import { signInWithGoogle } from '@/lib/supabaseClient';
 import OTPStep from './OTPStep';
 import ForgotPassword from './ForgotPassword';
 
@@ -43,6 +44,13 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [userId, setUserId] = useState(null);
   const [showForgot, setShowForgot] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    await signInWithGoogle();
+    // Page will redirect — no need to setGoogleLoading(false)
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -132,6 +140,35 @@ export default function LoginPage() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-black text-foreground mb-2">Welcome Back</h1>
         <p className="text-sm text-muted-foreground">Sign in to your trading account</p>
+      </div>
+
+      {/* Google Login Button */}
+      <motion.button
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={googleLoading}
+        className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold text-foreground border border-white/15 hover:border-white/30 hover:bg-white/5 transition-all mb-5 disabled:opacity-50"
+        style={{ background: 'rgba(255,255,255,0.04)' }}
+      >
+        {googleLoading ? (
+          <Loader className="w-4 h-4 animate-spin" />
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.2 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.5 13 17.8 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8C43.8 37.4 46.5 31.4 46.5 24.5z"/>
+            <path fill="#FBBC05" d="M10.5 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.6 10.5l7.9-5.9z"/>
+            <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.7 2.3-7.7 2.3-6.2 0-11.5-4.2-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/>
+          </svg>
+        )}
+        Continue with Google
+      </motion.button>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs text-muted-foreground/50 font-mono uppercase tracking-widest">or</span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
 
       <form onSubmit={handleLogin} className="space-y-5 mb-6">
