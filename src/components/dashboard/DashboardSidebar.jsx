@@ -372,7 +372,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </button>
 
       {/* Desktop sidebar */}
-      <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[60px]' : 'w-56'}`}
+      <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[70px]' : 'w-64'}`}
         style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
         <SidebarContent />
       </div>
