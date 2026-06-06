@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
 import { ArrowRight, Check, CheckCheck, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
+import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -232,137 +233,34 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           <motion.div
             key={`${challengeType}-${accountType}`}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`grid gap-4 mb-12 ${
-              plans.length <= 3 ? 'md:grid-cols-3' :
-              plans.length === 4 ? 'md:grid-cols-2 xl:grid-cols-4' :
-              plans.length === 5 ? 'md:grid-cols-3 xl:grid-cols-5' :
-              'md:grid-cols-3 xl:grid-cols-6'
-            }`}
+            className="grid gap-6 mb-12 md:grid-cols-3"
           >
             {plans.map((plan, i) => {
-              const leverage = accountType === 'standard' ? plan.leverage_standard : plan.leverage_swing;
-              const isSelected = selected?.id === plan.id;
               const isPopular = !!plan.is_popular;
-
-              const rows = [
-                challengeType === 'two-step' && { label: 'P1 Target', value: `${plan.phase1_target}%` },
-                challengeType === 'two-step' && { label: 'P2 Target', value: `${plan.phase2_target}%` },
-                (challengeType === 'instant' || challengeType === 'instant_light') && { label: 'No Target', value: '✓ Direct' },
-                challengeType === 'instant_light' && { label: 'Trailing DD', value: '✓ Active' },
-                { label: 'Max DD', value: `${plan.max_dd}%` },
-                { label: 'Daily DD', value: `${plan.daily_dd}%` },
-                { label: 'Leverage', value: leverage },
-                { label: 'Split', value: `${plan.profit_split}%` },
-              ].filter(Boolean);
+              let badge = null;
+              let badgeColor = '';
+              
+              if (isPopular) {
+                badge = '🔥 Most Popular';
+                badgeColor = 'bg-orange-500/90';
+              } else if (plan.type === 'instant_light') {
+                badge = '50% Cheaper - Trading Go';
+                badgeColor = 'bg-accent/90';
+              }
 
               return (
                 <motion.div
                   key={plan.id}
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07, type: 'spring', stiffness: 200, damping: 22 }}
-                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                  className="relative flex flex-col rounded-2xl overflow-hidden"
-                  style={{
-                    background: isSelected
-                      ? 'linear-gradient(160deg, rgba(204,255,0,0.08), rgba(14,14,20,0.98))'
-                      : isPopular
-                      ? 'linear-gradient(160deg, rgba(255,92,0,0.13), rgba(14,14,20,0.98))'
-                      : 'rgba(14,14,20,0.85)',
-                    border: isSelected
-                      ? '2px solid rgba(204,255,0,0.5)'
-                      : isPopular
-                      ? '2px solid rgba(255,92,0,0.5)'
-                      : '1px solid rgba(255,255,255,0.09)',
-                    boxShadow: isSelected
-                      ? '0 0 32px rgba(204,255,0,0.12), 0 8px 32px rgba(0,0,0,0.5)'
-                      : isPopular
-                      ? '0 0 40px rgba(255,92,0,0.18), 0 8px 32px rgba(0,0,0,0.5)'
-                      : '0 4px 20px rgba(0,0,0,0.3)',
-                    backdropFilter: 'blur(16px)',
-                  }}
+                  transition={{ delay: i * 0.1, type: 'spring', stiffness: 200, damping: 22 }}
                 >
-                  {/* Top accent bar */}
-                  <div className="h-1 w-full flex-shrink-0" style={{
-                    background: isSelected
-                      ? 'linear-gradient(90deg,#CCFF00,#aadd00)'
-                      : isPopular
-                      ? 'linear-gradient(90deg,#FF5C00,#FF8A3D)'
-                      : 'rgba(255,255,255,0.07)',
-                  }} />
-
-                  {/* Popular badge */}
-                  {isPopular && !isSelected && (
-                    <div className="flex justify-center -mt-0.5">
-                      <motion.span
-                        animate={{ y: [0, -2, 0] }}
-                        transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-                        className="px-4 py-0.5 rounded-b-xl text-[10px] font-black text-white tracking-widest"
-                        style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.4)' }}
-                      >
-                        🔥 MOST POPULAR
-                      </motion.span>
-                    </div>
-                  )}
-
-                  <div className="p-5 flex flex-col flex-1">
-                    {/* Header — size + type + price */}
-                    <div className="mb-5">
-                      <div className="flex items-start justify-between mb-1">
-                        <div className={`font-black text-foreground ${isPopular ? 'text-3xl' : 'text-2xl'}`}>
-                          {formatSize(plan.size)}
-                        </div>
-                        {isSelected && (
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'rgba(204,255,0,0.2)', border: '1px solid rgba(204,255,0,0.5)' }}>
-                            <Check className="w-3.5 h-3.5" style={{ color: '#CCFF00' }} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-[10px] font-mono text-muted-foreground mb-3">
-                        {challengeType === 'two-step' ? 'Two-Step' : challengeType === 'instant_light' ? 'Instant Light' : 'Instant'} · {accCfg.label}
-                      </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className={`font-black ${isPopular ? 'text-3xl' : 'text-2xl'} text-primary`}>
-                          $<NumberFlow value={plan.price} />
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono">one-time</span>
-                      </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-px mb-4" style={{ background: 'rgba(255,255,255,0.07)' }} />
-
-                    {/* Stats rows */}
-                    <div className="space-y-2 mb-5 flex-1">
-                      {rows.map(({ label, value }) => (
-                        <div key={label} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                              style={{ background: isPopular ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.06)', border: `1px solid ${isPopular ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                              <CheckCheck className="w-2.5 h-2.5" style={{ color: isPopular ? '#FF5C00' : '#10b981' }} />
-                            </span>
-                            <span className="text-xs text-muted-foreground font-mono">{label}</span>
-                          </div>
-                          <span className="text-xs text-foreground font-bold">{value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CTA */}
-                    <button
-                      onClick={() => handleSelect(plan)}
-                      className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 mt-auto"
-                      style={isSelected
-                        ? { background: 'rgba(204,255,0,0.12)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.4)' }
-                        : isPopular
-                        ? { background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', color: 'white', boxShadow: '0 4px 20px rgba(255,92,0,0.4)', border: '1px solid rgba(255,92,0,0.3)' }
-                        : { background: 'rgba(255,255,255,0.06)', color: 'hsl(var(--foreground))', border: '1px solid rgba(255,255,255,0.12)' }
-                      }
-                    >
-                      {isSelected ? <><Check className="w-4 h-4" /> Selected</> : <>Select <ArrowRight className="w-4 h-4" /></>}
-                    </button>
-                  </div>
+                  <ChallengeCard
+                    plan={plan}
+                    badge={badge}
+                    badgeColor={badgeColor}
+                    onSelect={() => handleSelect(plan)}
+                  />
                 </motion.div>
               );
             })}
