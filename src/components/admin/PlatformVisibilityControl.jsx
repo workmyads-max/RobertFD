@@ -5,8 +5,6 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const FEATURE_LIST = [
-  { key: 'trading_terminal', label: 'XTrading Terminal', category: 'trading', icon: '📊' },
-  { key: 'x_copier', label: 'X-Copier', category: 'trading', icon: '📋' },
   { key: 'analytics', label: 'Analytics', category: 'analytics', icon: '📈' },
   { key: 'market_news', label: 'Market News', category: 'analytics', icon: '📰' },
   { key: 'economic_calendar', label: 'Economic Calendar', category: 'analytics', icon: '📅' },

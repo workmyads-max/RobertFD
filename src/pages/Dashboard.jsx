@@ -5,7 +5,7 @@ import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverview
 import DashboardOverview from '../components/dashboard/DashboardOverview';
 import FundedDashboard from '../components/overview/FundedDashboard';
 import MyAccounts from '../components/dashboard/MyAccounts';
-import ProTradingTerminal from '../components/dashboard/ProTradingTerminal';
+
 import Analytics from '../components/dashboard/Analytics';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
 import MarketNews from '../components/dashboard/MarketNews';
@@ -60,7 +60,6 @@ import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
-import XCopier from '../components/dashboard/XCopier';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
 import TradingBackground from '../components/dashboard/TradingBackground';
 import PixelBlast from '../components/dashboard/PixelBlast';
@@ -149,8 +148,6 @@ export default function Dashboard() {
       case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'terminal': return isEnabled('trading_terminal') ? <ProTradingTerminal account={activeAccount || primaryActiveAccount} allAccounts={allAccounts} onAccountChange={handleAccountSwitch} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'xcopier': return isEnabled('x_copier') ? <XCopier /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return isEnabled('analytics') ? <Analytics onStartChallenge={goToChallenge} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;

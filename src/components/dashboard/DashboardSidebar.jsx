@@ -1,55 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
-  BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail, Globe, ArrowUpRight
-} from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import XFLogo from '@/components/shared/XFLogo';
+import { useQuery } from '@tanstack/react-query';
+import XFLogo from '../shared/XFLogo';
+import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 
-import { useFeatureVisibility } from '../../hooks/useFeatureVisibility';
-import { useStaffPermissions } from '../../hooks/useStaffPermissions';
-
-const navItems = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'accounts', label: 'My Accounts', icon: Wallet },
-  { id: 'account-overview', label: 'Account Overview', icon: BarChart3 },
-  { id: 'performance', label: 'My Performance', icon: Activity },
-  { id: 'marketplace', label: 'New Challenge', icon: Zap, highlight: true, prominent: true },
-  { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
-  { id: 'xcopier', label: 'X-Copier', icon: Activity },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-  { id: 'journal', label: 'Trading Journal', icon: BookOpen },
-  { id: 'billing', label: 'Billing', icon: CreditCard },
-  { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
-  { id: 'certificates', label: 'Certificates', icon: Award },
-  { id: 'affiliate', label: 'Affiliate', icon: Users },
-  { id: 'kyc', label: 'KYC Verification', icon: ShieldCheck },
-  { id: 'trash', label: 'Trash Accounts', icon: Trash2 },
-  { id: 'support', label: 'Support', icon: HeadphonesIcon },
-  { id: 'settings', label: 'Settings', icon: Settings },
-];
-
-export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount = 0, collapsed = false, setCollapsed }) {
+export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount, collapsed, setCollapsed }) {
   const { isEnabled } = useFeatureVisibility();
-  const { hasPermission, isAdminLevel } = useStaffPermissions();
-  // Force dark mode only
-  React.useEffect(() => {
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  }, []);
+  const { hasPermission, isAdminLevel } = useStaffPermissions(user);
 
-  const handleNav = (id) => {
-    setActivePage(id);
+  const handleNav = (page) => {
+    setActivePage(page);
     setIsOpen(false);
   };
 
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: Shield, prominent: true },
+    { id: 'accounts', label: 'My Accounts', icon: Wallet },
+    { id: 'account-overview', label: 'Account Overview', icon: Wallet },
+    { id: 'analytics', label: 'Analytics', icon: Zap },
+    { id: 'markets', label: 'Markets', icon: Activity },
+    { id: 'calendar', label: 'Calendar', icon: Globe },
+    { id: 'news', label: 'News', icon: Zap },
+    { id: 'journal', label: 'Journal', icon: Zap },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Zap },
+    { id: 'affiliate', label: 'Affiliate', icon: Users },
+    { id: 'certificates', label: 'Certificates', icon: Zap },
+    { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
+    { id: 'billing', label: 'Billing', icon: Zap },
+    { id: 'kyc', label: 'KYC', icon: ShieldCheck },
+    { id: 'support', label: 'Support', icon: HeadphonesIcon },
+    { id: 'settings', label: 'Settings', icon: Sliders },
+    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
+  ];
+
   const filterNavItems = () => {
     const visibilityMap = {
-      'terminal': 'trading_terminal',
-      'xcopier': 'x_copier',
       'analytics': 'analytics',
       'markets': 'market_news',
       'journal': 'trading_journal',
@@ -127,7 +115,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               } : {}}
             >
               <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
-              {!collapsed && <span className="flex-1 text-left font-medium relative z-10">{item.label}</span>}
+              {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
               )}
