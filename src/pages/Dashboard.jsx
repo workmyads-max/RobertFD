@@ -55,6 +55,8 @@ import AdminAffiliate from '../components/admin/AdminAffiliate';
 import AdminSocialMedia from '../components/admin/AdminSocialMedia';
 import EmailLogsDashboard from '../components/admin/EmailLogsDashboard';
 import MarketsHub from '../components/dashboard/MarketsHub';
+import LiveDDGuard from '../components/dashboard/LiveDDGuard';
+import DDBreachModal from '../components/dashboard/DDBreachModal';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
@@ -100,6 +102,11 @@ export default function Dashboard() {
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);
+  const [ddBreach, setDdBreach] = useState(null);
+
+  const handleDDBreach = (breach) => {
+    setDdBreach(breach);
+  };
 
   // Navigate to in-dashboard marketplace instead of external page
   const goToChallenge = () => setActivePage('marketplace');
@@ -191,6 +198,10 @@ export default function Dashboard() {
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
       {user && <UserWarningPanel user={user} />}
+
+      {/* Live DD Guard — runs every 15s when trader has dashboard open */}
+      {user && !isAdmin && <LiveDDGuard onBreach={handleDDBreach} />}
+      <DDBreachModal breach={ddBreach} onAcknowledge={() => { setDdBreach(null); setActivePage('accounts'); }} />
 
 
       <div className="flex flex-1 overflow-hidden relative z-10">
