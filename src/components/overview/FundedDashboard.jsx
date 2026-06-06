@@ -197,11 +197,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
         </div>
       )}
 
-      {/* Ticker */}
-      <div className="relative z-20">
-        <LiveTickerBar />
-      </div>
-
       {/* Content */}
       <div className="relative z-10 flex-1 px-4 md:px-6 pb-8 max-w-[1440px] mx-auto w-full space-y-4 mt-4">
 

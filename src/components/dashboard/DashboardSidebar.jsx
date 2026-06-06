@@ -19,7 +19,6 @@ const navItems = [
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
   { id: 'xcopier', label: 'X-Copier', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'markets', label: 'Markets & News', icon: CalendarDays },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'journal', label: 'Trading Journal', icon: BookOpen },
   { id: 'billing', label: 'Billing', icon: CreditCard },
