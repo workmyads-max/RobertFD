@@ -12,21 +12,30 @@ export function useSyncOnLogin() {
   const [syncError, setSyncError] = useState(null);
 
   useEffect(() => {
+    const SYNC_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+    const SYNC_KEY = 'xf_last_sync';
+
     const performSync = async () => {
+      // Skip if synced within the last 10 minutes in this browser session
+      // DD enforcement is server-side (automatedDDBreach runs every 15 min regardless)
+      const lastSyncTime = sessionStorage.getItem(SYNC_KEY);
+      if (lastSyncTime && Date.now() - parseInt(lastSyncTime, 10) < SYNC_COOLDOWN_MS) {
+        return;
+      }
+
       try {
         setSyncing(true);
         setSyncError(null);
         
-        // Call the on-demand sync function
         const response = await base44.functions.invoke('syncUserAccountOnLogin', {});
         
         if (response.data.success) {
+          sessionStorage.setItem(SYNC_KEY, String(Date.now()));
           setLastSync({
             timestamp: new Date(),
             syncedCount: response.data.synced,
             results: response.data.results,
           });
-          console.log(`[Sync] Synced ${response.data.synced} accounts`);
         }
       } catch (error) {
         setSyncError(error.message);
@@ -36,7 +45,6 @@ export function useSyncOnLogin() {
       }
     };
 
-    // Only sync once when dashboard loads
     performSync();
   }, []);
 

@@ -48,12 +48,14 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
     refetchInterval: 5 * 60 * 1000, // 5 min — MT sync updates data server-side
+    staleTime: 5 * 60 * 1000,       // Don't refetch on tab focus within the 5-min window
   });
 
   const { data: pendingOrders = [] } = useQuery({
     queryKey: ['my-pending-orders'],
     queryFn: () => base44.entities.Order.filter({ email: user?.email }),
     enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,       // Orders don't change faster than 5 min
   });
 
   const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');

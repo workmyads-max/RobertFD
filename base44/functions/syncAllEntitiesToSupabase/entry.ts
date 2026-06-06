@@ -42,22 +42,29 @@ Deno.serve(async (req) => {
 
     // 0. Create all user profiles first (to avoid FK constraint errors)
     const allEmails = new Set();
-    const allOrders = await base44.asServiceRole.entities.Order.list();
-    const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list();
-    const allAffiliates = await base44.asServiceRole.entities.AffiliateProfile.list();
-    const allKYCs = await base44.asServiceRole.entities.KYCVerification.list();
-    const allTickets = await base44.asServiceRole.entities.SupportTicket.list();
-    const allCerts = await base44.asServiceRole.entities.Certificate.list();
-    const allWithdrawals = await base44.asServiceRole.entities.WithdrawalRequest.list();
-    const allPlans = await base44.asServiceRole.entities.ChallengePlan.list();
-    const allNotifications = await base44.asServiceRole.entities.Notification.list();
-    const allCoupons = await base44.asServiceRole.entities.Coupon.list();
-    const allGateways = await base44.asServiceRole.entities.PaymentGateway.list();
-    const allTrades = await base44.asServiceRole.entities.TradeRecord.list();
-    const allPlatformSettings = await base44.asServiceRole.entities.PlatformSettings.list();
-    const allSocialSettings = await base44.asServiceRole.entities.SocialMediaSettings.list();
-    const allAffiliateSettings = await base44.asServiceRole.entities.AffiliateSettings.list();
-    
+    const [
+      allOrders, allAccounts, allAffiliates, allKYCs, allTickets,
+      allCerts, allWithdrawals, allPlans, allNotifications, allCoupons,
+      allGateways, allTrades, allPlatformSettings, allSocialSettings,
+      allAffiliateSettings, allCommissions
+    ] = await Promise.all([
+      base44.asServiceRole.entities.Order.list(),
+      base44.asServiceRole.entities.ChallengeAccount.list(),
+      base44.asServiceRole.entities.AffiliateProfile.list(),
+      base44.asServiceRole.entities.KYCVerification.list(),
+      base44.asServiceRole.entities.SupportTicket.list(),
+      base44.asServiceRole.entities.Certificate.list(),
+      base44.asServiceRole.entities.WithdrawalRequest.list(),
+      base44.asServiceRole.entities.ChallengePlan.list(),
+      base44.asServiceRole.entities.Notification.list(),
+      base44.asServiceRole.entities.Coupon.list(),
+      base44.asServiceRole.entities.PaymentGateway.list(),
+      base44.asServiceRole.entities.TradeRecord.list(),
+      base44.asServiceRole.entities.PlatformSettings.list(),
+      base44.asServiceRole.entities.SocialMediaSettings.list(),
+      base44.asServiceRole.entities.AffiliateSettings.list(),
+      base44.asServiceRole.entities.AffiliateCommission.list(),
+    ]);
     // Collect all emails
     allOrders.forEach(o => o.email && allEmails.add(o.email));
     allAccounts.forEach(a => a.user_email && allEmails.add(a.user_email));
@@ -598,11 +605,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Sync Affiliate Commissions (fetched once at top)
-    const allCommissions = await base44.asServiceRole.entities.AffiliateCommission.list();
-    const commissions = allCommissions;
-    stats.affiliate_commissions.total = commissions.length;
-    for (const commission of commissions) {
+    // 4. Sync Affiliate Commissions (pre-fetched in parallel block above)
+    stats.affiliate_commissions.total = allCommissions.length;
+    for (const commission of allCommissions) {
       try {
         // Check if commission already exists by affiliate_email + order_id combo
         const { data: existingComm } = await supabase
@@ -649,10 +654,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5. Sync KYC Verifications
-    const kyCs = await base44.asServiceRole.entities.KYCVerification.list();
-    stats.kyc_verifications.total = kyCs.length;
-    for (const kyc of kyCs) {
+    // 5. Sync KYC Verifications (pre-fetched in parallel block above)
+    stats.kyc_verifications.total = allKYCs.length;
+    for (const kyc of allKYCs) {
       try {
         const { error } = await supabase.from('kyc_verifications').upsert({
           user_email: kyc.user_email,

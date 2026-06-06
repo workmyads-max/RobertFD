@@ -46,14 +46,39 @@ async function getStaffPermissions(sr, userEmail) {
   return ROLE_PERMISSION_MAP[member.role_name] || [];
 }
 
-async function requirePermission(sr, userEmail, permission) {
-  // Classic admin (from UserAccount role) has all permissions
-  const accounts = await sr.entities.UserAccount.filter({ email: userEmail });
+// Resolves caller identity + permissions in one batched fetch — call once per request
+async function resolveCallerContext(sr, userEmail) {
+  const [accounts, members] = await Promise.all([
+    sr.entities.UserAccount.filter({ email: userEmail }),
+    sr.entities.StaffMember.filter({ user_email: userEmail }),
+  ]);
   const account = accounts[0];
-  if (account?.role === 'admin') return true;
-  const perms = await getStaffPermissions(sr, userEmail);
-  if (perms === null) return false;
-  return perms.includes(permission);
+  const member = members[0];
+  const isClassicAdmin = account?.role === 'admin';
+
+  let permissions = [];
+  if (isClassicAdmin) {
+    permissions = ALL_PERMISSIONS;
+  } else if (member) {
+    if (!member.is_active || member.is_suspended) {
+      permissions = [];
+    } else if (member.permissions && member.permissions.length > 0) {
+      permissions = member.permissions;
+    } else if (member.role_name === 'custom' && member.custom_role_id) {
+      const roles = await sr.entities.StaffRole.filter({ id: member.custom_role_id });
+      permissions = roles[0]?.permissions || [];
+    } else {
+      permissions = ROLE_PERMISSION_MAP[member.role_name] || [];
+    }
+  }
+
+  return { isClassicAdmin, permissions, member, account };
+}
+
+function hasPermission(ctx, permission) {
+  if (ctx.isClassicAdmin) return true;
+  if (!ctx.member) return false;
+  return ctx.permissions.includes(permission);
 }
 
 async function logActivity(sr, data) {
@@ -86,31 +111,30 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    // Resolve caller permissions ONCE per request — eliminates repeated DB reads
+    const ctx = await resolveCallerContext(sr, user.email);
+
     // ─── GET STAFF LIST ────────────────────────────────────────────
     if (action === 'get_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
       const staff = await sr.entities.StaffMember.list('-created_date', 200);
       return Response.json({ success: true, staff });
     }
 
     // ─── GET PERMISSIONS FOR CURRENT USER ──────────────────────────
     if (action === 'get_my_permissions') {
-      const accounts = await sr.entities.UserAccount.filter({ email: user.email });
-      if (accounts[0]?.role === 'admin') {
-        return Response.json({ success: true, permissions: ALL_PERMISSIONS, role: 'admin', is_classic_admin: true });
-      }
-      const members = await sr.entities.StaffMember.filter({ user_email: user.email });
-      const member = members[0];
-      if (!member) return Response.json({ success: true, permissions: [], role: 'none', is_classic_admin: false });
-      const permissions = await getStaffPermissions(sr, user.email);
-      return Response.json({ success: true, permissions, role: member.role_name, is_classic_admin: false, member });
+      return Response.json({
+        success: true,
+        permissions: ctx.permissions,
+        role: ctx.isClassicAdmin ? 'admin' : (ctx.member?.role_name || 'none'),
+        is_classic_admin: ctx.isClassicAdmin,
+        member: ctx.member || null,
+      });
     }
 
     // ─── INVITE STAFF ──────────────────────────────────────────────
     if (action === 'invite_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { email, full_name, role_name, permissions } = body;
       if (!email || !role_name) return Response.json({ error: 'Email and role required' }, { status: 400 });
@@ -167,8 +191,7 @@ Deno.serve(async (req) => {
 
     // ─── UPDATE STAFF ──────────────────────────────────────────────
     if (action === 'update_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { member_id, updates } = body;
       const member = await sr.entities.StaffMember.update(member_id, updates);
@@ -182,8 +205,7 @@ Deno.serve(async (req) => {
 
     // ─── SUSPEND STAFF ─────────────────────────────────────────────
     if (action === 'suspend_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { member_id, reason, target_email } = body;
 
@@ -208,8 +230,7 @@ Deno.serve(async (req) => {
 
     // ─── REACTIVATE STAFF ──────────────────────────────────────────
     if (action === 'reactivate_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { member_id, target_email } = body;
       const adminSupabase = getAdminSupabase();
@@ -228,8 +249,7 @@ Deno.serve(async (req) => {
 
     // ─── DELETE STAFF ──────────────────────────────────────────────
     if (action === 'delete_staff') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { member_id, target_email, auth_user_id } = body;
       const adminSupabase = getAdminSupabase();
@@ -245,8 +265,7 @@ Deno.serve(async (req) => {
 
     // ─── RESET PASSWORD ────────────────────────────────────────────
     if (action === 'reset_staff_password') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { auth_user_id, target_email } = body;
       const newPassword = 'Reset_' + Math.random().toString(36).slice(-10) + '!';
@@ -268,8 +287,7 @@ Deno.serve(async (req) => {
 
     // ─── CREATE ROLE ───────────────────────────────────────────────
     if (action === 'create_role') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { role_key, role_name, description, permissions, color } = body;
       const role = await sr.entities.StaffRole.create({
@@ -286,24 +304,18 @@ Deno.serve(async (req) => {
 
     // ─── UPDATE ROLE ───────────────────────────────────────────────
     if (action === 'update_role') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { role_id, updates } = body;
 
       // Privilege ceiling: cannot grant permissions the caller does not have
-      if (updates.permissions) {
-        const callerPerms = await getStaffPermissions(sr, user.email);
-        // Classic admin has all permissions — skip ceiling check
-        const accounts = await sr.entities.UserAccount.filter({ email: user.email });
-        const isClassicAdmin = accounts[0]?.role === 'admin';
-        if (!isClassicAdmin && Array.isArray(callerPerms)) {
-          const forbidden = updates.permissions.filter(p => !callerPerms.includes(p));
-          if (forbidden.length > 0) {
-            return Response.json({
-              error: `Cannot grant permissions you do not hold: ${forbidden.join(', ')}`
-            }, { status: 403 });
-          }
+      // Uses already-resolved ctx — no extra DB reads needed
+      if (updates.permissions && !ctx.isClassicAdmin) {
+        const forbidden = updates.permissions.filter(p => !ctx.permissions.includes(p));
+        if (forbidden.length > 0) {
+          return Response.json({
+            error: `Cannot grant permissions you do not hold: ${forbidden.join(', ')}`
+          }, { status: 403 });
         }
       }
 
@@ -318,8 +330,7 @@ Deno.serve(async (req) => {
 
     // ─── DELETE ROLE ───────────────────────────────────────────────
     if (action === 'delete_role') {
-      const allowed = await requirePermission(sr, user.email, 'manage_staff');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_staff')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const { role_id } = body;
       const roles = await sr.entities.StaffRole.filter({ id: role_id });
@@ -335,8 +346,7 @@ Deno.serve(async (req) => {
 
     // ─── GET ACTIVITY LOGS ─────────────────────────────────────────
     if (action === 'get_activity_logs') {
-      const allowed = await requirePermission(sr, user.email, 'manage_audit_logs');
-      if (!allowed) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+      if (!hasPermission(ctx, 'manage_audit_logs')) return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
 
       const logs = await sr.entities.StaffActivityLog.list('-created_date', body.limit || 100);
       return Response.json({ success: true, logs });

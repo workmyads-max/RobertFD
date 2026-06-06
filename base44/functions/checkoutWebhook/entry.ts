@@ -28,15 +28,18 @@ Deno.serve(async (req) => {
     const signature = req.headers.get('Checkout-Signature') || req.headers.get('Cko-Signature') || '';
     const ipAddress = req.headers.get('x-forwarded-for') || 'unknown';
 
-    // Load gateway config FIRST (needed for webhook secret)
-    const gateways = await base44.asServiceRole.entities.PaymentGateway.filter({
-      provider: 'checkout_com', is_active: true,
-    });
-    if (!gateways || gateways.length === 0) {
-      return Response.json({ error: 'Checkout.com not configured' }, { status: 500 });
+    // Load webhook secret from env var first (zero DB reads), fallback to DB only if not set
+    // This eliminates 1 DB read on every webhook hit including bot probes
+    let webhookSecret = Deno.env.get('CHECKOUT_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      const gateways = await base44.asServiceRole.entities.PaymentGateway.filter({
+        provider: 'checkout_com', is_active: true,
+      });
+      if (!gateways || gateways.length === 0) {
+        return Response.json({ error: 'Checkout.com not configured' }, { status: 500 });
+      }
+      webhookSecret = gateways[0]?.webhook_secret;
     }
-    const gateway = gateways[0];
-    const webhookSecret = gateway.webhook_secret;
 
     // ── HMAC SHA-256 SIGNATURE VERIFICATION ───────────────────────────────────
     if (webhookSecret) {
