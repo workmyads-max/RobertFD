@@ -76,40 +76,25 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ background: '#FF7A00' }} />
         </div>
-        <div className="w-16 h-16 flex flex-col items-center justify-center flex-shrink-0 relative cursor-pointer overflow-hidden"
+        <button 
           onClick={() => setCollapsed?.(!collapsed)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-          <div className="flex items-baseline gap-0">
-            <span className="font-black text-2xl tracking-tight" style={{
-              background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>XFT</span>
-          </div>
-          <ArrowUpRight className="w-4 h-4 -mt-1" style={{
-            background: 'linear-gradient(90deg, #FF5C00 0%, #CCFF00 100%)',
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="flex flex-col items-center gap-1 relative cursor-pointer">
+          <span className={`font-black tracking-tight transition-all ${collapsed ? 'text-xl' : 'text-3xl'}`} style={{
+            background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-          }} />
-        </div>
-        {!collapsed && (
-          <>
-            <div className="flex flex-col leading-none relative z-10">
-              <span className="font-black text-lg tracking-tight" style={{
-                background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>XFT</span>
-            </div>
-            <div className="ml-auto flex items-center gap-1 flex-shrink-0">
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00f5a0' }} />
-              <span className="text-[7px] font-mono" style={{ color: '#00f5a0' }}>LIVE</span>
-            </div>
-          </>
-        )}
+          }}>XFT</span>
+          {!collapsed && (
+            <ArrowUpRight className="w-4 h-4 -mt-0.5" style={{
+              background: 'linear-gradient(90deg, #FF5C00 0%, #CCFF00 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }} />
+          )}
+        </button>
         {/* Collapse toggle button */}
         {!collapsed && (
           <motion.button 
