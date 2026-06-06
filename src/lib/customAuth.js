@@ -31,12 +31,14 @@ export function clearSession() {
 export async function callAuth(action, payload) {
   try {
     const res = await base44.functions.invoke('supabaseAuthBridge', { action, ...payload });
-    const data = res.data || {};
+    // base44.functions.invoke returns Axios response: {data, status, headers}
+    // The backend response is in res.data
+    const backendResponse = res.data || {};
     // Check if response contains an error field
-    if (data.error) {
-      console.error('Auth error from server:', data.error);
+    if (backendResponse.error) {
+      console.error('Auth error from server:', backendResponse.error);
     }
-    return data;
+    return backendResponse;
   } catch (error) {
     console.error('callAuth error:', error);
     return { error: error.message || 'Request failed' };

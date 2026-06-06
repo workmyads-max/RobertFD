@@ -54,7 +54,9 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    console.log('Attempting login for:', email);
     const res = await callAuth('login', { email, password });
+    console.log('Login response:', res);
     setLoading(false);
 
     if (res.error) {
@@ -64,18 +66,22 @@ export default function LoginPage() {
 
     // Direct session — no OTP step
     if (res.session?.access_token && res.session?.refresh_token) {
+      console.log('Setting session...');
       const { error: sessionErr } = await supabase.auth.setSession({
         access_token: res.session.access_token,
         refresh_token: res.session.refresh_token,
       });
       if (sessionErr) {
+        console.error('Session setup failed:', sessionErr);
         setError('Session setup failed: ' + sessionErr.message);
         return;
       }
+      console.log('Session set, redirecting...');
       window.location.href = '/dashboard';
       return;
     }
 
+    console.error('No session in response');
     setError('Login failed. Please try again.');
   };
 
