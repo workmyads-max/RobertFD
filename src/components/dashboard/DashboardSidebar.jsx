@@ -137,33 +137,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         )}
       </div>
 
-      {/* User info */}
-      {user && (
-        <div className={`border-b ${collapsed ? 'px-2 py-3 flex justify-center' : 'px-4 py-3'}`} style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className={`flex ${collapsed ? 'justify-center' : 'items-center gap-3'}`}>
-            <div className="relative flex-shrink-0 group">
-              <div className={`${collapsed ? 'w-9 h-9' : 'w-10 h-10'} rounded-xl flex items-center justify-center text-sm font-black text-white`}
-                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.4), rgba(255,92,0,0.3))', border: '1px solid rgba(139,92,246,0.3)' }}>
-                {user.full_name?.charAt(0)?.toUpperCase() || 'T'}
-              </div>
-              {collapsed && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black animate-pulse" style={{ background: '#00f5a0' }} />
-              )}
-            </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <div className="text-[16px] font-black text-white truncate">{user.full_name || 'Trader'}</div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
-                  <span className="text-[12px] font-semibold" style={{ color: user.role === 'admin' ? '#FF5C00' : '#8b5cf6' }}>
-                    {user.role === 'admin' ? '⚡ Admin' : '● Trader'}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+
 
       {/* Nav */}
       <nav className={`flex-1 py-3 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none' }}>
