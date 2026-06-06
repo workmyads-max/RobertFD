@@ -402,41 +402,41 @@ async function logEmailToSupabase(emailData) {
  * Send email via real SMTP (Namecheap / any SMTP provider)
  */
 async function sendEmailViaSMTP(to, subject, body) {
+  const host = Deno.env.get('SMTP_HOST');
+  const port = parseInt(Deno.env.get('SMTP_PORT') || '465');
+  const username = Deno.env.get('SMTP_USERNAME');
+  const password = Deno.env.get('SMTP_PASSWORD');
+  const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
+  const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
+
+  console.log('[SMTP] Starting. host=' + host + ' port=' + port + ' user=' + username + ' hasPass=' + !!password);
+
+  if (!host || !username || !password) {
+    console.log('[SMTP] MISSING SECRETS — aborting');
+    return false;
+  }
+
   try {
-    const host = Deno.env.get('SMTP_HOST');
-    const port = parseInt(Deno.env.get('SMTP_PORT') || '587');
-    const username = Deno.env.get('SMTP_USERNAME');
-    const password = Deno.env.get('SMTP_PASSWORD');
-    const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
-    const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
-
-    console.log('SMTP config check:', { host: host || 'MISSING', port, username: username ? username.substring(0,5)+'...' : 'MISSING', hasPassword: !!password });
-    if (!host || !username || !password) {
-      console.error('SMTP not configured — missing SMTP_HOST, SMTP_USERNAME, or SMTP_PASSWORD');
-      return false;
-    }
-
     const nodemailer = (await import('npm:nodemailer@6.9.9')).default;
     const transporter = nodemailer.createTransport({
       host,
       port,
       secure: port === 465,
       auth: { user: username, pass: password },
-      tls: { rejectUnauthorized: false, ciphers: 'SSLv3' },
-      requireTLS: port === 587,
+      tls: { rejectUnauthorized: false },
     });
 
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
       to,
       subject,
       html: body,
     });
 
-    console.log(`Email sent via SMTP to ${to}`);
+    console.log('[SMTP] SUCCESS — messageId=' + info.messageId);
     return true;
   } catch (error) {
-    console.error('SMTP send failed — full error:', JSON.stringify({ message: error.message, code: error.code, command: error.command, response: error.response, responseCode: error.responseCode }));
+    console.log('[SMTP] FAILED — ' + error.message + ' | code=' + error.code + ' | response=' + error.response);
     return false;
   }
 }
