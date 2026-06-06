@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 // Supabase admin client for backend
@@ -399,44 +399,17 @@ async function logEmailToSupabase(emailData) {
 }
 
 /**
- * Send email via real SMTP (Namecheap / any SMTP provider)
+ * Send email via Base44 built-in SendEmail integration
+ * sr = base44.asServiceRole instance passed in from the handler
  */
-async function sendEmailViaSMTP(to, subject, body) {
-  const host = Deno.env.get('SMTP_HOST');
-  const port = parseInt(Deno.env.get('SMTP_PORT') || '465');
-  const username = Deno.env.get('SMTP_USERNAME');
-  const password = Deno.env.get('SMTP_PASSWORD');
-  const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
-  const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
-
-  console.log('[SMTP] Starting. host=' + host + ' port=' + port + ' user=' + username + ' hasPass=' + !!password);
-
-  if (!host || !username || !password) {
-    console.log('[SMTP] MISSING SECRETS — aborting');
-    return false;
-  }
-
+async function sendEmailViaSMTP(to, subject, body, sr) {
   try {
-    const nodemailer = (await import('npm:nodemailer@6.9.9')).default;
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user: username, pass: password },
-      tls: { rejectUnauthorized: false },
-    });
-
-    const info = await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject,
-      html: body,
-    });
-
-    console.log('[SMTP] SUCCESS — messageId=' + info.messageId);
+    const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
+    await sr.integrations.Core.SendEmail({ to, subject, body, from_name: fromName });
+    console.log('[EMAIL] Sent successfully to', to);
     return true;
   } catch (error) {
-    console.log('[SMTP] FAILED — ' + error.message + ' | code=' + error.code + ' | response=' + error.response);
+    console.log('[EMAIL] Failed:', error.message);
     return false;
   }
 }
@@ -445,6 +418,7 @@ async function sendEmailViaSMTP(to, subject, body) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole;
     const { action, ...payload } = await req.json();
 
     // ─── SEND OTP EMAIL ───────────────────────────────────────────────
@@ -461,7 +435,7 @@ Deno.serve(async (req) => {
         purpose: purpose || 'verification'
       });
 
-      const sent = await sendEmailViaSMTP(to, '🔐 Your Verification Code - XFunded Trader', emailBody);
+      const sent = await sendEmailViaSMTP(to, '🔐 Your Verification Code - XFunded Trader', emailBody, sr);
       
       // Log to Supabase
       await logEmailToSupabase({
@@ -496,7 +470,7 @@ Deno.serve(async (req) => {
       };
 
       const subject = subjectMap[type] || 'XFunded Trader Notification';
-      const sent = await sendEmailViaSMTP(to, subject, emailBody);
+      const sent = await sendEmailViaSMTP(to, subject, emailBody, sr);
       
       // Log to Supabase
       await logEmailToSupabase({
