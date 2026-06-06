@@ -1,8 +1,13 @@
 /**
  * automatedDDBreach — Institutional-grade automated drawdown breach detection
- * Scans ALL active accounts and automatically fails accounts that exceeded DD limits
+ * Scans ALL active/passed/funded accounts every 5 minutes
  * Also handles daily DD reset at 23:00 UTC (3:00 AM GMT+4)
- * Called by scheduled automation every 5 minutes
+ *
+ * INSTITUTIONAL ENFORCEMENT (FIX #5 + #6):
+ * - Reads PERSISTENT max_drawdown_used / daily_drawdown_used (never decreasing fields)
+ * - Once dd_breach_detected=true, account fails regardless of current equity
+ * - No future sync can undo a breach flag
+ * - Handles all challenge types: two-step, instant, instant_light, funded
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
@@ -14,6 +19,18 @@ async function sendEmail(sr, to, type, data) {
   }
 }
 
+// Returns correct DD limits per challenge type (FIX #7)
+function getDDLimits(account) {
+  const dailyLimit = 5; // 5% daily for all types
+  let overallLimit;
+  if (account.challenge_type === 'instant_light') {
+    overallLimit = 6; // Trailing 6%
+  } else {
+    overallLimit = 10; // Standard 10% for two-step, instant, funded
+  }
+  return { dailyLimit, overallLimit };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -23,7 +40,6 @@ Deno.serve(async (req) => {
     const utcHour = now.getUTCHours();
     const utcMinute = now.getUTCMinutes();
 
-    // Fetch only active/passed/funded accounts directly — avoids loading full 500-record list
     const [active, passed, funded] = await Promise.all([
       sr.entities.ChallengeAccount.filter({ status: 'active' }),
       sr.entities.ChallengeAccount.filter({ status: 'passed' }),
@@ -40,7 +56,9 @@ Deno.serve(async (req) => {
 
     await Promise.all(activeAccounts.map(async (account) => {
       try {
-        // ── DAILY DRAWDOWN RESET ────────────────────────────────────────────────
+
+        // ── DAILY DD RESET ──────────────────────────────────────────────────────
+        // IMPORTANT: only reset daily_drawdown_used, never touch max_drawdown_used
         if (isDailyResetWindow) {
           const lastReset = account.daily_reset_at ? new Date(account.daily_reset_at) : null;
           const resetToday = lastReset && lastReset.getUTCDate() === now.getUTCDate();
@@ -54,25 +72,44 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ── MAX DD BREACH DETECTION ────────────────────────────────────────────
-        const maxAllowedDD = account.challenge_type === 'instant_light'
-          ? 6  // Instant Light trailing DD = 6%
-          : 10; // Standard max DD = 10%
-
+        // ── BREACH DETECTION ───────────────────────────────────────────────────
+        // Read PERSISTENT fields — these are already the worst values ever seen
         const maxDDUsed = account.max_drawdown_used || 0;
         const dailyDDUsed = account.daily_drawdown_used || 0;
-        const dailyDDLimit = 5; // 5% daily DD limit
+        const { dailyLimit, overallLimit } = getDDLimits(account);
+
+        // Also re-check if dd_breach_detected was set by a sync but status not yet updated
+        const alreadyFlaggedBySync = account.dd_breach_detected === true;
 
         let breachReason = null;
-        if (maxDDUsed >= maxAllowedDD) {
-          breachReason = `Max drawdown limit reached: ${maxDDUsed.toFixed(2)}% / ${maxAllowedDD}%`;
-        } else if (dailyDDUsed >= dailyDDLimit) {
-          breachReason = `Daily drawdown limit reached: ${dailyDDUsed.toFixed(2)}% / ${dailyDDLimit}%`;
+        let breachType = account.dd_breach_type || null;
+
+        if (alreadyFlaggedBySync && account.status !== 'failed') {
+          // Sync detected a breach but status wasn't updated yet — catch it here
+          const type = account.dd_breach_type || 'unknown';
+          const val = account.dd_breach_value || maxDDUsed;
+          breachReason = `DD breach previously detected (${type}): ${val.toFixed ? val.toFixed(2) : val}%`;
+        } else if (!alreadyFlaggedBySync) {
+          if (maxDDUsed >= overallLimit) {
+            breachReason = `Max drawdown limit reached: ${maxDDUsed.toFixed(2)}% / ${overallLimit}%`;
+            breachType = account.challenge_type === 'instant_light' ? 'trailing' : 'overall';
+          } else if (dailyDDUsed >= dailyLimit) {
+            breachReason = `Daily drawdown limit reached: ${dailyDDUsed.toFixed(2)}% / ${dailyLimit}%`;
+            breachType = 'daily';
+          }
         }
 
         if (breachReason) {
-          // Auto-fail the account
-          await sr.entities.ChallengeAccount.update(account.id, { status: 'failed' });
+          const breachNow = new Date().toISOString();
+
+          // FIX #6: Write permanent breach flags (never overwrite if already set from sync)
+          await sr.entities.ChallengeAccount.update(account.id, {
+            status: 'failed',
+            dd_breach_detected: true,
+            ...(account.dd_breach_type ? {} : { dd_breach_type: breachType }),
+            ...(account.dd_breach_time ? {} : { dd_breach_time: breachNow }),
+            ...(account.dd_breach_value ? {} : { dd_breach_value: breachType === 'daily' ? dailyDDUsed : maxDDUsed }),
+          });
 
           // Create risk flag
           await sr.entities.RiskFlag.create({
@@ -82,13 +119,13 @@ Deno.serve(async (req) => {
             severity: 'critical',
             description: `AUTO-BREACH: ${breachReason}`,
             status: 'active',
-            triggered_at: now.toISOString(),
+            triggered_at: breachNow,
           });
 
-          // Notify user
+          // User notification
           await sr.entities.Notification.create({
             title: '🚫 Account Breached — Challenge Failed',
-            message: `Your account ${account.account_id} has been automatically closed. Reason: ${breachReason}. Please review your account in the dashboard.`,
+            message: `Your account ${account.account_id} has been automatically closed. Reason: ${breachReason}`,
             type: 'market_alert',
             priority: 'critical',
             display_mode: 'popup',
@@ -96,8 +133,8 @@ Deno.serve(async (req) => {
             target: 'challenge',
           });
 
-          // Send email notification with correct type based on breach
-          const emailType = breachReason.includes('Daily') ? 'daily_dd_breach' : 'max_dd_breach';
+          // Email notification
+          const emailType = (breachType === 'daily') ? 'daily_dd_breach' : 'max_dd_breach';
           await sendEmail(sr, account.user_email, emailType, {
             name: account.user_email,
             account_id: account.account_id,
@@ -111,6 +148,7 @@ Deno.serve(async (req) => {
             account_id: account.account_id,
             user_email: account.user_email,
             breach_reason: breachReason,
+            breach_type: breachType,
             max_dd_used: maxDDUsed,
             daily_dd_used: dailyDDUsed,
           });
