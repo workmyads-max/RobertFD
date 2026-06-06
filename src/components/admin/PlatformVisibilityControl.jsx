@@ -1,23 +1,33 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Eye, EyeOff, RefreshCw, Save } from 'lucide-react';
+import { Zap, Eye, EyeOff, RefreshCw, Save, Server, Globe, Shield, DollarSign, Users, Bell, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const FEATURE_LIST = [
-  { key: 'analytics', label: 'Analytics', category: 'analytics', icon: '📈' },
-  { key: 'market_news', label: 'Market News', category: 'analytics', icon: '📰' },
-  { key: 'economic_calendar', label: 'Economic Calendar', category: 'analytics', icon: '📅' },
-  { key: 'trading_journal', label: 'Trading Journal', category: 'analytics', icon: '📖' },
-  { key: 'affiliate', label: 'Affiliate Program', category: 'user_management', icon: '🤝' },
-  { key: 'certificates', label: 'Certificates', category: 'user_management', icon: '🏆' },
-  { key: 'withdrawals', label: 'Withdrawals', category: 'user_management', icon: '💰' },
-  { key: 'billing', label: 'Billing', category: 'user_management', icon: '💳' },
-  { key: 'leaderboard', label: 'Leaderboard', category: 'analytics', icon: '🎯' },
-  { key: 'support', label: 'Support', category: 'support', icon: '🆘' },
-  { key: 'notifications', label: 'Notifications', category: 'system', icon: '🔔' },
-  { key: 'kyc', label: 'KYC Verification', category: 'user_management', icon: '🪪' },
-  { key: 'live_chat', label: 'Live Chat', category: 'support', icon: '💬' },
+  // Trading Platforms
+  { key: 'mt5', label: 'MT5 Platform', category: 'trading', icon: '📈' },
+  { key: 'match_trader', label: 'Match Trader', category: 'trading', icon: '📊' },
+  { key: 'tradelocker', label: 'TradeLocker', category: 'trading', icon: '🔓' },
+  { key: 'xtrading', label: 'XTrading Terminal', category: 'trading', icon: '⚡' },
+  
+  // Features
+  { key: 'analytics', label: 'Analytics', category: 'features', icon: '📈' },
+  { key: 'market_news', label: 'Market News', category: 'features', icon: '📰' },
+  { key: 'economic_calendar', label: 'Economic Calendar', category: 'features', icon: '📅' },
+  { key: 'trading_journal', label: 'Trading Journal', category: 'features', icon: '📖' },
+  { key: 'leaderboard', label: 'Leaderboard', category: 'features', icon: '🎯' },
+  { key: 'affiliate', label: 'Affiliate Program', category: 'features', icon: '🤝' },
+  { key: 'certificates', label: 'Certificates', category: 'features', icon: '🏆' },
+  { key: 'withdrawals', label: 'Withdrawals', category: 'features', icon: '💰' },
+  { key: 'billing', label: 'Billing', category: 'features', icon: '💳' },
+  { key: 'support', label: 'Support', category: 'features', icon: '🆘' },
+  { key: 'notifications', label: 'Notifications', category: 'features', icon: '🔔' },
+  { key: 'kyc', label: 'KYC Verification', category: 'features', icon: '🪪' },
+  { key: 'live_chat', label: 'Live Chat', category: 'features', icon: '💬' },
+  
+  // System
+  { key: 'new_user_registration', label: 'New User Registration', category: 'system', icon: '🔐' },
 ];
 
 export default function PlatformVisibilityControl() {
@@ -63,12 +73,11 @@ export default function PlatformVisibilityControl() {
     return FEATURE_LIST.filter(f => f.category === filter);
   };
 
-  const categories = ['all', 'analytics', 'user_management', 'support', 'system'];
+  const categories = ['all', 'trading', 'features', 'system'];
   const categoryLabels = {
-    all: 'All Features',
-    analytics: 'Analytics',
-    user_management: 'User Management',
-    support: 'Support',
+    all: 'All Settings',
+    trading: 'Trading Platforms',
+    features: 'Features',
     system: 'System',
   };
 
@@ -82,9 +91,9 @@ export default function PlatformVisibilityControl() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FF5C00, #ff8a3d)', boxShadow: '0 0 20px rgba(255,92,0,0.4)' }}>
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-2xl font-black text-white">Platform Visibility Control</h2>
+            <h2 className="text-2xl font-black text-white">Platform Control Center</h2>
           </div>
-          <p className="text-sm text-slate-400 mt-2">Control feature visibility across the entire platform</p>
+          <p className="text-sm text-slate-400 mt-2">Manage platform availability, trading platforms, and feature visibility</p>
         </div>
       </motion.div>
 
