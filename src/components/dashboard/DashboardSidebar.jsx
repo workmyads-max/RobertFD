@@ -18,10 +18,12 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Shield, prominent: true },
     { id: 'accounts', label: 'My Accounts', icon: Wallet },
+    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'markets', label: 'Markets', icon: Activity },
+    { id: 'calendar', label: 'Economic Calendar', icon: Calendar },
+    { id: 'news', label: 'Market News', icon: Newspaper },
     { id: 'journal', label: 'Trading Journal', icon: BookOpen },
-    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'affiliate', label: 'Affiliate', icon: Users },
     { id: 'certificates', label: 'Certificates', icon: ShieldCheck },
