@@ -90,7 +90,9 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               {user?.avatar_url || user?.profile_photo_url ? (
                 <img src={user.avatar_url || user.profile_photo_url} alt={displayName} className="w-full h-full object-cover" style={{ background: 'transparent' }} />
               ) : (
-                initials
+                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))' }}>
+                  {initials}
+                </div>
               )}
             </motion.div>
             {/* KYC dot */}
