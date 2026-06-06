@@ -217,18 +217,22 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
       }
 
-      // Update password and metadata in Supabase auth, then sign in
-      const tempPassword = 'TempLogin_' + Math.random().toString(36).slice(-10);
-      await adminSupabase.auth.admin.updateUserById(authUserId, {
-        password: tempPassword,
+      // Update the Supabase auth user with the actual submitted password so signIn works
+      const { error: updateErr } = await adminSupabase.auth.admin.updateUserById(authUserId, {
+        password,
         email_confirm: true,
         user_metadata: { full_name: account.full_name, username: account.username, role: account.role || 'user' },
         app_metadata: { role: account.role || 'user' },
       });
 
+      if (updateErr) {
+        console.error('updateUserById failed:', updateErr.message);
+        return Response.json({ error: 'Login failed. Please try again.' }, { status: 500 });
+      }
+
       const { data: signInData, error: signInError } = await adminSupabase.auth.signInWithPassword({
         email: account.email,
-        password: tempPassword,
+        password,
       });
 
       if (signInError) {
