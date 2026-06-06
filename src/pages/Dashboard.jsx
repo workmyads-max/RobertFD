@@ -62,6 +62,7 @@ import AccountOverview from '../components/dashboard/AccountOverview';
 import XCopier from '../components/dashboard/XCopier';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
 import TradingBackground from '../components/dashboard/TradingBackground';
+import PixelBlast from '../components/dashboard/PixelBlast';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
@@ -192,6 +193,26 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
+      {/* PixelBlast background — full screen, fixed, behind everything */}
+      {!isTerminal && (
+        <div className="fixed inset-0 z-0 pointer-events-none" style={{ opacity: 0.18 }}>
+          <PixelBlast
+            variant="circle"
+            pixelSize={5}
+            color="#FF5C00"
+            patternScale={3}
+            patternDensity={1.1}
+            pixelSizeJitter={0.4}
+            enableRipples={true}
+            rippleSpeed={0.35}
+            rippleThickness={0.1}
+            rippleIntensityScale={1.2}
+            speed={0.4}
+            edgeFade={0.3}
+            transparent={true}
+          />
+        </div>
+      )}
       {/* Animated trading background — skip on overview & terminal (they have their own) */}
       {!isTerminal && !isOverview && <TradingBackground />}
 
