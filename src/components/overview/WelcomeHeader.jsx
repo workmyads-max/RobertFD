@@ -44,14 +44,14 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const greeting = hour < 5 ? 'Good Night' : hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
   const quotes = [
-    "The best time to plant a tree was 20 years ago. The second best time is now.",
-    "Markets reward patience and discipline.",
-    "Every expert was once a beginner.",
-    "Risk management is wealth management.",
-    "Profit is taken not made.",
-    "Consistency beats intensity.",
-    "Trading is a probability game, not a certainty game.",
-    "Your biggest edge is emotional control.",
+    "Success in trading is not about being right, it's about managing risk.",
+    "The market is a device for transferring money from the impatient to the patient.",
+    "Trade what you see, not what you think.",
+    "Losses are the tuition you pay to the market.",
+    "The goal is not to be a hero, but to be a disciplined trader.",
+    "In trading, patience is not a virtue, it's a necessity.",
+    "Cut losses quickly and let winners run.",
+    "The best trade is often the one you don't make.",
   ];
   const dailyQuote = quotes[new Date().getDate() % quotes.length];
 
