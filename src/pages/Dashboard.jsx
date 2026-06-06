@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import DashboardOverviewAdvanced from '../components/dashboard/DashboardOverviewAdvanced';
@@ -74,6 +74,18 @@ export default function Dashboard() {
   const [activePage, setActivePage] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Reset collapsed state on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 768) {
+        setSidebarCollapsed(false);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
@@ -243,7 +255,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto'}>
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}

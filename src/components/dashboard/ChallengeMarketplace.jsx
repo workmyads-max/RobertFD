@@ -119,7 +119,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   ];
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Terms Modal */}
       <TermsModal
         open={showTerms}

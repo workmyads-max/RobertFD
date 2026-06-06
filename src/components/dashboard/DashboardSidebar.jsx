@@ -293,7 +293,15 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       {/* Desktop sidebar */}
       <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[70px]' : 'w-64'}`}
         style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-        <SidebarContent />
+        {collapsed ? (
+          <div className="flex flex-col items-center py-4 space-y-4">
+            <button onClick={() => setCollapsed?.(false)} title="Expand sidebar" className="text-white/30 hover:text-white/60">
+              <PanelLeftOpen className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          <SidebarContent />
+        )}
       </div>
 
       {/* Mobile drawer */}
