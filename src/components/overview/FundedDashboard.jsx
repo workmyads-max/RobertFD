@@ -101,6 +101,17 @@ function QuickActions({ onNavigate }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
+  // Refetch user to get latest avatar_url/profile_photo_url
+  const { data: currentUser = user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const me = await base44.auth.me();
+      return me || user;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10s to catch profile updates
+  });
+
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
@@ -201,7 +212,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       <div className="relative z-10 flex-1 px-4 md:px-6 pb-8 max-w-[1440px] mx-auto w-full space-y-4 mt-4">
 
         {/* Welcome Header */}
-        <WelcomeHeader user={user} kyc={kyc} onStartChallenge={onStartChallenge} />
+        <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
         {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
