@@ -21,7 +21,7 @@ function InputField({ label, value, onChange, placeholder, disabled, type = 'tex
   const isPass = type === 'password';
   return (
     <div>
-      <label className="text-[11px] font-mono text-white/40 mb-1.5 block uppercase tracking-wider">{label}</label>
+      <label className="text-sm font-bold text-white/45 mb-2.5 block uppercase tracking-wide">{label}</label>
       <div className="relative">
         <input
           value={value || ''}
@@ -29,7 +29,7 @@ function InputField({ label, value, onChange, placeholder, disabled, type = 'tex
           placeholder={placeholder}
           disabled={disabled}
           type={isPass ? (show ? 'text' : 'password') : type}
-          className="w-full rounded-xl px-4 py-3 text-sm text-white outline-none disabled:opacity-40 transition-all"
+          className="w-full rounded-xl px-4 py-3 text-base text-white outline-none disabled:opacity-40 transition-all"
           style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.09)',
@@ -44,18 +44,18 @@ function InputField({ label, value, onChange, placeholder, disabled, type = 'tex
           </button>
         )}
       </div>
-      {hint && <p className="text-[10px] text-white/25 mt-1 font-mono">{hint}</p>}
+      {hint && <p className="text-xs text-white/25 mt-1.5 font-mono">{hint}</p>}
     </div>
   );
 }
 
 function Card({ title, subtitle, children }) {
   return (
-    <div className="rounded-2xl p-6 space-y-5"
+    <div className="rounded-2xl p-7 space-y-5"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
       <div className="border-b pb-4" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <h3 className="text-sm font-bold text-white">{title}</h3>
-        {subtitle && <p className="text-[11px] text-white/30 font-mono mt-0.5">{subtitle}</p>}
+        <h3 className="text-lg font-black text-white">{title}</h3>
+        {subtitle && <p className="text-sm text-white/35 font-mono mt-1">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -313,14 +313,14 @@ export default function DashboardSettings({ user }) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-black text-white flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.2)' }}>
-            <Settings className="w-5 h-5 text-primary" />
+      <div className="mb-10">
+        <h1 className="text-5xl font-black text-white flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(255,20,147,0.15), rgba(0,255,255,0.1))', border: '2px solid rgba(100,220,255,0.3)' }}>
+            <Settings className="w-6 h-6 text-primary" />
           </div>
           Settings
         </h1>
-        <p className="text-sm text-white/30 font-mono mt-1">Manage your account, security, and preferences</p>
+        <p className="text-base text-white/40 font-mono mt-2">Manage your account, security, and preferences</p>
       </div>
 
       <div className="flex gap-6">
@@ -332,11 +332,11 @@ export default function DashboardSettings({ user }) {
               const isActive = activeTab === t.id;
               return (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${
                     isActive ? 'text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.04]'
                   }`}
-                  style={isActive ? { background: 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))', borderLeft: '2px solid #FF5C00' } : {}}>
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-white/25'}`} />
+                  style={isActive ? { background: 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))', borderLeft: '3px solid #FF5C00' } : {}}>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-white/25'}`} />
                   {t.label}
                 </button>
               );
@@ -353,102 +353,6 @@ export default function DashboardSettings({ user }) {
               {/* ── PROFILE ── */}
               {activeTab === 'profile' && (
                 <>
-                  <Card title="Profile Photo" subtitle="Shown across your dashboard and certificates">
-                    <div className="flex items-center gap-5">
-                      <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center text-2xl font-black text-white"
-                          style={{
-                            background: profilePhoto ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(139,92,246,0.2))',
-                            border: '2px solid rgba(255,92,0,0.3)',
-                          }}>
-                          {profilePhoto
-                            ? <img src={profilePhoto} alt="" className="w-full h-full object-cover" />
-                            : <span>{user?.full_name?.charAt(0)?.toUpperCase() || '?'}</span>}
-                        </div>
-                        <div className="absolute inset-0 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background: 'rgba(0,0,0,0.6)' }}>
-                          <Upload className="w-5 h-5 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <button onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
-                          style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
-                          <Upload className="w-4 h-4" /> {uploadLoading ? 'Uploading…' : 'Upload Photo'}
-                        </button>
-                        <p className="text-[10px] text-white/25 font-mono mt-1.5">JPG, PNG, WEBP - max 5MB</p>
-                      </div>
-                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => handlePhotoUpload(e.target.files?.[0])} className="hidden" />
-                    </div>
-                  </Card>
-
-                  {/* Crop Modal */}
-                  <AnimatePresence>
-                    {showCropModal && tempImage && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)' }}
-                      >
-                        <motion.div
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.9, opacity: 0 }}
-                          className="w-full max-w-lg rounded-2xl p-6"
-                          style={{ background: 'rgba(14,14,16,0.98)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                              <Crop className="w-5 h-5 text-primary" />
-                              Crop Profile Photo
-                            </h3>
-                            <button onClick={() => setShowCropModal(false)} className="text-white/40 hover:text-white">
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-
-                          <div className="relative aspect-square rounded-xl overflow-hidden mb-6" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                            <img src={tempImage} alt="Crop preview" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 border-2 border-primary/50" style={{ boxShadow: 'inset 0 0 0 9999px rgba(0,0,0,0.5)' }} />
-                          </div>
-
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-[11px] font-mono text-white/40 mb-2 block uppercase">Zoom Level</label>
-                              <input
-                                type="range"
-                                min="50"
-                                max="100"
-                                value={cropPosition.size}
-                                onChange={e => setCropPosition(p => ({ ...p, size: parseInt(e.target.value) }))}
-                                className="w-full"
-                                style={{ accentColor: '#FF5C00' }}
-                              />
-                            </div>
-
-                            <div className="flex gap-3">
-                              <button onClick={() => setShowCropModal(false)}
-                                className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white"
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                Cancel
-                              </button>
-                              <button onClick={handleCropAndSave} disabled={uploadLoading}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
-                                {uploadLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                {uploadLoading ? 'Processing...' : 'Save Cropped'}
-                              </button>
-                            </div>
-                          </div>
-
-                          <canvas ref={canvasRef} className="hidden" />
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   <Card title="Personal Information" subtitle="Update your profile and contact details">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InputField label="Full Name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="John Doe" />

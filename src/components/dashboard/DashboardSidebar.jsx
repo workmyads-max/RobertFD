@@ -152,10 +152,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-bold text-white truncate">{user.full_name || 'Trader'}</div>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="text-[16px] font-black text-white truncate">{user.full_name || 'Trader'}</div>
+                <div className="flex items-center gap-1.5 mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
-                  <span className="text-[10px] font-mono" style={{ color: user.role === 'admin' ? '#FF5C00' : '#8b5cf6' }}>
+                  <span className="text-[12px] font-semibold" style={{ color: user.role === 'admin' ? '#FF5C00' : '#8b5cf6' }}>
                     {user.role === 'admin' ? '⚡ Admin' : '● Trader'}
                   </span>
                 </div>
@@ -176,7 +176,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-xl transition-all duration-150 group relative ${
-                item.prominent ? 'text-[15px] font-bold' : 'text-[13px] font-medium'
+                item.prominent ? 'text-[17px] font-black' : 'text-[15px] font-semibold'
               } ${
                 collapsed ? 'justify-center px-2 py-2.5' : item.prominent ? 'gap-2.5 px-4 py-3.5' : 'gap-2.5 px-3 py-2.5'
               } ${
