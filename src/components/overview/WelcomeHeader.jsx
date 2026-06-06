@@ -49,29 +49,27 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative rounded-2xl overflow-hidden"
+      className="relative rounded-xl overflow-hidden border-l-4"
       style={{
-        background: 'linear-gradient(135deg, rgba(8,14,30,0.98) 0%, rgba(12,20,44,0.97) 50%, rgba(10,16,36,0.98) 100%)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'linear-gradient(90deg, rgba(8,14,30,0.95) 0%, rgba(12,20,44,0.92) 100%)',
+        borderLeft: '4px solid rgba(255,92,0,0.6)',
+        borderTop: '1px solid rgba(255,92,0,0.3)',
+        borderBottom: '1px solid rgba(255,92,0,0.15)',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
         backdropFilter: 'blur(40px)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(255,92,0,0.08)',
       }}
     >
-      {/* Animated top glow line */}
-      <motion.div
-        animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-        className="absolute top-0 left-0 right-0 h-[2px]"
+      {/* Accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-1"
         style={{
-          background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.9), rgba(204,255,0,0.7), rgba(255,92,0,0.9), transparent)',
-          backgroundSize: '200% 100%',
+          background: 'linear-gradient(90deg, rgba(255,92,0,0.8), rgba(204,255,0,0.5), rgba(255,92,0,0.4), transparent)',
         }}
       />
 
-      {/* Background orbs */}
-      <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(255,92,0,0.06) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
-      <div className="absolute bottom-0 left-1/4 w-48 h-48 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,149,255,0.05) 0%, transparent 70%)', transform: 'translateY(50%)' }} />
+      {/* Corner accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
+        style={{ background: 'radial-gradient(circle at top right, rgba(255,92,0,0.1) 0%, transparent 70%)' }} />
 
       <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
 
@@ -133,11 +131,6 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
                   <AlertCircle className="w-3 h-3" /> Unverified — Verify Now
                 </button>
               )}
-
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono"
-                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
-                <Zap className="w-3 h-3" /> Funded Trader
-              </div>
 
               {/* Live clock */}
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono text-white/30"
