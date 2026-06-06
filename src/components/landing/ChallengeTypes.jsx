@@ -4,6 +4,7 @@ import {
   Layers, Zap, Lightbulb, ArrowRight, CheckCircle2, XCircle,
   Shield, Star, TrendingUp, Target, Clock, DollarSign, ChevronDown, ChevronUp, Activity
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // ── Data ────────────────────────────────────────────────────────────────────
 const CHALLENGES = [
@@ -114,7 +115,7 @@ function FeatureRow({ ok, label }) {
   );
 }
 
-function ChallengeCard({ c, i, expanded, onToggle }) {
+function ChallengeCard({ c, i, expanded, onToggle, onNavigate }) {
   const Icon = c.icon;
   const isLime = c.color === '#CCFF00';
 
@@ -204,7 +205,7 @@ function ChallengeCard({ c, i, expanded, onToggle }) {
 
         {/* CTA */}
         <div className="mt-auto">
-          <a href={c.href}
+          <button onClick={onNavigate}
             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={c.accent
               ? { background: 'linear-gradient(135deg, #FF5C00, #FF8A3D)', color: '#fff', boxShadow: '0 8px 32px rgba(255,92,0,0.35)' }
@@ -213,7 +214,7 @@ function ChallengeCard({ c, i, expanded, onToggle }) {
                 : { background: 'rgba(255,92,0,0.1)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
             {c.cta}
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -234,10 +235,15 @@ function CompareRow({ label, values, highlight }) {
 
 // ── Main export ─────────────────────────────────────────────────────────────
 export default function ChallengeTypes() {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState({});
   const [showCompare, setShowCompare] = useState(false);
 
   const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleNavigate = () => {
+    navigate('/challenges');
+  };
 
   const compareRows = [
     { label: 'Evaluation', values: [{ text: 'Phase 1+2', color: 'text-orange-400' }, { text: 'None', color: 'text-emerald-400' }, { text: 'None', color: 'text-emerald-400' }] },
@@ -297,6 +303,7 @@ export default function ChallengeTypes() {
               i={i}
               expanded={!!expanded[c.id]}
               onToggle={() => toggle(c.id)}
+              onNavigate={handleNavigate}
             />
           ))}
         </div>
