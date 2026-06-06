@@ -140,7 +140,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
 
       {/* Nav */}
-      <nav className={`flex-1 py-3 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none' }}>
+      <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'} mt-2`} style={{ scrollbarWidth: 'none' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
