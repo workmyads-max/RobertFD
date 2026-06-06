@@ -76,32 +76,20 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ background: '#FF7A00' }} />
         </div>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative cursor-pointer overflow-hidden"
+        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 relative cursor-pointer overflow-hidden"
           onClick={() => setCollapsed?.(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{ 
-            background: 'linear-gradient(135deg, rgba(255,122,0,0.12), rgba(255,122,0,0.05))',
-            border: '1px solid rgba(255,122,0,0.35)',
-            boxShadow: '0 4px 20px rgba(255,122,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)'
+            background: 'linear-gradient(135deg, rgba(255,122,0,0.15), rgba(255,122,0,0.08))',
+            border: '1px solid rgba(255,122,0,0.4)',
+            boxShadow: '0 4px 20px rgba(255,122,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
           }}>
-          {/* Mini X icon */}
-          <svg viewBox="0 0 40 40" width="28" height="28">
-            <rect x="8" y="5" width="5" height="30" rx="2.5" fill="#FF7A00" transform="rotate(-35 10.5 20)" />
-            <rect x="27" y="5" width="5" height="30" rx="2.5" fill="#FF7A00" transform="rotate(35 29.5 20)" />
-            <rect x="18" y="4" width="3" height="16" rx="1.5" fill="white" fillOpacity="0.95" transform="rotate(25 19.5 12)" />
-            {/* Mini candlesticks */}
-            <g transform="translate(24, 18)">
-              <line x1="0" y1="4" x2="0" y2="1" stroke="#FF7A00" strokeWidth="1" />
-              <rect x="-1" y="1" width="2" height="3" fill="#FF7A00" />
-              <line x1="4" y1="3" x2="4" y2="6" stroke="#FF7A00" strokeWidth="1" />
-              <rect x="3" y="3" width="2" height="3" fill="none" stroke="#FF7A00" strokeWidth="0.8" />
-            </g>
-          </svg>
+          <span className="text-white font-black text-xl tracking-tight" style={{ textShadow: '0 0 20px rgba(255,122,0,0.5)' }}>XFT</span>
         </div>
         {!collapsed && (
           <>
             <div className="flex flex-col leading-none relative z-10">
-              <span className="text-white font-black text-sm tracking-tight" style={{ textShadow: '0 0 20px rgba(255,122,0,0.3)' }}>XFunded</span>
+              <span className="text-white font-black text-lg tracking-tight" style={{ textShadow: '0 0 20px rgba(255,122,0,0.3)' }}>XFT</span>
               <span className="font-bold text-[9px] tracking-[0.2em]" style={{ color: '#FF7A00', marginTop: '2px' }}>TRADER</span>
             </div>
             <div className="ml-auto flex items-center gap-1 flex-shrink-0">
