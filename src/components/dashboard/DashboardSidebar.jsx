@@ -185,11 +185,19 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-mt5', label: 'MT5 Configuration', icon: Zap },
               { id: 'admin-match-trader', label: 'Match Trader', icon: Zap },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Zap },
+              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Zap },
+              { id: 'admin-risk-center', label: 'Risk Center', icon: Zap },
+              { id: 'admin-funded-review', label: 'Funded Review', icon: Zap },
               { id: 'admin-risk', label: 'Risk Management', icon: Zap },
+              { id: 'admin-appeals', label: 'Violation Appeals', icon: Zap },
               { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users },
               { id: 'admin-social', label: 'Social Media', icon: Zap },
               { id: 'admin-staff', label: 'Staff Management', icon: Users },
+              { id: 'admin-roles', label: 'Roles & Permissions', icon: Zap },
               { id: 'admin-promotions', label: 'Promotions', icon: Zap },
+              { id: 'admin-coupons', label: 'Coupons', icon: Zap },
+              { id: 'admin-email-logs', label: 'Email Logs', icon: Zap },
+              { id: 'admin-visibility', label: 'Platform Visibility', icon: Zap },
               ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
