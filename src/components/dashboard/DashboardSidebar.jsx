@@ -6,6 +6,7 @@ import {
   Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail, Globe, ArrowUpRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import XFLogo from '@/components/shared/XFLogo';
 
 import { useFeatureVisibility } from '../../hooks/useFeatureVisibility';
 import { useStaffPermissions } from '../../hooks/useStaffPermissions';
@@ -70,62 +71,21 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full circuit-bg">
-      {/* Logo - Premium X with candlesticks */}
-      <div className={`flex items-center border-b relative overflow-hidden ${collapsed ? 'justify-center px-2 py-4' : 'gap-3 px-4 py-5'}`}
-        style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(135deg, rgba(255,122,0,0.07), rgba(139,92,246,0.04), transparent)' }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ background: '#FF7A00' }} />
-        </div>
+      {/* Logo */}
+      <div className={`flex items-center border-b ${collapsed ? 'justify-center px-3 py-4' : 'px-4 py-5'}`}
+        style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <button 
           onClick={() => setCollapsed?.(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex flex-col items-center gap-1 relative cursor-pointer">
-          <span className={`font-black tracking-tight transition-all ${collapsed ? 'text-xl' : 'text-3xl'}`} style={{
-            background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>XFT</span>
-          {!collapsed && (
-            <ArrowUpRight className="w-4 h-4 -mt-0.5" style={{
-              background: 'linear-gradient(90deg, #FF5C00 0%, #CCFF00 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }} />
-          )}
+          className="hover:opacity-80 transition-opacity">
+          <XFLogo size={collapsed ? 'sm' : 'md'} animate />
         </button>
-        {/* Collapse toggle button */}
-        {!collapsed && (
-          <motion.button 
-            onClick={() => setCollapsed?.(true)} 
-            title="Collapse"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg transition-all"
-            style={{
-              background: 'rgba(255,122,0,0.08)',
-              border: '1px solid rgba(255,122,0,0.2)',
-              color: '#FF7A00',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,122,0,0.15)';
-              e.currentTarget.style.borderColor = 'rgba(255,122,0,0.35)';
-              e.currentTarget.style.boxShadow = '0 0 12px rgba(255,122,0,0.25)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,122,0,0.08)';
-              e.currentTarget.style.borderColor = 'rgba(255,122,0,0.2)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-            whileTap={{ scale: 0.92 }}>
-            <span className="text-lg font-black">«</span>
-          </motion.button>
-        )}
       </div>
 
 
 
       {/* Nav */}
-      <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'} mt-6`} style={{ scrollbarWidth: 'none' }}>
+      <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'} mt-8`} style={{ scrollbarWidth: 'none' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
