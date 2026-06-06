@@ -85,7 +85,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
 
       {/* Nav */}
-      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', marginTop: collapsed ? '0' : '68px' }}>
+      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', marginTop: collapsed ? '0' : '68px' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -172,7 +172,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               <div className="pt-3 pb-1 px-3">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.3), transparent)' }} />
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full" style={{ color: '#FF5C00', background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>⚡ ADMIN</span>
+                  <span className="text-[8px] sm:text-[9px] font-mono px-2 py-0.5 rounded-full whitespace-nowrap" style={{ color: '#FF5C00', background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>⚡ ADMIN</span>
                   <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(255,92,0,0.3), transparent)' }} />
                 </div>
               </div>
