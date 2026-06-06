@@ -4,7 +4,6 @@ import { ShieldCheck, AlertCircle, Zap, Globe, MessageCircle, Send, ArrowRight }
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import RotatingText from '../shared/RotatingText';
 
 export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
@@ -149,62 +148,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Right: Start New Challenge Button with RotatingText */}
-        <motion.button
-          onClick={onStartChallenge}
-          whileHover={{ scale: 1.06, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          className="relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-3xl font-bold text-white text-base group overflow-hidden"
-          style={{
-            backgroundImage: 'url(https://media.base44.com/images/public/69ff44f98e27baf8957d0676/1a106290d_generated_image.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            boxShadow: '0 0 40px rgba(100, 220, 255, 0.4), 0 0 60px rgba(150, 100, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-            border: '2.5px solid rgba(100, 220, 255, 0.5)',
-          }}>
-          {/* Holographic shimmer overlay */}
-          <motion.div
-            className="absolute inset-0 rounded-3xl"
-            animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              background: 'linear-gradient(-45deg, transparent 0%, rgba(150, 255, 220, 0.15) 25%, rgba(100, 220, 255, 0.1) 50%, rgba(180, 100, 255, 0.15) 75%, transparent 100%)',
-              backgroundSize: '200% 200%',
-              pointerEvents: 'none',
-            }}
-          />
-          
-          {/* Pulsing glow effect */}
-          <motion.div
-            className="absolute inset-0 rounded-3xl"
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 3.5, repeat: Infinity }}
-            style={{
-              background: 'radial-gradient(circle at center, rgba(100, 220, 255, 0.25), transparent 60%)',
-              filter: 'blur(16px)',
-              pointerEvents: 'none',
-            }}
-          />
 
-          <RotatingText
-            texts={['Start Challenge', 'Get Funded', 'Trade Now', 'Join Elite']}
-            mainClassName="relative z-10"
-            staggerFrom="last"
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '-120%', opacity: 0 }}
-            staggerDuration={0.025}
-            splitLevelClassName="overflow-hidden pb-1"
-            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            rotationInterval={2500}
-          />
-          <motion.div
-            animate={{ x: [0, 4, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="relative z-10">
-            <ArrowRight className="w-5 h-5" />
-          </motion.div>
-        </motion.button>
       </div>
     </motion.div>
 
