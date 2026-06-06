@@ -15,7 +15,7 @@ const navItems = [
   { id: 'accounts', label: 'My Accounts', icon: Wallet },
   { id: 'account-overview', label: 'Account Overview', icon: BarChart3 },
   { id: 'performance', label: 'My Performance', icon: Activity },
-  { id: 'marketplace', label: 'New Challenge', icon: Zap, highlight: true },
+  { id: 'marketplace', label: 'New Challenge', icon: Zap, highlight: true, prominent: true },
   { id: 'terminal', label: 'XTrading Terminal', icon: Monitor },
   { id: 'xcopier', label: 'X-Copier', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -152,10 +152,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-bold text-white truncate">{user.full_name || 'Trader'}</div>
+                <div className="text-[14px] font-bold text-white truncate">{user.full_name || 'Trader'}</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
-                  <span className="text-[9px] font-mono" style={{ color: user.role === 'admin' ? '#FF5C00' : '#8b5cf6' }}>
+                  <span className="text-[10px] font-mono" style={{ color: user.role === 'admin' ? '#FF5C00' : '#8b5cf6' }}>
                     {user.role === 'admin' ? '⚡ Admin' : '● Trader'}
                   </span>
                 </div>
@@ -175,8 +175,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               key={item.id}
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center rounded-xl text-[13px] font-medium transition-all duration-150 group relative ${
-                collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
+              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative ${
+                item.prominent ? 'text-[15px] font-bold' : 'text-[13px] font-medium'
+              } ${
+                collapsed ? 'justify-center px-2 py-2.5' : item.prominent ? 'gap-2.5 px-4 py-3.5' : 'gap-2.5 px-3 py-2.5'
               } ${
                 isActive
                   ? 'text-white'
@@ -186,26 +188,31 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     ? 'text-accent hover:text-accent hover:bg-accent/10'
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
-              style={isActive ? {
+              style={item.prominent && !isActive ? {
+                background: 'linear-gradient(135deg, rgba(115,255,0,0.25), rgba(115,255,0,0.12))',
+                border: '2px solid rgba(115,255,0,0.5)',
+                boxShadow: '0 0 20px rgba(115,255,0,0.3)',
+              } : isActive ? {
                 background: item.highlight
                   ? collapsed
-                    ? 'rgba(115,255,0,0.18)'
-                    : 'linear-gradient(90deg, rgba(115,255,0,0.15), rgba(115,255,0,0.06), rgba(115,255,0,0.04))'
+                    ? 'rgba(115,255,0,0.25)'
+                    : 'linear-gradient(90deg, rgba(115,255,0,0.2), rgba(115,255,0,0.1), rgba(115,255,0,0.06))'
                   : collapsed
                   ? 'rgba(255,92,0,0.18)'
                   : 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(139,92,246,0.06), rgba(255,92,0,0.04))',
-                borderLeft: collapsed ? 'none' : `2px solid ${item.highlight ? '#73ff00' : '#FF5C00'}`,
+                borderLeft: collapsed ? 'none' : `${item.prominent ? '3px' : '2px'} solid ${item.highlight ? '#73ff00' : '#FF5C00'}`,
                 boxShadow: collapsed ? `0 0 12px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.2)` : `inset 0 0 20px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.05)`,
               } : item.highlight && !isActive ? {
-                background: 'rgba(115,255,0,0.08)',
+                background: 'rgba(115,255,0,0.12)',
+                border: '1px solid rgba(115,255,0,0.25)',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
               {!collapsed && <span className="flex-1 text-left font-medium relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
               )}
-              {!collapsed && isActive && item.id !== 'trash' && <ChevronRight className="w-3 h-3 text-primary/40 relative z-10" />}
+              {!collapsed && isActive && item.id !== 'trash' && <ChevronRight className={`${item.prominent ? 'w-4 h-4' : 'w-3 h-3'} text-primary/40 relative z-10`} />}
               {collapsed && trashCount > 0 && item.id === 'trash' && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
               )}

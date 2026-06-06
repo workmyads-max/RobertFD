@@ -104,8 +104,8 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
 
           {/* Text */}
           <div className="flex-1">
-            <div className="text-xs md:text-sm font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-none tracking-tight mb-3">
+            <div className="text-sm md:text-base font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-none tracking-tight mb-3">
               Welcome,{' '}
               <span style={{
                 background: 'linear-gradient(90deg, #FF5C00, #FF9A3D, #CCFF00)',
@@ -120,25 +120,25 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             {/* Badges row */}
             <div className="flex items-center gap-2 flex-wrap">
               {isVerified ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono"
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold font-mono"
                   style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#10b981' }}>
                   <ShieldCheck className="w-3 h-3" /> KYC Verified
                 </div>
               ) : (
                 <button onClick={() => {}}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono transition-all hover:scale-105"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold font-mono transition-all hover:scale-105"
                   style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#f59e0b' }}>
                   <AlertCircle className="w-3 h-3" /> Unverified — Verify Now
                 </button>
               )}
 
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono"
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono"
                 style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
                 <Zap className="w-3 h-3" /> Funded Trader
               </div>
 
               {/* Live clock */}
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono text-white/30"
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono text-white/30"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 {time.toUTCString().slice(17, 25)} UTC
               </div>
