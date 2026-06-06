@@ -29,6 +29,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const greeting = hour < 5 ? 'Good Night' : hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
   return (
+    <div className="space-y-4">
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -57,16 +58,16 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
       <div className="absolute bottom-0 left-1/4 w-48 h-48 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(0,149,255,0.05) 0%, transparent 70%)', transform: 'translateY(50%)' }} />
 
-      <div className="relative z-10 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
 
         {/* Left: Avatar + greeting */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <motion.div
               animate={{ boxShadow: ['0 0 0px rgba(255,92,0,0)', '0 0 24px rgba(255,92,0,0.4)', '0 0 0px rgba(255,92,0,0)'] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-black text-white overflow-hidden"
+              className="w-20 h-20 md:w-28 md:h-28 rounded-3xl flex items-center justify-center text-2xl md:text-4xl font-black text-white overflow-hidden"
               style={{
                 background: user?.avatar_url ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
                 border: user?.avatar_url ? 'none' : '2px solid rgba(255,92,0,0.5)',
@@ -87,9 +88,9 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
 
           {/* Text */}
-          <div>
-            <div className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mb-1">{greeting}</div>
-            <h1 className="text-2xl md:text-3xl font-black text-white leading-none tracking-tight mb-2">
+          <div className="flex-1">
+            <div className="text-xs md:text-sm font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-none tracking-tight mb-3">
               Welcome,{' '}
               <span style={{
                 background: 'linear-gradient(90deg, #FF5C00, #FF9A3D, #CCFF00)',
@@ -181,5 +182,48 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
         </motion.button>
       </div>
     </motion.div>
+
+    {/* Professional Promotion Banner */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="relative rounded-xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,122,0,0.08) 0%, rgba(255,122,0,0.04) 100%)',
+        border: '1px solid rgba(255,122,0,0.25)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      {/* Accent glow line */}
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,122,0,0.8), transparent)' }} />
+      
+      {/* Background gradient orb */}
+      <div className="absolute right-0 top-0 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,122,0,0.05) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+      
+      <div className="relative z-10 px-6 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="text-[11px] md:text-xs font-mono text-white/40 uppercase tracking-[0.15em] mb-1.5">🎯 LIMITED OFFER</div>
+          <h3 className="text-lg md:text-xl font-black text-white mb-1">
+            Get <span style={{ color: '#FF7A00' }}>30% off</span> on your next challenge
+          </h3>
+          <p className="text-sm md:text-base text-white/60">Complete your KYC verification and unlock exclusive rewards. Offer valid for the next 7 days.</p>
+        </div>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative px-6 md:px-8 py-2.5 md:py-3 rounded-lg font-bold text-white text-sm md:text-base whitespace-nowrap flex-shrink-0 overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,122,0,0.3), rgba(255,122,0,0.1))',
+            border: '1px solid rgba(255,122,0,0.4)',
+            boxShadow: '0 4px 16px rgba(255,122,0,0.2)',
+          }}
+        >
+          <span className="relative z-10">Learn More</span>
+        </motion.button>
+      </div>
+    </motion.div>
+    </div>
   );
 }
