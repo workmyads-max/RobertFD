@@ -49,83 +49,83 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className={`relative rounded-2xl border ${getBorderColor()} bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-6 transition-all duration-300 overflow-hidden group`}
+      className={`relative rounded-2xl border ${getBorderColor()} bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-4 sm:p-5 md:p-6 transition-all duration-300 overflow-hidden group`}
     >
       {/* Background glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-primary transition-opacity" />
 
       {/* Badge */}
       {badge && (
-        <div className={`absolute top-4 right-4 px-2.5 py-1 rounded-full text-xs font-bold text-white ${badgeColor}`}>
+        <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-white ${badgeColor}`}>
           {badge}
         </div>
       )}
 
       {/* Icon */}
-      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-4 ${getAccentColor()} opacity-75`}>
+      <div className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg mb-3 sm:mb-4 ${getAccentColor()} opacity-75`}>
         {getIcon()}
       </div>
 
       {/* Label & Title */}
-      <div className="mb-4">
-        <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
+      <div className="mb-3 sm:mb-4">
+        <div className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
           {plan.type === 'two-step' ? 'Evaluation Phase' : plan.type === 'instant' ? 'No Evaluation' : 'Most Affordable'}
         </div>
-        <h3 className="text-2xl font-black text-foreground">{plan.name}</h3>
+        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-foreground">{plan.name}</h3>
       </div>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+      <p className="text-[11px] sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
         {plan.type === 'two-step'
-          ? 'Prove your skills through a structured 2-phase evaluation. Built for disciplined traders who want the highest trust and capital allocation.'
+          ? 'Prove your skills through a structured 2-phase evaluation. Built for disciplined traders.'
           : plan.type === 'instant'
-          ? 'Skip evaluation entirely. Get funded capital the same day and request payouts daily from day one.'
-          : 'Most affordable path to funding. Trading drawdown protection moves your safety floor up as your balance grows.'}
+          ? 'Skip evaluation entirely. Get funded capital the same day and request payouts daily.'
+          : 'Most affordable path to funding. Trading drawdown protection moves your safety floor up.'}
       </p>
 
       {/* Metrics Grid */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {plan.type === 'two-step' && (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 1 Target</span>
-              <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
+              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 1 Target</span>
+              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 2 Target</span>
-              <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.phase2_target}%</span>
+              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 2 Target</span>
+              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase2_target}%</span>
             </div>
           </>
         )}
         {(plan.type === 'instant' || plan.type === 'instant_light') && (
           <div className="flex justify-between items-center">
-            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Target</span>
-            <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
+            <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Target</span>
+            <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Daily DD</span>
-          <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.daily_dd}%</span>
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Daily DD</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.daily_dd}%</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Max DD</span>
-          <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.max_dd}%</span>
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Max DD</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.max_dd}%</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Leverage</span>
-          <span className={`text-sm font-bold ${getAccentColor()}`}>
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Leverage</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
             {plan.account_type === 'swing' ? plan.leverage_swing : plan.leverage_standard}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Payouts</span>
-          <span className={`text-sm font-bold ${getAccentColor()}`}>
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Payouts</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
             {plan.type === 'instant' || plan.type === 'instant_light' ? 'Daily' : 'On Pass'}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Split</span>
-          <span className={`text-sm font-bold ${getAccentColor()}`}>{plan.profit_split}%</span>
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Split</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.profit_split}%</span>
         </div>
       </div>
 
