@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, Eye, EyeOff, Chrome } from 'lucide-react';
 import Lightfall from './Lightfall';
@@ -16,6 +16,15 @@ export default function LoginModal({ isOpen, onClose }) {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -128,10 +137,10 @@ export default function LoginModal({ isOpen, onClose }) {
                   {/* Header */}
                   <div className="text-center mb-6">
                     <h2 className="text-2xl font-black text-white mb-1">
-                      {isLogin ? 'Welcome Back' : 'Create Account'}
+                      {isLogin ? 'Welcome Back' : 'Join XFunded Trader'}
                     </h2>
                     <p className="text-xs text-white/60 font-mono">
-                      {isLogin ? 'Sign in to access your trading dashboard' : 'Start your funded trading journey'}
+                      {isLogin ? 'Sign in to access your trading dashboard' : 'Create your account to start trading'}
                     </p>
                   </div>
 
@@ -231,7 +240,7 @@ export default function LoginModal({ isOpen, onClose }) {
                         }}
                         className="ml-2 text-[#FF5C00] hover:text-[#FF8A3D] font-medium transition-colors"
                       >
-                        {isLogin ? 'Sign Up' : 'Sign In'}
+                        {isLogin ? 'Create one' : 'Login here'}
                       </button>
                     </p>
                   </div>

@@ -82,11 +82,8 @@ export default function Navbar() {
                   onClick={() => setLoginModalOpen(true)}
                   className="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all"
                 >
-                  Login
+                  Login / Sign Up
                 </button>
-                <Link to="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
-                  Register
-                </Link>
                 <button onClick={() => scrollTo('#challenge')}
                   className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring">
                   Start Challenge <ChevronRight className="inline w-4 h-4 ml-1" />
@@ -134,8 +131,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</Link>
-                  <Link to="/register" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Register</Link>
+                  <button onClick={() => setLoginModalOpen(true)} className="block w-full py-3 text-sm text-center text-white bg-primary rounded-full">Login / Sign Up</button>
                   <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
                 </>
               )}
