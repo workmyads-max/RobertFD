@@ -43,6 +43,18 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const hour = time.getUTCHours();
   const greeting = hour < 5 ? 'Good Night' : hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
+  const quotes = [
+    "The best time to plant a tree was 20 years ago. The second best time is now.",
+    "Markets reward patience and discipline.",
+    "Every expert was once a beginner.",
+    "Risk management is wealth management.",
+    "Profit is taken not made.",
+    "Consistency beats intensity.",
+    "Trading is a probability game, not a certainty game.",
+    "Your biggest edge is emotional control.",
+  ];
+  const dailyQuote = quotes[new Date().getDate() % quotes.length];
+
   return (
     <div className="space-y-4">
     <motion.div
@@ -99,6 +111,16 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               {isVerified
                 ? <ShieldCheck className="w-3.5 h-3.5 text-white" />
                 : <AlertCircle className="w-3.5 h-3.5 text-white" />}
+            </div>
+          </div>
+
+          {/* Left: Motivational Quote */}
+          <div className="hidden lg:flex flex-col justify-between flex-1">
+            <div>
+              <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
+              <p className="text-sm md:text-base font-medium text-white/80 leading-relaxed italic max-w-xs">
+                "{dailyQuote}"
+              </p>
             </div>
           </div>
 
