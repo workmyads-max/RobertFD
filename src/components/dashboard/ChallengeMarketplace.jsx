@@ -128,30 +128,30 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       />
 
       {/* Header */}
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
-          style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-mono text-primary uppercase tracking-widest">Challenge Marketplace</span>
-        </div>
-        <h1 className="text-3xl font-black text-foreground mb-2">
-          Choose Your <span className="text-primary">Capital Tier</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Institutional funding from $5K to $200K. Select your challenge type and account model.
-        </p>
-      </div>
+       <div className="mb-6 sm:mb-8">
+         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3 sm:mb-4"
+           style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
+           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+           <span className="text-[10px] sm:text-xs font-mono text-primary uppercase tracking-widest">Challenge Marketplace</span>
+         </div>
+         <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
+           Choose Your <span className="text-primary">Capital Tier</span>
+         </h1>
+         <p className="text-xs sm:text-sm text-muted-foreground">
+           Institutional funding from $5K to $200K. Select your challenge type and account model.
+         </p>
+       </div>
 
       {/* Challenge type toggle */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <div className="inline-flex rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+        <div className="inline-flex rounded-xl p-1 flex-wrap gap-1 sm:flex-nowrap" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
-            { id: 'two-step', label: '⚡ Two-Step Challenge' },
-            { id: 'instant', label: '🚀 Instant Funding' },
-            { id: 'instant_light', label: '💡 Instant Light' },
+            { id: 'two-step', label: '⚡ Two-Step' },
+            { id: 'instant', label: '🚀 Instant' },
+            { id: 'instant_light', label: '💡 Light' },
           ].map(t => (
             <button key={t.id} onClick={() => { setChallengeType(t.id); setSelected(null); }}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                 challengeType === t.id ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
               }`}>
               {t.label}
@@ -159,9 +159,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           ))}
         </div>
         {challengeType === 'instant_light' && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono"
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-mono"
             style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.2)', color: '#CCFF00' }}>
-            ⬇ 50% cheaper · Trailing DD Protection
+            50% OFF
           </div>
         )}
       </div>
@@ -235,7 +235,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           <motion.div
             key={`${challengeType}-${accountType}`}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="grid gap-6 mb-12 md:grid-cols-3"
+            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
           >
             {plans.map((plan, i) => {
               const isPopular = !!plan.is_popular;
@@ -276,7 +276,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       )}
 
       {/* Quick highlights */}
-      <div className="rounded-2xl p-5 grid md:grid-cols-3 gap-5 mb-10"
+      <div className="rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 mb-8 sm:mb-10"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         {[
           { icon: TrendingUp, title: 'Profit Split', desc: 'Up to 80% profit split. Scaling plan available on all funded accounts.' },
@@ -285,13 +285,13 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         ].map(f => {
           const Icon = f.icon;
           return (
-            <div key={f.title} className="flex gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-4 h-4 text-primary" />
+            <div key={f.title} className="flex gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
-              <div>
-                <div className="text-sm font-bold text-foreground mb-0.5">{f.title}</div>
-                <div className="text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold text-foreground mb-0.5">{f.title}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
               </div>
             </div>
           );
@@ -299,19 +299,19 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Full Challenge Rules */}
-      <div className="mb-2">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.12)' }}>
-            <Shield className="w-4 h-4 text-primary" />
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,92,0,0.12)' }}>
+            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
-          <div>
-            <h2 className="text-xl font-black text-foreground">Challenge Rules</h2>
-            <p className="text-xs text-muted-foreground font-mono">Understand all rules before purchasing — violations result in termination without refund.</p>
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-black text-foreground">Challenge Rules</h2>
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-mono">Understand all rules before purchasing — violations result in termination.</p>
           </div>
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-8">
         {CHALLENGE_RULES.map((rule, i) => {
           const Icon = rule.icon;
           return (
@@ -321,20 +321,20 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
               whileHover={{ y: -3, transition: { duration: 0.2 } }}
-              className="rounded-2xl p-5 flex gap-4"
+              className="rounded-xl sm:rounded-2xl p-3 sm:p-5 flex gap-3 sm:gap-4"
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 border: `1px solid ${rule.color}22`,
                 boxShadow: `0 0 20px ${rule.color}08`,
               }}
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
                 style={{ background: `${rule.color}15`, border: `1px solid ${rule.color}30` }}>
-                <Icon className="w-5 h-5" style={{ color: rule.color }} />
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: rule.color }} />
               </div>
-              <div>
-                <div className="text-sm font-bold text-foreground mb-1">{rule.title}</div>
-                <div className="text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold text-foreground mb-1">{rule.title}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
               </div>
             </motion.div>
           );
