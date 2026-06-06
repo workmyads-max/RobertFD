@@ -410,6 +410,7 @@ async function sendEmailViaSMTP(to, subject, body) {
     const fromEmail = Deno.env.get('SMTP_FROM_EMAIL') || 'noreply@xfundedtrader.com';
     const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
 
+    console.log('SMTP config check:', { host: host || 'MISSING', port, username: username ? username.substring(0,5)+'...' : 'MISSING', hasPassword: !!password });
     if (!host || !username || !password) {
       console.error('SMTP not configured — missing SMTP_HOST, SMTP_USERNAME, or SMTP_PASSWORD');
       return false;
@@ -435,7 +436,7 @@ async function sendEmailViaSMTP(to, subject, body) {
     console.log(`Email sent via SMTP to ${to}`);
     return true;
   } catch (error) {
-    console.error('SMTP send failed:', error.message);
+    console.error('SMTP send failed — full error:', JSON.stringify({ message: error.message, code: error.code, command: error.command, response: error.response, responseCode: error.responseCode }));
     return false;
   }
 }
