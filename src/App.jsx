@@ -8,15 +8,13 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
-import Register from './pages/Register.jsx';
-import LoginPage from './components/auth/LoginPage.jsx';
-
-// Add page imports here
+import Register from './pages/Register';
+import Login from './pages/Login';
 
 const LoginRoute = () => {
   const { user } = useSupabaseAuth();
   if (user) return <Navigate to="/dashboard" replace />;
-  return <LoginPage />;
+  return <Login />;
 };
 
 const ProtectedRoute = ({ children }) => {

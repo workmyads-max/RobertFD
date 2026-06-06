@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import XFLogo from '@/components/shared/XFLogo';
-import LoginModal from '@/components/shared/LoginModal';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,7 +18,6 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { user, logout } = useCustomAuth();
 
   useEffect(() => {
@@ -78,12 +77,11 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <button
-                  onClick={() => setLoginModalOpen(true)}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all"
+                <Link to="/login"
+                  className="px-5 py-2 text-sm font-semibold text-foreground border border-border rounded-full hover:border-primary/50 transition-all"
                 >
-                  Login / Sign Up
-                </button>
+                  Login
+                </Link>
                 <button onClick={() => scrollTo('#challenge')}
                   className="relative px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all pulse-ring">
                   Start Challenge <ChevronRight className="inline w-4 h-4 ml-1" />
@@ -131,7 +129,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <button onClick={() => setLoginModalOpen(true)} className="block w-full py-3 text-sm text-center text-white bg-primary rounded-full">Login / Sign Up</button>
+                  <Link to="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</Link>
                   <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
                 </>
               )}
@@ -140,8 +138,6 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Login Modal */}
-      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </>
   );
 }

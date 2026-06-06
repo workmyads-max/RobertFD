@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
 
-export default function Register() {
+export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   });
   const [error, setError] = useState('');
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -27,38 +26,22 @@ export default function Register() {
       });
       if (error) throw error;
     } catch (err) {
-      toast.error('Google signup failed: ' + err.message);
+      toast.error('Google login failed: ' + err.message);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
-        }
+        password: formData.password
       });
       if (error) throw error;
-      toast.success('Account created! Please check your email to verify.');
+      toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -72,7 +55,7 @@ export default function Register() {
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-w-md space-y-8">
           {/* Back Button */}
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Home
@@ -85,8 +68,8 @@ export default function Register() {
 
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-black text-foreground">Create Account</h1>
-            <p className="text-muted-foreground">Start your funded trading journey today</p>
+            <h1 className="text-3xl font-black text-foreground">Welcome Back</h1>
+            <p className="text-muted-foreground">Sign in to access your trading dashboard</p>
           </div>
 
           {/* Form */}
@@ -128,21 +111,6 @@ export default function Register() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  required
-                />
-              </div>
-            </div>
-
             {error && (
               <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
                 {error}
@@ -154,7 +122,7 @@ export default function Register() {
               disabled={isLoading}
               className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Please wait...' : 'Create Account'}
+              {isLoading ? 'Please wait...' : 'Sign In'}
             </button>
           </form>
 
@@ -165,9 +133,9 @@ export default function Register() {
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          {/* Google Signup */}
+          {/* Google Login */}
           <button
-            onClick={handleGoogleSignup}
+            onClick={handleGoogleLogin}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:bg-card/80 transition-all disabled:opacity-50"
           >
@@ -175,71 +143,49 @@ export default function Register() {
             <span className="text-sm font-medium text-foreground">Continue with Google</span>
           </button>
 
-          {/* Benefits */}
-          <div className="space-y-3 pt-4">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">Instant Access</span> - Start trading immediately after verification
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">No Hidden Fees</span> - Transparent pricing with 0% commission
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">Professional Platform</span> - Trade on MT5, MT4, and more
-              </div>
-            </div>
-          </div>
-
-          {/* Login Link */}
+          {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
-              Sign In
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Create Account
             </Link>
           </p>
         </div>
       </div>
 
       {/* Right Side - Trading Motivation */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent flex-col justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex-col justify-center p-12 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-accent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-black text-foreground leading-tight">
-            Your Trading Career<br />
-            <span className="text-accent">Starts Here.</span>
+            Master the Markets.<br />
+            <span className="text-primary">Fund Your Future.</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Get funded with up to $200,000 in trading capital. Prove your skills in our evaluation 
-            and unlock consistent monthly withdrawals with our industry-leading profit splits.
+            Join thousands of traders who have transformed their trading careers with our funded account programs. 
+            Get access to capital up to $200,000 and keep up to 80% of your profits.
           </p>
           <div className="grid grid-cols-2 gap-6 pt-8">
             <div className="space-y-1">
-              <div className="text-3xl font-black text-accent">5K-200K</div>
-              <div className="text-sm text-muted-foreground">Account Sizes</div>
+              <div className="text-3xl font-black text-primary">$200K+</div>
+              <div className="text-sm text-muted-foreground">Maximum Funding</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-black text-accent">1:100</div>
-              <div className="text-sm text-muted-foreground">Leverage</div>
+              <div className="text-3xl font-black text-primary">80%</div>
+              <div className="text-sm text-muted-foreground">Profit Split</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-black text-accent">Fast</div>
-              <div className="text-sm text-muted-foreground">Payouts</div>
+              <div className="text-3xl font-black text-primary">0%</div>
+              <div className="text-sm text-muted-foreground">Commission</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-black text-accent">Global</div>
-              <div className="text-sm text-muted-foreground">Access</div>
+              <div className="text-3xl font-black text-primary">24/7</div>
+              <div className="text-sm text-muted-foreground">Support</div>
             </div>
           </div>
         </div>
