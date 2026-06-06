@@ -23,13 +23,8 @@ export const SupabaseAuthProvider = ({ children }) => {
 
     const initAuth = async () => {
       try {
-        // Try to get session with 3 second timeout
-        const getSessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('timeout')), 3000)
-        );
-        
-        const { data: { session } } = await Promise.race([getSessionPromise, timeoutPromise]);
+        // Get session - Supabase SDK handles persistence automatically
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
           setSession(session);
@@ -41,15 +36,13 @@ export const SupabaseAuthProvider = ({ children }) => {
           setSession(null);
           setUser(null);
         }
+      } finally {
+        // Always stop loading even if session fetch fails
+        if (mounted) setLoading(false);
       }
     };
 
     initAuth();
-
-    // Fallback: Always stop loading after 4 seconds max
-    loadTimeout = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 4000);
 
     // Listen to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
