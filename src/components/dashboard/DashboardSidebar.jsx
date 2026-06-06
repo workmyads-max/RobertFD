@@ -72,7 +72,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     <div className="flex flex-col h-full circuit-bg">
       {/* Logo - Premium X with candlesticks */}
       <div className={`flex items-center border-b relative overflow-hidden ${collapsed ? 'justify-center px-2 py-4' : 'gap-3 px-4 py-5'}`}
-        style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(255,20,147,0.08), rgba(0,255,255,0.05), rgba(255,122,0,0.04), transparent)' }}>
+        style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(135deg, rgba(255,122,0,0.07), rgba(139,92,246,0.04), transparent)' }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ background: '#FF7A00' }} />
         </div>
@@ -185,13 +185,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
                     : item.highlight && !isActive
-                    ? 'text-white hover:text-white hover:bg-white/[0.08]'
+                    ? 'text-accent hover:text-accent hover:bg-accent/10'
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
               style={item.prominent && !isActive ? {
-                background: 'linear-gradient(135deg, rgba(255,20,147,0.25), rgba(0,255,255,0.15), rgba(255,122,0,0.1))',
-                border: '2px solid rgba(255,255,255,0.4)',
-                boxShadow: '0 0 30px rgba(255,20,147,0.4), 0 0 60px rgba(0,255,255,0.2)',
+                background: 'linear-gradient(135deg, rgba(115,255,0,0.25), rgba(115,255,0,0.12))',
+                border: '2px solid rgba(115,255,0,0.5)',
+                boxShadow: '0 0 20px rgba(115,255,0,0.3)',
               } : isActive ? {
                 background: item.highlight
                   ? collapsed

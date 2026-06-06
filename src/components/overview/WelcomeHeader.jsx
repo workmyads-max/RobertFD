@@ -106,15 +106,14 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
 
           {/* Text */}
           <div className="flex-1">
-            <div className="text-xs md:text-sm font-mono text-white/40 uppercase tracking-[0.25em] mb-2">{greeting}</div>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none tracking-tight mb-4">
+            <div className="text-sm md:text-base font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-none tracking-tight mb-3">
               Welcome,{' '}
               <span style={{
-                background: 'linear-gradient(135deg, #FF00FF, #00FFFF, #00FF00, #FFFF00, #FF5C00)',
+                background: 'linear-gradient(90deg, #FF5C00, #FF9A3D, #CCFF00)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                backgroundSize: '300% 300%',
               }}>
                 {firstName}
               </span>
@@ -152,56 +151,46 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
         {/* Right: Start New Challenge Button */}
         <motion.button
           onClick={onStartChallenge}
-          whileHover={{ scale: 1.08, y: -3 }}
-          whileTap={{ scale: 0.94 }}
-          className="relative inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full font-black text-white text-lg group overflow-hidden flex-shrink-0"
+          whileHover={{ scale: 1.06, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-3xl font-bold text-white text-base group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00, #FFFF00, #FF5C00)',
-            backgroundSize: '300% 300%',
-            boxShadow: '0 0 60px rgba(255,20,147,0.6), 0 0 100px rgba(0,255,255,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
-            border: '3px solid rgba(255,255,255,0.4)',
-            backdropFilter: 'blur(20px)',
+            backgroundImage: 'url(https://media.base44.com/images/public/69ff44f98e27baf8957d0676/1a106290d_generated_image.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: '0 0 40px rgba(100, 220, 255, 0.4), 0 0 60px rgba(150, 100, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+            border: '2.5px solid rgba(100, 220, 255, 0.5)',
           }}>
-          {/* Animated holographic shimmer */}
+          {/* Holographic shimmer overlay */}
           <motion.div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-3xl"
             animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2) 75%, transparent 100%)',
-              backgroundSize: '200% 100%',
+              background: 'linear-gradient(-45deg, transparent 0%, rgba(150, 255, 220, 0.15) 25%, rgba(100, 220, 255, 0.1) 50%, rgba(180, 100, 255, 0.15) 75%, transparent 100%)',
+              backgroundSize: '200% 200%',
               pointerEvents: 'none',
             }}
           />
           
-          {/* Dual pulsing glow effect */}
+          {/* Pulsing glow effect */}
           <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{ opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute inset-0 rounded-3xl"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3.5, repeat: Infinity }}
             style={{
-              background: 'radial-gradient(circle at center, rgba(255,20,147,0.3), transparent 60%)',
-              filter: 'blur(20px)',
-              pointerEvents: 'none',
-            }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{ opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-            style={{
-              background: 'radial-gradient(circle at center, rgba(0,255,255,0.25), transparent 60%)',
-              filter: 'blur(20px)',
+              background: 'radial-gradient(circle at center, rgba(100, 220, 255, 0.25), transparent 60%)',
+              filter: 'blur(16px)',
               pointerEvents: 'none',
             }}
           />
 
-          <span className="relative z-10 font-black">Start New Challenge</span>
+          <span className="relative z-10">Start New Challenge</span>
           <motion.div
-            animate={{ x: [0, 6, 0] }}
+            animate={{ x: [0, 4, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             className="relative z-10">
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-5 h-5" />
           </motion.div>
         </motion.button>
       </div>

@@ -51,17 +51,11 @@ function InputField({ label, value, onChange, placeholder, disabled, type = 'tex
 
 function Card({ title, subtitle, children }) {
   return (
-    <div className="rounded-2xl p-7 space-y-5 relative overflow-hidden"
-      style={{ 
-        background: 'linear-gradient(135deg, rgba(255,20,147,0.05), rgba(0,255,255,0.03), rgba(255,255,255,0.02))',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 0 40px rgba(255,20,147,0.05)'
-      }}>
-      <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" 
-        style={{ background: 'radial-gradient(circle, rgba(255,20,147,0.08) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
-      <div className="border-b pb-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <h3 className="text-lg font-black text-white">{title}</h3>
-        {subtitle && <p className="text-sm text-white/40 font-mono mt-1">{subtitle}</p>}
+    <div className="rounded-2xl p-6 space-y-5"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="border-b pb-4" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+        <h3 className="text-sm font-bold text-white">{title}</h3>
+        {subtitle && <p className="text-[11px] text-white/30 font-mono mt-0.5">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -319,27 +313,14 @@ export default function DashboardSettings({ user }) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-10 relative">
-        <div className="absolute top-0 left-0 w-64 h-64 rounded-full pointer-events-none" 
-          style={{ background: 'radial-gradient(circle, rgba(255,20,147,0.1) 0%, transparent 70%)', transform: 'translate(-30%, -30%)' }} />
-        <h1 className="text-5xl font-black text-white flex items-center gap-4 relative z-10">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" 
-            style={{ 
-              background: 'linear-gradient(135deg, rgba(255,20,147,0.2), rgba(0,255,255,0.15), rgba(255,122,0,0.1))',
-              border: '2px solid rgba(255,255,255,0.3)',
-              boxShadow: '0 0 40px rgba(255,20,147,0.3), 0 0 80px rgba(0,255,255,0.15)'
-            }}>
-            <Settings className="w-7 h-7 text-white" />
+      <div className="mb-8">
+        <h1 className="text-3xl font-black text-white flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.2)' }}>
+            <Settings className="w-5 h-5 text-primary" />
           </div>
-          <span style={{
-            background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00, #FFFF00)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            backgroundSize: '300% 300%',
-          }}>Settings</span>
+          Settings
         </h1>
-        <p className="text-base text-white/45 font-mono mt-3">Manage your account, security, and preferences</p>
+        <p className="text-sm text-white/30 font-mono mt-1">Manage your account, security, and preferences</p>
       </div>
 
       <div className="flex gap-6">
@@ -351,20 +332,11 @@ export default function DashboardSettings({ user }) {
               const isActive = activeTab === t.id;
               return (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-base font-semibold transition-all ${
-                    isActive ? 'text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive ? 'text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.04]'
                   }`}
-                  style={isActive ? { 
-                    background: 'linear-gradient(135deg, rgba(255,20,147,0.2), rgba(0,255,255,0.1), rgba(255,20,147,0.05))',
-                    borderLeft: '3px solid rgba(255,255,255,0.5)',
-                    boxShadow: '0 0 20px rgba(255,20,147,0.2)'
-                  } : {}}>
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/25'}`} style={isActive ? {
-                    background: 'linear-gradient(135deg, #FF1493, #00FFFF)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  } : {}} />
+                  style={isActive ? { background: 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(255,92,0,0.05))', borderLeft: '2px solid #FF5C00' } : {}}>
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-white/25'}`} />
                   {t.label}
                 </button>
               );
@@ -393,24 +365,9 @@ export default function DashboardSettings({ user }) {
                       <InputField label="Postal Code" value={profile.postal_code || user?.postal_code || ''} onChange={e => setProfile(p => ({ ...p, postal_code: e.target.value }))} placeholder="10001" />
                     </div>
                     <button onClick={() => { saveMutation.mutate(profile); }} disabled={saveMutation.isPending}
-                      className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-bold text-white disabled:opacity-40 relative overflow-hidden group"
-                      style={{ 
-                        background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00, #FFFF00)',
-                        backgroundSize: '300% 300%',
-                        boxShadow: '0 0 30px rgba(255,20,147,0.4), 0 0 60px rgba(0,255,255,0.2)',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                      }}>
-                      <motion.span
-                        className="absolute inset-0"
-                        animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                        style={{
-                          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
-                          backgroundSize: '200% 100%',
-                        }}
-                      />
-                      <Save className="w-5 h-5 relative z-10" /> 
-                      <span className="relative z-10">{saveMutation.isPending ? 'Saving…' : 'Save All Changes'}</span>
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-40"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                      <Save className="w-4 h-4" /> {saveMutation.isPending ? 'Saving…' : 'Save All Changes'}
                     </button>
                   </Card>
                 </>
@@ -576,14 +533,9 @@ export default function DashboardSettings({ user }) {
                       <InputField label="New Password" type="password" placeholder="••••••••" hint="At least 8 characters with a mix of letters and numbers" />
                       <InputField label="Confirm New Password" type="password" placeholder="••••••••" />
                     </div>
-                    <button className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-bold text-white"
-                      style={{ 
-                        background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00)',
-                        backgroundSize: '300% 300%',
-                        boxShadow: '0 0 30px rgba(255,20,147,0.4)',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                      }}>
-                      <Save className="w-5 h-5" /> Update Password
+                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                      <Save className="w-4 h-4" /> Update Password
                     </button>
                   </Card>
                 </>
@@ -635,14 +587,9 @@ export default function DashboardSettings({ user }) {
                       </div>
                     </div>
                     <button onClick={() => saveMutation.mutate({ ...wallets, payout_wallet_type: selectedWalletType, payout_wallet_address: wallets[selectedWalletType] })}
-                      className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-bold text-white"
-                      style={{ 
-                        background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00)',
-                        backgroundSize: '300% 300%',
-                        boxShadow: '0 0 30px rgba(255,20,147,0.4)',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                      }}>
-                      <Save className="w-5 h-5" /> Save Primary Wallet
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                      <Save className="w-4 h-4" /> Save Primary Wallet
                     </button>
                   </Card>
 
@@ -659,14 +606,9 @@ export default function DashboardSettings({ user }) {
                       ))}
                     </div>
                     <button onClick={() => saveMutation.mutate(wallets)}
-                      className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-bold text-white"
-                      style={{ 
-                        background: 'linear-gradient(135deg, #FF1493, #00FFFF, #00FF00)',
-                        backgroundSize: '300% 300%',
-                        boxShadow: '0 0 30px rgba(255,20,147,0.4)',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                      }}>
-                      <Save className="w-5 h-5" /> Save All Wallets
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                      <Save className="w-4 h-4" /> Save All Wallets
                     </button>
                   </Card>
                 </>
