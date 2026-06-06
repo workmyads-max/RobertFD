@@ -63,10 +63,9 @@ export default function PlatformVisibilityControl() {
     return FEATURE_LIST.filter(f => f.category === filter);
   };
 
-  const categories = ['all', 'trading', 'analytics', 'user_management', 'support', 'system'];
+  const categories = ['all', 'analytics', 'user_management', 'support', 'system'];
   const categoryLabels = {
     all: 'All Features',
-    trading: 'Trading',
     analytics: 'Analytics',
     user_management: 'User Management',
     support: 'Support',
