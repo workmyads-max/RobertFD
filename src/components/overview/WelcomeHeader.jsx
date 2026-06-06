@@ -114,16 +114,6 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             </div>
           </div>
 
-          {/* Left: Motivational Quote */}
-          <div className="hidden lg:flex flex-col justify-between flex-1">
-            <div>
-              <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
-              <p className="text-sm md:text-base font-medium text-white/80 leading-relaxed italic max-w-xs">
-                "{dailyQuote}"
-              </p>
-            </div>
-          </div>
-
           {/* Text */}
           <div className="flex-1">
             <div className="text-sm md:text-base font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
@@ -161,8 +151,15 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               </div>
             </div>
           </div>
-        </div>
 
+          {/* Right: Motivational Quote */}
+          <div className="hidden lg:flex flex-col justify-center flex-1 pl-8 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
+            <p className="text-sm md:text-base font-medium text-white/80 leading-relaxed italic">
+              "{dailyQuote}"
+            </p>
+          </div>
+        </div>
 
       </div>
     </motion.div>
