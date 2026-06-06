@@ -1,25 +1,56 @@
 /**
- * scheduledMTSync — Batch MT5/Match Trader sync with INSTITUTIONAL DD ENFORCEMENT
+ * scheduledMTSync — Batch MT5/Match Trader sync
+ * Runs every 5 minutes via scheduled automation.
  *
- * CRITICAL RULES (FTMO/E8/FundedNext standard):
- * 1. max_drawdown_used is PERSISTENT — only ever increases, never decreases
- * 2. daily_drawdown_used is PERSISTENT within a trading day — only ever increases until daily reset
- * 3. Any DD breach immediately sets status='failed' and writes permanent breach flags
- * 4. Recovered equity CANNOT undo a breach — the worst DD is always stored
- * 5. Already-failed accounts are NEVER re-activated by a sync
+ * INSTITUTIONAL DD ENFORCEMENT (FTMO/E8/FundedNext standard):
+ *
+ * OVERALL DD:
+ *   - Two-step / Instant / Funded: (accountSize - equity) / accountSize * 100
+ *   - Instant Light: (highWaterMark - equity) / highWaterMark * 100  (trailing)
+ *   - Stored with Math.max — NEVER decreases
+ *
+ * DAILY DD (TRUE INSTITUTIONAL):
+ *   - Formula: (daily_start_balance - equity) / daily_start_balance * 100
+ *   - daily_start_balance = balance recorded at last 23:00 UTC reset
+ *   - Falls back to account_size if never reset (new account)
+ *   - Stored with Math.max — NEVER decreases within a trading day
+ *   - Closed profits do NOT increase daily DD allowance
+ *
+ * BREACH:
+ *   - Detected inside the sync — no waiting for automatedDDBreach
+ *   - status='failed' written in same DB update as breach flags
+ *   - Breach flags (dd_breach_detected, dd_breach_type, dd_breach_time, dd_breach_value)
+ *     are written once and NEVER overwritten
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Returns the DD limits for a given account (challenge_type + account_type)
 function getDDLimits(acc) {
-  const dailyLimit = 5; // 5% for all types
-  let overallLimit;
-  if (acc.challenge_type === 'instant_light') {
-    overallLimit = 6; // Trailing 6% for Instant Light
-  } else {
-    overallLimit = 10; // Standard 10% for Two-Step, Instant, Funded
-  }
+  const dailyLimit = 5;
+  const overallLimit = acc.challenge_type === 'instant_light' ? 6 : 10;
   return { dailyLimit, overallLimit };
+}
+
+/**
+ * Calculate current overall DD%.
+ * Instant Light uses trailing DD from high water mark.
+ */
+function calcOverallDD(acc, equity, newHWM) {
+  const accountSize = acc.account_size || 100000;
+  if (acc.challenge_type === 'instant_light') {
+    const hwm = newHWM || accountSize;
+    return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
+  }
+  return Math.max(0, ((accountSize - equity) / accountSize) * 100);
+}
+
+/**
+ * Calculate current daily DD%.
+ * Uses daily_start_balance as the base — true institutional formula.
+ * daily_start_balance is set at 23:00 UTC daily reset and never changes intraday.
+ */
+function calcDailyDD(acc, equity) {
+  const base = acc.daily_start_balance || acc.account_size || 100000;
+  return base > 0 ? Math.max(0, ((base - equity) / base) * 100) : 0;
 }
 
 Deno.serve(async (req) => {
@@ -51,7 +82,7 @@ Deno.serve(async (req) => {
           const apiKey = isMT5 ? MT5_API_KEY : MT_API_KEY;
 
           if (!apiBase || !apiKey) {
-            return { account_id: acc.account_id, ok: false, error: `Missing API config for platform: ${acc.platform}` };
+            return { account_id: acc.account_id, ok: false, error: `Missing API config: ${acc.platform}` };
           }
 
           const headers = {
@@ -60,7 +91,7 @@ Deno.serve(async (req) => {
             'api-key': apiKey,
           };
 
-          const [infoRes, posRes, histRes] = await Promise.all([
+          const [infoRes, , histRes] = await Promise.all([
             fetch(`${apiBase}/accounts/${acc.mt_login}`, { headers }),
             fetch(`${apiBase}/accounts/${acc.mt_login}/positions`, { headers }),
             fetch(`${apiBase}/accounts/${acc.mt_login}/deals?limit=100`, { headers }),
@@ -68,7 +99,6 @@ Deno.serve(async (req) => {
 
           let mtData = {};
           let deals = [];
-
           if (infoRes.ok) mtData = await infoRes.json();
           if (histRes.ok) { const d = await histRes.json(); deals = d?.deals || d || []; }
 
@@ -80,28 +110,18 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
-          // ── INSTITUTIONAL DD CALCULATION ──────────────────────────────────────
-          // Instant Light uses trailing DD from high water mark
-          let currentOverallDD;
-          if (acc.challenge_type === 'instant_light') {
-            currentOverallDD = Math.max(0, ((newHWM - equity) / newHWM) * 100);
-          } else {
-            currentOverallDD = Math.max(0, ((accountSize - equity) / accountSize) * 100);
-          }
+          // ── TRUE INSTITUTIONAL DD CALCULATIONS ─────────────────────────────
+          const currentOverallDD = calcOverallDD(acc, equity, newHWM);
+          const currentDailyDD = calcDailyDD(acc, equity);
 
-          // Daily DD: from balance at start of day vs current equity
-          // We use equity vs accountSize as proxy if daily_pnl not set
-          const currentDailyDD = Math.max(0, ((balance - equity) / accountSize) * 100);
-
-          // ── PERSISTENT DD STORAGE (FIX #1 + FIX #2) ──────────────────────────
-          // CRITICAL: always take the WORST (highest) value ever seen — never overwrite with lower
+          // ── PERSISTENT DD — only ever increases (Math.max) ─────────────────
           const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(2));
           const persistentDailyDD = parseFloat(Math.max(acc.daily_drawdown_used || 0, currentDailyDD).toFixed(2));
 
           const { dailyLimit, overallLimit } = getDDLimits(acc);
 
-          // ── BREACH DETECTION (FIX #3) ─────────────────────────────────────────
-          // Check persistent values — if either EVER reached the limit, breach fires
+          // ── BREACH DETECTION — fires in same sync, no delay ────────────────
+          // Once breachDetected is true, it is NEVER set to false again
           let breachDetected = acc.dd_breach_detected || false;
           let breachType = acc.dd_breach_type || null;
           let breachTime = acc.dd_breach_time || null;
@@ -113,13 +133,13 @@ Deno.serve(async (req) => {
               breachType = acc.challenge_type === 'instant_light' ? 'trailing' : 'overall';
               breachTime = new Date().toISOString();
               breachValue = persistentOverallDD;
-              console.log(`[DD-BREACH] ${acc.account_id} overall DD: ${persistentOverallDD.toFixed(2)}% >= ${overallLimit}%`);
+              console.log(`[BREACH] ${acc.account_id} overall DD: ${persistentOverallDD.toFixed(2)}% / limit ${overallLimit}%`);
             } else if (persistentDailyDD >= dailyLimit) {
               breachDetected = true;
               breachType = 'daily';
               breachTime = new Date().toISOString();
               breachValue = persistentDailyDD;
-              console.log(`[DD-BREACH] ${acc.account_id} daily DD: ${persistentDailyDD.toFixed(2)}% >= ${dailyLimit}%`);
+              console.log(`[BREACH] ${acc.account_id} daily DD: ${persistentDailyDD.toFixed(2)}% / limit ${dailyLimit}%`);
             }
           }
 
@@ -129,28 +149,32 @@ Deno.serve(async (req) => {
             pnl: parseFloat((balance - accountSize).toFixed(2)),
             win_rate: parseFloat(winRate.toFixed(1)),
             total_trades: closedTrades.length,
-            // PERSISTENT: only ever increases
-            max_drawdown_used: persistentOverallDD,
-            daily_drawdown_used: persistentDailyDD,
+            max_drawdown_used: persistentOverallDD,   // PERSISTENT — Math.max
+            daily_drawdown_used: persistentDailyDD,   // PERSISTENT — Math.max
             profit_target_progress: parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
-            // Breach flags — written once, never cleared by a sync
             dd_breach_detected: breachDetected,
-            ...(breachType && { dd_breach_type: breachType }),
-            ...(breachTime && { dd_breach_time: breachTime }),
-            ...(breachValue !== null && { dd_breach_value: breachValue }),
+            // Breach flags written ONCE — spread operator skips nulls
+            ...(breachType && !acc.dd_breach_type && { dd_breach_type: breachType }),
+            ...(breachTime && !acc.dd_breach_time && { dd_breach_time: breachTime }),
+            ...(breachValue !== null && !acc.dd_breach_value && { dd_breach_value: breachValue }),
           };
 
-          // Fail immediately during sync — don't wait for automatedDDBreach (FIX #3)
+          // Immediate failure — same DB write, no waiting for automatedDDBreach
           if (breachDetected && acc.status !== 'failed') {
             updates.status = 'failed';
-            console.log(`[AUTO-FAIL] ${acc.account_id} failed during scheduledMTSync (${breachType} DD breach: ${breachValue?.toFixed(2)}%)`);
+            console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
           }
 
           await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, updates);
 
-          return { account_id: acc.account_id, ok: true, balance, equity, overall_dd: persistentOverallDD, daily_dd: persistentDailyDD, breached: breachDetected };
+          return {
+            account_id: acc.account_id, ok: true,
+            balance, equity,
+            overall_dd: persistentOverallDD, daily_dd: persistentDailyDD,
+            breached: breachDetected,
+          };
         } catch (err) {
           return { account_id: acc.account_id, ok: false, error: err.message };
         }

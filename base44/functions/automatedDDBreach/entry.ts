@@ -1,13 +1,14 @@
 /**
- * automatedDDBreach — Institutional-grade automated drawdown breach detection
- * Scans ALL active/passed/funded accounts every 5 minutes
- * Also handles daily DD reset at 23:00 UTC (3:00 AM GMT+4)
+ * automatedDDBreach — Secondary DD enforcement layer.
+ * Runs every 5 minutes via scheduled automation.
+ * Does NOT call MT5 API — reads persistent DB fields written by scheduledMTSync.
  *
- * INSTITUTIONAL ENFORCEMENT (FIX #5 + #6):
- * - Reads PERSISTENT max_drawdown_used / daily_drawdown_used (never decreasing fields)
- * - Once dd_breach_detected=true, account fails regardless of current equity
- * - No future sync can undo a breach flag
- * - Handles all challenge types: two-step, instant, instant_light, funded
+ * Roles:
+ * 1. Catch any account where dd_breach_detected=true but status≠'failed' (sync wrote flag but failed to update status)
+ * 2. Catch any account where stored DD values exceed limits (safety net)
+ * 3. Reset daily_drawdown_used at 23:00 UTC (also sets daily_start_balance for next day)
+ *
+ * Scans: active + passed + funded accounts
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
@@ -19,15 +20,9 @@ async function sendEmail(sr, to, type, data) {
   }
 }
 
-// Returns correct DD limits per challenge type (FIX #7)
 function getDDLimits(account) {
-  const dailyLimit = 5; // 5% daily for all types
-  let overallLimit;
-  if (account.challenge_type === 'instant_light') {
-    overallLimit = 6; // Trailing 6%
-  } else {
-    overallLimit = 10; // Standard 10% for two-step, instant, funded
-  }
+  const dailyLimit = 5;
+  const overallLimit = account.challenge_type === 'instant_light' ? 6 : 10;
   return { dailyLimit, overallLimit };
 }
 
@@ -40,6 +35,7 @@ Deno.serve(async (req) => {
     const utcHour = now.getUTCHours();
     const utcMinute = now.getUTCMinutes();
 
+    // Fetch all enforceable accounts in parallel
     const [active, passed, funded] = await Promise.all([
       sr.entities.ChallengeAccount.filter({ status: 'active' }),
       sr.entities.ChallengeAccount.filter({ status: 'passed' }),
@@ -52,49 +48,50 @@ Deno.serve(async (req) => {
     const errors = [];
 
     // ── DAILY DD RESET at 23:00 UTC ────────────────────────────────────────────
+    // Resets daily_drawdown_used to 0 AND records current balance as daily_start_balance
+    // This is what enables the true institutional daily DD formula
     const isDailyResetWindow = utcHour === 23 && utcMinute < 10;
 
     await Promise.all(activeAccounts.map(async (account) => {
       try {
 
-        // ── DAILY DD RESET ──────────────────────────────────────────────────────
-        // IMPORTANT: only reset daily_drawdown_used, never touch max_drawdown_used
+        // ── DAILY RESET ─────────────────────────────────────────────────────────
         if (isDailyResetWindow) {
           const lastReset = account.daily_reset_at ? new Date(account.daily_reset_at) : null;
           const resetToday = lastReset && lastReset.getUTCDate() === now.getUTCDate();
           if (!resetToday) {
+            // Record today's closing balance as tomorrow's daily_start_balance
             await sr.entities.ChallengeAccount.update(account.id, {
               daily_pnl: 0,
               daily_drawdown_used: 0,
+              daily_start_balance: account.balance || account.account_size,
               daily_reset_at: now.toISOString(),
             });
             dailyResets.push(account.account_id);
           }
         }
 
-        // ── BREACH DETECTION ───────────────────────────────────────────────────
-        // Read PERSISTENT fields — these are already the worst values ever seen
+        // ── BREACH DETECTION ────────────────────────────────────────────────────
         const maxDDUsed = account.max_drawdown_used || 0;
         const dailyDDUsed = account.daily_drawdown_used || 0;
         const { dailyLimit, overallLimit } = getDDLimits(account);
 
-        // Also re-check if dd_breach_detected was set by a sync but status not yet updated
+        // Path 1: sync already wrote breach flag but status update may have failed
         const alreadyFlaggedBySync = account.dd_breach_detected === true;
 
         let breachReason = null;
         let breachType = account.dd_breach_type || null;
 
         if (alreadyFlaggedBySync && account.status !== 'failed') {
-          // Sync detected a breach but status wasn't updated yet — catch it here
-          const type = account.dd_breach_type || 'unknown';
           const val = account.dd_breach_value || maxDDUsed;
-          breachReason = `DD breach previously detected (${type}): ${val.toFixed ? val.toFixed(2) : val}%`;
+          breachReason = `DD breach flag detected (${account.dd_breach_type || 'unknown'}): ${typeof val === 'number' ? val.toFixed(2) : val}%`;
         } else if (!alreadyFlaggedBySync) {
+          // Path 2: persistent stored values exceeded limits (safety net)
           if (maxDDUsed >= overallLimit) {
-            breachReason = `Max drawdown limit reached: ${maxDDUsed.toFixed(2)}% / ${overallLimit}%`;
+            breachReason = `Max drawdown limit: ${maxDDUsed.toFixed(2)}% / ${overallLimit}%`;
             breachType = account.challenge_type === 'instant_light' ? 'trailing' : 'overall';
           } else if (dailyDDUsed >= dailyLimit) {
-            breachReason = `Daily drawdown limit reached: ${dailyDDUsed.toFixed(2)}% / ${dailyLimit}%`;
+            breachReason = `Daily drawdown limit: ${dailyDDUsed.toFixed(2)}% / ${dailyLimit}%`;
             breachType = 'daily';
           }
         }
@@ -102,7 +99,7 @@ Deno.serve(async (req) => {
         if (breachReason) {
           const breachNow = new Date().toISOString();
 
-          // FIX #6: Write permanent breach flags (never overwrite if already set from sync)
+          // Write status + permanent breach flags — never overwrite existing breach data
           await sr.entities.ChallengeAccount.update(account.id, {
             status: 'failed',
             dd_breach_detected: true,
@@ -111,7 +108,7 @@ Deno.serve(async (req) => {
             ...(account.dd_breach_value ? {} : { dd_breach_value: breachType === 'daily' ? dailyDDUsed : maxDDUsed }),
           });
 
-          // Create risk flag
+          // Audit trail
           await sr.entities.RiskFlag.create({
             user_email: account.user_email,
             account_id: account.account_id,
@@ -122,35 +119,24 @@ Deno.serve(async (req) => {
             triggered_at: breachNow,
           });
 
-          // User notification
           await sr.entities.Notification.create({
             title: '🚫 Account Breached — Challenge Failed',
             message: `Your account ${account.account_id} has been automatically closed. Reason: ${breachReason}`,
-            type: 'market_alert',
-            priority: 'critical',
-            display_mode: 'popup',
-            is_active: true,
-            target: 'challenge',
+            type: 'market_alert', priority: 'critical',
+            display_mode: 'popup', is_active: true, target: 'challenge',
           });
 
-          // Email notification
-          const emailType = (breachType === 'daily') ? 'daily_dd_breach' : 'max_dd_breach';
+          const emailType = breachType === 'daily' ? 'daily_dd_breach' : 'max_dd_breach';
           await sendEmail(sr, account.user_email, emailType, {
-            name: account.user_email,
-            account_id: account.account_id,
-            account_size: account.account_size,
-            breach_reason: breachReason,
-            daily_dd_used: account.daily_drawdown_used,
-            max_dd_used: account.max_drawdown_used,
+            name: account.user_email, account_id: account.account_id,
+            account_size: account.account_size, breach_reason: breachReason,
+            daily_dd_used: account.daily_drawdown_used, max_dd_used: account.max_drawdown_used,
           });
 
           breached.push({
-            account_id: account.account_id,
-            user_email: account.user_email,
-            breach_reason: breachReason,
-            breach_type: breachType,
-            max_dd_used: maxDDUsed,
-            daily_dd_used: dailyDDUsed,
+            account_id: account.account_id, user_email: account.user_email,
+            breach_reason: breachReason, breach_type: breachType,
+            max_dd_used: maxDDUsed, daily_dd_used: dailyDDUsed,
           });
         }
 

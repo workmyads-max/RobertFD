@@ -1,10 +1,10 @@
 /**
- * syncMatchTraderAccount — On-demand single-account MT sync with INSTITUTIONAL DD ENFORCEMENT
+ * syncMatchTraderAccount — On-demand single-account sync.
+ * Applies identical institutional DD enforcement as scheduledMTSync.
  *
- * INSTITUTIONAL DD ENFORCEMENT:
- * 1. max_drawdown_used is PERSISTENT — Math.max only, never overwrite with lower value
- * 2. Breach flags are permanent — once dd_breach_detected = true, never cleared
- * 3. Breach causes immediate status='failed' — no waiting for automatedDDBreach
+ * DAILY DD: (daily_start_balance - equity) / daily_start_balance * 100
+ * OVERALL DD: Math.max — persistent, never decreases
+ * BREACH: Immediate — no waiting for automatedDDBreach
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
@@ -17,6 +17,20 @@ function getDDLimits(acc) {
   const dailyLimit = 5;
   const overallLimit = acc.challenge_type === 'instant_light' ? 6 : 10;
   return { dailyLimit, overallLimit };
+}
+
+function calcOverallDD(acc, equity, newHWM) {
+  const accountSize = acc.account_size || 100000;
+  if (acc.challenge_type === 'instant_light') {
+    const hwm = newHWM || accountSize;
+    return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
+  }
+  return Math.max(0, ((accountSize - equity) / accountSize) * 100);
+}
+
+function calcDailyDD(acc, equity) {
+  const base = acc.daily_start_balance || acc.account_size || 100000;
+  return base > 0 ? Math.max(0, ((base - equity) / base) * 100) : 0;
 }
 
 Deno.serve(async (req) => {
@@ -41,7 +55,6 @@ Deno.serve(async (req) => {
     let mtData = {};
     let positions = [];
     let deals = [];
-
     if (infoRes.ok) mtData = await infoRes.json();
     if (posRes.ok) { const d = await posRes.json(); positions = d?.positions || d || []; }
     if (histRes.ok) { const d = await histRes.json(); deals = d?.deals || d || []; }
@@ -56,23 +69,19 @@ Deno.serve(async (req) => {
     // Sync open positions as TradeRecords
     for (const pos of positions) {
       const existing = await base44.asServiceRole.entities.TradeRecord.filter({
-        account_id,
-        trade_id: String(pos.id || pos.positionId),
+        account_id, trade_id: String(pos.id || pos.positionId),
       });
       const tradeData = {
-        account_id,
-        user_email: user.email,
+        account_id, user_email: user.email,
         trade_id: String(pos.id || pos.positionId),
         symbol: pos.symbol,
         type: pos.side === 'BUY' || pos.action === 0 ? 'BUY' : 'SELL',
         order_type: 'MARKET',
         lots: pos.volume || pos.lots || 0,
         entry: pos.openPrice || pos.price || 0,
-        sl: pos.stopLoss || null,
-        tp: pos.takeProfit || null,
+        sl: pos.stopLoss || null, tp: pos.takeProfit || null,
         pnl: pos.profit || pos.pnl || 0,
-        status: 'open',
-        open_time: pos.openTime || pos.time || '',
+        status: 'open', open_time: pos.openTime || pos.time || '',
       };
       if (existing.length === 0) {
         await base44.asServiceRole.entities.TradeRecord.create(tradeData);
@@ -81,29 +90,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update ChallengeAccount with live metrics + institutional DD enforcement
+    // Update account with institutional DD enforcement
     const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ account_id });
     if (accounts.length > 0) {
       const acc = accounts[0];
       const accountSize = acc.account_size || 100000;
       const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
-      // ── INSTITUTIONAL DD CALCULATION ───────────────────────────────────────
-      let currentOverallDD;
-      if (acc.challenge_type === 'instant_light') {
-        currentOverallDD = Math.max(0, ((newHWM - equity) / newHWM) * 100);
-      } else {
-        currentOverallDD = Math.max(0, ((accountSize - equity) / accountSize) * 100);
-      }
-      const currentDailyDD = Math.max(0, ((balance - equity) / accountSize) * 100);
+      // ── TRUE INSTITUTIONAL DD ─────────────────────────────────────────────
+      const currentOverallDD = calcOverallDD(acc, equity, newHWM);
+      const currentDailyDD = calcDailyDD(acc, equity);
 
-      // ── PERSISTENT DD (FIX #1 + #2) ────────────────────────────────────────
+      // ── PERSISTENT — only ever increases ─────────────────────────────────
       const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(2));
       const persistentDailyDD = parseFloat(Math.max(acc.daily_drawdown_used || 0, currentDailyDD).toFixed(2));
 
       const { dailyLimit, overallLimit } = getDDLimits(acc);
 
-      // ── BREACH FLAGS (FIX #4) ───────────────────────────────────────────────
+      // ── BREACH FLAGS — written once, never cleared ────────────────────────
       let breachDetected = acc.dd_breach_detected || false;
       let breachType = acc.dd_breach_type || null;
       let breachTime = acc.dd_breach_time || null;
@@ -124,8 +128,7 @@ Deno.serve(async (req) => {
       }
 
       const updates = {
-        balance,
-        equity,
+        balance, equity,
         pnl: parseFloat((balance - accountSize).toFixed(2)),
         win_rate: parseFloat(winRate.toFixed(1)),
         total_trades: closedTrades.length,
@@ -135,26 +138,20 @@ Deno.serve(async (req) => {
         high_water_mark: newHWM,
         last_synced_at: new Date().toISOString(),
         dd_breach_detected: breachDetected,
-        ...(breachType && { dd_breach_type: breachType }),
-        ...(breachTime && { dd_breach_time: breachTime }),
-        ...(breachValue !== null && { dd_breach_value: breachValue }),
+        ...(breachType && !acc.dd_breach_type && { dd_breach_type: breachType }),
+        ...(breachTime && !acc.dd_breach_time && { dd_breach_time: breachTime }),
+        ...(breachValue !== null && !acc.dd_breach_value && { dd_breach_value: breachValue }),
       };
 
       if (breachDetected && acc.status !== 'failed') {
         updates.status = 'failed';
-        console.log(`[AUTO-FAIL] ${account_id} failed during MT sync (${breachType} DD: ${breachValue?.toFixed(2)}%)`);
+        console.log(`[AUTO-FAIL] MT sync — ${account_id} failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
       }
 
       await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, updates);
     }
 
-    return Response.json({
-      success: true,
-      balance, equity, floatPnl,
-      openPositions: positions.length,
-      closedTrades: closedTrades.length,
-      winRate: parseFloat(winRate.toFixed(1)),
-    });
+    return Response.json({ success: true, balance, equity, floatPnl, openPositions: positions.length, closedTrades: closedTrades.length, winRate: parseFloat(winRate.toFixed(1)) });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -73,12 +73,17 @@
     "daily_drawdown_used": {
       "type": "number",
       "default": 0,
-      "description": "PERSISTENT: highest daily DD reached today \u2014 never decreases within a trading day"
+      "description": "PERSISTENT within trading day: highest daily DD% reached today \u2014 calculated from daily_start_balance. Never decreases until daily reset at 23:00 UTC."
     },
     "max_drawdown_used": {
       "type": "number",
       "default": 0,
-      "description": "PERSISTENT: highest overall DD ever reached \u2014 never decreases"
+      "description": "PERSISTENT forever: highest overall DD% ever reached \u2014 Math.max only, never decreases, never resets."
+    },
+    "daily_start_balance": {
+      "type": "number",
+      "default": 0,
+      "description": "Balance recorded at daily reset (23:00 UTC). Used as the baseline for true institutional daily DD calculation. Reset alongside daily_drawdown_used."
     },
     "high_water_mark": {
       "type": "number",
@@ -146,7 +151,7 @@
     "dd_breach_detected": {
       "type": "boolean",
       "default": false,
-      "description": "PERMANENT: true once any DD breach is detected \u2014 never reset to false"
+      "description": "PERMANENT: set to true the moment any DD breach is detected. NEVER reset to false \u2014 not by sync, not by recovery, not by daily reset."
     },
     "dd_breach_type": {
       "type": "string",
@@ -155,15 +160,15 @@
         "overall",
         "trailing"
       ],
-      "description": "Type of DD breach that triggered failure"
+      "description": "Type of the first DD breach detected. Written once, never overwritten."
     },
     "dd_breach_time": {
       "type": "string",
-      "description": "ISO timestamp when the DD breach was first detected"
+      "description": "ISO timestamp of when the DD breach was first detected. Written once, never overwritten."
     },
     "dd_breach_value": {
       "type": "number",
-      "description": "The exact DD % value recorded at time of breach"
+      "description": "The exact DD % at time of breach detection. Written once, never overwritten."
     }
   },
   "required": [
