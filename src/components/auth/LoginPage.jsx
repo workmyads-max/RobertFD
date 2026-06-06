@@ -64,13 +64,12 @@ export default function LoginPage() {
 
     // Direct session — no OTP step
     if (res.session?.access_token && res.session?.refresh_token) {
-      await supabase.auth.signOut();
       const { error: sessionErr } = await supabase.auth.setSession({
         access_token: res.session.access_token,
         refresh_token: res.session.refresh_token,
       });
       if (sessionErr) {
-        setError('Session setup failed. Please try again.');
+        setError('Session setup failed: ' + sessionErr.message);
         return;
       }
       window.location.href = '/dashboard';
