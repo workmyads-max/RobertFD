@@ -57,12 +57,12 @@ function AccountInfoStrip({ account }) {
   ];
   return (
     <motion.div key={account.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      className="flex overflow-x-auto rounded-xl border divide-x glass"
+      className="flex overflow-x-auto rounded-xl border divide-x glass scrollbar-hide"
       style={{ borderColor: 'rgba(255,255,255,0.1)', scrollbarWidth: 'none' }}>
       {items.map(item => (
-        <div key={item.label} className="flex-1 px-4 py-3 min-w-[80px] flex-shrink-0 border-r border-white/[0.06]">
-          <div className="text-[8px] font-mono uppercase text-muted-foreground tracking-widest mb-1">{item.label}</div>
-          <div className="text-[11px] font-semibold text-primary whitespace-nowrap">{item.value}</div>
+        <div key={item.label} className="flex-1 px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[70px] sm:min-w-[80px] flex-shrink-0 border-r border-white/[0.06] last:border-r-0">
+          <div className="text-[7px] sm:text-[8px] font-mono uppercase text-muted-foreground tracking-wider sm:tracking-widest mb-0.5 sm:mb-1">{item.label}</div>
+          <div className="text-[9px] sm:text-[10px] md:text-[11px] font-semibold text-primary whitespace-nowrap truncate max-w-full">{item.value}</div>
         </div>
       ))}
     </motion.div>
@@ -78,7 +78,7 @@ function QuickActions({ onNavigate }) {
     { label: 'Trade Journal', icon: BookOpen, color: '#00F5A0', page: 'journal' },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       {actions.map((a, i) => {
         const Icon = a.icon;
         return (
@@ -86,12 +86,12 @@ function QuickActions({ onNavigate }) {
             onClick={() => onNavigate?.(a.page)}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.04 }}
-            className="flex items-center gap-3 p-4 rounded-xl text-sm font-medium glass-light hover:bg-white/[0.06] transition-all border border-white/[0.09] text-foreground/70 hover:text-foreground">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 lg:p-4 rounded-xl text-xs sm:text-sm font-medium glass-light hover:bg-white/[0.06] transition-all border border-white/[0.09] text-foreground/70 hover:text-foreground">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: `${a.color}12`, border: `1px solid ${a.color}20` }}>
-              <Icon className="w-4 h-4" style={{ color: a.color }} />
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: a.color }} />
             </div>
-            {a.label}
+            <span className="hidden sm:inline">{a.label}</span><span className="sm:hidden text-[10px]">{a.label === 'Open Terminal' ? 'Terminal' : a.label === 'Trade Journal' ? 'Journal' : a.label}</span>
           </motion.button>
         );
       })}
@@ -209,7 +209,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-4 md:px-6 pb-8 max-w-[1440px] mx-auto w-full space-y-4 mt-4">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-3 sm:space-y-4 mt-3 sm:mt-4">
 
         {/* Welcome Header */}
         <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />

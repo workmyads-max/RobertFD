@@ -83,16 +83,15 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
       <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
         style={{ background: 'radial-gradient(circle at top right, rgba(255,92,0,0.1) 0%, transparent 70%)' }} />
 
-      <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-
-        {/* Left: Avatar + greeting */}
-        <div className="flex items-center gap-6">
+      <div className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col gap-6">
+        {/* Top row: Avatar + greeting */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <motion.div
               animate={{ boxShadow: ['0 0 0px rgba(255,92,0,0)', '0 0 24px rgba(255,92,0,0.4)', '0 0 0px rgba(255,92,0,0)'] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-20 h-20 md:w-28 md:h-28 rounded-3xl flex items-center justify-center text-2xl md:text-4xl font-black text-white overflow-hidden"
+              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white overflow-hidden"
               style={{
                 background: (user?.avatar_url || user?.profile_photo_url) ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
                 border: (user?.avatar_url || user?.profile_photo_url) ? 'none' : '2px solid rgba(255,92,0,0.5)',
@@ -106,18 +105,18 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               )}
             </motion.div>
             {/* KYC dot */}
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
               style={{ background: isVerified ? '#10b981' : '#f59e0b', border: '2px solid rgba(8,14,30,1)' }}>
               {isVerified
-                ? <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                : <AlertCircle className="w-3.5 h-3.5 text-white" />}
+                ? <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                : <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />}
             </div>
           </div>
 
           {/* Text */}
-          <div className="flex-1">
-            <div className="text-sm md:text-base font-mono text-white/30 uppercase tracking-[0.2em] mb-2">{greeting}</div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-none tracking-tight mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-xs sm:text-sm md:text-base font-mono text-white/30 uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1.5 sm:mb-2">{greeting}</div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-none tracking-tight mb-2 sm:mb-3">
               Welcome,{' '}
               <span style={{
                 background: 'linear-gradient(90deg, #FF5C00, #FF9A3D, #CCFF00)',
@@ -130,37 +129,36 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             </h1>
 
             {/* Badges row */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {isVerified ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold font-mono"
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-bold font-mono"
                   style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', color: '#10b981' }}>
-                  <ShieldCheck className="w-3 h-3" /> KYC Verified
+                  <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">KYC </span>Verified
                 </div>
               ) : (
                 <button onClick={() => {}}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold font-mono transition-all hover:scale-105"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-bold font-mono transition-all hover:scale-105"
                   style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#f59e0b' }}>
-                  <AlertCircle className="w-3 h-3" /> Unverified — Verify Now
+                  <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">Unverified — </span>Verify Now
                 </button>
               )}
 
               {/* Live clock */}
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono text-white/30"
+              <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-mono text-white/30"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 {time.toUTCString().slice(17, 25)} UTC
               </div>
             </div>
           </div>
-
-          {/* Right: Motivational Quote */}
-          <div className="hidden lg:flex flex-col justify-center flex-1 pl-8 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
-            <p className="text-sm md:text-base font-medium text-white/80 leading-relaxed italic">
-              "{dailyQuote}"
-            </p>
-          </div>
         </div>
 
+        {/* Bottom row: Motivational Quote (hidden on mobile, visible on lg+) */}
+        <div className="hidden lg:flex flex-col justify-center flex-1 pl-6 border-t lg:border-t-0 lg:border-l pt-4 lg:pt-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <span className="text-[9px] sm:text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
+          <p className="text-xs sm:text-sm md:text-base font-medium text-white/80 leading-relaxed italic line-clamp-2">
+            "{dailyQuote}"
+          </p>
+        </div>
       </div>
     </motion.div>
 
@@ -183,23 +181,23 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
         {/* Background gradient orb */}
         <div className="absolute right-0 top-0 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,122,0,0.05) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
         
-        <div className="relative z-10 px-6 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="text-[11px] md:text-xs font-mono text-white/40 uppercase tracking-[0.15em] mb-1.5">{activePromotion.tag || '🎯 OFFER'}</div>
-            <h3 className="text-lg md:text-xl font-black text-white mb-1">
+        <div className="relative z-10 px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] sm:text-[11px] md:text-xs font-mono text-white/40 uppercase tracking-[0.12em] sm:tracking-[0.15em] mb-1">{activePromotion.tag || '🎯 OFFER'}</div>
+            <h3 className="text-base sm:text-lg md:text-xl font-black text-white mb-0.5 sm:mb-1 line-clamp-2">
               {activePromotion.title}
               {activePromotion.discount_percent > 0 && (
                 <span style={{ color: '#FF7A00' }}> {activePromotion.discount_percent}%</span>
               )}
             </h3>
-            <p className="text-sm md:text-base text-white/60">{activePromotion.description}</p>
+            <p className="text-xs sm:text-sm md:text-base text-white/60 line-clamp-2">{activePromotion.description}</p>
           </div>
           
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => activePromotion.cta_url && window.open(activePromotion.cta_url)}
-            className="relative px-6 md:px-8 py-2.5 md:py-3 rounded-lg font-bold text-white text-sm md:text-base whitespace-nowrap flex-shrink-0 overflow-hidden cursor-pointer"
+            className="relative px-5 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 rounded-lg font-bold text-white text-xs sm:text-sm md:text-base whitespace-nowrap flex-shrink-0 overflow-hidden cursor-pointer w-full sm:w-auto"
             style={{
               background: 'linear-gradient(135deg, rgba(255,122,0,0.3), rgba(255,122,0,0.1))',
               border: '1px solid rgba(255,122,0,0.4)',

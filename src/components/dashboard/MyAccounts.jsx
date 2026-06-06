@@ -121,7 +121,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-5 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-5 relative z-10">
           {[
             { label: 'P&L', value: `${isPnlPos ? '+' : ''}$${(account.pnl || 0).toLocaleString()}`, color: isPnlPos ? 'text-emerald-400' : 'text-red-400' },
             { label: 'Win Rate', value: `${account.win_rate || 0}%`, color: 'text-foreground' },
@@ -134,13 +134,13 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.05 }}
               whileHover={{ scale: 1.08 }}
-              className="rounded-xl p-3 text-center group/stat cursor-pointer transition-all"
+              className="rounded-xl p-2 sm:p-3 text-center group/stat cursor-pointer transition-all"
               style={{
                 background: `linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,92,0,0.02))`,
                 border: '1px solid rgba(255,255,255,0.1)',
               }}>
-              <div className="text-[10px] font-mono text-muted-foreground/70 mb-1 uppercase tracking-widest">{s.label}</div>
-              <motion.div className={`text-sm font-black ${s.color}`}
+              <div className="text-[8px] sm:text-[10px] font-mono text-muted-foreground/70 mb-0.5 sm:mb-1 uppercase tracking-wider sm:tracking-widest">{s.label}</div>
+              <motion.div className={`text-xs sm:text-sm font-black ${s.color}`}
                 whileHover={{ scale: 1.1 }}>
                 {s.value}
               </motion.div>
@@ -198,35 +198,34 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 flex-wrap relative z-10">
+        <div className="flex flex-wrap gap-2 relative z-10">
           {account.platform === 'match_trader' && account.mt_login ? (
             <a href="https://app.match-trader.com" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
-              style={{ background: 'linear-gradient(90deg,#10b981,#059669)', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
-              <ExternalLink className="w-3.5 h-3.5" /> Open Match Trader
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105 flex-1 sm:flex-none justify-center">
+              <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Open Match Trader</span><span className="sm:hidden">MT</span>
             </a>
           ) : (
             <a href="https://web.metatrader.app/terminal" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105 flex-1 sm:flex-none justify-center"
               style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
-              <Monitor className="w-3.5 h-3.5" /> Open Terminal
+              <Monitor className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Open Terminal</span><span className="sm:hidden">Terminal</span>
             </a>
           )}
           <button onClick={() => onOpenAnalytics && onOpenAnalytics(account)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 flex-1 sm:flex-none justify-center"
             style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>
-            <BarChart3 className="w-3.5 h-3.5" /> Analytics
+            <BarChart3 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Analytics</span><span className="sm:hidden">Stats</span>
           </button>
           {account.status === 'funded' && (
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-emerald-500/10"
+            <button className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-emerald-500/10 flex-1 sm:flex-none justify-center"
               style={{ border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}>
-              <DollarSign className="w-3.5 h-3.5" /> Withdraw
+              <DollarSign className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Withdraw</span><span className="sm:hidden">Cash Out</span>
             </button>
           )}
           <button onClick={() => setShowCreds(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 ml-auto"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 flex-1 sm:flex-none justify-center"
             style={{ border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--muted-foreground))' }}>
-            <Eye className="w-3.5 h-3.5" /> Credentials
+            <Eye className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Credentials</span><span className="sm:hidden">Creds</span>
           </button>
         </div>
         {/* Platform badge */}
@@ -270,22 +269,22 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
-            <Wallet className="w-6 h-6 text-primary" /> My Accounts
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground flex items-center gap-2 sm:gap-3">
+            <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> My Accounts
           </h1>
-          <p className="text-base text-muted-foreground font-mono mt-1">Manage your challenge and funded accounts</p>
+          <p className="text-sm sm:text-base text-muted-foreground font-mono mt-1">Manage your challenge and funded accounts</p>
         </div>
         <button onClick={onStartChallenge}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+          className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 w-full sm:w-auto"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
           <Plus className="w-4 h-4" /> New Challenge
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: 'Active', count: displayAccounts.filter(a => a.status === 'active').length, color: '#10b981' },
           { label: 'Funded', count: displayAccounts.filter(a => a.status === 'funded').length, color: '#FF5C00' },

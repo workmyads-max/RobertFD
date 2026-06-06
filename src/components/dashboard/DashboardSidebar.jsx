@@ -85,7 +85,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
 
       {/* Nav */}
-      <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', marginTop: '68px' }}>
+      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', marginTop: collapsed ? '0' : '68px' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -253,7 +253,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </nav>
 
       {/* Bottom actions */}
-      <div className={`pb-4 pt-2 border-t ${collapsed ? 'px-1.5 space-y-1 flex flex-col items-center' : 'px-3 space-y-0.5'}`} style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <div className={`pb-3 sm:pb-4 pt-2 border-t ${collapsed ? 'px-1.5 space-y-1 flex flex-col items-center' : 'px-3 space-y-0.5'}`} style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         {collapsed ? (
           <>
             <button onClick={() => setCollapsed?.(false)} title="Expand sidebar"
@@ -285,9 +285,9 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       {/* Mobile toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden w-10 h-10 rounded-xl glass flex items-center justify-center"
+        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl glass flex items-center justify-center shadow-lg"
       >
-        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
       </button>
 
       {/* Desktop sidebar */}
@@ -308,7 +308,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             <motion.div
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 bottom-0 z-50 w-56 md:hidden border-r border-white/5"
+              className="fixed left-0 top-0 bottom-0 z-50 w-[280px] sm:w-72 md:hidden border-r border-white/5 safe-area-inset-left"
               style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)' }}
             >
               <SidebarContent />
