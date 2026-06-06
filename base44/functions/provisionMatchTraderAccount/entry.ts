@@ -1,15 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
-// Support both Match Trader and MT5 platforms
-const MT_BASE = Deno.env.get('MATCH_TRADER_BASE_URL') || 'https://broker-api-demo.match-trader.com';
-const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY');
-const MT5_BASE = Deno.env.get('MT5_API_BASE_URL');
-const MT5_API_KEY = Deno.env.get('MT5_API_KEY');
-
-const mtHeaders = {
-  'Content-Type': 'application/json',
-  'api-key': MT_API_KEY,
-};
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Map challenge type + size to a Match Trader group name
 function getGroupName(challengeType, accountSize, accountModel) {
@@ -38,29 +27,28 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { order_id, account_id, user_email, challenge_type, account_type, account_size, leverage, platform } = body;
 
-    // Support both Match Trader and MT5 platforms
-    const isMatchTrader = platform === 'match_trader';
-    const isMT5 = platform === 'mt5';
-    
-    if (!isMatchTrader && !isMT5) {
-      return Response.json({ error: 'Not a Match Trader or MT5 order', skip: true });
+    if (!['match_trader', 'mt5'].includes(platform)) {
+      return Response.json({ error: 'Unsupported platform', skip: true });
     }
 
-    // Select API configuration based on platform
-    const apiBase = isMT5 ? MT5_BASE : MT_BASE;
-    const apiKey = isMT5 ? MT5_API_KEY : MT_API_KEY;
-    
-    if (!apiKey) {
-      return Response.json({ 
-        error: `${platform.toUpperCase()} API key not configured. Please set ${isMT5 ? 'MT5_API_KEY' : 'MATCH_TRADER_API_KEY'} secret.`,
-        status: 'missing_api_key'
+    // Fetch credentials from database first, fallback to env vars
+    const credRes = await base44.asServiceRole.functions.invoke('getPlatformCredentials', { platform });
+    if (!credRes.data?.success) {
+      return Response.json({
+        error: credRes.data?.error || `Failed to load ${platform} credentials`,
+        status: 'missing_credentials',
       }, { status: 500 });
     }
 
+    const { api_key, server_url } = credRes.data;
+    const apiBase = server_url || (platform === 'mt5' 
+      ? Deno.env.get('MT5_API_BASE_URL') 
+      : Deno.env.get('MATCH_TRADER_BASE_URL') || 'https://broker-api-demo.match-trader.com');
+
     const apiHeaders = {
       'Content-Type': 'application/json',
-      'api-key': apiKey,
-      ...(isMT5 ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+      'api-key': api_key,
+      'Authorization': `Bearer ${api_key}`,
     };
 
     const password = genPassword();
@@ -122,20 +110,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'MT API did not return a login ID', details: mtAccount }, { status: 502 });
     }
 
-    const mtServer = isMT5 ? (Deno.env.get('MT5_SERVER_NAME') || 'mt5-live.server.com') : 'broker-api-demo.match-trader.com';
+    const mtServer = platform === 'mt5' 
+      ? (Deno.env.get('MT5_SERVER_NAME') || 'mt5-live.server.com') 
+      : 'broker-api-demo.match-trader.com';
 
     // Step 2: Update ChallengeAccount in CRM with REAL credentials
     const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ account_id });
     if (accounts.length > 0) {
       await base44.asServiceRole.entities.ChallengeAccount.update(accounts[0].id, {
         status: 'active',
-        platform: 'match_trader',
+        platform: platform,
         mt_login: String(mtLogin),
         mt_password: password,
         mt_server: mtServer,
         mt_group: groupName,
         provisioned_at: new Date().toISOString(),
-        // Store readable credentials (login_credentials kept for backward compat)
         login_credentials: `Login: ${mtLogin} | Password: ${password} | Server: ${mtServer}`,
         server: mtServer,
       });

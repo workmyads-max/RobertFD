@@ -57,17 +57,19 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const MT5_BASE = Deno.env.get('MT5_API_BASE_URL');
-    const MT5_API_KEY = Deno.env.get('MT5_API_KEY');
-    const MT_BASE = Deno.env.get('MATCH_TRADER_BASE_URL');
-    const MT_API_KEY = Deno.env.get('MATCH_TRADER_API_KEY');
-
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
       ['active', 'funded', 'passed'].includes(a.status) &&
       ['mt5', 'match_trader'].includes(a.platform)
     );
+
+    // Pre-fetch credentials for both platforms to avoid repeated database lookups
+    const mt5CredsRes = await base44.asServiceRole.functions.invoke('getPlatformCredentials', { platform: 'mt5' });
+    const mtCredsRes = await base44.asServiceRole.functions.invoke('getPlatformCredentials', { platform: 'match_trader' });
+    
+    const mt5Creds = mt5CredsRes.data?.success ? mt5CredsRes.data : null;
+    const mtCreds = mtCredsRes.data?.success ? mtCredsRes.data : null;
 
     const results = [];
     const BATCH_SIZE = 50;
@@ -78,11 +80,19 @@ Deno.serve(async (req) => {
       const batchResults = await Promise.all(batch.map(async (acc) => {
         try {
           const isMT5 = acc.platform === 'mt5';
-          const apiBase = isMT5 ? MT5_BASE : MT_BASE;
-          const apiKey = isMT5 ? MT5_API_KEY : MT_API_KEY;
+          const creds = isMT5 ? mt5Creds : mtCreds;
+
+          if (!creds) {
+            return { account_id: acc.account_id, ok: false, error: `Missing API credentials for ${acc.platform}` };
+          }
+
+          const apiBase = creds.server_url || (isMT5 
+            ? Deno.env.get('MT5_API_BASE_URL')
+            : Deno.env.get('MATCH_TRADER_BASE_URL'));
+          const apiKey = creds.api_key;
 
           if (!apiBase || !apiKey) {
-            return { account_id: acc.account_id, ok: false, error: `Missing API config: ${acc.platform}` };
+            return { account_id: acc.account_id, ok: false, error: `Invalid API config: ${acc.platform}` };
           }
 
           const headers = {
