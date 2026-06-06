@@ -176,17 +176,12 @@ export default function Dashboard() {
       case 'admin-livechat': return isAdmin ? <AdminLiveChat /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-platforms': return isAdmin ? <AdminPlatformSettings /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-challenges': return isAdmin ? <AdminChallenges /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-mt5': return isAdmin ? <AdminMT5Configuration /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-terminal': return isAdmin ? <AdminTerminalControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk-detection': return isAdmin ? <AdminRiskDetection /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk-center': return isAdmin ? <AdminRiskCenter /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-funded-review': return isAdmin ? <AdminFundedReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-appeals': return isAdmin ? <AdminAppeals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-roles': return isAdmin ? <AdminRolesPermissions /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-coupons': return isAdmin ? <AdminCoupons /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-email-logs': return isAdmin ? <EmailLogsDashboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;

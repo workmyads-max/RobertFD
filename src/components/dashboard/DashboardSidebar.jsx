@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, Sliders, Activity, Globe, Trophy, BookOpen, BarChart3, Newspaper, Calendar } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
@@ -18,33 +19,35 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Shield, prominent: true },
     { id: 'accounts', label: 'My Accounts', icon: Wallet },
-    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'account-overview', label: 'Account Overview', icon: Wallet },
+    { id: 'analytics', label: 'Analytics', icon: Zap },
     { id: 'markets', label: 'Markets', icon: Activity },
-    { id: 'calendar', label: 'Economic Calendar', icon: Calendar },
-    { id: 'news', label: 'Market News', icon: Newspaper },
-    { id: 'journal', label: 'Trading Journal', icon: BookOpen },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+    { id: 'calendar', label: 'Calendar', icon: Globe },
+    { id: 'news', label: 'News', icon: Zap },
+    { id: 'journal', label: 'Journal', icon: Zap },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Zap },
     { id: 'affiliate', label: 'Affiliate', icon: Users },
-    { id: 'certificates', label: 'Certificates', icon: ShieldCheck },
+    { id: 'certificates', label: 'Certificates', icon: Zap },
     { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
+    { id: 'billing', label: 'Billing', icon: Zap },
     { id: 'kyc', label: 'KYC', icon: ShieldCheck },
     { id: 'support', label: 'Support', icon: HeadphonesIcon },
     { id: 'settings', label: 'Settings', icon: Sliders },
+    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
   ];
 
   const filterNavItems = () => {
     const visibilityMap = {
       'analytics': 'analytics',
       'markets': 'market_news',
-      'calendar': 'economic_calendar',
-      'news': 'market_news',
       'journal': 'trading_journal',
-      'leaderboard': 'leaderboard',
       'affiliate': 'affiliate',
       'certificates': 'certificates',
       'withdrawals': 'withdrawals',
+      'billing': 'billing',
+      'leaderboard': 'leaderboard',
       'support': 'support',
+      'notifications': 'notifications',
       'kyc': 'kyc',
     };
 
@@ -67,6 +70,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         </button>
       </div>
 
+
+
       {/* Nav */}
       <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', marginTop: collapsed ? '0' : '68px' }}>
         {filterNavItems().map((item) => {
@@ -84,9 +89,11 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               } ${
                 isActive
                   ? 'text-white'
-                  : item.highlight && !isActive
-                  ? 'text-accent hover:text-accent hover:bg-accent/10'
-                  : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
+                  : item.id === 'trash'
+                    ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
+                    : item.highlight && !isActive
+                    ? 'text-accent hover:text-accent hover:bg-accent/10'
+                    : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
               style={item.prominent && !isActive ? {
                 background: 'linear-gradient(135deg, rgba(115,255,0,0.25), rgba(115,255,0,0.12))',
@@ -107,9 +114,15 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 border: '1px solid rgba(115,255,0,0.25)',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
-              {!collapsed && <span className="flex-1 text-left font-medium relative z-10">{item.label}</span>}
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
+              {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
+              {!collapsed && item.id === 'trash' && trashCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
+              )}
               {!collapsed && isActive && item.id !== 'trash' && <ChevronRight className={`${item.prominent ? 'w-4 h-4' : 'w-3 h-3'} text-primary/40 relative z-10`} />}
+              {collapsed && trashCount > 0 && item.id === 'trash' && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+              )}
             </button>
           );
         })}
@@ -175,29 +188,33 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             })}
             {[
               { id: 'admin-overview', label: 'Admin Overview', icon: Shield },
-              { id: 'admin-orders', label: 'Orders', icon: Zap },
-              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet },
-              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign },
-              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon },
-              { id: 'admin-users', label: 'User Management', icon: Users },
-              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck },
-              { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap },
-              { id: 'admin-mt5', label: 'MT5 Configuration', icon: Zap },
-              { id: 'admin-match-trader', label: 'Match Trader', icon: Zap },
-              { id: 'admin-terminal', label: 'Terminal Control', icon: Zap },
-              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Zap },
-              { id: 'admin-risk-center', label: 'Risk Center', icon: Zap },
-              { id: 'admin-funded-review', label: 'Funded Review', icon: Zap },
-              { id: 'admin-risk', label: 'Risk Management', icon: Zap },
-              { id: 'admin-appeals', label: 'Violation Appeals', icon: Zap },
-              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users },
-              { id: 'admin-social', label: 'Social Media', icon: Zap },
-              { id: 'admin-staff', label: 'Staff Management', icon: Users },
-              { id: 'admin-roles', label: 'Roles & Permissions', icon: Zap },
-              { id: 'admin-promotions', label: 'Promotions', icon: Zap },
-              { id: 'admin-coupons', label: 'Coupons', icon: Zap },
-              { id: 'admin-email-logs', label: 'Email Logs', icon: Zap },
-              { id: 'admin-visibility', label: 'Platform Visibility', icon: Zap },
+              { id: 'admin-orders', label: 'Orders', icon: ShoppingBag, permission: 'manage_payments' },
+              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet, permission: 'manage_challenges' },
+              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign, permission: 'manage_payouts' },
+              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon, permission: 'manage_support' },
+              { id: 'admin-users', label: 'User Management', icon: Users, permission: 'manage_users' },
+              { id: 'admin-notifications', label: 'Notifications', icon: Bell, permission: 'manage_notifications' },
+              { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet, permission: 'manage_payments' },
+              { id: 'admin-payment-review', label: 'Payment Review Queue', icon: Shield, permission: 'manage_payments' },
+              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck, permission: 'manage_kyc' },
+              { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle, permission: 'manage_support' },
+              { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity, permission: 'manage_settings' },
+              { id: 'admin-mt5-config', label: 'MT5 Config', icon: Globe, permission: 'manage_settings' },
+              { id: 'admin-platforms', label: 'Platforms API', icon: Cpu, permission: 'manage_settings' },
+              { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap, permission: 'manage_challenges' },
+              { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders, permission: 'manage_settings' },
+              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-risk-center', label: 'Risk Center', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-funded-review', label: 'Funded Review Queue', icon: ShieldCheck, permission: 'manage_risk' },
+              { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle, permission: 'manage_risk' },
+              { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag, permission: 'manage_coupons' },
+              { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield, permission: 'manage_risk' },
+              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users, permission: 'manage_affiliates' },
+              { id: 'admin-social', label: 'Social Media', icon: Share2, permission: 'manage_settings' },
+              { id: 'admin-email-logs', label: 'Email Logs', icon: Mail, permission: 'manage_audit_logs' },
+              { id: 'admin-staff', label: 'Staff Management', icon: Users, permission: 'manage_staff' },
+              { id: 'admin-roles', label: 'Roles & Permissions', icon: Shield, permission: 'manage_staff' },
+              { id: 'admin-promotions', label: 'Promotions', icon: Tag, permission: 'manage_settings' },
               ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
