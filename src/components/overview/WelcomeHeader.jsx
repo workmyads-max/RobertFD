@@ -151,38 +151,34 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           onClick={onStartChallenge}
           whileHover={{ scale: 1.06, y: -2 }}
           whileTap={{ scale: 0.95 }}
-          className="relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-white text-base group overflow-hidden"
+          className="relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-3xl font-bold text-white text-base group overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #FF5C00 0%, #FF8A3D 50%, #FFB266 100%)',
-            boxShadow: '0 8px 32px rgba(255,92,0,0.45), 0 0 20px rgba(255,92,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
+            backgroundImage: 'url(https://media.base44.com/images/public/69ff44f98e27baf8957d0676/1a106290d_generated_image.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: '0 0 40px rgba(100, 220, 255, 0.4), 0 0 60px rgba(150, 100, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+            border: '2.5px solid rgba(100, 220, 255, 0.5)',
           }}>
-          {/* Animated border glow */}
+          {/* Holographic shimmer overlay */}
           <motion.div
-            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            animate={{ boxShadow: ['0 0 0px rgba(255,92,0,0)', '0 0 30px rgba(255,92,0,0.6)', '0 0 0px rgba(255,92,0,0)'] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            style={{ pointerEvents: 'none' }}
-          />
-          
-          {/* Shimmer sweep */}
-          <motion.div
-            className="absolute inset-0 rounded-full opacity-60"
+            className="absolute inset-0 rounded-3xl"
+            animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-              backgroundSize: '200% 100%',
+              background: 'linear-gradient(-45deg, transparent 0%, rgba(150, 255, 220, 0.15) 25%, rgba(100, 220, 255, 0.1) 50%, rgba(180, 100, 255, 0.15) 75%, transparent 100%)',
+              backgroundSize: '200% 200%',
+              pointerEvents: 'none',
             }}
-            animate={{ backgroundPosition: ['-200% 0', '200% 0'] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           />
           
-          {/* Pulse background effect */}
+          {/* Pulsing glow effect */}
           <motion.div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-3xl"
             animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity }}
+            transition={{ duration: 3.5, repeat: Infinity }}
             style={{
-              background: 'linear-gradient(45deg, rgba(255,92,0,0.2), rgba(255,170,92,0.1))',
-              filter: 'blur(12px)',
+              background: 'radial-gradient(circle at center, rgba(100, 220, 255, 0.25), transparent 60%)',
+              filter: 'blur(16px)',
               pointerEvents: 'none',
             }}
           />
