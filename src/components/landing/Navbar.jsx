@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import XFLogo from '@/components/shared/XFLogo';
+import LoginModal from '@/components/shared/LoginModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,6 +18,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { user, logout } = useCustomAuth();
 
   useEffect(() => {
@@ -76,9 +78,12 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login" className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <button
+                  onClick={() => setLoginModalOpen(true)}
+                  className="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary/90 transition-all"
+                >
                   Login
-                </Link>
+                </button>
                 <Link to="/register" className="px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
                   Register
                 </Link>
@@ -138,6 +143,9 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </>
   );
 }
