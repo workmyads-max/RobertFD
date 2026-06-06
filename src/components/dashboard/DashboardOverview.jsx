@@ -15,22 +15,23 @@ function StatCard({ label, value, sub, color, icon: Icon, i }) {
       whileHover={{ scale: 1.02, y: -4 }}
       className="rounded-2xl p-6 group relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(204,255,0,0.03))',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        background: 'linear-gradient(135deg, rgba(0,245,160,0.08), rgba(0,200,150,0.03))',
+        border: '1px solid rgba(0,245,160,0.2)',
+        boxShadow: '0 8px 32px rgba(0,245,160,0.1)',
       }}>
       {/* Glow effect */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
-          background: 'radial-gradient(circle at top right, rgba(255,92,0,0.15), transparent)',
+          background: 'radial-gradient(circle at top right, rgba(0,245,160,0.2), transparent)',
         }} />
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{label}</span>
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-primary" />
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(0,245,160,0.15)', color: '#00F5A0' }}>
+            <Icon className="w-5 h-5" style={{ color: '#00F5A0' }} />
           </motion.div>
         </div>
         <div className="text-3xl font-black text-foreground mb-2">{value}</div>
@@ -103,13 +104,13 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
         </div>
         <div className="hidden md:flex flex-col gap-2">
           <button onClick={onStartChallenge}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg,#00F5A0,#00D9A3)', color: '#000', boxShadow: '0 4px 20px rgba(0,245,160,0.4)' }}>
             <Plus className="w-4 h-4" /> New Challenge
           </button>
           <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>
-            🔗 Mirror Trades <span className="ml-auto text-muted-foreground">(0)</span>
+            style={{ background: 'rgba(0,245,160,0.1)', border: '1px solid rgba(0,245,160,0.2)', color: '#00F5A0' }}>
+            🔗 Mirror Trades <span className="ml-auto opacity-60">(0)</span>
           </button>
         </div>
       </div>
@@ -142,8 +143,8 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
             You don't have any active challenge accounts yet. Purchase a challenge to access the XTrading Terminal, analytics, and funded capital.
           </div>
           <button onClick={onStartChallenge}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
-            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold hover:scale-105 transition-all"
+            style={{ background: 'linear-gradient(90deg,#00F5A0,#00D9A3)', color: '#000', boxShadow: '0 4px 20px rgba(0,245,160,0.4)' }}>
             <Plus className="w-4 h-4" /> Browse Challenge Plans
           </button>
         </motion.div>
@@ -162,9 +163,9 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, type: 'spring' }}
               className="lg:col-span-2 rounded-2xl p-6 group relative overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.02))',
-                border: '1px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 8px 32px rgba(255,92,0,0.08)',
+               background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.02))',
+               border: '1px solid rgba(0,245,160,0.2)',
+               boxShadow: '0 8px 32px rgba(0,245,160,0.08)',
               }}
             >
               <div className="flex items-center justify-between mb-5">
@@ -175,14 +176,14 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                   </div>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-mono capitalize"
-                  style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
+                  style={{ background: 'rgba(0,245,160,0.12)', color: '#00F5A0', border: '1px solid rgba(0,245,160,0.2)' }}>
                   {primaryAccount?.status}
                 </span>
               </div>
               {[
-                { label: 'Profit Target', current: primaryAccount?.profit_target_progress || 0, target: profitTarget, color: '#FF5C00' },
-                { label: 'Daily Drawdown Used', current: primaryAccount?.daily_drawdown_used || 0, target: dailyDDLimit, color: '#10b981' },
-                { label: 'Max Drawdown Used', current: primaryAccount?.max_drawdown_used || 0, target: maxDDLimit, color: '#10b981' },
+                { label: 'Profit Target', current: primaryAccount?.profit_target_progress || 0, target: profitTarget, color: '#00F5A0' },
+                { label: 'Daily Drawdown Used', current: primaryAccount?.daily_drawdown_used || 0, target: dailyDDLimit, color: '#00F5A0' },
+                { label: 'Max Drawdown Used', current: primaryAccount?.max_drawdown_used || 0, target: maxDDLimit, color: '#00F5A0' },
               ].map((p) => (
                 <div key={p.label} className="mb-4 last:mb-0">
                   <div className="flex justify-between text-xs font-mono mb-1.5">
@@ -216,18 +217,18 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: 'spring' }}
               className="rounded-2xl p-6 relative overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,92,0,0.06), rgba(204,255,0,0.02))',
-                border: '1px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 8px 32px rgba(255,92,0,0.08)',
+                background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.02))',
+                border: '1px solid rgba(0,245,160,0.2)',
+                boxShadow: '0 8px 32px rgba(0,245,160,0.08)',
               }}
             >
               <div className="text-sm font-bold text-foreground mb-4 relative z-10">Quick Actions</div>
               <div className="space-y-3 relative z-10">
                 {[
-                  { label: 'Request Payout', icon: DollarSign, color: 'text-emerald-400', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', page: 'withdrawals' },
-                  { label: 'View Analytics', icon: BarChart3, color: 'text-primary', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)', page: 'analytics' },
-                  { label: 'Trading Journal', icon: Activity, color: 'text-accent', bg: 'rgba(204,255,0,0.08)', border: 'rgba(204,255,0,0.2)', page: 'journal' },
-                  { label: 'Economic Calendar', icon: Target, color: 'text-blue-400', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', page: 'calendar' },
+                  { label: 'Request Payout', icon: DollarSign, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'withdrawals' },
+                  { label: 'View Analytics', icon: BarChart3, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'analytics' },
+                  { label: 'Trading Journal', icon: Activity, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'journal' },
+                  { label: 'Economic Calendar', icon: Target, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'calendar' },
                 ].map((a, idx) => {
                   const Icon = a.icon;
                   return (
@@ -238,10 +239,10 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                       whileHover={{ scale: 1.05, x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full flex items-center gap-3 p-4 rounded-xl transition-all group"
-                      style={{ background: a.bg, border: `1px solid ${a.border}` }}>
-                      <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
-                        <Icon className={`w-4 h-4 ${a.color}`} />
-                      </motion.div>
+                       style={{ background: a.bg, border: `1px solid ${a.border}` }}>
+                       <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
+                         <Icon className="w-4 h-4" style={{ color: a.color }} />
+                       </motion.div>
                       <span className="text-sm font-medium text-foreground">{a.label}</span>
                       <motion.div className="w-3 h-3 text-muted-foreground ml-auto"
                         whileHover={{ x: 4 }}>
@@ -259,9 +260,9 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: 'spring' }}
             className="rounded-2xl p-6 relative overflow-hidden group"
             style={{
-              background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(255,92,0,0.03))',
-              border: '1px solid rgba(16,185,129,0.2)',
-              boxShadow: `0 8px 32px ${totalPnl >= 0 ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'}`,
+              background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.03))',
+              border: '1px solid rgba(0,245,160,0.2)',
+              boxShadow: `0 8px 32px ${totalPnl >= 0 ? 'rgba(0,245,160,0.08)' : 'rgba(239,68,68,0.08)'}`,
             }}
           >
             <div className="flex items-center justify-between mb-6 relative z-10">
@@ -269,7 +270,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                 <div className="text-sm font-bold text-foreground">Portfolio Equity Curve</div>
                 <div className="text-xs text-muted-foreground font-mono">Real-time balance across all accounts</div>
               </div>
-              <motion.span className={`text-lg font-black ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+              <motion.span className={`text-lg font-black`} style={{ color: totalPnl >= 0 ? '#00F5A0' : '#ff6b6b' }}
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}>
                 {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -284,11 +285,11 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
               <svg viewBox="0 0 600 100" className="w-full h-24">
                 <defs>
                   <linearGradient id="eqOv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={totalPnl >= 0 ? '#FF5C00' : '#ef4444'} stopOpacity="0.3" />
-                    <stop offset="100%" stopColor={totalPnl >= 0 ? '#FF5C00' : '#ef4444'} stopOpacity="0" />
+                    <stop offset="0%" stopColor={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <line x1="0" y1="50" x2="600" y2={totalPnl >= 0 ? '20' : '80'} stroke={totalPnl >= 0 ? '#FF5C00' : '#ef4444'} strokeWidth="2.5" />
+                <line x1="0" y1="50" x2="600" y2={totalPnl >= 0 ? '20' : '80'} stroke={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} strokeWidth="2.5" />
               </svg>
             )}
           </motion.div>
