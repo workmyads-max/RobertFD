@@ -84,11 +84,11 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="w-20 h-20 md:w-28 md:h-28 rounded-3xl flex items-center justify-center text-2xl md:text-4xl font-black text-white overflow-hidden"
               style={{
-                background: user?.avatar_url ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
-                border: user?.avatar_url ? 'none' : '2px solid rgba(255,92,0,0.5)',
+                background: (user?.avatar_url || user?.profile_photo_url) ? 'transparent' : 'linear-gradient(135deg, rgba(255,92,0,0.3), rgba(255,92,0,0.1))',
+                border: (user?.avatar_url || user?.profile_photo_url) ? 'none' : '2px solid rgba(255,92,0,0.5)',
               }}>
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt={displayName} className="w-full h-full object-cover" style={{ background: 'transparent' }} />
+              {user?.avatar_url || user?.profile_photo_url ? (
+                <img src={user.avatar_url || user.profile_photo_url} alt={displayName} className="w-full h-full object-cover" style={{ background: 'transparent' }} />
               ) : (
                 initials
               )}
