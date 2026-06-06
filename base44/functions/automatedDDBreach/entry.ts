@@ -96,12 +96,15 @@ Deno.serve(async (req) => {
             target: 'challenge',
           });
 
-          // Send email notification
-          await sendEmail(sr, account.user_email, 'account_breached', {
+          // Send email notification with correct type based on breach
+          const emailType = breachReason.includes('Daily') ? 'daily_dd_breach' : 'max_dd_breach';
+          await sendEmail(sr, account.user_email, emailType, {
             name: account.user_email,
             account_id: account.account_id,
             account_size: account.account_size,
             breach_reason: breachReason,
+            daily_dd_used: account.daily_drawdown_used,
+            max_dd_used: account.max_drawdown_used,
           });
 
           breached.push({

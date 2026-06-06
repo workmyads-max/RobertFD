@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Eye, EyeOff, Save, Plus, Edit2, Trash2, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Settings, Eye, EyeOff, Save, Plus, Edit2, Trash2, AlertCircle, ToggleLeft, ToggleRight, UserPlus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -16,6 +16,66 @@ const TRADEABLE_PLATFORMS = [
   { key: 'mt5', label: 'MetaTrader 5', icon: '📈', color: '#0066CC' },
   { key: 'tradelocker', label: 'TradeLocker', icon: '🔓', color: '#00A86B' },
 ];
+
+function AuthSettingsPanel() {
+  const qc = useQueryClient();
+
+  const { data: settings = [] } = useQuery({
+    queryKey: ['platform-settings-auth'],
+    queryFn: () => base44.entities.PlatformSettings.filter({ category: 'auth' }),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ key, label, enabled }) => {
+      const existing = settings.find(s => s.setting_key === key);
+      if (existing) {
+        return base44.entities.PlatformSettings.update(existing.id, { is_enabled: enabled });
+      }
+      return base44.entities.PlatformSettings.create({ setting_key: key, label, category: 'auth', is_enabled: enabled });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['platform-settings-auth'] }),
+  });
+
+  const getSetting = (key, defaultVal = true) => {
+    const s = settings.find(p => p.setting_key === key);
+    return s ? s.is_enabled !== false : defaultVal;
+  };
+
+  const registrationEnabled = getSetting('registration_enabled', true);
+
+  return (
+    <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <h3 className="text-sm font-bold text-foreground mb-1 flex items-center gap-2">
+        <UserPlus className="w-4 h-4 text-primary" /> Authentication Settings
+      </h3>
+      <p className="text-[11px] font-mono text-muted-foreground mb-4">Control platform registration and access settings.</p>
+      <div className="flex items-center justify-between px-4 py-3 rounded-xl max-w-sm"
+        style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${registrationEnabled ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)'}` }}>
+        <div className="flex items-center gap-3">
+          <span className="text-xl">👤</span>
+          <div>
+            <div className="text-xs font-bold text-foreground">New Registrations</div>
+            <div className="text-[10px] font-mono" style={{ color: registrationEnabled ? '#10b981' : '#666' }}>
+              {registrationEnabled ? 'Open — Anyone can register' : 'Closed — Registrations disabled'}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => toggleMutation.mutate({ key: 'registration_enabled', label: 'Registration Enabled', enabled: !registrationEnabled })}
+          disabled={toggleMutation.isPending}
+          className="transition-all ml-4"
+        >
+          {registrationEnabled
+            ? <ToggleRight className="w-8 h-8 text-emerald-400" />
+            : <ToggleLeft className="w-8 h-8 text-muted-foreground" />}
+        </button>
+      </div>
+      {!registrationEnabled && (
+        <p className="text-xs text-yellow-400 mt-2 ml-1">⚠️ New users visiting /register will see: "Registrations are currently disabled."</p>
+      )}
+    </div>
+  );
+}
 
 export default function AdminPlatformSettings() {
   const [selectedPlatform, setSelectedPlatform] = useState('mt5');
@@ -99,6 +159,9 @@ export default function AdminPlatformSettings() {
         </h1>
         <p className="text-base text-muted-foreground font-mono mt-1">Configure MT5 and TradeLocker API credentials</p>
       </div>
+
+      {/* Authentication Settings */}
+      <AuthSettingsPanel />
 
       {/* Platform Availability Toggles */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, AtSign, Loader, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { callAuth, signInToSupabase } from '@/lib/customAuth';
-import OTPStep from '@/components/auth/OTPStep';
+import { callAuth } from '@/lib/customAuth';
+import { supabase, signInWithGoogle } from '@/lib/supabaseClient';
 import XFLogo from '@/components/shared/XFLogo';
 
 const AuthCard = ({ children, title, subtitle }) => (
@@ -32,65 +32,74 @@ const AuthCard = ({ children, title, subtitle }) => (
 );
 
 export default function Register() {
-  const [step, setStep] = useState('form');
   const [fields, setFields] = useState({ full_name: '', username: '', email: '', password: '', confirm: '' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState(null);
-  const [devOtp, setDevOtp] = useState(null);
+  const [done, setDone] = useState(false);
 
   const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
+
+  const handleGoogleRegister = async () => {
+    setGoogleLoading(true);
+    await signInWithGoogle();
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    if (!fields.email || !fields.username || !fields.full_name || !fields.password) { setError('All fields are required.'); return; }
+    if (!fields.email || !fields.username || !fields.full_name || !fields.password) {
+      setError('All fields are required.'); return;
+    }
     if (fields.password !== fields.confirm) { setError('Passwords do not match.'); return; }
     if (fields.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) { setError('Username can only contain letters, numbers and underscores.'); return; }
-    setLoading(true);
-    try {
-      const res = await Promise.race([
-        callAuth('register', { email: fields.email, username: fields.username, full_name: fields.full_name, password: fields.password }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 15000)),
-      ]);
-      if (res.error) { setError(res.error); setLoading(false); return; }
-      setUserId(res.userId);
-      if (res.dev_otp) setDevOtp(res.dev_otp);
-      setStep('otp');
-    } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+    if (!/^[a-zA-Z0-9_]+$/.test(fields.username)) {
+      setError('Username can only contain letters, numbers and underscores.'); return;
     }
+
+    setLoading(true);
+    const res = await callAuth('register', {
+      email: fields.email,
+      username: fields.username,
+      full_name: fields.full_name,
+      password: fields.password,
+    });
     setLoading(false);
+
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+
+    // Auto sign-in session returned directly — set it and redirect
+    if (res.session?.access_token && res.session?.refresh_token) {
+      await supabase.auth.signOut();
+      await supabase.auth.setSession({
+        access_token: res.session.access_token,
+        refresh_token: res.session.refresh_token,
+      });
+      setDone(true);
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
+      return;
+    }
+
+    // Fallback: account created but no auto-login
+    setDone(true);
+    setTimeout(() => { window.location.href = '/login'; }, 1500);
   };
 
-  const handleOTPSuccess = async (res) => {
-    console.log('Registration OTP verified:', res);
-    // Registration successful - redirect to dashboard
-    setStep('done');
-    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
-  };
-
-  if (step === 'done') {
+  if (done) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
           <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10 text-emerald-400" />
           </div>
-          <h1 className="text-3xl font-black text-foreground mb-3">Account Activated!</h1>
+          <h1 className="text-3xl font-black text-foreground mb-3">Account Created!</h1>
           <p className="text-muted-foreground">Redirecting to your dashboard...</p>
         </motion.div>
       </div>
-    );
-  }
-
-  if (step === 'otp') {
-    return (
-      <AuthCard>
-        <OTPStep userId={userId} onSuccess={handleOTPSuccess} onBack={() => setStep('form')} purpose="registration" devOtp={devOtp} />
-      </AuthCard>
     );
   }
 
@@ -98,7 +107,35 @@ export default function Register() {
   const inputClass = "w-full rounded-xl px-4 py-3 pl-10 text-sm text-foreground outline-none transition-all";
 
   return (
-    <AuthCard title="Start Trading" subtitle="Create your Funded Firms account">
+    <AuthCard title="Start Trading" subtitle="Create your account">
+      {/* Google Sign Up */}
+      <motion.button
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+        type="button"
+        onClick={handleGoogleRegister}
+        disabled={googleLoading}
+        className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold text-foreground border border-white/15 hover:border-white/30 hover:bg-white/5 transition-all mb-5 disabled:opacity-50"
+        style={{ background: 'rgba(255,255,255,0.04)' }}
+      >
+        {googleLoading ? (
+          <Loader className="w-4 h-4 animate-spin" />
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.2 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.5 13 17.8 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8C43.8 37.4 46.5 31.4 46.5 24.5z"/>
+            <path fill="#FBBC05" d="M10.5 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.6 10.5l7.9-5.9z"/>
+            <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.7 2.3-7.7 2.3-6.2 0-11.5-4.2-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/>
+          </svg>
+        )}
+        Continue with Google
+      </motion.button>
+
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs text-muted-foreground/50 font-mono uppercase tracking-widest">or</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
       <form onSubmit={handleRegister} className="space-y-4 mb-6">
         <div>
           <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase tracking-wider">Full Name</label>
@@ -157,7 +194,7 @@ export default function Register() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <a href="/login" onClick={(e) => { e.preventDefault(); window.location.href = '/login'; }} className="text-primary font-semibold hover:underline">Sign in</a>
+        <a href="/login" className="text-primary font-semibold hover:underline">Sign in</a>
       </p>
     </AuthCard>
   );

@@ -290,7 +290,6 @@ function getEmailTemplate(type, data) {
             <strong style="color: #FF5C00; font-size: 20px;">$${(data.account_size || 100000).toLocaleString()}</strong> in institutional capital
           </p>
         </div>
-        
         <div class="card">
           <div class="stat-grid">
             <div class="stat-box">
@@ -310,19 +309,166 @@ function getEmailTemplate(type, data) {
               <div class="stat-label">Status</div>
             </div>
           </div>
+          ${data.mt_login ? `
+          <div class="divider"></div>
+          <div style="margin-top: 16px;">
+            <div style="color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Account Credentials</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="stat-box"><div class="stat-value" style="font-size:16px;">${data.mt_login}</div><div class="stat-label">Login ID</div></div>
+              <div class="stat-box"><div class="stat-value" style="font-size:16px;">${data.mt_password || '—'}</div><div class="stat-label">Password</div></div>
+            </div>
+            <div class="stat-box" style="margin-top:12px;"><div class="stat-value" style="font-size:13px;">${data.mt_server || '—'}</div><div class="stat-label">Server</div></div>
+          </div>` : ''}
         </div>
-        
         <div style="text-align: center;">
-          <a href="https://xfundedtrader.com/dashboard/terminal" class="button">Start Trading Now</a>
+          <a href="https://xfundedtrader.com/dashboard" class="button">Access Your Dashboard</a>
         </div>
-        
-        <div class="info-box" style="margin-top: 32px;">
-          <p>🎯 <strong>Your Journey Continues:</strong></p>
-          <p>• Access your funded account credentials</p>
-          <p>• Trade with up to 80% profit split</p>
-          <p>• Request payouts every 14 days</p>
-          <p>• Scale your capital with consistent performance</p>
+      </div>
+    `,
+
+    daily_dd_breach: `
+      <h1>Daily DD Breach</h1>
+      <p class="subtitle">Daily drawdown limit reached</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(239,68,68,0.3); background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04));">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🚨</div>
+            <h2 style="color: #ef4444; font-size: 22px; font-weight: 900;">Daily Drawdown Breached</h2>
+            <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 8px;">Account: <strong style="color:#FF5C00">${data.account_id || 'N/A'}</strong></p>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-value error">${data.daily_dd_used || '0'}%</div><div class="stat-label">DD Used</div></div>
+            <div class="stat-box"><div class="stat-value">5%</div><div class="stat-label">Daily Limit</div></div>
+          </div>
+          <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 20px; text-align: center;">
+            Reason: ${data.breach_reason || 'Daily drawdown limit exceeded'}
+          </p>
         </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/dashboard" class="button">View Dashboard</a></div>
+      </div>
+    `,
+
+    max_dd_breach: `
+      <h1>Account Breached</h1>
+      <p class="subtitle">Maximum drawdown limit reached — account closed</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(239,68,68,0.3); background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04));">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">💔</div>
+            <h2 style="color: #ef4444; font-size: 22px; font-weight: 900;">Challenge Failed</h2>
+            <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 8px;">Account: <strong style="color:#FF5C00">${data.account_id || 'N/A'}</strong> has been automatically closed.</p>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-value error">${data.max_dd_used || '0'}%</div><div class="stat-label">Max DD Used</div></div>
+            <div class="stat-box"><div class="stat-value">10%</div><div class="stat-label">Max Limit</div></div>
+            <div class="stat-box"><div class="stat-value" style="font-size:14px;">$${(data.account_size || 0).toLocaleString()}</div><div class="stat-label">Account Size</div></div>
+            <div class="stat-box"><div class="stat-value error" style="font-size:14px;">Closed</div><div class="stat-label">Status</div></div>
+          </div>
+          <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 20px; text-align: center;">${data.breach_reason || 'Maximum drawdown limit exceeded.'}</p>
+        </div>
+        <div class="info-box">
+          <p>🔄 <strong>What's Next?</strong></p>
+          <p>• Review your trading strategy</p>
+          <p>• Purchase a new challenge to try again</p>
+          <p>• Contact support if you believe this was an error</p>
+        </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/challenges" class="button">Start New Challenge</a></div>
+      </div>
+    `,
+
+    account_breached: `
+      <h1>Account Breached</h1>
+      <p class="subtitle">Your account has been automatically closed</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(239,68,68,0.3); background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04));">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🚫</div>
+            <h2 style="color: #ef4444; font-size: 22px; font-weight: 900;">Challenge Failed</h2>
+            <p style="color: rgba(255,255,255,0.6); margin-top: 8px;">Account <strong style="color:#FF5C00">${data.account_id || ''}</strong> has been closed.</p>
+            <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 8px;">Reason: ${data.breach_reason || 'Drawdown limit exceeded'}</p>
+          </div>
+        </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/challenges" class="button">Start New Challenge</a></div>
+      </div>
+    `,
+
+    withdrawal_otp: `
+      <h1>Withdrawal OTP</h1>
+      <p class="subtitle">Verify your withdrawal request</p>
+      <div class="content">
+        <p style="color: rgba(255,255,255,0.85); font-size: 16px; margin-bottom: 32px;">
+          Hello <strong style="color: #FF5C00;">${data.name || 'Trader'}</strong>,<br>
+          You requested a withdrawal of <strong style="color:#FF5C00;">$${(data.amount || 0).toLocaleString()}</strong>. Enter the code below to confirm.
+        </p>
+        <div class="code-display">
+          <div style="color: rgba(255,255,255,0.6); font-size: 11px; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 12px; position: relative; z-index: 1;">Withdrawal OTP</div>
+          <div class="code-value">${data.code}</div>
+          <div style="color: rgba(255,255,255,0.5); font-size: 13px; position: relative; z-index: 1;">⏱️ Valid for 10 minutes only</div>
+        </div>
+        <div class="info-box">
+          <p>⚠️ <strong>Security Notice:</strong></p>
+          <p>• Never share this code with anyone</p>
+          <p>• XFunded staff will never ask for this code</p>
+          <p>• If you didn't request this withdrawal, contact support immediately</p>
+        </div>
+      </div>
+    `,
+
+    withdrawal_submitted: `
+      <h1>Withdrawal Submitted</h1>
+      <p class="subtitle">Your request is pending review</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(245,158,11,0.25); background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.03));">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <div style="font-size: 36px;">⏳</div>
+            <div>
+              <div style="color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 700;">Withdrawal Pending Review</div>
+              <div style="color: rgba(255,255,255,0.5); font-size: 13px;">Usually processed within 24–48 hours</div>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-value">$${(data.amount || 0).toLocaleString()}</div><div class="stat-label">Amount</div></div>
+            <div class="stat-box"><div class="stat-value warning" style="font-size:14px;">Pending</div><div class="stat-label">Status</div></div>
+          </div>
+          ${data.wallet_address ? `<div class="info-box" style="margin-top:16px;"><p>Destination: <strong>${data.wallet_address}</strong></p></div>` : ''}
+        </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/dashboard" class="button">View Dashboard</a></div>
+      </div>
+    `,
+
+    withdrawal_approved: `
+      <h1>Withdrawal Approved</h1>
+      <p class="subtitle">Your payout has been approved</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04));">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">✅</div>
+            <h2 style="color: #10b981; font-size: 22px; font-weight: 900;">Withdrawal Approved</h2>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-value success">$${(data.amount || 0).toLocaleString()}</div><div class="stat-label">Amount</div></div>
+            <div class="stat-box"><div class="stat-value success" style="font-size:14px;">Approved</div><div class="stat-label">Status</div></div>
+          </div>
+          ${data.transaction_id ? `<div class="info-box" style="margin-top:16px;"><p>Transaction ID: <strong>${data.transaction_id}</strong></p></div>` : ''}
+        </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/dashboard" class="button">View Dashboard</a></div>
+      </div>
+    `,
+
+    withdrawal_rejected: `
+      <h1>Withdrawal Rejected</h1>
+      <p class="subtitle">Your withdrawal request was not approved</p>
+      <div class="content">
+        <div class="card" style="border-color: rgba(239,68,68,0.25); background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04));">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">❌</div>
+            <h2 style="color: #ef4444; font-size: 22px; font-weight: 900;">Withdrawal Rejected</h2>
+          </div>
+          <div class="info-box">
+            <p>Reason: <strong>${data.reason || 'Please contact support for details.'}</strong></p>
+          </div>
+        </div>
+        <div style="text-align: center;"><a href="https://xfundedtrader.com/dashboard" class="button">Contact Support</a></div>
       </div>
     `,
   };
@@ -337,6 +483,13 @@ function getEmailTemplate(type, data) {
     payout_approved: 'Payout Approved',
     phase_passed: 'Achievement Unlocked',
     funded_approval: 'You\'re Funded!',
+    daily_dd_breach: 'Daily DD Breach',
+    max_dd_breach: 'Account Breached',
+    account_breached: 'Challenge Failed',
+    withdrawal_otp: 'Withdrawal OTP',
+    withdrawal_submitted: 'Withdrawal Submitted',
+    withdrawal_approved: 'Withdrawal Approved',
+    withdrawal_rejected: 'Withdrawal Rejected',
   };
 
   return `
@@ -467,6 +620,13 @@ Deno.serve(async (req) => {
         phase_passed: '🏆 Phase Passed - Congratulations!',
         funded_approval: '💼 You\'re Funded!',
         login_alert: '🔐 New Login to Your Account',
+        daily_dd_breach: '⚠️ Daily Drawdown Limit Reached',
+        max_dd_breach: '🚨 Account Breached — Challenge Failed',
+        account_breached: '🚫 Account Closed — Drawdown Breach',
+        withdrawal_otp: '🔐 Withdrawal Verification Code',
+        withdrawal_submitted: '⏳ Withdrawal Request Submitted',
+        withdrawal_approved: '✅ Withdrawal Approved',
+        withdrawal_rejected: '❌ Withdrawal Rejected',
       };
 
       const subject = subjectMap[type] || 'XFunded Trader Notification';

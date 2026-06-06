@@ -1,88 +1,13 @@
 /**
- * fixAdminAuth - Recreate missing auth user for admin account
+ * fixAdminAuth — Creates or updates admin user workmyads@gmail.com
+ * Sets password to Admin@Thai9, full admin role, no OTP required.
+ * Call this once from dashboard: functions > fixAdminAuth > Test
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
-Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const sr = base44.asServiceRole;
-    
-    // Get admin account
-    const accounts = await sr.entities.UserAccount.filter({ email: 'workmyads@gmail.com' });
-    const account = accounts[0];
-    
-    if (!account) {
-      return Response.json({ error: 'Admin account not found' }, { status: 404 });
-    }
-    
-    console.log('Found admin account:', account.id, 'auth_user_id:', account.auth_user_id);
-    
-    // Find and delete any existing auth user with this email
-    const { data: usersData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
-    const existingAuthUser = usersData?.users?.find(u => u.email?.toLowerCase() === 'workmyads@gmail.com');
-    
-    if (existingAuthUser) {
-      await adminSupabase.auth.admin.deleteUser(existingAuthUser.id);
-      console.log('Deleted existing auth user:', existingAuthUser.id);
-    }
-    
-    // Also delete old auth_user_id if different
-    if (account.auth_user_id && account.auth_user_id !== existingAuthUser?.id) {
-      try {
-        await adminSupabase.auth.admin.deleteUser(account.auth_user_id);
-        console.log('Deleted old auth_user_id:', account.auth_user_id);
-      } catch (e) {
-        console.log('Old auth_user_id already deleted:', e.message);
-      }
-    }
-    
-    // Create new auth user
-    const tempPassword = 'Admin@123';
-    const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
-      email: 'workmyads@gmail.com',
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: { 
-        full_name: account.full_name, 
-        username: account.username, 
-        role: account.role,
-      },
-      app_metadata: { role: account.role },
-    });
-    
-    if (createError) {
-      console.error('Failed to create auth user:', createError.message);
-      return Response.json({ error: 'Failed to create auth user: ' + createError.message }, { status: 500 });
-    }
-    
-    // Update UserAccount with new auth_user_id
-    await sr.entities.UserAccount.update(account.id, {
-      auth_user_id: createData.user.id,
-      password_hash: await hashPassword(tempPassword),
-    });
-    
-    console.log('Successfully fixed admin auth. New auth_user_id:', createData.user.id);
-    
-    return Response.json({ 
-      success: true, 
-      message: 'Admin auth fixed successfully',
-      new_auth_user_id: createData.user.id,
-    });
-    
-  } catch (error) {
-    console.error('fixAdminAuth error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-});
 
 async function hashPassword(password, existingSalt = null) {
   const encoder = new TextEncoder();
@@ -95,3 +20,111 @@ async function hashPassword(password, existingSalt = null) {
   const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   return `${saltHex}:${hashHex}`;
 }
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole;
+    const adminSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const ADMIN_EMAIL = 'workmyads@gmail.com';
+    const ADMIN_PASSWORD = 'Admin@Thai9';
+    const ADMIN_FULL_NAME = 'Platform Admin';
+    const ADMIN_USERNAME = 'admin_workmyads';
+
+    const password_hash = await hashPassword(ADMIN_PASSWORD);
+
+    // ── Step 1: Handle Supabase auth user ──────────────────────────
+    const { data: listData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+    const existingAuthUser = listData?.users?.find(u => u.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+
+    let authUserId;
+
+    if (existingAuthUser) {
+      authUserId = existingAuthUser.id;
+      await adminSupabase.auth.admin.updateUserById(authUserId, {
+        password: ADMIN_PASSWORD,
+        email_confirm: true,
+        user_metadata: { full_name: ADMIN_FULL_NAME, username: ADMIN_USERNAME, role: 'admin' },
+        app_metadata: { role: 'admin' },
+      });
+      console.log('Updated existing auth user:', authUserId);
+    } else {
+      const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        email_confirm: true,
+        user_metadata: { full_name: ADMIN_FULL_NAME, username: ADMIN_USERNAME, role: 'admin' },
+        app_metadata: { role: 'admin' },
+      });
+      if (createError) {
+        return Response.json({ error: 'Failed to create auth user: ' + createError.message }, { status: 500 });
+      }
+      authUserId = createData.user.id;
+      console.log('Created new auth user:', authUserId);
+    }
+
+    // ── Step 2: Handle UserAccount entity ──────────────────────────
+    const existingAccounts = await sr.entities.UserAccount.filter({ email: ADMIN_EMAIL.toLowerCase() });
+    const existingAccount = existingAccounts[0];
+
+    if (existingAccount) {
+      await sr.entities.UserAccount.update(existingAccount.id, {
+        full_name: ADMIN_FULL_NAME,
+        username: ADMIN_USERNAME,
+        password_hash,
+        is_verified: true,
+        is_active: true,
+        role: 'admin',
+        login_attempts: 0,
+        locked_until: null,
+        otp_code: null,
+        otp_expires_at: null,
+        otp_type: null,
+        auth_user_id: authUserId,
+      });
+      console.log('Updated UserAccount entity for', ADMIN_EMAIL);
+    } else {
+      await sr.entities.UserAccount.create({
+        email: ADMIN_EMAIL.toLowerCase(),
+        username: ADMIN_USERNAME,
+        full_name: ADMIN_FULL_NAME,
+        password_hash,
+        is_verified: true,
+        is_active: true,
+        role: 'admin',
+        login_attempts: 0,
+        auth_user_id: authUserId,
+      });
+      console.log('Created UserAccount entity for', ADMIN_EMAIL);
+    }
+
+    // ── Step 3: Test sign-in ────────────────────────────────────────
+    const { data: signInData, error: signInError } = await adminSupabase.auth.signInWithPassword({
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD,
+    });
+
+    if (signInError) {
+      return Response.json({
+        warning: 'Account set up but test sign-in failed: ' + signInError.message,
+        authUserId,
+      });
+    }
+
+    return Response.json({
+      success: true,
+      message: 'Admin user created/updated successfully. Login works without OTP.',
+      email: ADMIN_EMAIL,
+      authUserId,
+      role: 'admin',
+      session_valid: !!signInData?.session?.access_token,
+    });
+
+  } catch (error) {
+    console.error('fixAdminAuth error:', error.message);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});

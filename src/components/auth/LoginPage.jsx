@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Loader, AlertCircle, Eye, EyeOff, Shield } from 'lucide-react';
 import XFLogo from '@/components/shared/XFLogo';
 import { callAuth } from '@/lib/customAuth';
-import { signInWithGoogle } from '@/lib/supabaseClient';
-import OTPStep from './OTPStep';
+import { signInWithGoogle, supabase } from '@/lib/supabaseClient';
 import ForgotPassword from './ForgotPassword';
 
 const AuthCard = ({ children }) => (
@@ -36,96 +35,50 @@ const AuthCard = ({ children }) => (
 );
 
 export default function LoginPage() {
-  const [step, setStep] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState(null);
   const [showForgot, setShowForgot] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     await signInWithGoogle();
-    // Page will redirect — no need to setGoogleLoading(false)
+    // Page will redirect
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     const res = await callAuth('login', { email, password });
     setLoading(false);
-    if (res.error) { setError(res.error); return; }
-    setUserId(res.userId);
-    setStep('otp');
-  };
 
-  const handleOTPSuccess = async (res) => {
-    try {
-      console.log('OTP verified successfully:', res);
-      
-      if (!res?.email) {
-        setError('Login verification failed. Please try again.');
-        setStep('login');
-        return;
-      }
-      
-      // Primary method: Use session tokens from supabaseAuthBridge
-      if (res.session?.access_token && res.session?.refresh_token) {
-        console.log('Setting session tokens...');
-        const { supabase } = await import('@/lib/supabaseClient');
-        
-        // Remove existing session first to avoid conflicts
-        await supabase.auth.signOut();
-        
-        const { error } = await supabase.auth.setSession({
-          access_token: res.session.access_token,
-          refresh_token: res.session.refresh_token,
-        });
-        
-        if (error) {
-          console.error('Failed to set session:', error);
-          setError('Session setup failed. Please try again.');
-          setStep('login');
-          return;
-        }
-        
-        // Verify session was set
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.error('Session not persisted after setSession');
-          setError('Session could not be saved. Please try again.');
-          setStep('login');
-          return;
-        }
-        
-        console.log('Session verified, redirecting to dashboard...');
-        window.location.href = '/dashboard';
-        return;
-      }
-      
-      // Fallback should not happen - supabaseAuthBridge always returns session
-      console.error('No session tokens returned from supabaseAuthBridge');
-      setError('Login successful but authentication failed. Please contact support.');
-      setStep('login');
+    if (res.error) {
+      setError(res.error);
       return;
-    } catch (err) {
-      console.error('OTP success handler error:', err);
-      setError(err.message || 'An error occurred. Please try again.');
-      setStep('login');
     }
-  };
 
-  if (step === 'otp') {
-    return (
-      <AuthCard>
-        <OTPStep userId={userId} onSuccess={handleOTPSuccess} onBack={() => setStep('login')} purpose="login" />
-      </AuthCard>
-    );
-  }
+    // Direct session — no OTP step
+    if (res.session?.access_token && res.session?.refresh_token) {
+      await supabase.auth.signOut();
+      const { error: sessionErr } = await supabase.auth.setSession({
+        access_token: res.session.access_token,
+        refresh_token: res.session.refresh_token,
+      });
+      if (sessionErr) {
+        setError('Session setup failed. Please try again.');
+        return;
+      }
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    setError('Login failed. Please try again.');
+  };
 
   if (showForgot) {
     return (
@@ -142,7 +95,7 @@ export default function LoginPage() {
         <p className="text-sm text-muted-foreground">Sign in to your trading account</p>
       </div>
 
-      {/* Google Login Button */}
+      {/* Google Login */}
       <motion.button
         whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
         type="button"
@@ -164,7 +117,6 @@ export default function LoginPage() {
         Continue with Google
       </motion.button>
 
-      {/* Divider */}
       <div className="flex items-center gap-3 mb-5">
         <div className="flex-1 h-px bg-white/10" />
         <span className="text-xs text-muted-foreground/50 font-mono uppercase tracking-widest">or</span>
@@ -216,7 +168,7 @@ export default function LoginPage() {
           type="submit" disabled={loading}
           className="w-full py-3.5 rounded-xl text-sm font-black text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 10px 30px rgba(255,92,0,0.3)' }}>
-          {loading ? <><Loader className="w-4 h-4 animate-spin" /> Signing in...</> : <>Continue <span className="text-lg">→</span></>}
+          {loading ? <><Loader className="w-4 h-4 animate-spin" /> Signing in...</> : <>Sign In <span className="text-lg">→</span></>}
         </motion.button>
       </form>
 

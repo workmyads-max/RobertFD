@@ -1,11 +1,12 @@
 /**
- * supabaseAuthBridge — Public auth endpoint. v2
- * Uses asServiceRole for all operations so no user JWT is needed.
- * This allows unauthenticated users (login/register pages) to call this function.
- * Actions: register, verify_registration, login, verify_login, resend_otp, forgot_password, reset_password_otp
+ * supabaseAuthBridge — v3
+ * REGISTRATION: No OTP. Account created and verified immediately.
+ * LOGIN: No OTP. Session returned directly after password check.
+ * WITHDRAWAL OTP: Handled separately via sendOTP / verifyOTP functions.
+ * FORGOT PASSWORD: OTP still used (password reset only).
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -46,32 +47,23 @@ async function verifyPassword(password, storedHash) {
   return recomputed === storedHash;
 }
 
-async function sendOTPEmail(sr, to, name, code, purpose) {
+async function sendEmailNonBlocking(sr, to, type, data) {
   try {
-    // Use asServiceRole explicitly for emailService
-    await sr.functions.invoke('emailService', {
-      action: 'send_notification',
-      to,
-      type: 'otp',
-      data: { name, code, purpose },
-    });
+    await sr.functions.invoke('emailService', { action: 'send_notification', to, type, data });
   } catch (e) {
-    console.error('OTP email failed:', e.message);
-    // Don't fail registration if email fails - OTP will still work
+    console.error('Email failed (non-blocking):', e.message);
   }
 }
 
 Deno.serve(async (req) => {
   try {
-    // createClientFromRequest is fine — we use asServiceRole for all ops
-    // so no user JWT is required (works for unauthenticated login/register calls)
     const base44 = createClientFromRequest(req);
-    const sr = base44.asServiceRole; // shorthand — all entity/function calls go through service role
+    const sr = base44.asServiceRole;
     const adminSupabase = getAdminClient();
     const body = await req.json();
     const { action } = body;
 
-    // ─── REGISTER ─────────────────────────────────────────────────
+    // ─── REGISTER (no OTP — immediate account creation) ────────────
     if (action === 'register') {
       const { email, username, full_name, password } = body;
       if (!email || !username || !full_name || !password) {
@@ -81,138 +73,113 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       }
 
-      const otp_code = generateOTP();
-      const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      const password_hash = await hashPassword(password);
-
-      // Check username taken
-      const existingUsername = await sr.entities.UserAccount.filter({ username: username.toLowerCase() });
-      if (existingUsername.length > 0) {
-        return Response.json({ error: 'This username is already taken.' }, { status: 409 });
+      // Check registration enabled setting
+      const regSettings = await sr.entities.PlatformSettings.filter({ setting_key: 'registration_enabled' });
+      if (regSettings.length > 0 && regSettings[0].is_enabled === false) {
+        return Response.json({ error: 'Registrations are currently disabled.' }, { status: 403 });
       }
 
-      // Check UserAccount entity for existing email
+      // Check duplicate email
       const existingAccounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
       const existingAccount = existingAccounts[0];
       if (existingAccount && existingAccount.is_verified) {
-        return Response.json({ error: 'This email is already registered.' }, { status: 409 });
+        return Response.json({ error: 'Account already exists with this email.' }, { status: 409 });
       }
 
-      let authUserId;
-      let isNewAccount = false;
+      // Check username taken
+      const existingUsername = await sr.entities.UserAccount.filter({ username: username.toLowerCase() });
+      if (existingUsername.length > 0 && (!existingAccount || existingUsername[0].id !== existingAccount?.id)) {
+        return Response.json({ error: 'This username is already taken.' }, { status: 409 });
+      }
 
-      // Always try fresh creation first - handle 409 by cleaning up and retrying
-      console.log('Attempting to create auth user for:', email.toLowerCase());
+      const password_hash = await hashPassword(password);
+
+      // Create or update Supabase auth user
+      let authUserId;
+
+      // Try to create auth user
       const { data: createData, error: createError } = await adminSupabase.auth.admin.createUser({
         email: email.toLowerCase(),
         password,
-        email_confirm: false,
-        user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+        email_confirm: true, // immediately confirmed — no OTP needed
+        user_metadata: { full_name, username: username.toLowerCase(), role: 'user' },
         app_metadata: { role: 'user' },
       });
 
       if (createError && createError.status === 409) {
-        console.log('Email exists in auth (409), attempting cleanup and retry...');
-        // Email is reserved in Supabase auth - find and delete it
-        const { data: euData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
-        const conflictingUser = euData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
-        
-        if (conflictingUser) {
-          console.log('Found conflicting auth user:', conflictingUser.id);
-          await adminSupabase.auth.admin.deleteUser(conflictingUser.id);
-          console.log('Deleted conflicting user, retrying creation...');
-          
-          // Retry creation
-          const { data: retryData, error: retryError } = await adminSupabase.auth.admin.createUser({
-            email: email.toLowerCase(),
+        // Email already exists in Supabase auth — find it and update
+        const { data: listData } = await adminSupabase.auth.admin.listUsers({ perPage: 1000, page: 1 });
+        const conflictUser = listData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        if (conflictUser) {
+          authUserId = conflictUser.id;
+          await adminSupabase.auth.admin.updateUserById(authUserId, {
             password,
-            email_confirm: false,
-            user_metadata: { full_name, username: username.toLowerCase(), role: 'user', otp_code, otp_expires_at, otp_type: 'registration' },
+            email_confirm: true,
+            user_metadata: { full_name, username: username.toLowerCase(), role: 'user' },
             app_metadata: { role: 'user' },
           });
-          
-          if (retryError) {
-            console.error('Retry createUser failed:', retryError.message);
-            return Response.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
-          }
-          authUserId = retryData.user.id;
-          isNewAccount = true;
         } else {
-          console.error('Could not find conflicting user to delete');
-          return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
+          return Response.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
         }
       } else if (createError) {
         console.error('createUser error:', createError.message);
         return Response.json({ error: 'Registration failed. Please try a different email.' }, { status: 400 });
       } else {
         authUserId = createData.user.id;
-        isNewAccount = true;
       }
 
-      // Delete old unverified record if it exists
+      // Delete old unverified UserAccount entity if exists
       if (existingAccount) {
         await sr.entities.UserAccount.delete(existingAccount.id);
       }
 
-      // Create fresh UserAccount entity
+      // Create fresh UserAccount entity — already verified
       await sr.entities.UserAccount.create({
-        email: email.toLowerCase(), username: username.toLowerCase(), full_name, password_hash,
-        is_verified: false, is_active: true, role: 'user',
-        otp_code, otp_expires_at, otp_type: 'registration',
-        otp_sent_at: new Date().toISOString(), login_attempts: 0,
+        email: email.toLowerCase(),
+        username: username.toLowerCase(),
+        full_name,
+        password_hash,
+        is_verified: true,
+        is_active: true,
+        role: 'user',
+        login_attempts: 0,
         auth_user_id: authUserId,
       });
 
-      await sendOTPEmail(sr, email, full_name, otp_code, 'Email Verification');
-      return Response.json({ success: true, userId: authUserId, message: 'OTP sent to email.' });
-    }
-
-    // ─── VERIFY REGISTRATION OTP ───────────────────────────────────
-    if (action === 'verify_registration') {
-      const { userId, otp } = body;
-
-      const { data: { user: authUser }, error } = await adminSupabase.auth.admin.getUserById(userId);
-      if (error || !authUser) return Response.json({ error: 'Account not found.' }, { status: 404 });
-
-      const meta = authUser.user_metadata || {};
-      if (authUser.email_confirmed_at) return Response.json({ error: 'Account already verified.' }, { status: 400 });
-      if (!meta.otp_code || meta.otp_type !== 'registration') return Response.json({ error: 'Invalid OTP type.' }, { status: 400 });
-      if (new Date() > new Date(meta.otp_expires_at)) return Response.json({ error: 'OTP expired. Request a new one.' }, { status: 400 });
-      if (meta.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
-
-      await adminSupabase.auth.admin.updateUserById(userId, {
-        email_confirm: true,
-        user_metadata: { ...meta, otp_code: null, otp_expires_at: null, otp_type: null },
+      // Sign in immediately to create session
+      const { data: signInData, error: signInError } = await adminSupabase.auth.signInWithPassword({
+        email: email.toLowerCase(),
+        password,
       });
 
-      const accounts = await sr.entities.UserAccount.filter({ email: authUser.email });
-      if (accounts[0]) {
-        await sr.entities.UserAccount.update(accounts[0].id, {
-          is_verified: true, otp_code: null, otp_expires_at: null, otp_type: null,
-        });
+      if (signInError) {
+        console.error('Auto sign-in after register failed:', signInError.message);
+        return Response.json({ error: 'Account created but auto-login failed. Please log in manually.' }, { status: 200 });
       }
 
-      try {
-        await sr.functions.invoke('emailService', {
-          action: 'send_notification', to: authUser.email, type: 'registration',
-          data: { name: meta.full_name, email: authUser.email, role: 'Trader' },
-        });
-      } catch (_) {}
+      // Send welcome email non-blocking
+      sendEmailNonBlocking(sr, email.toLowerCase(), 'registration', {
+        name: full_name, email: email.toLowerCase(), role: 'Trader',
+      });
 
       return Response.json({
         success: true,
-        autoSignIn: true,
+        session: {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        },
         user: {
-          id: authUser.id,
-          email: authUser.email,
-          username: meta.username,
-          full_name: meta.full_name,
-          role: meta.role || 'user',
+          id: authUserId,
+          email: email.toLowerCase(),
+          username: username.toLowerCase(),
+          full_name,
+          role: 'user',
+          is_verified: true,
         },
       });
     }
 
-    // ─── LOGIN ─────────────────────────────────────────────────────
+    // ─── LOGIN (no OTP — session returned directly) ────────────────
     if (action === 'login') {
       const { email, password } = body;
       if (!email || !password) return Response.json({ error: 'Email and password are required.' }, { status: 400 });
@@ -226,6 +193,10 @@ Deno.serve(async (req) => {
         return Response.json({ error: `Account locked. Try again in ${mins} minute(s).` }, { status: 429 });
       }
 
+      if (!account.is_active) {
+        return Response.json({ error: 'Your account has been suspended. Please contact support.' }, { status: 403 });
+      }
+
       const valid = await verifyPassword(password, account.password_hash);
       if (!valid) {
         const attempts = (account.login_attempts || 0) + 1;
@@ -234,101 +205,47 @@ Deno.serve(async (req) => {
         await sr.entities.UserAccount.update(account.id, updates);
         return Response.json({ error: 'Invalid email or password.' }, { status: 401 });
       }
+
+      // Mark verified if not already (handles legacy accounts)
       if (!account.is_verified) {
-        return Response.json({ error: 'Please verify your email first.', needsVerification: true, userId: account.id }, { status: 403 });
+        await sr.entities.UserAccount.update(account.id, { is_verified: true });
       }
 
-      const otp_code = generateOTP();
-      const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await sr.entities.UserAccount.update(account.id, {
-        login_attempts: 0, locked_until: null, otp_code, otp_expires_at, otp_type: 'login', otp_sent_at: new Date().toISOString(),
-      });
-
-      await sendOTPEmail(sr, account.email, account.full_name, otp_code, 'Login Verification');
-      return Response.json({ success: true, userId: account.id, email: account.email, message: 'OTP sent.' });
-    }
-
-    // ─── VERIFY LOGIN OTP ──────────────────────────────────────────
-    if (action === 'verify_login') {
-      const { userId, otp } = body;
-      const ipAddress = req.headers.get('x-forwarded-for') || 'Unknown';
-      const userAgent = req.headers.get('user-agent') || 'Unknown';
-
-      console.log('[STEP 1] verify_login request:', { userId, otp, timestamp: new Date().toISOString() });
-      
-      const accounts = await sr.entities.UserAccount.filter({ id: userId });
-      const account = accounts[0];
-      console.log('[STEP 2] Account lookup result:', { found: !!account, accountEmail: account?.email, otp_type: account?.otp_type, otp_expires: account?.otp_expires_at, otp_code: account?.otp_code });
-      
-      if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
-      if (account.otp_type !== 'login') return Response.json({ error: 'Invalid OTP type. Please log in again.' }, { status: 400 });
-      if (new Date() > new Date(account.otp_expires_at)) return Response.json({ error: 'OTP expired. Please log in again.' }, { status: 400 });
-      if (account.otp_code !== otp) return Response.json({ error: 'Invalid OTP code.' }, { status: 400 });
-      console.log('[STEP 3] OTP verified successfully');
-
+      // Ensure auth user exists and get session
       const authUserId = account.auth_user_id;
-      console.log('[STEP 4] auth_user_id:', authUserId);
-      
       if (!authUserId) {
-        console.error('[ERROR] auth_user_id is null');
         return Response.json({ error: 'Account setup incomplete. Please contact support.' }, { status: 500 });
       }
 
-      // Non-blocking login alert
-      console.log('[STEP 5] Sending login alert email...');
-      sr.functions.invoke('emailService', {
-        action: 'send_notification', to: account.email, type: 'login_alert',
-        data: { name: account.full_name, time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }), ip: ipAddress, device: userAgent.substring(0, 80) },
-      }).catch((e) => console.log('Login alert failed (non-blocking):', e.message));
-
-      // Verify the auth user exists and is confirmed
-      const { data: authUser, error: authUserError } = await adminSupabase.auth.admin.getUserById(authUserId);
-      if (authUserError || !authUser) {
-        console.error('[ERROR STEP 6] Auth user not found:', authUserError);
-        return Response.json({ error: 'Auth user not found.' }, { status: 500 });
-      }
-      
-      console.log('[STEP 7] Auth user verified:', authUser.email);
-
-      // Clear OTP first
-      console.log('[STEP 8] Clearing OTP and updating last_login_at...');
-      await sr.entities.UserAccount.update(account.id, {
-        otp_code: null, otp_expires_at: null, otp_type: null, last_login_at: new Date().toISOString(),
-      });
-      console.log('[STEP 9] OTP cleared successfully');
-
-      // Create a session by updating the user's password and signing in
-      // This is the only reliable way to get session tokens for an existing user
-      const tempPassword = 'TempPass_' + Math.random().toString(36).slice(-8);
-      
-      // Ensure auth user metadata has correct role (especially for admin)
+      // Update password and metadata in Supabase auth, then sign in
+      const tempPassword = 'TempLogin_' + Math.random().toString(36).slice(-10);
       await adminSupabase.auth.admin.updateUserById(authUserId, {
         password: tempPassword,
-        user_metadata: {
-          ...(authUser.user_metadata || {}),
-          role: account.role || 'user',
-          full_name: account.full_name,
-        },
-        app_metadata: {
-          ...(authUser.app_metadata || {}),
-          role: account.role || 'user',
-        },
+        email_confirm: true,
+        user_metadata: { full_name: account.full_name, username: account.username, role: account.role || 'user' },
+        app_metadata: { role: account.role || 'user' },
       });
-      
-      // Now sign in with the temp password
+
       const { data: signInData, error: signInError } = await adminSupabase.auth.signInWithPassword({
         email: account.email,
         password: tempPassword,
       });
-      
+
       if (signInError) {
-        console.error('[ERROR STEP 10] signInWithPassword failed:', signInError.message);
-        return Response.json({ error: 'Failed to create session: ' + signInError.message }, { status: 500 });
+        console.error('signInWithPassword failed:', signInError.message);
+        return Response.json({ error: 'Login failed. Please try again.' }, { status: 500 });
       }
-      
-      console.log('[STEP 11] Session created successfully');
-      
-      console.log('[SUCCESS] Login complete');
+
+      // Reset failed attempts, update last login
+      await sr.entities.UserAccount.update(account.id, {
+        login_attempts: 0,
+        locked_until: null,
+        last_login_at: new Date().toISOString(),
+        otp_code: null,
+        otp_expires_at: null,
+        otp_type: null,
+      });
+
       return Response.json({
         success: true,
         email: account.email,
@@ -348,33 +265,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── RESEND OTP ────────────────────────────────────────────────
-    if (action === 'resend_otp') {
-      const { userId } = body;
-      const accounts = await sr.entities.UserAccount.filter({ id: userId });
-      const account = accounts[0];
-      if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
-      if (account.otp_sent_at && new Date() - new Date(account.otp_sent_at) < 60000) {
-        return Response.json({ error: 'Please wait 60 seconds before requesting another OTP.' }, { status: 429 });
-      }
-      const otp_code = generateOTP();
-      const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await sr.entities.UserAccount.update(account.id, {
-        otp_code, otp_expires_at, otp_sent_at: new Date().toISOString(),
-      });
-      await sendOTPEmail(sr, account.email, account.full_name, otp_code,
-        account.otp_type === 'registration' ? 'Email Verification' : 'Login Verification');
-      return Response.json({ success: true, message: 'New OTP sent.' });
-    }
-
-    // ─── FORGOT PASSWORD ───────────────────────────────────────────
+    // ─── FORGOT PASSWORD (OTP still required for password reset) ───
     if (action === 'forgot_password') {
       const { email } = body;
       if (!email) return Response.json({ error: 'Email is required.' }, { status: 400 });
 
       const accounts = await sr.entities.UserAccount.filter({ email: email.toLowerCase() });
       const account = accounts[0];
-      // Always return success to prevent email enumeration
       if (!account) return Response.json({ success: true, message: 'If this email exists, an OTP has been sent.' });
 
       const otp_code = generateOTP();
@@ -383,7 +280,9 @@ Deno.serve(async (req) => {
         otp_code, otp_expires_at, otp_type: 'password_reset', otp_sent_at: new Date().toISOString(),
       });
 
-      await sendOTPEmail(sr, account.email, account.full_name || 'Trader', otp_code, 'Password Reset');
+      await sendEmailNonBlocking(sr, account.email, 'otp', {
+        name: account.full_name || 'Trader', code: otp_code, purpose: 'Password Reset',
+      });
       return Response.json({ success: true, userId: account.id, message: 'OTP sent to email.' });
     }
 
@@ -406,12 +305,31 @@ Deno.serve(async (req) => {
         login_attempts: 0, locked_until: null,
       });
 
-      // Also update password in Supabase auth so session works
       if (account.auth_user_id) {
         await adminSupabase.auth.admin.updateUserById(account.auth_user_id, { password: newPassword });
       }
 
       return Response.json({ success: true, message: 'Password reset successfully. You can now log in.' });
+    }
+
+    // ─── RESEND OTP (only for password_reset type) ─────────────────
+    if (action === 'resend_otp') {
+      const { userId } = body;
+      const accounts = await sr.entities.UserAccount.filter({ id: userId });
+      const account = accounts[0];
+      if (!account) return Response.json({ error: 'Account not found.' }, { status: 404 });
+      if (account.otp_sent_at && new Date() - new Date(account.otp_sent_at) < 60000) {
+        return Response.json({ error: 'Please wait 60 seconds before requesting another OTP.' }, { status: 429 });
+      }
+      const otp_code = generateOTP();
+      const otp_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await sr.entities.UserAccount.update(account.id, {
+        otp_code, otp_expires_at, otp_sent_at: new Date().toISOString(),
+      });
+      await sendEmailNonBlocking(sr, account.email, 'otp', {
+        name: account.full_name, code: otp_code, purpose: 'Password Reset',
+      });
+      return Response.json({ success: true, message: 'New OTP sent.' });
     }
 
     return Response.json({ error: 'Unknown action.' }, { status: 400 });
