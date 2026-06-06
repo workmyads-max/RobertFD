@@ -230,72 +230,129 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         <AnimatePresence mode="wait">
           <motion.div key={`${challengeType}-${accountType}`}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`grid gap-4 mb-8 ${plans.length <= 3 ? 'md:grid-cols-3' : plans.length <= 4 ? 'md:grid-cols-2 xl:grid-cols-4' : plans.length <= 5 ? 'md:grid-cols-3 xl:grid-cols-5' : 'md:grid-cols-3 xl:grid-cols-6'}`}>
+            className="flex flex-wrap justify-center gap-5 mb-12 items-end">
             {plans.map((plan, i) => {
               const leverage = accountType === 'standard' ? plan.leverage_standard : plan.leverage_swing;
               const isSelected = selected?.id === plan.id;
-              return (
-                <motion.div key={plan.id}
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                  className="relative rounded-2xl overflow-hidden"
-                  style={{
-                    background: plan.is_popular ? 'rgba(20,10,4,0.98)' : 'rgba(14,14,16,0.8)',
-                    border: `1px solid ${isSelected ? 'rgba(204,255,0,0.5)' : plan.is_popular ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: plan.is_popular ? '0 0 30px rgba(255,92,0,0.12)' : isSelected ? '0 0 20px rgba(204,255,0,0.1)' : 'none',
-                  }}>
-                  <div className="h-0.5 w-full" style={{ background: isSelected ? 'linear-gradient(90deg,#CCFF00,#aadd00)' : plan.is_popular ? 'linear-gradient(90deg,#FF5C00,#FF8A3D)' : 'rgba(255,255,255,0.08)' }} />
+              const isPopular = plan.is_popular && !isSelected;
 
-                  {plan.is_popular && !isSelected && (
-                    <div className="absolute top-0 left-0 right-0 flex justify-center">
-                      <div className="px-3 py-0.5 rounded-b-lg text-[10px] font-black text-white"
-                        style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>MOST POPULAR</div>
-                    </div>
+              // Side cards get a slight tilt, popular card floats up
+              const totalPlans = plans.length;
+              const mid = Math.floor(totalPlans / 2);
+              const offset = i - mid;
+              const rotate = isPopular ? 0 : offset * 1.5;
+              const translateY = isPopular ? -16 : 0;
+
+              const rows = [
+                challengeType === 'two-step' && { label: 'P1 Target', value: `${plan.phase1_target}%` },
+                challengeType === 'two-step' && { label: 'P2 Target', value: `${plan.phase2_target}%` },
+                (challengeType === 'instant' || challengeType === 'instant_light') && { label: 'No Target', value: '✓ Direct' },
+                challengeType === 'instant_light' && { label: 'Trailing DD', value: '✓ Active' },
+                { label: 'Max DD', value: `${plan.max_dd}%` },
+                { label: 'Daily DD', value: `${plan.daily_dd}%` },
+                { label: 'Leverage', value: leverage },
+                { label: 'Split', value: `${plan.profit_split}%` },
+              ].filter(Boolean);
+
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 30, rotate: rotate }}
+                  animate={{ opacity: 1, y: translateY, rotate: rotate }}
+                  transition={{ delay: i * 0.06, type: 'spring', duration: 0.5 }}
+                  whileHover={{ scale: 1.04, y: translateY - 6, rotate: 0, transition: { duration: 0.2 } }}
+                  className="relative flex-shrink-0"
+                  style={{ width: isPopular ? 200 : 175, zIndex: isPopular ? 20 : 10 - Math.abs(offset) }}
+                >
+                  {/* Popular badge */}
+                  {isPopular && (
+                    <motion.div
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                      className="absolute -top-5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black text-white z-30 whitespace-nowrap"
+                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.5)' }}>
+                      🔥 MOST POPULAR
+                    </motion.div>
                   )}
 
-                  <div className="p-4 pt-5">
-                    <div className="text-center mb-4">
-                      <div className="text-xl font-black text-foreground mb-0.5">{formatSize(plan.size)}</div>
-                      <div className="text-[10px] font-mono text-muted-foreground mb-2">
-                        {challengeType === 'two-step' ? 'Two-Step' : challengeType === 'instant_light' ? 'Instant Light' : 'Instant'} · {accCfg.label}
-                      </div>
-                      <div className="text-lg font-black text-primary">${plan.price}</div>
-                    </div>
+                  {/* Card */}
+                  <div
+                    className="rounded-2xl overflow-hidden cursor-pointer"
+                    onClick={() => handleSelect(plan)}
+                    style={{
+                      background: isSelected
+                        ? 'linear-gradient(160deg, rgba(204,255,0,0.12), rgba(14,14,16,0.98))'
+                        : isPopular
+                        ? 'linear-gradient(160deg, rgba(255,92,0,0.18), rgba(14,14,16,0.98))'
+                        : 'rgba(14,14,16,0.85)',
+                      border: isSelected
+                        ? '2px solid rgba(204,255,0,0.55)'
+                        : isPopular
+                        ? '2px solid rgba(255,92,0,0.55)'
+                        : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: isSelected
+                        ? '0 0 30px rgba(204,255,0,0.15), 0 8px 32px rgba(0,0,0,0.4)'
+                        : isPopular
+                        ? '0 0 40px rgba(255,92,0,0.2), 0 8px 32px rgba(0,0,0,0.5)'
+                        : '0 4px 24px rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(12px)',
+                    }}
+                  >
+                    {/* Top accent line */}
+                    <div className="h-1 w-full" style={{
+                      background: isSelected
+                        ? 'linear-gradient(90deg,#CCFF00,#aadd00)'
+                        : isPopular
+                        ? 'linear-gradient(90deg,#FF5C00,#FF8A3D)'
+                        : 'rgba(255,255,255,0.08)',
+                    }} />
 
-                    <div className="space-y-1.5 mb-4">
-                      {[
-                        challengeType === 'two-step' && { label: 'P1 Target', value: `${plan.phase1_target}%` },
-                        challengeType === 'two-step' && { label: 'P2 Target', value: `${plan.phase2_target}%` },
-                        (challengeType === 'instant' || challengeType === 'instant_light') && { label: 'No Target', value: '✓ Direct' },
-                        challengeType === 'instant_light' && { label: 'Trailing DD', value: '✓ Active' },
-                        { label: 'Max DD', value: `${plan.max_dd}%` },
-                        { label: 'Daily DD', value: `${plan.daily_dd}%` },
-                        { label: 'Leverage', value: leverage },
-                        { label: 'Split', value: `${plan.profit_split}%` },
-                      ].filter(Boolean).map(({ label, value }) => (
-                        <div key={label} className="flex justify-between text-[11px]">
-                          <span className="text-muted-foreground font-mono">{label}</span>
-                          <span className="text-foreground font-semibold">{value}</span>
+                    <div className={`p-5 ${isPopular ? 'pt-6 pb-6' : 'pt-5 pb-5'}`}>
+                      {/* Size */}
+                      <div className="text-center mb-4">
+                        <div className={`font-black text-foreground mb-0.5 ${isPopular ? 'text-2xl' : 'text-xl'}`}>
+                          {formatSize(plan.size)}
                         </div>
-                      ))}
-                    </div>
+                        <div className="text-[10px] font-mono text-muted-foreground mb-2">
+                          {challengeType === 'two-step' ? 'Two-Step' : challengeType === 'instant_light' ? 'Instant Light' : 'Instant'} · {accCfg.label}
+                        </div>
+                        <div className={`font-black ${isPopular ? 'text-2xl text-primary' : 'text-xl text-primary'}`}>
+                          ${plan.price}
+                        </div>
+                      </div>
 
-                    <button onClick={() => handleSelect(plan)}
-                      className="w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
-                      style={isSelected
-                        ? { background: 'rgba(204,255,0,0.15)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.4)' }
-                        : plan.is_popular
-                        ? { background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', color: 'white', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }
-                        : { background: 'rgba(255,255,255,0.07)', color: 'hsl(var(--foreground))', border: '1px solid rgba(255,255,255,0.12)' }
-                      }>
-                      {isSelected ? '✓ Selected — Loading...' : <>Select <ArrowRight className="w-3 h-3" /></>}
-                    </button>
+                      {/* Divider */}
+                      <div className="h-px mb-3" style={{ background: 'rgba(255,255,255,0.07)' }} />
+
+                      {/* Stats */}
+                      <div className="space-y-1.5 mb-4">
+                        {rows.map(({ label, value }) => (
+                          <div key={label} className="flex justify-between text-[11px]">
+                            <span className="text-muted-foreground font-mono">{label}</span>
+                            <span className="text-foreground font-semibold">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSelect(plan); }}
+                        className="w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                        style={isSelected
+                          ? { background: 'rgba(204,255,0,0.15)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.4)' }
+                          : isPopular
+                          ? { background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', color: 'white', boxShadow: '0 4px 16px rgba(255,92,0,0.35)' }
+                          : { background: 'rgba(255,255,255,0.07)', color: 'hsl(var(--foreground))', border: '1px solid rgba(255,255,255,0.12)' }
+                        }>
+                        {isSelected ? '✓ Selected' : <>Select <ArrowRight className="w-3 h-3" /></>}
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               );
             })}
             {plans.length === 0 && (
-              <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
+              <div className="w-full text-center py-12 text-muted-foreground text-sm">
                 No active plans for this challenge type and account model.
               </div>
             )}
