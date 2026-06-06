@@ -4,6 +4,7 @@ import { ShieldCheck, AlertCircle, Zap, Globe, MessageCircle, Send, ArrowRight }
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import RotatingText from '../shared/RotatingText';
 
 export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
@@ -148,7 +149,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Right: Start New Challenge Button */}
+        {/* Right: Start New Challenge Button with RotatingText */}
         <motion.button
           onClick={onStartChallenge}
           whileHover={{ scale: 1.06, y: -2 }}
@@ -185,7 +186,18 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             }}
           />
 
-          <span className="relative z-10">Start New Challenge</span>
+          <RotatingText
+            texts={['Start Challenge', 'Get Funded', 'Trade Now', 'Join Elite']}
+            mainClassName="relative z-10"
+            staggerFrom="last"
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '-120%', opacity: 0 }}
+            staggerDuration={0.025}
+            splitLevelClassName="overflow-hidden pb-1"
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+            rotationInterval={2500}
+          />
           <motion.div
             animate={{ x: [0, 4, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
