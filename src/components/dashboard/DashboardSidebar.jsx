@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Wallet, Monitor, BarChart3, CalendarDays, Newspaper,
   BookOpen, CreditCard, DollarSign, Award, Users, HeadphonesIcon,
-  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail, Globe
+  Settings, Bell, X, Menu, ChevronRight, Shield, ShoppingBag, Zap, LogOut, ShieldCheck, MessageCircle, Activity, Trash2, Trophy, Cpu, Sliders, AlertTriangle, PanelLeftClose, PanelLeftOpen, Tag, Share2, Mail, Globe, ArrowUpRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -76,21 +76,33 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ background: '#FF7A00' }} />
         </div>
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 relative cursor-pointer overflow-hidden"
+        <div className="w-16 h-16 flex flex-col items-center justify-center flex-shrink-0 relative cursor-pointer overflow-hidden"
           onClick={() => setCollapsed?.(!collapsed)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(255,122,0,0.15), rgba(255,122,0,0.08))',
-            border: '1px solid rgba(255,122,0,0.4)',
-            boxShadow: '0 4px 20px rgba(255,122,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
-          }}>
-          <span className="text-white font-black text-xl tracking-tight" style={{ textShadow: '0 0 20px rgba(255,122,0,0.5)' }}>XFT</span>
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <div className="flex items-baseline gap-0">
+            <span className="font-black text-2xl tracking-tight" style={{
+              background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>XFT</span>
+          </div>
+          <ArrowUpRight className="w-4 h-4 -mt-1" style={{
+            background: 'linear-gradient(90deg, #FF5C00 0%, #CCFF00 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }} />
         </div>
         {!collapsed && (
           <>
             <div className="flex flex-col leading-none relative z-10">
-              <span className="text-white font-black text-lg tracking-tight" style={{ textShadow: '0 0 20px rgba(255,122,0,0.3)' }}>XFT</span>
-              <span className="font-bold text-[9px] tracking-[0.2em]" style={{ color: '#FF7A00', marginTop: '2px' }}>TRADER</span>
+              <span className="font-black text-lg tracking-tight" style={{
+                background: 'linear-gradient(90deg, #FF5C00 0%, #FF9A3D 25%, #CCFF00 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>XFT</span>
             </div>
             <div className="ml-auto flex items-center gap-1 flex-shrink-0">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00f5a0' }} />
