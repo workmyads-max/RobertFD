@@ -5,10 +5,10 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 export default function AdminDashboard() {
-  const { data: orders = [] } = useQuery({ queryKey: ['admin-orders'], queryFn: () => base44.entities.Order.list('-created_date', 100) });
-  const { data: accounts = [] } = useQuery({ queryKey: ['admin-accounts'], queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100) });
-  const { data: withdrawals = [] } = useQuery({ queryKey: ['admin-withdrawals'], queryFn: () => base44.entities.WithdrawalRequest.list('-created_date', 100) });
-  const { data: tickets = [] } = useQuery({ queryKey: ['admin-tickets'], queryFn: () => base44.entities.SupportTicket.list('-created_date', 100) });
+  const { data: orders = [] } = useQuery({ queryKey: ['admin-orders'], queryFn: () => base44.entities.Order.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
+  const { data: accounts = [] } = useQuery({ queryKey: ['admin-accounts'], queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
+  const { data: withdrawals = [] } = useQuery({ queryKey: ['admin-withdrawals'], queryFn: () => base44.entities.WithdrawalRequest.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
+  const { data: tickets = [] } = useQuery({ queryKey: ['admin-tickets'], queryFn: () => base44.entities.SupportTicket.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
 
   const totalRevenue = orders.filter(o => o.payment_status === 'confirmed').reduce((s, o) => s + (o.price || 0), 0);
   const pendingOrders = orders.filter(o => o.payment_status === 'pending' || o.payment_status === 'awaiting_confirmation');

@@ -30,9 +30,25 @@ Deno.serve(async (req) => {
     const results = [];
     const analysisTime = new Date().toISOString();
 
+    // Bulk-fetch ALL trades and flags once — eliminates N+1 (200 queries → 2 queries)
+    const [allTrades, allFlags] = await Promise.all([
+      sr.entities.TradeRecord.list('-created_date', 5000),
+      sr.entities.RiskFlag.filter({ status: 'active' }),
+    ]);
+    const tradesByAccount = {};
+    for (const t of allTrades) {
+      if (!tradesByAccount[t.account_id]) tradesByAccount[t.account_id] = [];
+      tradesByAccount[t.account_id].push(t);
+    }
+    const flagsByAccount = {};
+    for (const f of allFlags) {
+      if (!flagsByAccount[f.account_id]) flagsByAccount[f.account_id] = [];
+      flagsByAccount[f.account_id].push(f);
+    }
+
     for (const account of accounts) {
       try {
-        const trades = await sr.entities.TradeRecord.filter({ account_id: account.account_id });
+        const trades = tradesByAccount[account.account_id] || [];
         const closedTrades = trades.filter(t => t.status === 'closed');
         const openTrades = trades.filter(t => t.status === 'open');
 
@@ -193,7 +209,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ── CREATE RISK FLAGS — parallel duplicate checks (eliminates inner N+1) ─
+        // ── CREATE RISK FLAGS — use pre-fetched flags map ─────────────────────────
         const existingFlagsList = flagsByAccount[account.account_id] || [];
         const existingFlagTypes = new Set(existingFlagsList.map(f => f.flag_type));
 

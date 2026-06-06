@@ -23,9 +23,13 @@ Deno.serve(async (req) => {
     const utcHour = now.getUTCHours();
     const utcMinute = now.getUTCMinutes();
 
-    // Fetch all active challenge accounts
-    const allAccounts = await sr.entities.ChallengeAccount.list('-created_date', 500);
-    const activeAccounts = allAccounts.filter(a => ['active', 'passed', 'funded'].includes(a.status));
+    // Fetch only active/passed/funded accounts directly — avoids loading full 500-record list
+    const [active, passed, funded] = await Promise.all([
+      sr.entities.ChallengeAccount.filter({ status: 'active' }),
+      sr.entities.ChallengeAccount.filter({ status: 'passed' }),
+      sr.entities.ChallengeAccount.filter({ status: 'funded' }),
+    ]);
+    const activeAccounts = [...active, ...passed, ...funded];
 
     const breached = [];
     const dailyResets = [];

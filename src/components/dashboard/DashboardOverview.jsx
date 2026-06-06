@@ -47,7 +47,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 30000, // 30 sec - data already synced on load
+    refetchInterval: 5 * 60 * 1000, // 5 min — MT sync updates data server-side
   });
 
   const { data: pendingOrders = [] } = useQuery({

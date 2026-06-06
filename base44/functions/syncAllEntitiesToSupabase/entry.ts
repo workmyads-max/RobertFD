@@ -555,8 +555,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3. Sync Affiliate Profiles
-    const affiliates = await base44.asServiceRole.entities.AffiliateProfile.list();
+    // 3. Sync Affiliate Profiles (reuse allAffiliates already fetched above)
+    const affiliates = allAffiliates;
     stats.affiliate_profiles.total = affiliates.length;
     for (const affiliate of affiliates) {
       try {
@@ -598,8 +598,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Sync Affiliate Commissions
-    const commissions = await base44.asServiceRole.entities.AffiliateCommission.list();
+    // 4. Sync Affiliate Commissions (fetched once at top)
+    const allCommissions = await base44.asServiceRole.entities.AffiliateCommission.list();
+    const commissions = allCommissions;
     stats.affiliate_commissions.total = commissions.length;
     for (const commission of commissions) {
       try {

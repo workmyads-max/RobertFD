@@ -8,13 +8,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    
-    // Only admins can trigger this
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized - Admin only' }, { status: 403 });
-    }
-
+    const sr = base44.asServiceRole;
     const now = new Date();
     const utcDay = now.getUTCDay();
     const utcHour = now.getUTCHours();
@@ -35,9 +29,9 @@ Deno.serve(async (req) => {
     }
 
     // Get all active Standard accounts (not Swing)
-    const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ 
+    const accounts = await sr.entities.ChallengeAccount.filter({ 
       status: 'active',
-      account_type: 'standard' // Only Standard accounts, Swing can hold weekend
+      account_type: 'standard'
     });
 
     const results = [];
@@ -46,7 +40,7 @@ Deno.serve(async (req) => {
     for (const account of accounts) {
       try {
         // Get open positions for this account
-        const positions = await base44.asServiceRole.entities.TradeRecord.filter({
+        const positions = await sr.entities.TradeRecord.filter({
           account_id: account.account_id,
           status: 'open'
         });
@@ -65,7 +59,7 @@ Deno.serve(async (req) => {
         for (const position of positions) {
           try {
             // Update position status to closed
-            await base44.asServiceRole.entities.TradeRecord.update(position.id, {
+            await sr.entities.TradeRecord.update(position.id, {
               status: 'closed',
               close_time: now.toISOString(),
               close_reason: 'weekend_close_auto',
@@ -95,7 +89,7 @@ Deno.serve(async (req) => {
 
         // Send notification email to user
         try {
-          await base44.functions.invoke('emailService', {
+          await sr.functions.invoke('emailService', {
             action: 'send_notification',
             to: account.user_email,
             type: 'weekend_close',

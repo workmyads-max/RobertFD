@@ -36,13 +36,17 @@ Deno.serve(async (req) => {
 
     const violations = [];
 
+    // Bulk-fetch all trades once — eliminates N+1 (200 queries → 1 query)
+    const allTradesBulk = await base44.asServiceRole.entities.TradeRecord.list('-created_date', 5000);
+    const tradesByAcct = {};
+    for (const t of allTradesBulk) {
+      if (!tradesByAcct[t.account_id]) tradesByAcct[t.account_id] = [];
+      tradesByAcct[t.account_id].push(t);
+    }
+
     for (const account of accounts) {
       try {
-        // Get all trades in time window
-        const allTrades = await base44.asServiceRole.entities.TradeRecord.filter({
-          account_id: account.account_id
-        });
-
+        const allTrades = tradesByAcct[account.account_id] || [];
         const recentTrades = allTrades.filter(t => {
           const tradeTime = new Date(t.open_time);
           return tradeTime >= timeThreshold;
@@ -92,25 +96,21 @@ Deno.serve(async (req) => {
         const repetitiveRatio = repetitiveCount / (recentTrades.length - 1);
         const isRepetitive = repetitiveRatio > 0.5; // More than 50% are repetitive
 
-        // === ARBITRAGE DETECTION ===
-        // 1. Opposite positions on same symbol within short time
+        // === ARBITRAGE DETECTION — O(n) sliding window instead of O(n²) ===
+        // Group by symbol, then check consecutive opposite trades within 60s
         let arbitrageCount = 0;
-        for (let i = 0; i < sortedTrades.length; i++) {
-          for (let j = i + 1; j < sortedTrades.length; j++) {
-            const t1 = sortedTrades[i];
-            const t2 = sortedTrades[j];
-            
-            if (!t1.open_time || !t2.open_time) continue;
-            
-            const timeDiff = (new Date(t2.open_time) - new Date(t1.open_time)) / 1000; // seconds
-            const sameSymbol = t1.symbol === t2.symbol;
-            const oppositeType = t1.type !== t2.type;
-            const withinMinute = timeDiff < 60;
-            
-            if (sameSymbol && oppositeType && withinMinute) {
-              arbitrageCount++;
-              break; // Count once per pair
-            }
+        const bySymbol = {};
+        for (const t of sortedTrades) {
+          if (!t.open_time || !t.symbol) continue;
+          if (!bySymbol[t.symbol]) bySymbol[t.symbol] = [];
+          bySymbol[t.symbol].push(t);
+        }
+        for (const symTrades of Object.values(bySymbol)) {
+          for (let i = 1; i < symTrades.length; i++) {
+            const prev = symTrades[i - 1];
+            const curr = symTrades[i];
+            const timeDiff = (new Date(curr.open_time) - new Date(prev.open_time)) / 1000;
+            if (timeDiff < 60 && prev.type !== curr.type) arbitrageCount++;
           }
         }
         const isArbitrage = arbitrageCount > 5; // More than 5 arbitrage-like pairs
