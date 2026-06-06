@@ -300,7 +300,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-email-logs', label: 'Email Logs', icon: Mail, permission: 'manage_audit_logs' },
               { id: 'admin-staff', label: 'Staff Management', icon: Users, permission: 'manage_staff' },
               { id: 'admin-roles', label: 'Roles & Permissions', icon: Shield, permission: 'manage_staff' },
-            ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
+              { id: 'admin-promotions', label: 'Promotions', icon: Tag, permission: 'manage_settings' },
+              ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (

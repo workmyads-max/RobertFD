@@ -19,6 +19,21 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   });
   const social = socialSettings[0] || {};
 
+  // Fetch active promotions
+  const { data: promotions = [] } = useQuery({
+    queryKey: ['promotions'],
+    queryFn: async () => {
+      const all = await base44.entities.Promotion.filter({ is_active: true });
+      const now = new Date();
+      return all.filter(p => {
+        if (p.start_date && new Date(p.start_date) > now) return false;
+        if (p.end_date && new Date(p.end_date) < now) return false;
+        return true;
+      }).sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0));
+    },
+  });
+  const activePromotion = promotions[0];
+
   const [time, setTime] = useState(new Date());
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
@@ -184,46 +199,52 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
     </motion.div>
 
     {/* Professional Promotion Banner */}
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-      className="relative rounded-xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,122,0,0.08) 0%, rgba(255,122,0,0.04) 100%)',
-        border: '1px solid rgba(255,122,0,0.25)',
-        backdropFilter: 'blur(20px)',
-      }}
-    >
-      {/* Accent glow line */}
-      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,122,0,0.8), transparent)' }} />
-      
-      {/* Background gradient orb */}
-      <div className="absolute right-0 top-0 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,122,0,0.05) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
-      
-      <div className="relative z-10 px-6 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="text-[11px] md:text-xs font-mono text-white/40 uppercase tracking-[0.15em] mb-1.5">🎯 LIMITED OFFER</div>
-          <h3 className="text-lg md:text-xl font-black text-white mb-1">
-            Get <span style={{ color: '#FF7A00' }}>30% off</span> on your next challenge
-          </h3>
-          <p className="text-sm md:text-base text-white/60">Complete your KYC verification and unlock exclusive rewards. Offer valid for the next 7 days.</p>
-        </div>
+    {activePromotion && (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,122,0,0.08) 0%, rgba(255,122,0,0.04) 100%)',
+          border: '1px solid rgba(255,122,0,0.25)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
+        {/* Accent glow line */}
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,122,0,0.8), transparent)' }} />
         
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="relative px-6 md:px-8 py-2.5 md:py-3 rounded-lg font-bold text-white text-sm md:text-base whitespace-nowrap flex-shrink-0 overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,122,0,0.3), rgba(255,122,0,0.1))',
-            border: '1px solid rgba(255,122,0,0.4)',
-            boxShadow: '0 4px 16px rgba(255,122,0,0.2)',
-          }}
-        >
-          <span className="relative z-10">Learn More</span>
-        </motion.button>
-      </div>
-    </motion.div>
+        {/* Background gradient orb */}
+        <div className="absolute right-0 top-0 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,122,0,0.05) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+        
+        <div className="relative z-10 px-6 md:px-8 py-5 md:py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="text-[11px] md:text-xs font-mono text-white/40 uppercase tracking-[0.15em] mb-1.5">{activePromotion.tag || '🎯 OFFER'}</div>
+            <h3 className="text-lg md:text-xl font-black text-white mb-1">
+              {activePromotion.title}
+              {activePromotion.discount_percent > 0 && (
+                <span style={{ color: '#FF7A00' }}> {activePromotion.discount_percent}%</span>
+              )}
+            </h3>
+            <p className="text-sm md:text-base text-white/60">{activePromotion.description}</p>
+          </div>
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => activePromotion.cta_url && window.open(activePromotion.cta_url)}
+            className="relative px-6 md:px-8 py-2.5 md:py-3 rounded-lg font-bold text-white text-sm md:text-base whitespace-nowrap flex-shrink-0 overflow-hidden cursor-pointer"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,122,0,0.3), rgba(255,122,0,0.1))',
+              border: '1px solid rgba(255,122,0,0.4)',
+              boxShadow: '0 4px 16px rgba(255,122,0,0.2)',
+            }}
+          >
+            <span className="relative z-10">{activePromotion.cta_text || 'Learn More'}</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    )}
     </div>
   );
 }
