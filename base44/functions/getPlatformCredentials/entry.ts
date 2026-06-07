@@ -1,7 +1,7 @@
 /**
- * getPlatformCredentials — Retrieve MT5/TradeLocker API credentials from database
- * Called by other backend functions to get the stored credentials.
- * Falls back to env vars for backward compatibility.
+ * getPlatformCredentials — Retrieve MT5/TradeLocker API credentials from database.
+ * Called by all backend functions — single source of truth for platform credentials.
+ * Falls back to env vars only if no DB record exists.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'platform required' }, { status: 400 });
     }
 
-    // Try to fetch from database first
+    // Try database first
     const providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({
       platform_name: platform,
       is_active: true,
@@ -30,21 +30,23 @@ Deno.serve(async (req) => {
         api_key: provider.api_key,
         api_secret: provider.api_secret,
         server_url: provider.server_url,
+        server_name: provider.server_name || null,
         demo_api_key: provider.demo_api_key,
         demo_api_secret: provider.demo_api_secret,
         demo_server_url: provider.demo_server_url,
       });
     }
 
-    // Fallback to environment variables for backward compatibility
+    // Fallback to environment variables
     console.log(`ℹ️ No database credentials found for ${platform}. Trying environment variables...`);
-    
-    let api_key, api_secret, server_url, demo_api_key, demo_api_secret, demo_server_url;
+
+    let api_key, api_secret, server_url, server_name, demo_api_key, demo_api_secret, demo_server_url;
 
     if (platform === 'mt5') {
       api_key = Deno.env.get('MT5_API_KEY');
       api_secret = Deno.env.get('MT5_API_SECRET');
       server_url = Deno.env.get('MT5_API_BASE_URL');
+      server_name = Deno.env.get('MT5_SERVER_NAME');
       demo_api_key = Deno.env.get('MT5_DEMO_API_KEY');
       demo_api_secret = Deno.env.get('MT5_DEMO_API_SECRET');
       demo_server_url = Deno.env.get('MT5_DEMO_API_BASE_URL');
@@ -52,6 +54,7 @@ Deno.serve(async (req) => {
       api_key = Deno.env.get('TRADELOCKER_API_KEY');
       api_secret = Deno.env.get('TRADELOCKER_API_SECRET');
       server_url = Deno.env.get('TRADELOCKER_API_BASE_URL');
+      server_name = Deno.env.get('TRADELOCKER_SERVER_NAME');
       demo_api_key = Deno.env.get('TRADELOCKER_DEMO_API_KEY');
       demo_api_secret = Deno.env.get('TRADELOCKER_DEMO_API_SECRET');
       demo_server_url = Deno.env.get('TRADELOCKER_DEMO_API_BASE_URL');
@@ -61,7 +64,7 @@ Deno.serve(async (req) => {
       console.error(`❌ No credentials found for ${platform}`);
       return Response.json({
         success: false,
-        error: `No ${platform.toUpperCase()} credentials configured. Add them in Admin > Platform Settings.`,
+        error: `No ${platform.toUpperCase()} credentials configured. Add them in Admin > Platforms API.`,
       }, { status: 500 });
     }
 
@@ -72,6 +75,7 @@ Deno.serve(async (req) => {
       api_key,
       api_secret,
       server_url,
+      server_name,
       demo_api_key,
       demo_api_secret,
       demo_server_url,

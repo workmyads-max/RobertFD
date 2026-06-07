@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
-    const { api_key, server_url } = credRes.data;
+    const { api_key, server_url, server_name } = credRes.data;
     const apiBase = server_url || (platform === 'mt5' 
       ? Deno.env.get('MT5_API_BASE_URL') 
       : Deno.env.get('MATCH_TRADER_BASE_URL') || 'https://broker-api-demo.match-trader.com');
@@ -110,8 +110,8 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'MT API did not return a login ID', details: mtAccount }, { status: 502 });
     }
 
-    const mtServer = platform === 'mt5' 
-      ? (Deno.env.get('MT5_SERVER_NAME') || 'mt5-live.server.com') 
+    const mtServer = platform === 'mt5'
+      ? (server_name || Deno.env.get('MT5_SERVER_NAME') || 'mt5-live.server.com')
       : 'broker-api-demo.match-trader.com';
 
     // Step 2: Update ChallengeAccount in CRM with REAL credentials

@@ -227,7 +227,8 @@ export default function AdminPlatformSettings() {
           {[
             { label: 'API Key', key: 'api_key', secret: true },
             { label: 'API Secret', key: 'api_secret', secret: true },
-            { label: 'Server URL', key: 'server_url', placeholder: 'https://api.example.com' },
+            { label: 'Server URL', key: 'server_url', placeholder: 'https://api.yourprovider.com' },
+            { label: 'MT5 Server Name', key: 'server_name', placeholder: 'YourBroker-Live' },
             { label: 'Demo API Key', key: 'demo_api_key', secret: true },
             { label: 'Demo API Secret', key: 'demo_api_secret', secret: true },
             { label: 'Demo Server URL', key: 'demo_server_url', placeholder: 'https://demo-api.example.com' },

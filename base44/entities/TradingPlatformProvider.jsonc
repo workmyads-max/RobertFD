@@ -20,7 +20,11 @@
     },
     "server_url": {
       "type": "string",
-      "description": "Platform server URL"
+      "description": "Platform REST API base URL e.g. https://api.yourprovider.com"
+    },
+    "server_name": {
+      "type": "string",
+      "description": "MT5 trader-facing server name e.g. YourBroker-Live \u2014 shown to traders in credentials"
     },
     "is_active": {
       "type": "boolean",

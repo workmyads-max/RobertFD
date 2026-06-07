@@ -99,6 +99,36 @@ Deno.serve(async (req) => {
         if (breachReason) {
           const breachNow = new Date().toISOString();
 
+          // ── BROKER-SIDE DISABLE — non-blocking ──────────────────────────────
+          if (account.platform === 'mt5' && account.mt_login) {
+            (async () => {
+              try {
+                const credRes = await sr.functions.invoke('getPlatformCredentials', { platform: 'mt5' });
+                if (credRes.data?.success) {
+                  const { api_key, server_url } = credRes.data;
+                  const headers = {
+                    'Content-Type': 'application/json',
+                    'api-key': api_key,
+                    'Authorization': `Bearer ${api_key}`,
+                  };
+                  const res1 = await fetch(`${server_url}/accounts/${account.mt_login}/disable`, {
+                    method: 'PUT', headers,
+                    body: JSON.stringify({ reason: breachReason }),
+                  });
+                  if (!res1.ok) {
+                    await fetch(`${server_url}/accounts/${account.mt_login}`, {
+                      method: 'PUT', headers,
+                      body: JSON.stringify({ enabled: false, readonly: true, reason: breachReason }),
+                    });
+                  }
+                  console.log(`[MT5-DISABLE] Account ${account.mt_login} disabled at broker`);
+                }
+              } catch (e) {
+                console.error(`[MT5-DISABLE] Failed for ${account.mt_login}:`, e.message);
+              }
+            })();
+          }
+
           // Write status + permanent breach flags — never overwrite existing breach data
           await sr.entities.ChallengeAccount.update(account.id, {
             status: 'failed',

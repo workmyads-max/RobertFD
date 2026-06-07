@@ -175,6 +175,28 @@ Deno.serve(async (req) => {
           if (breachDetected && acc.status !== 'failed') {
             updates.status = 'failed';
             console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
+
+            // ── BROKER-SIDE DISABLE — non-blocking ─────────────────────────────
+            if (acc.platform === 'mt5' && acc.mt_login) {
+              const disableReason = `DD breach: ${breachType} at ${breachValue?.toFixed(2)}%`;
+              (async () => {
+                try {
+                  const res1 = await fetch(`${apiBase}/accounts/${acc.mt_login}/disable`, {
+                    method: 'PUT', headers,
+                    body: JSON.stringify({ reason: disableReason }),
+                  });
+                  if (!res1.ok) {
+                    await fetch(`${apiBase}/accounts/${acc.mt_login}`, {
+                      method: 'PUT', headers,
+                      body: JSON.stringify({ enabled: false, readonly: true, reason: disableReason }),
+                    });
+                  }
+                  console.log(`[MT5-DISABLE] Account ${acc.mt_login} disabled at broker`);
+                } catch (e) {
+                  console.error(`[MT5-DISABLE] Failed for ${acc.mt_login}:`, e.message);
+                }
+              })();
+            }
           }
 
           await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, updates);
