@@ -109,9 +109,13 @@ Deno.serve(async (req) => {
         try {
           await base44.functions.invoke('provisionMatchTraderAccount', {
             account_id: order.account_id || order.order_id,
+            order_id: order.order_id,
             user_email: order.email,
             challenge_type: order.challenge_type,
+            account_type: order.account_type || 'standard',
             account_size: order.account_size,
+            leverage: order.leverage || '1:100',
+            platform: order.platform || 'mt5',
           });
         } catch (e) { console.error('[Checkout.com] Provisioning failed (non-blocking):', e.message); }
 
