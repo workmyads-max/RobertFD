@@ -228,6 +228,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                   { label: 'Request Payout', icon: DollarSign, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'withdrawals' },
                   { label: 'View Analytics', icon: BarChart3, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'analytics' },
                   { label: 'Trading Journal', icon: Activity, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'journal' },
+                  { label: 'Buy Challenge', icon: Plus, color: '#FF5C00', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)', page: 'challenge' },
                   { label: 'Economic Calendar', icon: Target, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'calendar' },
                 ].map((a, idx) => {
                   const Icon = a.icon;
