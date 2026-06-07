@@ -1,164 +1,178 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, Zap, Shield, Lightbulb } from 'lucide-react';
+import { ChevronDown, ChevronUp, Zap, Shield, Lightbulb, Check } from 'lucide-react';
+
+function formatSize(n) {
+  if (n >= 1000000) return `$${n / 1000000}M`;
+  if (n >= 1000) return `$${n / 1000}K`;
+  return `$${n}`;
+}
 
 export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
   const [showRules, setShowRules] = useState(false);
 
-  const getIcon = () => {
-    switch (plan.type) {
-      case 'two-step':
-        return <Shield className="w-6 h-6" />;
-      case 'instant':
-        return <Zap className="w-6 h-6" />;
-      case 'instant_light':
-        return <Lightbulb className="w-6 h-6" />;
-      default:
-        return <Zap className="w-6 h-6" />;
-    }
-  };
+  const isPopular = !!plan.is_popular;
+  const isLight = plan.type === 'instant_light';
 
-  const getBorderColor = () => {
-    switch (plan.type) {
-      case 'two-step':
-        return 'border-orange-500/30 hover:border-orange-500/50';
-      case 'instant':
-        return 'border-orange-500/30 hover:border-orange-500/50';
-      case 'instant_light':
-        return 'border-accent/30 hover:border-accent/50';
-      default:
-        return 'border-border hover:border-primary/50';
-    }
-  };
+  const accentColor = isLight ? '#CCFF00' : '#FF5C00';
+  const accentMuted = isLight ? 'rgba(204,255,0,0.12)' : 'rgba(255,92,0,0.1)';
+  const accentBorder = isLight ? 'rgba(204,255,0,0.25)' : 'rgba(255,92,0,0.22)';
 
-  const getAccentColor = () => {
-    switch (plan.type) {
-      case 'two-step':
-      case 'instant':
-        return 'text-orange-400';
-      case 'instant_light':
-        return 'text-accent';
-      default:
-        return 'text-primary';
-    }
-  };
-
-  const buttonColor = plan.type === 'instant_light' ? 'bg-accent hover:bg-accent/90' : 'bg-orange-500 hover:bg-orange-600';
-  const buttonTextColor = plan.type === 'instant_light' ? 'text-black' : 'text-white';
+  const metrics = [];
+  if (plan.type === 'two-step') {
+    metrics.push({ label: 'Phase 1', value: `${plan.phase1_target}%` });
+    metrics.push({ label: 'Phase 2', value: `${plan.phase2_target}%` });
+  } else {
+    metrics.push({ label: 'Target', value: `${plan.phase1_target}%` });
+  }
+  metrics.push({ label: 'Daily DD', value: `${plan.daily_dd}%` });
+  metrics.push({ label: 'Max DD', value: `${plan.max_dd}%` });
+  metrics.push({ label: 'Leverage', value: plan.account_type === 'swing' ? plan.leverage_swing : plan.leverage_standard });
+  metrics.push({ label: 'Payouts', value: plan.type === 'instant' || isLight ? 'Daily' : 'On Pass' });
+  metrics.push({ label: 'Split', value: `${plan.profit_split}%` });
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className={`relative rounded-2xl border ${getBorderColor()} bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-4 sm:p-5 md:p-6 transition-all duration-300 overflow-hidden group`}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+      className="relative flex flex-col rounded-2xl overflow-hidden"
+      style={{
+        background: isPopular
+          ? 'linear-gradient(160deg, rgba(28,18,10,0.98) 0%, rgba(22,14,8,0.99) 100%)'
+          : 'rgba(255,255,255,0.03)',
+        border: isPopular
+          ? `1px solid rgba(255,92,0,0.3)`
+          : '1px solid rgba(255,255,255,0.07)',
+        boxShadow: isPopular
+          ? '0 0 0 1px rgba(255,92,0,0.08) inset, 0 8px 32px rgba(0,0,0,0.3)'
+          : '0 2px 12px rgba(0,0,0,0.2)',
+      }}
     >
-      {/* Background glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-primary transition-opacity" />
+      {/* Popular top accent line */}
+      {isPopular && (
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,92,0,0.7) 30%, rgba(255,92,0,0.7) 70%, transparent 100%)' }} />
+      )}
 
       {/* Badge */}
       {badge && (
-        <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-white ${badgeColor}`}>
-          {badge}
+        <div className="absolute top-4 right-4 z-10">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold"
+            style={{
+              background: isPopular ? 'rgba(255,92,0,0.18)' : 'rgba(204,255,0,0.12)',
+              border: isPopular ? '1px solid rgba(255,92,0,0.35)' : '1px solid rgba(204,255,0,0.25)',
+              color: isPopular ? '#FF7A2F' : '#CCFF00',
+            }}>
+            {isPopular ? '★ Popular' : '50% OFF'}
+          </span>
         </div>
       )}
 
-      {/* Icon */}
-      <div className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg mb-3 sm:mb-4 ${getAccentColor()} opacity-75`}>
-        {getIcon()}
-      </div>
+      <div className="flex flex-col flex-1 p-5 sm:p-6">
 
-      {/* Label & Title */}
-      <div className="mb-3 sm:mb-4">
-        <div className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
-          {plan.type === 'two-step' ? 'Evaluation Phase' : plan.type === 'instant' ? 'No Evaluation' : 'Most Affordable'}
+        {/* Type label */}
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] mb-4"
+          style={{ color: 'rgba(255,255,255,0.3)' }}>
+          {plan.type === 'two-step' ? 'Two-Step Evaluation' : plan.type === 'instant' ? 'Instant Funding' : 'Instant Light'}
         </div>
-        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-foreground">{plan.name}</h3>
-      </div>
 
-      {/* Description */}
-      <p className="text-[11px] sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-        {plan.type === 'two-step'
-          ? 'Prove your skills through a structured 2-phase evaluation. Built for disciplined traders.'
-          : plan.type === 'instant'
-          ? 'Skip evaluation entirely. Get funded capital the same day and request payouts daily.'
-          : 'Most affordable path to funding. Trading drawdown protection moves your safety floor up.'}
-      </p>
-
-      {/* Metrics Grid */}
-      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-        {plan.type === 'two-step' && (
-          <>
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 1 Target</span>
-              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 2 Target</span>
-              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase2_target}%</span>
-            </div>
-          </>
-        )}
-        {(plan.type === 'instant' || plan.type === 'instant_light') && (
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Target</span>
-            <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
-          </div>
-        )}
-        <div className="flex justify-between items-center">
-          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Daily DD</span>
-          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.daily_dd}%</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Max DD</span>
-          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.max_dd}%</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Leverage</span>
-          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
-            {plan.account_type === 'swing' ? plan.leverage_swing : plan.leverage_standard}
+        {/* Account size — primary visual focus */}
+        <div className="mb-1">
+          <span className="text-4xl sm:text-5xl font-bold tracking-tight text-white leading-none">
+            {formatSize(plan.size)}
           </span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Payouts</span>
-          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
-            {plan.type === 'instant' || plan.type === 'instant_light' ? 'Daily' : 'On Pass'}
-          </span>
+        <div className="text-xs text-white/30 mb-5">Account Size</div>
+
+        {/* Divider */}
+        <div className="h-px mb-5" style={{ background: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Metrics */}
+        <div className="space-y-3 mb-6 flex-1">
+          {metrics.map(m => (
+            <div key={m.label} className="flex items-center justify-between">
+              <span className="text-xs text-white/40">{m.label}</span>
+              <span className="text-xs font-semibold text-white/80">{m.value}</span>
+            </div>
+          ))}
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Split</span>
-          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.profit_split}%</span>
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1.5 mb-4">
+          <span className="text-2xl font-bold text-white">${plan.price}</span>
+          <span className="text-xs text-white/30">one-time fee</span>
         </div>
+
+        {/* CTA */}
+        <button
+          onClick={() => onSelect(plan)}
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] mb-3"
+          style={{
+            background: isPopular
+              ? 'linear-gradient(135deg, #FF5C00, #FF7A2F)'
+              : isLight
+              ? 'rgba(204,255,0,0.12)'
+              : 'rgba(255,255,255,0.07)',
+            border: isPopular
+              ? 'none'
+              : isLight
+              ? '1px solid rgba(204,255,0,0.3)'
+              : '1px solid rgba(255,255,255,0.12)',
+            color: isPopular ? '#fff' : isLight ? '#CCFF00' : 'rgba(255,255,255,0.85)',
+            boxShadow: isPopular ? '0 4px 16px rgba(255,92,0,0.25)' : 'none',
+          }}
+        >
+          Start Challenge
+        </button>
+
+        {/* Show Rules */}
+        <button
+          onClick={() => setShowRules(!showRules)}
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-white/25 hover:text-white/50 transition-colors"
+        >
+          <span>{showRules ? 'Hide' : 'View'} rules</span>
+          {showRules ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+
+        {/* Rules */}
+        {showRules && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-3 pt-3 space-y-2 border-t"
+            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+          >
+            <div className="flex items-center gap-2 text-xs text-white/40">
+              <Check className="w-3 h-3 text-white/20 flex-shrink-0" />
+              <span>Max Lots: {plan.max_lots}</span>
+            </div>
+            {plan.news_trading && (
+              <div className="flex items-center gap-2 text-xs text-white/40">
+                <Check className="w-3 h-3 flex-shrink-0" style={{ color: '#CCFF00' }} />
+                <span>News Trading Allowed</span>
+              </div>
+            )}
+            {plan.overnight_holding && (
+              <div className="flex items-center gap-2 text-xs text-white/40">
+                <Check className="w-3 h-3 flex-shrink-0" style={{ color: '#CCFF00' }} />
+                <span>Overnight Holding Allowed</span>
+              </div>
+            )}
+            {plan.weekend_holding && (
+              <div className="flex items-center gap-2 text-xs text-white/40">
+                <Check className="w-3 h-3 flex-shrink-0" style={{ color: '#CCFF00' }} />
+                <span>Weekend Holding Allowed</span>
+              </div>
+            )}
+            {plan.hedging && (
+              <div className="flex items-center gap-2 text-xs text-white/40">
+                <Check className="w-3 h-3 flex-shrink-0" style={{ color: '#CCFF00' }} />
+                <span>Hedging Allowed</span>
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
-
-      {/* CTA Button — above rules/calendar */}
-      <button
-        onClick={() => onSelect(plan)}
-        className={`w-full py-3 rounded-xl ${buttonColor} ${buttonTextColor} font-bold transition-all active:scale-95 relative z-10 mb-4`}
-      >
-        Start Challenge →
-      </button>
-
-      {/* Show Rules */}
-      <button
-        onClick={() => setShowRules(!showRules)}
-        className="w-full flex items-center justify-between py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <span>Show Rules</span>
-        {showRules ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-      </button>
-
-      {/* Rules */}
-      {showRules && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2 text-xs text-muted-foreground">
-          <div className="flex items-start gap-2">
-            <span className="text-primary">✓</span>
-            <span>Max Lots: {plan.max_lots}</span>
-          </div>
-          {plan.news_trading && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>News Trading Allowed</span></div>}
-          {plan.overnight_holding && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Overnight Holding Allowed</span></div>}
-          {plan.weekend_holding && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Weekend Holding Allowed</span></div>}
-          {plan.hedging && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Hedging Allowed</span></div>}
-        </motion.div>
-      )}
     </motion.div>
   );
 }
