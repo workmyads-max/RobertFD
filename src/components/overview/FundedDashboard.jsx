@@ -25,18 +25,17 @@ function EmptyState({ onStartChallenge }) {
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-32 text-center">
-      <motion.div animate={{ y: [-6, 6, -6] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
-        style={{ background: 'rgba(0,245,160,0.08)', border: '1px solid rgba(0,245,160,0.2)' }}>
-        <Shield className="w-9 h-9" style={{ color: '#00F5A0' }} />
-      </motion.div>
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
+        style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' }}>
+        <Shield className="w-9 h-9 text-primary" />
+      </div>
       <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">No Active Accounts</h2>
       <p className="text-[13px] text-muted-foreground mb-10 max-w-sm leading-relaxed font-light">
         Purchase a challenge to access the full funded trader platform — real-time analytics, live objectives, and institutional-grade tools.
       </p>
       <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onStartChallenge}
-        className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold"
-        style={{ background: 'linear-gradient(135deg, #00F5A0, #00D9A3)', color: '#000', boxShadow: '0 8px 32px rgba(0,245,160,0.3)' }}>
+        className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white"
+        style={{ background: '#FF5C00' }}>
         <Plus className="w-4 h-4" /> Get Started
       </motion.button>
     </motion.div>
@@ -72,10 +71,10 @@ function AccountInfoStrip({ account }) {
 // ─── Quick actions ────────────────────────────────────────────────────────────
 function QuickActions({ onNavigate }) {
   const actions = [
-    { label: 'Open Terminal', icon: Zap, color: '#00F5A0', page: 'terminal' },
-    { label: 'Analytics', icon: TrendingUp, color: '#00F5A0', page: 'analytics' },
-    { label: 'Withdrawal', icon: Award, color: '#00F5A0', page: 'withdrawals' },
-    { label: 'Trade Journal', icon: BookOpen, color: '#00F5A0', page: 'journal' },
+    { label: 'Open Terminal', icon: Zap, color: '#FF5C00', page: 'terminal' },
+    { label: 'Analytics', icon: TrendingUp, color: '#FF5C00', page: 'analytics' },
+    { label: 'Withdrawal', icon: Award, color: '#FF5C00', page: 'withdrawals' },
+    { label: 'Trade Journal', icon: BookOpen, color: '#FF5C00', page: 'journal' },
   ];
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -173,20 +172,10 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
-      {/* Premium glassmorphism background with AI aesthetic */}
+      {/* Background accent */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        {/* Primary glow */}
-        <div className="absolute top-0 left-1/4 w-[700px] h-[500px] rounded-full blur-[140px] opacity-[0.12]"
-          style={{ background: 'radial-gradient(circle, #00F5A0, rgba(0,200,150,0.5), transparent)' }} />
-        {/* Secondary accent glow */}
-        <div className="absolute -top-20 -right-32 w-[600px] h-[600px] rounded-full blur-[150px] opacity-[0.08]"
-          style={{ background: 'radial-gradient(circle, #00F5A0, #00D9A0, transparent)' }} />
-        {/* Tertiary blue glow */}
-        <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[400px] rounded-full blur-[120px] opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
-        {/* Accent green teal */}
-        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] rounded-full blur-[100px] opacity-[0.05]"
-          style={{ background: 'radial-gradient(circle, #00f5a0, transparent)' }} />
+        <div className="absolute top-0 left-1/4 w-[700px] h-[500px] rounded-full blur-[140px] opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
       </div>
       {/* Particles */}
       <ParticleBackground />
