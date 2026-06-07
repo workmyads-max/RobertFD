@@ -164,29 +164,27 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         )}
       </div>
 
-      {/* Platform selector — hidden when only MT5 is available */}
-      {PLATFORMS.length > 1 && (
-        <div className="mb-4 sm:mb-6">
-          <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            {PLATFORMS.map(p => (
-              <button key={p.id} onClick={() => setPlatform(p.id)}
-                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all hover:scale-[1.02]"
-                style={{
-                  background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
-                }}>
-                <span className="text-base sm:text-lg">{p.icon}</span>
-                <div className="text-left min-w-0">
-                  <div className={`text-xs sm:text-sm font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'} truncate max-w-[120px] sm:max-w-none`}>{p.label}</div>
-                  <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">{p.desc}</div>
-                </div>
-                {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-auto flex-shrink-0" />}
-              </button>
-            ))}
-          </div>
+      {/* Platform selector — always visible */}
+      <div className="mb-4 sm:mb-6">
+        <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          {PLATFORMS.map(p => (
+            <button key={p.id} onClick={() => setPlatform(p.id)}
+              className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all hover:scale-[1.02]"
+              style={{
+                background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
+              }}>
+              <span className="text-base sm:text-lg">{p.icon}</span>
+              <div className="text-left min-w-0">
+                <div className={`text-xs sm:text-sm font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'} truncate max-w-[120px] sm:max-w-none`}>{p.label}</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">{p.desc}</div>
+              </div>
+              {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-auto flex-shrink-0" />}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Account type */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-full mb-6 sm:mb-8">
