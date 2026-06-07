@@ -129,10 +129,18 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
         </div>
       </div>
 
+      {/* CTA Button — above rules/calendar */}
+      <button
+        onClick={() => onSelect(plan)}
+        className={`w-full py-3 rounded-xl ${buttonColor} ${buttonTextColor} font-bold transition-all active:scale-95 relative z-10 mb-4`}
+      >
+        Start Challenge →
+      </button>
+
       {/* Show Rules */}
       <button
         onClick={() => setShowRules(!showRules)}
-        className="w-full flex items-center justify-between py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="w-full flex items-center justify-between py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
       >
         <span>Show Rules</span>
         {showRules ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -140,7 +148,7 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
 
       {/* Rules */}
       {showRules && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 space-y-2 text-xs text-muted-foreground">
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2 text-xs text-muted-foreground">
           <div className="flex items-start gap-2">
             <span className="text-primary">✓</span>
             <span>Max Lots: {plan.max_lots}</span>
@@ -151,14 +159,6 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
           {plan.hedging && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Hedging Allowed</span></div>}
         </motion.div>
       )}
-
-      {/* CTA Button */}
-      <button
-        onClick={() => onSelect(plan)}
-        className={`w-full py-3 rounded-xl ${buttonColor} ${buttonTextColor} font-bold transition-all active:scale-95 relative z-10`}
-      >
-        Start Challenge →
-      </button>
     </motion.div>
   );
 }
