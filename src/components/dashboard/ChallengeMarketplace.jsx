@@ -47,17 +47,18 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       const data = await base44.entities.ChallengePlan.list('sort_order', 200);
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 30 * 1000,
-    refetchOnMount: true,
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
 
   const plans = allPlans
-    .filter(p =>
-      p.type === challengeType &&
-      p.account_type === accountType &&
-      p.is_visible !== false
-    )
+    .filter(p => {
+      const typeMatch = p.type === challengeType;
+      const accountMatch = (p.account_type || 'standard') === accountType;
+      const visible = p.is_visible !== false;
+      return typeMatch && accountMatch && visible;
+    })
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   const { data: platformSettings = [] } = useQuery({
@@ -307,8 +308,17 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
             {plans.length === 0 && !plansLoading && (
               <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
                 {allPlans.length === 0
-                  ? 'Loading challenge plans...'
-                  : `No plans available for ${challengeType.replace('-', ' ')} ${accountType} accounts.`
+                  ? 'No challenge plans found in database. Please add plans via Admin → Challenges.'
+                  : (
+                    <div>
+                      <div className="mb-2">No plans match current filters.</div>
+                      <div className="text-xs font-mono opacity-60">
+                        Total plans: {allPlans.length} | Filter: type={challengeType}, account_type={accountType}<br/>
+                        Plan types in DB: {[...new Set(allPlans.map(p => p.type))].join(', ')}<br/>
+                        Account types in DB: {[...new Set(allPlans.map(p => p.account_type || 'standard'))].join(', ')}
+                      </div>
+                    </div>
+                  )
                 }
               </div>
             )}

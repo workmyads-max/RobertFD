@@ -224,8 +224,7 @@ export default function Dashboard() {
           />
         </div>
       )}
-      {/* Animated trading background — skip on overview & terminal (they have their own) */}
-      {!isTerminal && !isOverview && <TradingBackground />}
+      {/* Trading background removed — clean institutional look */}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
