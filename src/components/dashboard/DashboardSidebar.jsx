@@ -22,6 +22,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: Wallet },
     { id: 'analytics', label: 'Analytics', icon: Zap },
     { id: 'markets', label: 'Markets', icon: Activity },
+    { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true },
     { id: 'calendar', label: 'Calendar', icon: Globe },
     { id: 'news', label: 'News', icon: Zap },
     { id: 'journal', label: 'Journal', icon: Zap },
@@ -33,7 +34,6 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'kyc', label: 'KYC', icon: ShieldCheck },
     { id: 'support', label: 'Support', icon: HeadphonesIcon },
     { id: 'settings', label: 'Settings', icon: Sliders },
-    { id: 'marketplace', label: 'Buy Challenge', icon: Zap, highlight: true, prominent: true },
   ];
 
   const filterNavItems = () => {
@@ -92,29 +92,22 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
                     : item.highlight && !isActive
-                    ? 'text-accent hover:text-accent hover:bg-accent/10'
+                    ? 'text-primary hover:text-primary'
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
-              style={item.prominent && !isActive ? {
-                background: 'linear-gradient(135deg, rgba(115,255,0,0.25), rgba(115,255,0,0.12))',
-                border: '2px solid rgba(115,255,0,0.5)',
-                boxShadow: '0 0 20px rgba(115,255,0,0.3)',
+              style={item.highlight && !isActive ? {
+                background: 'linear-gradient(135deg, rgba(255,92,0,0.18), rgba(255,92,0,0.08))',
+                border: '1.5px solid rgba(255,92,0,0.5)',
+                boxShadow: '0 2px 12px rgba(255,92,0,0.2)',
               } : isActive ? {
-                background: item.highlight
-                  ? collapsed
-                    ? 'rgba(115,255,0,0.25)'
-                    : 'linear-gradient(90deg, rgba(115,255,0,0.2), rgba(115,255,0,0.1), rgba(115,255,0,0.06))'
-                  : collapsed
+                background: collapsed
                   ? 'rgba(255,92,0,0.18)'
                   : 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(139,92,246,0.06), rgba(255,92,0,0.04))',
-                borderLeft: collapsed ? 'none' : `${item.prominent ? '3px' : '2px'} solid ${item.highlight ? '#73ff00' : '#FF5C00'}`,
-                boxShadow: collapsed ? `0 0 12px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.2)` : `inset 0 0 20px rgba(${item.highlight ? '115,255,0' : '255,92,0'},0.05)`,
-              } : item.highlight && !isActive ? {
-                background: 'rgba(115,255,0,0.12)',
-                border: '1px solid rgba(115,255,0,0.25)',
+                borderLeft: collapsed ? 'none' : `${item.prominent ? '3px' : '2px'} solid #FF5C00`,
+                boxShadow: collapsed ? 'none' : 'inset 0 0 20px rgba(255,92,0,0.05)',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? (item.highlight ? 'text-accent' : 'text-primary') : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-accent group-hover:text-accent' : 'text-white/25 group-hover:text-white/60'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-white/25 group-hover:text-white/60'}`} />
               {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
