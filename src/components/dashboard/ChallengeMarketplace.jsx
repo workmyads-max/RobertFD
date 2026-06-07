@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
-import { ArrowRight, Check, CheckCheck, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
 import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
@@ -343,47 +343,69 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         })}
       </div>
 
-      {/* Full Challenge Rules */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,92,0,0.12)' }}>
-            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+      {/* Challenge Rules — single unified card */}
+      <div className="rounded-2xl overflow-hidden mb-8"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Card header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(255,92,0,0.12)' }}>
+              <Shield className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-foreground">Challenge Rules</div>
+              <div className="text-xs text-muted-foreground">Violations result in immediate account termination</div>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-black text-foreground">Challenge Rules</h2>
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-mono">Understand all rules before purchasing — violations result in termination.</p>
-          </div>
+          <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+            style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+            Strictly Enforced
+          </span>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-8">
-        {CHALLENGE_RULES.map((rule, i) => {
-          const Icon = rule.icon;
-          return (
-            <motion.div
-              key={rule.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06, duration: 0.4 }}
-              whileHover={{ y: -3, transition: { duration: 0.2 } }}
-              className="rounded-xl sm:rounded-2xl p-3 sm:p-5 flex gap-3 sm:gap-4"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid ${rule.color}22`,
-                boxShadow: `0 0 20px ${rule.color}08`,
-              }}
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: `${rule.color}15`, border: `1px solid ${rule.color}30` }}>
-                <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: rule.color }} />
+        {/* Rules list */}
+        <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          {CHALLENGE_RULES.map((rule, i) => {
+            const Icon = rule.icon;
+            return (
+              <div key={rule.title}
+                className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-white/[0.02] group">
+                {/* Index + icon */}
+                <div className="flex items-center gap-3 flex-shrink-0 w-8">
+                  <span className="text-xs font-mono text-muted-foreground/40 w-4 text-right select-none">{String(i + 1).padStart(2, '0')}</span>
+                </div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${rule.color}10`, border: `1px solid ${rule.color}20` }}>
+                  <Icon className="w-4 h-4" style={{ color: rule.color }} />
+                </div>
+                {/* Rule content */}
+                <div className="flex-1 min-w-0 sm:flex sm:items-baseline sm:gap-6">
+                  <div className="text-sm font-semibold text-foreground whitespace-nowrap mb-0.5 sm:mb-0 sm:w-44 flex-shrink-0">{rule.title}</div>
+                  <div className="text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
+                </div>
+                {/* Pill badge */}
+                <div className="hidden md:flex flex-shrink-0 items-center">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: `${rule.color}10`, color: rule.color, border: `1px solid ${rule.color}20` }}>
+                    {i < 3 ? 'Core' : i < 6 ? 'Conduct' : 'Security'}
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-xs sm:text-sm font-bold text-foreground mb-1">{rule.title}</div>
-                <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
-              </div>
-            </motion.div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Card footer */}
+        <div className="px-6 py-3 flex items-center gap-2 border-t"
+          style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
+          <AlertTriangle className="w-3.5 h-3.5 text-yellow-400/60 flex-shrink-0" />
+          <span className="text-[11px] text-muted-foreground/60">
+            By purchasing a challenge you confirm you have read and agree to all rules above.
+          </span>
+        </div>
       </div>
     </div>
   );
