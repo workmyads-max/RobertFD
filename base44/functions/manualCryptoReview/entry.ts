@@ -134,6 +134,15 @@ Deno.serve(async (req) => {
         });
       } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
 
+      // Affiliate commissions L1/L2/L3 — non-blocking
+      sr.functions.invoke('createAffiliateCommissions', {
+        user_email: order.email,
+        order_id: order.order_id,
+        order_price: order.price,
+        challenge_type: order.challenge_type,
+        account_size: order.account_size,
+      }).catch(e => console.error('[ManualCrypto] Affiliate commission failed:', e.message));
+
       try {
         await sr.functions.invoke('sendBrandedEmail', {
           to: order.email, template_type: 'payment_success',

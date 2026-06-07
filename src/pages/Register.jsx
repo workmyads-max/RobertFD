@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { base44 } from '@/api/base44Client';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function Register() {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+
+  // Read referral code from URL: ?ref=RFXXXXXX
+  const refCode = new URLSearchParams(window.location.search).get('ref') || '';
 
   const handleGoogleSignup = async () => {
     try {
@@ -58,6 +62,35 @@ export default function Register() {
         }
       });
       if (error) throw error;
+
+      // Affiliate attribution: if ?ref= param present, link this user to the referrer
+      if (refCode) {
+        try {
+          const referrers = await base44.entities.AffiliateProfile.filter({ referral_code: refCode });
+          if (referrers.length > 0) {
+            const referrer = referrers[0];
+            // Create affiliate profile for the new user with referral relationship
+            const newCode = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
+            await base44.entities.AffiliateProfile.create({
+              user_email: formData.email,
+              referral_code: newCode,
+              referred_by_code: refCode,
+              referred_by_email: referrer.user_email,
+              tier: 'standard',
+              total_earned: 0, total_pending: 0, total_paid: 0,
+              referral_clicks: 0, total_referrals: 0, conversions: 0,
+              active_funded_traders: 0, is_active: true, is_frozen: false,
+            });
+            // Increment referrer's total_referrals
+            await base44.entities.AffiliateProfile.update(referrer.id, {
+              total_referrals: (referrer.total_referrals || 0) + 1,
+            });
+          }
+        } catch (affErr) {
+          console.error('Affiliate attribution error (non-blocking):', affErr);
+        }
+      }
+
       toast.success('Account created! Please check your email to verify.');
       navigate('/dashboard');
     } catch (err) {

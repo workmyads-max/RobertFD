@@ -22,7 +22,7 @@
  *   - Breach flags (dd_breach_detected, dd_breach_type, dd_breach_time, dd_breach_value)
  *     are written once and NEVER overwritten
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 function getDDLimits(acc) {
   const dailyLimit = 5;
@@ -201,11 +201,48 @@ Deno.serve(async (req) => {
 
           await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, updates);
 
+          // ── WRITE TRADERECORD ENTITIES FOR EACH CLOSED DEAL ───────────────
+          // Upsert by trade_id — skip if already exists (idempotent)
+          const existingTrades = await base44.asServiceRole.entities.TradeRecord.filter({ account_id: acc.account_id });
+          const existingIds = new Set(existingTrades.map(t => t.trade_id));
+
+          const newDeals = closedTrades.filter(d => {
+            const tradeId = String(d.positionId || d.deal || d.id || '');
+            return tradeId && !existingIds.has(tradeId);
+          });
+
+          if (newDeals.length > 0) {
+            await Promise.all(newDeals.map(d => {
+              const tradeId = String(d.positionId || d.deal || d.id || '');
+              const pnl = parseFloat(d.profit ?? 0);
+              return base44.asServiceRole.entities.TradeRecord.create({
+                account_id: acc.account_id,
+                user_email: acc.user_email,
+                trade_id: tradeId,
+                symbol: d.symbol || d.instrument || '',
+                type: (d.type === 'SELL' || d.side === 'sell' || d.direction === 'SELL') ? 'SELL' : 'BUY',
+                order_type: 'MARKET',
+                lots: parseFloat(d.volume ?? d.lots ?? 0),
+                entry: parseFloat(d.price ?? d.openPrice ?? d.entry ?? 0),
+                close: parseFloat(d.closePrice ?? d.exitPrice ?? d.price ?? 0),
+                sl: parseFloat(d.sl ?? d.stopLoss ?? 0) || undefined,
+                tp: parseFloat(d.tp ?? d.takeProfit ?? 0) || undefined,
+                pnl,
+                status: 'closed',
+                close_reason: d.comment || d.reason || 'close',
+                open_time: d.openTime || d.time || new Date().toISOString(),
+                close_time: d.closeTime || d.time || new Date().toISOString(),
+              }).catch(() => null); // non-blocking per trade
+            }));
+            console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);
+          }
+
           return {
             account_id: acc.account_id, ok: true,
             balance, equity,
             overall_dd: persistentOverallDD, daily_dd: persistentDailyDD,
             breached: breachDetected,
+            new_trades: newDeals.length,
           };
         } catch (err) {
           return { account_id: acc.account_id, ok: false, error: err.message };
@@ -215,7 +252,8 @@ Deno.serve(async (req) => {
       results.push(...batchResults);
     }
 
-    return Response.json({ success: true, synced: results.length, results });
+    const totalNewTrades = results.reduce((s, r) => s + (r.new_trades || 0), 0);
+    return Response.json({ success: true, synced: results.length, total_new_trades: totalNewTrades, results });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -91,6 +91,15 @@ Deno.serve(async (req) => {
         console.error('Provisioning failed:', e);
       }
 
+      // Affiliate commissions L1/L2/L3 — non-blocking
+      base44.functions.invoke('createAffiliateCommissions', {
+        user_email: order.email,
+        order_id: order.order_id,
+        order_price: order.price,
+        challenge_type: order.challenge_type,
+        account_size: order.account_size,
+      }).catch(e => console.error('[Confirmo] Affiliate commission failed:', e.message));
+
       // Send confirmation email
       await base44.functions.invoke('sendBrandedEmail', {
         to: order.email,

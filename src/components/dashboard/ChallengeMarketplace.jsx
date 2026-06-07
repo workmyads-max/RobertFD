@@ -39,7 +39,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const { isEnabled } = useFeatureVisibility();
   const [challengeType, setChallengeType] = useState('two-step');
   const [accountType, setAccountType] = useState('standard');
-  const [platform, setPlatform] = useState('match_trader');
+  const [platform, setPlatform] = useState('mt5');
 
   const { data: allPlans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['challenge-plans'],
@@ -64,12 +64,10 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [pendingOrder, setPendingOrder] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
 
+  // Only show platforms that are enabled — MT5-only mode: others are hidden completely
   const PLATFORMS = [
-    { id: 'match_trader', label: 'Match Trader', desc: 'Institutional platform — recommended', available: enabledPlatforms.match_trader !== false && isEnabled('match_trader'), icon: '📊' },
-    { id: 'xtrading', label: 'XTrading', desc: 'Built-in simulated terminal', available: enabledPlatforms.xtrading !== false && isEnabled('trading_terminal'), icon: '⚡' },
-    { id: 'mt5', label: 'MetaTrader 5', desc: 'Industry standard platform', available: enabledPlatforms.mt5 !== false && isEnabled('mt5'), icon: '📈' },
-    { id: 'tradelocker', label: 'TradeLocker', desc: 'Next-gen prop firm platform', available: enabledPlatforms.tradelocker !== false && isEnabled('tradelocker'), icon: '🔓' },
-  ];
+    { id: 'mt5', label: 'MetaTrader 5', desc: 'Industry standard platform', available: true, icon: '📈' },
+  ].filter(p => p.available);
 
   const accCfg = ACCOUNT_TYPES[accountType];
 
@@ -166,28 +164,29 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         )}
       </div>
 
-      {/* Platform selector */}
-      <div className="mb-4 sm:mb-6">
-        <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          {PLATFORMS.map(p => (
-            <button key={p.id} onClick={() => p.available && setPlatform(p.id)}
-              className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all ${!p.available ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-              style={{
-                background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
-              }}>
-              <span className="text-base sm:text-lg">{p.icon}</span>
-              <div className="text-left min-w-0">
-                <div className={`text-xs sm:text-sm font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'} truncate max-w-[120px] sm:max-w-none`}>{p.label}</div>
-                <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">{p.desc}</div>
-              </div>
-              {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-auto flex-shrink-0" />}
-              {!p.available && <span className="ml-auto px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-mono flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', color: '#888' }}>SOON</span>}
-            </button>
-          ))}
+      {/* Platform selector — hidden when only MT5 is available */}
+      {PLATFORMS.length > 1 && (
+        <div className="mb-4 sm:mb-6">
+          <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {PLATFORMS.map(p => (
+              <button key={p.id} onClick={() => setPlatform(p.id)}
+                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all hover:scale-[1.02]"
+                style={{
+                  background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
+                }}>
+                <span className="text-base sm:text-lg">{p.icon}</span>
+                <div className="text-left min-w-0">
+                  <div className={`text-xs sm:text-sm font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'} truncate max-w-[120px] sm:max-w-none`}>{p.label}</div>
+                  <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">{p.desc}</div>
+                </div>
+                {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-auto flex-shrink-0" />}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Account type */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-full mb-6 sm:mb-8">

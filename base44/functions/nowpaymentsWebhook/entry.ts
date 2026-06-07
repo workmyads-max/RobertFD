@@ -126,6 +126,15 @@ Deno.serve(async (req) => {
       });
       await provisionAfterPayment(base44, order);
 
+      // Affiliate commissions L1/L2/L3 — non-blocking
+      base44.asServiceRole.functions.invoke('createAffiliateCommissions', {
+        user_email: order.email,
+        order_id: order.order_id,
+        order_price: order.price,
+        challenge_type: order.challenge_type,
+        account_size: order.account_size,
+      }).catch(e => console.error('[NOWPayments] Affiliate commission failed:', e.message));
+
       await base44.asServiceRole.entities.Notification.create({
         title: '✅ NOWPayments Payment Confirmed',
         message: `Order ${orderId} paid. Challenge account provisioning initiated.`,
