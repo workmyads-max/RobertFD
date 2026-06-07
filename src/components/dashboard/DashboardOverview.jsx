@@ -1,31 +1,51 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { TrendingUp, DollarSign, BarChart3, Award, Target, Activity, Zap, Plus, Clock, AlertCircle, ChevronRight } from 'lucide-react';
+import { TrendingUp, DollarSign, BarChart3, Award, Plus, Clock, ChevronRight, Activity } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 
-function StatCard({ label, value, sub, color, icon: Icon, i }) {
+function KpiPanel({ label, value, sub, trend, trendLabel }) {
+  const isPos = trend >= 0;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.06 }}
-      className="rounded-2xl p-5 group"
-      style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-      }}>
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)' }}>
-          <Icon className="w-4 h-4 text-primary" />
+    <div className="flex flex-col justify-between p-6 border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">{label}</div>
+      <div className="text-3xl font-semibold text-foreground tracking-tight mb-2">{value}</div>
+      <div className="flex items-center gap-2">
+        {trendLabel && (
+          <span className={`text-xs font-medium ${isPos ? 'text-emerald-400' : 'text-red-400'}`}>
+            {isPos ? '↑' : '↓'} {trendLabel}
+          </span>
+        )}
+        {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
+      </div>
+    </div>
+  );
+}
+
+function ObjectiveRow({ label, current, target, color, passed, danger }) {
+  const pct = Math.min((current / target) * 100, 100);
+  const status = passed ? 'On Track' : danger ? 'At Risk' : 'Active';
+  const statusColor = passed ? 'text-emerald-400' : danger ? 'text-red-400' : 'text-muted-foreground';
+  return (
+    <div className="flex items-center gap-6 py-4 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="w-32 flex-shrink-0">
+        <div className="text-sm font-medium text-foreground">{label}</div>
+      </div>
+      <div className="flex-1">
+        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
         </div>
       </div>
-      <div className="text-2xl font-bold text-foreground mb-1">{value}</div>
-      <div className={`text-xs font-medium ${color}`}>{sub}</div>
-    </motion.div>
+      <div className="w-28 text-right flex-shrink-0">
+        <span className="text-sm font-mono text-foreground">{current.toFixed(2)}%</span>
+        <span className="text-xs text-muted-foreground"> / {target}%</span>
+      </div>
+      <div className="w-16 text-right flex-shrink-0">
+        <span className={`text-xs font-medium ${statusColor}`}>{status}</span>
+      </div>
+    </div>
   );
 }
 
@@ -36,238 +56,250 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 5 * 60 * 1000, // 5 min — MT sync updates data server-side
-    staleTime: 5 * 60 * 1000,       // Don't refetch on tab focus within the 5-min window
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: pendingOrders = [] } = useQuery({
     queryKey: ['my-pending-orders'],
     queryFn: () => base44.entities.Order.filter({ email: user?.email }),
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,       // Orders don't change faster than 5 min
+    staleTime: 5 * 60 * 1000,
   });
 
   const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
   const pendingActivation = pendingOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
-  // Aggregate real stats across all active accounts
   const totalBalance = activeAccounts.reduce((s, a) => s + (a.balance || a.account_size || 0), 0);
   const totalPnl = activeAccounts.reduce((s, a) => s + (a.pnl || 0), 0);
   const avgWinRate = activeAccounts.length
-    ? activeAccounts.reduce((s, a) => s + (a.win_rate || 0), 0) / activeAccounts.length
-    : 0;
+    ? activeAccounts.reduce((s, a) => s + (a.win_rate || 0), 0) / activeAccounts.length : 0;
   const worstDD = activeAccounts.length
-    ? Math.max(...activeAccounts.map(a => a.daily_drawdown_used || 0))
-    : 0;
+    ? Math.max(...activeAccounts.map(a => a.daily_drawdown_used || 0)) : 0;
 
   const hasAccounts = activeAccounts.length > 0;
-
-  // Best account for progress display
   const primaryAccount = activeAccounts[0];
   const profitTarget = primaryAccount?.challenge_type === 'instant' ? 8 : (primaryAccount?.phase === 'phase2' ? 5 : 10);
-  const dailyDDLimit = primaryAccount?.account_type === 'swing' ? 5 : 5;
+  const dailyDDLimit = 5;
   const maxDDLimit = 10;
 
-  const stats = hasAccounts ? [
-    { label: 'Total Balance', value: `$${totalBalance.toLocaleString()}`, sub: `${activeAccounts.length} active account${activeAccounts.length > 1 ? 's' : ''}`, color: 'text-muted-foreground', icon: DollarSign },
-    { label: 'Total P&L', value: `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub: totalPnl >= 0 ? 'Profitable session' : 'Loss in session', color: totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400', icon: TrendingUp },
-    { label: 'Avg Win Rate', value: `${avgWinRate.toFixed(1)}%`, sub: `Across ${activeAccounts.length} account${activeAccounts.length > 1 ? 's' : ''}`, color: avgWinRate >= 50 ? 'text-emerald-400' : 'text-yellow-400', icon: Award },
-    { label: 'Max Daily DD', value: `${worstDD.toFixed(2)}%`, sub: `Limit: ${dailyDDLimit}%`, color: worstDD > dailyDDLimit * 0.8 ? 'text-red-400' : 'text-emerald-400', icon: BarChart3 },
-  ] : [];
+  const quickActions = [
+    { label: 'Request Payout', page: 'withdrawals' },
+    { label: 'View Analytics', page: 'analytics' },
+    { label: 'Trading Journal', page: 'journal' },
+    { label: 'Economic Calendar', page: 'calendar' },
+  ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, <span className="text-primary">{user?.full_name || 'Trader'}</span>
+    <div className="space-y-8">
+
+      {/* Page header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Welcome back, {user?.full_name?.split(' ')[0] || 'Trader'}
           </h1>
-          <div className="text-muted-foreground text-xs mt-2 space-y-0.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-foreground/60">Robert Funds</span>
-              <span className="text-border">·</span>
-              <span>IP: {location.loading ? '—' : location.ip}</span>
-              <span className="text-border">·</span>
-              <span>{location.flag} {location.loading ? '—' : location.country}</span>
-              <span className="text-border">·</span>
-              <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-            </div>
-            {syncing && <div className="text-primary">Syncing MT5 data...</div>}
-            {lastSync && <div className="text-emerald-400">Synced {lastSync.syncedCount} account{lastSync.syncedCount !== 1 ? 's' : ''} at {lastSync.timestamp.toLocaleTimeString()}</div>}
-            {syncError && <div className="text-red-400">Sync error: {syncError}</div>}
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+            {!location.loading && (
+              <>
+                <span className="opacity-30">·</span>
+                <span>{location.flag} {location.country}</span>
+              </>
+            )}
+            {syncing && <><span className="opacity-30">·</span><span className="text-primary">Syncing…</span></>}
+            {lastSync && <><span className="opacity-30">·</span><span className="text-emerald-400">Synced {lastSync.timestamp.toLocaleTimeString()}</span></>}
+            {syncError && <><span className="opacity-30">·</span><span className="text-red-400">Sync error</span></>}
           </div>
         </div>
-        <div className="hidden md:flex flex-col gap-2">
-          <button onClick={onStartChallenge}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground transition-all hover:opacity-90"
-            style={{ background: '#FF5C00' }}>
-            <Plus className="w-4 h-4" /> New Challenge
-          </button>
-        </div>
+        <button
+          onClick={onStartChallenge}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+          style={{ background: '#FF5C00' }}>
+          <Plus className="w-4 h-4" /> New Challenge
+        </button>
       </div>
 
-      {/* Pending activation notice */}
+      {/* Pending notice */}
       {pendingActivation.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-3 p-4 rounded-2xl mb-6"
-          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="text-sm font-bold text-yellow-400 mb-0.5">
-              {pendingActivation.length} order{pendingActivation.length > 1 ? 's' : ''} pending admin approval
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Your payment has been received and is being reviewed. Your account will be activated within 1–24 hours after confirmation.
-            </div>
-          </div>
-        </motion.div>
+        <div className="flex items-center gap-3 px-5 py-4 rounded-lg border text-sm"
+          style={{ background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.2)' }}>
+          <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+          <span className="text-yellow-400 font-medium">{pendingActivation.length} order{pendingActivation.length > 1 ? 's' : ''} pending approval.</span>
+          <span className="text-muted-foreground">Account will activate within 1–24 hours.</span>
+        </div>
       )}
 
-      {/* No accounts — empty state */}
+      {/* Empty state */}
       {!hasAccounts && pendingActivation.length === 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-12 text-center mb-8"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-          <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
-            <Zap className="w-7 h-7 text-primary" />
-          </div>
-          <div className="text-lg font-semibold text-foreground mb-2">Start Your Trading Journey</div>
-          <div className="text-sm text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
-            You don't have any active challenge accounts yet. Purchase a challenge to access the trading terminal, analytics, and funded capital.
+        <div className="rounded-xl border border-dashed py-20 flex flex-col items-center justify-center text-center"
+          style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="text-base font-semibold text-foreground mb-2">No active accounts</div>
+          <div className="text-sm text-muted-foreground mb-6 max-w-sm">
+            Purchase a challenge to access the trading terminal, analytics, and funded capital.
           </div>
           <button onClick={onStartChallenge}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground transition-all hover:opacity-90"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white hover:opacity-90 transition-opacity"
             style={{ background: '#FF5C00' }}>
             <Plus className="w-4 h-4" /> Browse Challenge Plans
           </button>
-        </motion.div>
+        </div>
       )}
 
-      {/* Real stats */}
       {hasAccounts && (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((s, i) => <StatCard key={s.label} {...s} i={i} />)}
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Challenge Progress — primary account */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, type: 'spring' }}
-              className="lg:col-span-2 rounded-2xl p-6"
-              style={{
-               background: 'rgba(255,255,255,0.04)',
-               border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <div className="text-sm font-bold text-foreground">Challenge Progress</div>
-                  <div className="text-xs font-mono text-muted-foreground">
-                    {primaryAccount?.phase?.replace('phase', 'Phase ')} — ${(primaryAccount?.account_size || 0).toLocaleString()} Account
-                  </div>
-                </div>
-                <span className="px-3 py-1 rounded-full text-xs font-mono capitalize"
-                  style={{ background: 'rgba(255,92,0,0.1)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
-                  {primaryAccount?.status}
-                </span>
-              </div>
-              {[
-                { label: 'Profit Target', current: primaryAccount?.profit_target_progress || 0, target: profitTarget, color: '#FF5C00' },
-                { label: 'Daily Drawdown Used', current: primaryAccount?.daily_drawdown_used || 0, target: dailyDDLimit, color: '#10b981' },
-                { label: 'Max Drawdown Used', current: primaryAccount?.max_drawdown_used || 0, target: maxDDLimit, color: '#10b981' },
-              ].map((p) => (
-                <div key={p.label} className="mb-4 last:mb-0">
-                  <div className="flex justify-between text-xs font-mono mb-1.5">
-                    <span className="text-muted-foreground">{p.label}</span>
-                    <span style={{ color: p.color }}>{p.current.toFixed(2)}% / {p.target}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((p.current / p.target) * 100, 100)}%` }}
-                      transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full relative overflow-hidden"
-                      style={{
-                        background: p.color,
-                      }}>
-                      <motion.div
-                        animate={{ x: ['0%', '100%'] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                        className="hidden" />
-                    </motion.div>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: 'spring' }}
-              className="rounded-2xl p-6"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div className="text-sm font-bold text-foreground mb-4 relative z-10">Quick Actions</div>
-              <div className="space-y-3 relative z-10">
-                {[
-                  { label: 'Request Payout', icon: DollarSign, page: 'withdrawals' },
-                  { label: 'View Analytics', icon: BarChart3, page: 'analytics' },
-                  { label: 'Trading Journal', icon: Activity, page: 'journal' },
-                  { label: 'Buy Challenge', icon: Plus, page: 'challenge', primary: true },
-                  { label: 'Economic Calendar', icon: Target, page: 'calendar' },
-                ].map((a, idx) => {
-                  const Icon = a.icon;
-                  return (
-                    <button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/[0.05] group"
-                      style={a.primary ? { background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' } : { border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${a.primary ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
-                      <span className="text-sm font-medium text-foreground">{a.label}</span>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 ml-auto" />
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Equity Curve — real data or flat line if no trades */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="rounded-2xl p-6"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <div className="flex items-center justify-between mb-6 relative z-10">
-              <div>
-                <div className="text-sm font-bold text-foreground">Portfolio Equity Curve</div>
-                <div className="text-xs text-muted-foreground font-mono">Real-time balance across all accounts</div>
-              </div>
-              <span className={`text-lg font-bold ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
+          {/* KPI strip — institutional proportions */}
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+              <KpiPanel
+                label="Total Balance"
+                value={`$${totalBalance.toLocaleString()}`}
+                sub={`${activeAccounts.length} account${activeAccounts.length > 1 ? 's' : ''}`}
+                trend={0}
+              />
+              <KpiPanel
+                label="Total P&L"
+                value={`${totalPnl >= 0 ? '+' : ''}$${Math.abs(totalPnl).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                trendLabel={totalPnl >= 0 ? 'Profitable' : 'Loss'}
+                trend={totalPnl}
+              />
+              <KpiPanel
+                label="Avg Win Rate"
+                value={`${avgWinRate.toFixed(1)}%`}
+                sub={`across ${activeAccounts.length} account${activeAccounts.length > 1 ? 's' : ''}`}
+                trend={avgWinRate - 50}
+                trendLabel={avgWinRate >= 50 ? 'Above break-even' : 'Below break-even'}
+              />
+              <KpiPanel
+                label="Peak Daily DD"
+                value={`${worstDD.toFixed(2)}%`}
+                sub={`of ${dailyDDLimit}% limit`}
+                trend={-(worstDD)}
+                trendLabel={worstDD > dailyDDLimit * 0.7 ? 'Approaching limit' : 'Within range'}
+              />
             </div>
-            {totalPnl === 0 ? (
-              <div className="flex items-center justify-center h-24 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.06)' }}>
-                <span className="text-xs font-mono text-muted-foreground/40">No trading activity yet — open the XTrading Terminal to start</span>
+          </div>
+
+          {/* Main 2-col layout */}
+          <div className="grid lg:grid-cols-3 gap-6">
+
+            {/* Left — objectives + equity */}
+            <div className="lg:col-span-2 space-y-6">
+
+              {/* Trading Objectives */}
+              <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+                <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">Trading Objectives</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {primaryAccount?.phase?.replace('phase', 'Phase ')} — {primaryAccount?.challenge_type === 'two-step' ? 'Two-Step' : 'Instant'} — ${(primaryAccount?.account_size || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 rounded font-medium capitalize"
+                    style={{ background: 'rgba(255,92,0,0.1)', color: '#FF5C00' }}>
+                    {primaryAccount?.status}
+                  </span>
+                </div>
+                <div className="px-6 py-2">
+                  <ObjectiveRow
+                    label="Profit Target"
+                    current={primaryAccount?.profit_target_progress || 0}
+                    target={profitTarget}
+                    color="#FF5C00"
+                    passed={(primaryAccount?.profit_target_progress || 0) >= profitTarget}
+                    danger={false}
+                  />
+                  <ObjectiveRow
+                    label="Daily Drawdown"
+                    current={primaryAccount?.daily_drawdown_used || 0}
+                    target={dailyDDLimit}
+                    color="#10b981"
+                    passed={(primaryAccount?.daily_drawdown_used || 0) < dailyDDLimit}
+                    danger={(primaryAccount?.daily_drawdown_used || 0) > dailyDDLimit * 0.8}
+                  />
+                  <ObjectiveRow
+                    label="Max Drawdown"
+                    current={primaryAccount?.max_drawdown_used || 0}
+                    target={maxDDLimit}
+                    color="#10b981"
+                    passed={(primaryAccount?.max_drawdown_used || 0) < maxDDLimit}
+                    danger={(primaryAccount?.max_drawdown_used || 0) > maxDDLimit * 0.7}
+                  />
+                </div>
               </div>
-            ) : (
-              <svg viewBox="0 0 600 100" className="w-full h-24">
-                <defs>
-                  <linearGradient id="eqOv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} stopOpacity="0.3" />
-                    <stop offset="100%" stopColor={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <line x1="0" y1="50" x2="600" y2={totalPnl >= 0 ? '20' : '80'} stroke={totalPnl >= 0 ? '#00F5A0' : '#ff6b6b'} strokeWidth="2.5" />
-              </svg>
-            )}
-          </motion.div>
+
+              {/* Equity placeholder */}
+              <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+                <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">Portfolio Equity</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Aggregate balance across all accounts</div>
+                  </div>
+                  <span className={`text-lg font-semibold ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="px-6 py-6">
+                  {totalPnl === 0 ? (
+                    <div className="flex items-center justify-center h-20 rounded-lg border border-dashed"
+                      style={{ borderColor: 'hsl(var(--border))' }}>
+                      <span className="text-xs text-muted-foreground">No trading activity yet — open the terminal to start</span>
+                    </div>
+                  ) : (
+                    <svg viewBox="0 0 600 80" className="w-full h-20">
+                      <line x1="0" y1="40" x2="600" y2={totalPnl >= 0 ? '15' : '65'} stroke={totalPnl >= 0 ? '#10b981' : '#ef4444'} strokeWidth="1.5" strokeDasharray="0" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right — account summary + quick nav */}
+            <div className="space-y-6">
+
+              {/* Account summary */}
+              <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+                <div className="px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div className="text-sm font-semibold text-foreground">Primary Account</div>
+                </div>
+                <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
+                  {[
+                    { label: 'Account ID', value: primaryAccount?.account_id || '—' },
+                    { label: 'Balance', value: `$${(primaryAccount?.balance || primaryAccount?.account_size || 0).toLocaleString()}` },
+                    { label: 'Phase', value: primaryAccount?.phase?.replace('phase', 'Phase ') || '—' },
+                    { label: 'Platform', value: primaryAccount?.platform || 'XTrading' },
+                    { label: 'Leverage', value: primaryAccount?.leverage || '1:100' },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-muted-foreground">{r.label}</span>
+                      <span className="text-xs font-medium text-foreground">{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick navigation */}
+              <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+                <div className="px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div className="text-sm font-semibold text-foreground">Quick Navigation</div>
+                </div>
+                <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
+                  {quickActions.map(a => (
+                    <button key={a.label} onClick={() => onNavigate?.(a.page)}
+                      className="w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-white/[0.03] group">
+                      <span className="text-sm text-foreground">{a.label}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                    </button>
+                  ))}
+                  <button onClick={onStartChallenge}
+                    className="w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-white/[0.03] group">
+                    <span className="text-sm text-primary font-medium">Buy New Challenge</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-primary/40 group-hover:text-primary transition-colors" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>

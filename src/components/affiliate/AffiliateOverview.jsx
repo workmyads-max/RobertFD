@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { DollarSign, Clock, CheckCircle, Award, Users, TrendingUp, Zap, Star } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Award, Users, TrendingUp, Zap, ArrowRight } from 'lucide-react';
 
-function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 2 }) {
+function AnimatedNumber({ value, prefix = '', decimals = 2 }) {
   const [displayed, setDisplayed] = useState(0);
   useEffect(() => {
     let start = 0;
@@ -18,15 +17,29 @@ function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 2 }) {
     }, step);
     return () => clearInterval(timer);
   }, [value]);
-  return <>{prefix}{decimals === 0 ? Math.round(displayed) : displayed.toFixed(decimals)}{suffix}</>;
+  return <>{prefix}{decimals === 0 ? Math.round(displayed) : displayed.toFixed(decimals)}</>;
 }
 
 const TIERS = [
-  { min: 0, max: 9, rate: 7, label: 'Starter', color: '#60a5fa' },
-  { min: 10, max: 24, rate: 11, label: 'Silver', color: '#a78bfa' },
-  { min: 25, max: 49, rate: 17, label: 'Gold', color: '#fbbf24' },
-  { min: 50, max: Infinity, rate: 25, label: 'Platinum', color: '#FF5C00' },
+  { min: 0, max: 9, rate: 7, label: 'Starter' },
+  { min: 10, max: 24, rate: 11, label: 'Silver' },
+  { min: 25, max: 49, rate: 17, label: 'Gold' },
+  { min: 50, max: Infinity, rate: 25, label: 'Platinum' },
 ];
+
+function StatRow({ label, value, sub, valueColor }) {
+  return (
+    <div className="flex items-center justify-between py-3.5 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div>
+        <div className="text-sm text-muted-foreground">{label}</div>
+      </div>
+      <div className="text-right">
+        <div className={`text-sm font-semibold ${valueColor || 'text-foreground'}`}>{value}</div>
+        {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+      </div>
+    </div>
+  );
+}
 
 export default function AffiliateOverview({ commissions = [], profile, accounts = [] }) {
   const totalEarned = commissions.reduce((s, c) => s + (c.commission_amount || 0), 0);
@@ -39,104 +52,130 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
   const activeFunded = profile?.active_funded_traders || 0;
   const currentTier = TIERS.find(t => activeFunded >= t.min && activeFunded <= t.max) || TIERS[0];
   const nextTier = TIERS.find(t => t.min > activeFunded);
-
-  const stats = [
-    { label: 'Total Earned', value: totalEarned, prefix: '$', color: '#10b981', icon: DollarSign, sub: `${commissions.length} commissions` },
-    { label: 'Pending', value: totalPending, prefix: '$', color: '#f59e0b', icon: Clock, sub: 'Awaiting approval' },
-    { label: 'Approved', value: totalApproved, prefix: '$', color: '#60a5fa', icon: CheckCircle, sub: 'Ready for payout' },
-    { label: 'Total Paid', value: totalPaid, prefix: '$', color: '#10b981', icon: CheckCircle, sub: 'Processed' },
-    { label: 'Payout Rewards', value: payoutRewards, prefix: '$', color: '#CCFF00', icon: Award, sub: 'From funded profits' },
-    { label: 'Purchase Comm.', value: purchaseComm, prefix: '$', color: '#FF5C00', icon: Zap, sub: 'Challenge sales' },
-    { label: 'Active Funded', value: activeFunded, prefix: '', decimals: 0, color: currentTier.color, icon: Users, sub: `${currentTier.label} tier` },
-    { label: 'Total Referrals', value: profile?.total_referrals || 0, prefix: '', decimals: 0, color: '#a78bfa', icon: TrendingUp, sub: `${profile?.conversions || 0} converted` },
-  ];
+  const tierPct = nextTier ? Math.min((activeFunded / nextTier.min) * 100, 100) : 100;
 
   return (
-    <div>
-      {/* Tier Banner */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-5 mb-6 flex items-center gap-5 flex-wrap"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(255,92,0,0.1)' }}>
-          <Star className="w-6 h-6 text-primary" />
-        </div>
-        <div className="flex-1">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
-            Current Tier
+    <div className="space-y-8">
+
+      {/* Tier status — large institutional panel */}
+      <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+
+          {/* Current tier */}
+          <div className="p-8">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-4">Current Tier</div>
+            <div className="text-4xl font-semibold text-foreground mb-1">{currentTier.label}</div>
+            <div className="text-sm text-muted-foreground">
+              Payout reward rate: <span className="font-semibold text-primary">{currentTier.rate}%</span>
+            </div>
           </div>
-          <div className="text-xl font-bold text-foreground">{currentTier.label}</div>
-          <div className="text-xs text-muted-foreground">
-            Payout Reward Rate: <span className="font-bold text-primary">{currentTier.rate}%</span>
-            {nextTier && (
-              <span className="ml-3">→ {nextTier.min - activeFunded} more traders for {nextTier.label} ({nextTier.rate}%)</span>
+
+          {/* Tier progress */}
+          <div className="p-8">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              {nextTier ? `Progress to ${nextTier.label}` : 'Maximum Tier Reached'}
+            </div>
+            {nextTier ? (
+              <>
+                <div className="text-4xl font-semibold text-foreground mb-1">
+                  {activeFunded}<span className="text-xl text-muted-foreground font-normal"> / {nextTier.min}</span>
+                </div>
+                <div className="text-sm text-muted-foreground mb-4">active funded traders</div>
+                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all duration-1000" style={{ width: `${tierPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground">You are at the highest commission tier.</div>
             )}
           </div>
+
+          {/* Tier ladder */}
+          <div className="p-8">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-4">Commission Tiers</div>
+            <div className="space-y-3">
+              {TIERS.map((t, i) => {
+                const isActive = currentTier.label === t.label;
+                return (
+                  <div key={i} className={`flex items-center justify-between text-sm ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-primary' : 'bg-white/10'}`} />
+                      <span className={isActive ? 'font-semibold' : ''}>{t.label}</span>
+                      <span className="text-xs opacity-50">{t.min === 0 ? '0' : t.min}–{t.max === Infinity ? '∞' : t.max} traders</span>
+                    </div>
+                    <span className={`font-semibold ${isActive ? 'text-primary' : ''}`}>{t.rate}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        {/* Tier progress */}
-        <div className="hidden md:flex items-center gap-3">
-          {TIERS.map((t, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-full border-2 transition-all"
-                style={{
-                  background: activeFunded >= t.min ? t.color : 'transparent',
-                  borderColor: activeFunded >= t.min ? t.color : 'rgba(255,255,255,0.2)',
-                }} />
-              <span className="text-[9px] font-medium text-muted-foreground">{t.rate}%</span>
+      </div>
+
+      {/* KPI strip */}
+      <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+          {[
+            { label: 'Total Earned', value: totalEarned, prefix: '$', sub: `${commissions.length} commissions`, color: 'text-foreground' },
+            { label: 'Pending Approval', value: totalPending, prefix: '$', sub: 'Awaiting review', color: 'text-yellow-400' },
+            { label: 'Approved', value: totalApproved, prefix: '$', sub: 'Ready for payout', color: 'text-emerald-400' },
+            { label: 'Total Paid', value: totalPaid, prefix: '$', sub: 'Processed', color: 'text-foreground' },
+          ].map(s => (
+            <div key={s.label} className="p-6 border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">{s.label}</div>
+              <div className={`text-3xl font-semibold tracking-tight mb-1 ${s.color}`}>
+                <AnimatedNumber value={s.value} prefix={s.prefix} />
+              </div>
+              <div className="text-xs text-muted-foreground">{s.sub}</div>
             </div>
           ))}
         </div>
-      </motion.div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <motion.div key={s.label}
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className="rounded-2xl p-5"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{s.label}</span>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)' }}>
-                  <Icon className="w-3.5 h-3.5 text-primary" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-foreground">
-                <AnimatedNumber value={s.value} prefix={s.prefix} decimals={s.decimals ?? 2} />
-              </div>
-              {s.sub && <div className="text-xs text-muted-foreground mt-1">{s.sub}</div>}
-            </motion.div>
-          );
-        })}
       </div>
 
-      {/* Level Breakdown */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        {[
-          { lvl: 1, label: 'Level 1 — Direct', rate: '8%' },
-          { lvl: 2, label: 'Level 2', rate: '2%' },
-          { lvl: 3, label: 'Level 3', rate: '1%' },
-        ].map(({ lvl, label, rate }) => {
-          const lvlComms = commissions.filter(c => c.level === lvl);
-          const earned = lvlComms.reduce((s, c) => s + (c.commission_amount || 0), 0);
-          const unique = new Set(lvlComms.map(c => c.referred_email)).size;
-          return (
-            <motion.div key={lvl} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + lvl * 0.1 }}
-              className="rounded-2xl p-5"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-primary"
-                  style={{ background: 'rgba(255,92,0,0.1)' }}>L{lvl}</div>
-                <div className="text-base font-bold text-primary">{rate}</div>
-              </div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">{label}</div>
-              <div className="text-xl font-bold text-emerald-400 mb-0.5">${earned.toFixed(2)}</div>
-              <div className="text-xs text-muted-foreground">{unique} unique referrals</div>
-            </motion.div>
-          );
-        })}
+      {/* Two-column breakdown */}
+      <div className="grid lg:grid-cols-2 gap-6">
+
+        {/* Commission by type */}
+        <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="text-sm font-semibold text-foreground">Commission Breakdown</div>
+          </div>
+          <div className="px-6 py-2">
+            <StatRow label="Purchase Commissions" value={`$${purchaseComm.toFixed(2)}`} sub="From challenge sales" valueColor="text-primary" />
+            <StatRow label="Payout Rewards" value={`$${payoutRewards.toFixed(2)}`} sub="From funded profits" valueColor="text-emerald-400" />
+            <StatRow label="Active Funded Traders" value={activeFunded} sub={`${currentTier.label} tier`} />
+            <StatRow label="Total Referrals" value={profile?.total_referrals || 0} sub={`${profile?.conversions || 0} converted`} />
+          </div>
+        </div>
+
+        {/* Level breakdown */}
+        <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="text-sm font-semibold text-foreground">Multi-Level Earnings</div>
+          </div>
+          <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
+            {[
+              { lvl: 1, label: 'Level 1 — Direct Referrals', rate: '8%' },
+              { lvl: 2, label: 'Level 2', rate: '2%' },
+              { lvl: 3, label: 'Level 3', rate: '1%' },
+            ].map(({ lvl, label, rate }) => {
+              const lvlComms = commissions.filter(c => c.level === lvl);
+              const earned = lvlComms.reduce((s, c) => s + (c.commission_amount || 0), 0);
+              const unique = new Set(lvlComms.map(c => c.referred_email)).size;
+              return (
+                <div key={lvl} className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <div className="text-sm font-medium text-foreground">{label}</div>
+                    <div className="text-xs text-muted-foreground">{unique} unique referrals · {rate} rate</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-emerald-400">${earned.toFixed(2)}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
