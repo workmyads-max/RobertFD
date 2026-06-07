@@ -88,7 +88,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 collapsed ? 'justify-center px-2 py-2.5' : item.prominent ? 'gap-2.5 px-4 py-3.5' : 'gap-2.5 px-3 py-2.5'
               } ${
                 isActive
-                  ? 'text-white'
+                  ? (item.highlight ? 'text-primary' : 'text-white')
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
                     : item.highlight && !isActive
