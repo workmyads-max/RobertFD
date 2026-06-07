@@ -219,7 +219,8 @@ export default function EconomicCalendar() {
       </div>
 
       {/* Column headers (desktop) */}
-      <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+      <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-2 rounded-lg"
+        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
         <span className="col-span-1">Time</span>
         <span className="col-span-1">Flag</span>
         <span className="col-span-1">Ccy</span>
@@ -251,7 +252,8 @@ export default function EconomicCalendar() {
 
       {/* Events */}
       {!loading && !error && (
-        <div className="space-y-1.5">
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)' }}>
+          <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
           <AnimatePresence>
             {filtered.map((event, i) => {
               const impact = impactColors[event.impact] || impactColors.low;
@@ -261,10 +263,10 @@ export default function EconomicCalendar() {
               return (
                 <motion.div key={event.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }} transition={{ delay: i * 0.03 }}
-                  className="rounded-xl px-4 py-3 transition-all hover:bg-white/[0.02]"
+                  className="px-4 py-3 transition-all hover:bg-white/[0.03]"
                   style={{
-                    background: isHighImpact ? 'rgba(239,68,68,0.04)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${isHighImpact ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    borderLeft: isHighImpact ? '3px solid rgba(239,68,68,0.55)' : '3px solid transparent',
                   }}>
                   {/* Mobile */}
                   <div className="md:hidden">
@@ -322,6 +324,7 @@ export default function EconomicCalendar() {
               No events for this filter
             </div>
           )}
+          </div>
         </div>
       )}
 
