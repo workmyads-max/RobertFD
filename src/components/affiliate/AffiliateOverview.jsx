@@ -96,20 +96,18 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
           return (
             <motion.div key={s.label}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className="rounded-2xl p-5 relative overflow-hidden group hover:scale-[1.02] transition-transform"
-              style={{ background: `${s.color}08`, border: `1px solid ${s.color}20` }}>
-              <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: `radial-gradient(ellipse at top left, ${s.color}10, transparent)` }} />
+              className="rounded-2xl p-5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{s.label}</span>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${s.color}18` }}>
-                  <Icon className="w-3.5 h-3.5" style={{ color: s.color }} />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{s.label}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)' }}>
+                  <Icon className="w-3.5 h-3.5 text-primary" />
                 </div>
               </div>
-              <div className="text-2xl font-black" style={{ color: s.color }}>
+              <div className="text-2xl font-bold text-foreground">
                 <AnimatedNumber value={s.value} prefix={s.prefix} decimals={s.decimals ?? 2} />
               </div>
-              {s.sub && <div className="text-[10px] font-mono text-muted-foreground mt-1">{s.sub}</div>}
+              {s.sub && <div className="text-xs text-muted-foreground mt-1">{s.sub}</div>}
             </motion.div>
           );
         })}
@@ -118,25 +116,25 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
       {/* Level Breakdown */}
       <div className="grid grid-cols-3 gap-4 mt-6">
         {[
-          { lvl: 1, label: 'Level 1 — Direct', color: '#FF5C00', rate: '8%' },
-          { lvl: 2, label: 'Level 2', color: '#60a5fa', rate: '2%' },
-          { lvl: 3, label: 'Level 3', color: '#a78bfa', rate: '1%' },
-        ].map(({ lvl, label, color, rate }) => {
+          { lvl: 1, label: 'Level 1 — Direct', rate: '8%' },
+          { lvl: 2, label: 'Level 2', rate: '2%' },
+          { lvl: 3, label: 'Level 3', rate: '1%' },
+        ].map(({ lvl, label, rate }) => {
           const lvlComms = commissions.filter(c => c.level === lvl);
           const earned = lvlComms.reduce((s, c) => s + (c.commission_amount || 0), 0);
           const unique = new Set(lvlComms.map(c => c.referred_email)).size;
           return (
-            <motion.div key={lvl} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + lvl * 0.1 }}
+            <motion.div key={lvl} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + lvl * 0.1 }}
               className="rounded-2xl p-5"
-              style={{ background: `${color}08`, border: `1px solid ${color}25` }}>
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black"
-                  style={{ background: `${color}20`, color, border: `1px solid ${color}35` }}>L{lvl}</div>
-                <div className="text-lg font-black" style={{ color }}>{rate}</div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-primary"
+                  style={{ background: 'rgba(255,92,0,0.1)' }}>L{lvl}</div>
+                <div className="text-base font-bold text-primary">{rate}</div>
               </div>
-              <div className="text-xs font-semibold text-foreground mb-1">{label}</div>
-              <div className="text-2xl font-black text-emerald-400 mb-0.5">${earned.toFixed(2)}</div>
-              <div className="text-[10px] font-mono text-muted-foreground">{unique} unique referrals</div>
+              <div className="text-xs font-medium text-muted-foreground mb-1">{label}</div>
+              <div className="text-xl font-bold text-emerald-400 mb-0.5">${earned.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">{unique} unique referrals</div>
             </motion.div>
           );
         })}

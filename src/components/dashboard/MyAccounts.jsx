@@ -78,20 +78,15 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      transition={{ type: 'spring', stiffness: 100 }}
-      className="rounded-2xl overflow-hidden group relative"
+      className="rounded-2xl overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${statusCfg.color}08, rgba(255,255,255,0.03))`,
-        border: `1px solid ${statusCfg.color}30`,
-        boxShadow: `0 8px 32px ${statusCfg.color}12`,
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderTop: `2px solid ${statusCfg.color}`,
       }}
     >
-      {/* Status bar */}
-      <div className="h-1 w-full" style={{ background: statusCfg.color, opacity: 0.7 }} />
-
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
@@ -129,22 +124,12 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
             { label: 'Max DD', value: `${account.max_drawdown_used || 0}%`, color: (account.max_drawdown_used || 0) > 7 ? 'text-red-400' : 'text-foreground' },
             { label: 'Trades', value: account.total_trades || 0, color: 'text-foreground' },
           ].map((s, idx) => (
-            <motion.div key={s.label}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              whileHover={{ scale: 1.08 }}
-              className="rounded-xl p-2 sm:p-3 text-center group/stat cursor-pointer transition-all"
-              style={{
-                background: `linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,92,0,0.02))`,
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}>
-              <div className="text-[8px] sm:text-[10px] font-mono text-muted-foreground/70 mb-0.5 sm:mb-1 uppercase tracking-wider sm:tracking-widest">{s.label}</div>
-              <motion.div className={`text-xs sm:text-sm font-black ${s.color}`}
-                whileHover={{ scale: 1.1 }}>
-                {s.value}
-              </motion.div>
-            </motion.div>
+            <div key={s.label}
+              className="rounded-xl p-2 sm:p-3 text-center"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-[10px] font-medium text-muted-foreground mb-1 uppercase tracking-wider">{s.label}</div>
+              <div className={`text-xs sm:text-sm font-bold ${s.color}`}>{s.value}</div>
+            </div>
           ))}
         </div>
 
@@ -159,22 +144,13 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               {account.profit_target_progress?.toFixed(1) || 0}% / {profitTarget}%
             </motion.span>
           </div>
-          <div className="h-3 rounded-full bg-white/5 overflow-hidden relative border border-white/10">
+          <div className="h-2 rounded-full bg-white/5 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(((account.profit_target_progress || 0) / profitTarget) * 100, 100)}%` }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full rounded-full relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)',
-                boxShadow: '0 0 20px rgba(255,92,0,0.4)',
-              }}>
-              <motion.div
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 opacity-30"
-                style={{ background: 'linear-gradient(90deg, transparent, white, transparent)' }} />
-            </motion.div>
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full rounded-full"
+              style={{ background: '#FF5C00' }} />
           </div>
         </div>
 

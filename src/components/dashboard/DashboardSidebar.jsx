@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, CalendarDays, Newspaper, BookOpen, Trophy, Award, CreditCard } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -19,18 +19,18 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Shield, prominent: true },
     { id: 'accounts', label: 'My Accounts', icon: Wallet },
-    { id: 'account-overview', label: 'Account Overview', icon: Wallet },
-    { id: 'analytics', label: 'Analytics', icon: Zap },
-    { id: 'markets', label: 'Markets', icon: Activity },
+    { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
+    { id: 'analytics', label: 'Analytics', icon: Activity },
+    { id: 'markets', label: 'Markets', icon: Globe },
     { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true },
-    { id: 'calendar', label: 'Calendar', icon: Globe },
-    { id: 'news', label: 'News', icon: Zap },
-    { id: 'journal', label: 'Journal', icon: Zap },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Zap },
+    { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+    { id: 'news', label: 'News', icon: Newspaper },
+    { id: 'journal', label: 'Journal', icon: BookOpen },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'affiliate', label: 'Affiliate', icon: Users },
-    { id: 'certificates', label: 'Certificates', icon: Zap },
+    { id: 'certificates', label: 'Certificates', icon: Award },
     { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
-    { id: 'billing', label: 'Billing', icon: Zap },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'kyc', label: 'KYC', icon: ShieldCheck },
     { id: 'support', label: 'Support', icon: HeadphonesIcon },
     { id: 'settings', label: 'Settings', icon: Sliders },
@@ -58,7 +58,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full circuit-bg">
+    <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center border-b ${collapsed ? 'justify-center px-3 py-4' : 'px-4 py-5'}`}
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
@@ -82,10 +82,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               key={item.id}
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative ${
-                item.prominent ? 'text-[17px] font-black' : 'text-[15px] font-semibold'
-              } ${
-                collapsed ? 'justify-center px-2 py-2.5' : item.prominent ? 'gap-2.5 px-4 py-3.5' : 'gap-2.5 px-3 py-2.5'
+              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative text-sm font-medium ${
+                collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
               } ${
                 isActive
                   ? (item.highlight ? 'text-primary' : 'text-white')
@@ -96,15 +94,11 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
               style={item.highlight && !isActive ? {
-                background: 'linear-gradient(135deg, rgba(255,92,0,0.18), rgba(255,92,0,0.08))',
-                border: '1.5px solid rgba(255,92,0,0.5)',
-                boxShadow: '0 2px 12px rgba(255,92,0,0.2)',
+                background: 'rgba(255,92,0,0.12)',
+                border: '1px solid rgba(255,92,0,0.35)',
               } : isActive ? {
-                background: collapsed
-                  ? 'rgba(255,92,0,0.18)'
-                  : 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(139,92,246,0.06), rgba(255,92,0,0.04))',
-                borderLeft: collapsed ? 'none' : `${item.prominent ? '3px' : '2px'} solid #FF5C00`,
-                boxShadow: collapsed ? 'none' : 'inset 0 0 20px rgba(255,92,0,0.05)',
+                background: collapsed ? 'rgba(255,92,0,0.15)' : 'rgba(255,92,0,0.1)',
+                borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
               } : {}}
             >
               <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-white/25 group-hover:text-white/60'}`} />
@@ -112,7 +106,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
               )}
-              {!collapsed && isActive && item.id !== 'trash' && <ChevronRight className={`${item.prominent ? 'w-4 h-4' : 'w-3 h-3'} text-primary/40 relative z-10`} />}
+              {!collapsed && isActive && item.id !== 'trash' && <div className="w-1 h-1 rounded-full bg-primary/60 ml-auto relative z-10" />}
               {collapsed && trashCount > 0 && item.id === 'trash' && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
               )}
@@ -132,7 +126,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
           }`}
           style={activePage === 'notifications' ? {
-            background: collapsed ? 'rgba(255,92,0,0.18)' : 'linear-gradient(90deg, rgba(255,92,0,0.15), rgba(139,92,246,0.06))',
+            background: collapsed ? 'rgba(255,92,0,0.15)' : 'rgba(255,92,0,0.1)',
             borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
           } : {}}
         >
@@ -171,10 +165,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     isActive ? 'text-white' : 'text-white/25 hover:text-white/70 hover:bg-white/[0.04]'
                   }`}
                   style={isActive ? {
-                    background: collapsed ? 'rgba(255,92,0,0.18)' : 'linear-gradient(90deg, rgba(255,92,0,0.12), rgba(139,92,246,0.05))',
+                    background: 'rgba(255,92,0,0.1)',
                     borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
                   } : {}}>
-                  <Icon className={`flex-shrink-0 ${collapsed ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
+                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
                 </button>
               );
@@ -220,12 +214,12 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     isActive ? 'text-white' : 'text-white/25 hover:text-white/70 hover:bg-white/[0.04]'
                   }`}
                   style={isActive ? {
-                    background: collapsed ? 'rgba(255,92,0,0.18)' : 'linear-gradient(90deg, rgba(255,92,0,0.12), rgba(139,92,246,0.05))',
+                    background: 'rgba(255,92,0,0.1)',
                     borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
                   } : {}}>
-                  <Icon className={`flex-shrink-0 ${collapsed ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
+                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                  {!collapsed && isActive && <ChevronRight className="w-3 h-3 text-primary/40" />}
+                  {!collapsed && isActive && <div className="w-1 h-1 rounded-full bg-primary/60" />}
                 </button>
               );
             })}

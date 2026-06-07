@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, DollarSign, BarChart3, Award, Target, Activity, Zap, Plus, Clock, AlertCircle } from 'lucide-react';
+import { TrendingUp, DollarSign, BarChart3, Award, Target, Activity, Zap, Plus, Clock, AlertCircle, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
@@ -9,34 +9,22 @@ import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
 function StatCard({ label, value, sub, color, icon: Icon, i }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.07, type: 'spring', stiffness: 100 }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      className="rounded-2xl p-6 group relative overflow-hidden"
+      transition={{ delay: i * 0.06 }}
+      className="rounded-2xl p-5 group"
       style={{
-        background: 'linear-gradient(135deg, rgba(0,245,160,0.08), rgba(0,200,150,0.03))',
-        border: '1px solid rgba(0,245,160,0.2)',
-        boxShadow: '0 8px 32px rgba(0,245,160,0.1)',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
       }}>
-      {/* Glow effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: 'radial-gradient(circle at top right, rgba(0,245,160,0.2), transparent)',
-        }} />
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{label}</span>
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(0,245,160,0.15)', color: '#00F5A0' }}>
-            <Icon className="w-5 h-5" style={{ color: '#00F5A0' }} />
-          </motion.div>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)' }}>
+          <Icon className="w-4 h-4 text-primary" />
         </div>
-        <div className="text-3xl font-black text-foreground mb-2">{value}</div>
-        <div className={`text-xs font-mono ${color}`}>{sub}</div>
       </div>
+      <div className="text-2xl font-bold text-foreground mb-1">{value}</div>
+      <div className={`text-xs font-medium ${color}`}>{sub}</div>
     </motion.div>
   );
 }
@@ -91,26 +79,29 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
     <div>
       <div className="flex items-center justify-between mb-8">
         <div className="flex-1">
-          <h1 className="text-4xl font-black text-foreground">
+          <h1 className="text-2xl font-bold text-foreground">
             Welcome back, <span className="text-primary">{user?.full_name || 'Trader'}</span>
           </h1>
-          <div className="text-muted-foreground text-sm mt-2 font-mono space-y-1">
-            <div>📍 Company: <span className="text-primary">Robert Funds</span> • 🌍 IP: <span className="text-foreground">{location.loading ? 'Loading...' : location.ip}</span> • <span>{location.flag}</span> {location.loading ? 'Loading...' : location.country}</div>
-            <div>📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • 🕐 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} GMT+4</div>
-            {syncing && <div className="text-xs text-primary mt-1">🔄 Syncing MT5 data...</div>}
-            {lastSync && <div className="text-xs text-emerald-400 mt-1">✅ Synced {lastSync.syncedCount} account{lastSync.syncedCount !== 1 ? 's' : ''} at {lastSync.timestamp.toLocaleTimeString()}</div>}
-            {syncError && <div className="text-xs text-red-400 mt-1">⚠️ Sync error: {syncError}</div>}
+          <div className="text-muted-foreground text-xs mt-2 space-y-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-foreground/60">Robert Funds</span>
+              <span className="text-border">·</span>
+              <span>IP: {location.loading ? '—' : location.ip}</span>
+              <span className="text-border">·</span>
+              <span>{location.flag} {location.loading ? '—' : location.country}</span>
+              <span className="text-border">·</span>
+              <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+            </div>
+            {syncing && <div className="text-primary">Syncing MT5 data...</div>}
+            {lastSync && <div className="text-emerald-400">Synced {lastSync.syncedCount} account{lastSync.syncedCount !== 1 ? 's' : ''} at {lastSync.timestamp.toLocaleTimeString()}</div>}
+            {syncError && <div className="text-red-400">Sync error: {syncError}</div>}
           </div>
         </div>
         <div className="hidden md:flex flex-col gap-2">
           <button onClick={onStartChallenge}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(90deg,#00F5A0,#00D9A3)', color: '#000', boxShadow: '0 4px 20px rgba(0,245,160,0.4)' }}>
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground transition-all hover:opacity-90"
+            style={{ background: '#FF5C00' }}>
             <Plus className="w-4 h-4" /> New Challenge
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: 'rgba(0,245,160,0.1)', border: '1px solid rgba(0,245,160,0.2)', color: '#00F5A0' }}>
-            🔗 Mirror Trades <span className="ml-auto opacity-60">(0)</span>
           </button>
         </div>
       </div>
@@ -135,16 +126,18 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
       {/* No accounts — empty state */}
       {!hasAccounts && pendingActivation.length === 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-10 text-center mb-8"
+          className="rounded-2xl p-12 text-center mb-8"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-          <div className="text-4xl mb-4">🚀</div>
-          <div className="text-xl font-black text-foreground mb-2">Start Your Trading Journey</div>
-          <div className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-            You don't have any active challenge accounts yet. Purchase a challenge to access the XTrading Terminal, analytics, and funded capital.
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
+            <Zap className="w-7 h-7 text-primary" />
+          </div>
+          <div className="text-lg font-semibold text-foreground mb-2">Start Your Trading Journey</div>
+          <div className="text-sm text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
+            You don't have any active challenge accounts yet. Purchase a challenge to access the trading terminal, analytics, and funded capital.
           </div>
           <button onClick={onStartChallenge}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold hover:scale-105 transition-all"
-            style={{ background: 'linear-gradient(90deg,#00F5A0,#00D9A3)', color: '#000', boxShadow: '0 4px 20px rgba(0,245,160,0.4)' }}>
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground transition-all hover:opacity-90"
+            style={{ background: '#FF5C00' }}>
             <Plus className="w-4 h-4" /> Browse Challenge Plans
           </button>
         </motion.div>
@@ -161,11 +154,10 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
             {/* Challenge Progress — primary account */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, type: 'spring' }}
-              className="lg:col-span-2 rounded-2xl p-6 group relative overflow-hidden"
+              className="lg:col-span-2 rounded-2xl p-6"
               style={{
-               background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.02))',
-               border: '1px solid rgba(0,245,160,0.2)',
-               boxShadow: '0 8px 32px rgba(0,245,160,0.08)',
+               background: 'rgba(255,255,255,0.04)',
+               border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
               <div className="flex items-center justify-between mb-5">
@@ -176,14 +168,14 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                   </div>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-mono capitalize"
-                  style={{ background: 'rgba(0,245,160,0.12)', color: '#00F5A0', border: '1px solid rgba(0,245,160,0.2)' }}>
+                  style={{ background: 'rgba(255,92,0,0.1)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
                   {primaryAccount?.status}
                 </span>
               </div>
               {[
-                { label: 'Profit Target', current: primaryAccount?.profit_target_progress || 0, target: profitTarget, color: '#00F5A0' },
-                { label: 'Daily Drawdown Used', current: primaryAccount?.daily_drawdown_used || 0, target: dailyDDLimit, color: '#00F5A0' },
-                { label: 'Max Drawdown Used', current: primaryAccount?.max_drawdown_used || 0, target: maxDDLimit, color: '#00F5A0' },
+                { label: 'Profit Target', current: primaryAccount?.profit_target_progress || 0, target: profitTarget, color: '#FF5C00' },
+                { label: 'Daily Drawdown Used', current: primaryAccount?.daily_drawdown_used || 0, target: dailyDDLimit, color: '#10b981' },
+                { label: 'Max Drawdown Used', current: primaryAccount?.max_drawdown_used || 0, target: maxDDLimit, color: '#10b981' },
               ].map((p) => (
                 <div key={p.label} className="mb-4 last:mb-0">
                   <div className="flex justify-between text-xs font-mono mb-1.5">
@@ -197,16 +189,12 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                       transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
                       className="h-full rounded-full relative overflow-hidden"
                       style={{
-                        background: `linear-gradient(90deg, ${p.color}, ${p.color}dd)`,
-                        boxShadow: `0 0 20px ${p.color}40`,
+                        background: p.color,
                       }}>
                       <motion.div
                         animate={{ x: ['0%', '100%'] }}
                         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                        className="absolute inset-0 opacity-40"
-                        style={{
-                          background: `linear-gradient(90deg, transparent, white, transparent)`,
-                        }} />
+                        className="hidden" />
                     </motion.div>
                   </div>
                 </div>
@@ -215,41 +203,30 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: 'spring' }}
-              className="rounded-2xl p-6 relative overflow-hidden"
+              className="rounded-2xl p-6"
               style={{
-                background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.02))',
-                border: '1px solid rgba(0,245,160,0.2)',
-                boxShadow: '0 8px 32px rgba(0,245,160,0.08)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
               <div className="text-sm font-bold text-foreground mb-4 relative z-10">Quick Actions</div>
               <div className="space-y-3 relative z-10">
                 {[
-                  { label: 'Request Payout', icon: DollarSign, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'withdrawals' },
-                  { label: 'View Analytics', icon: BarChart3, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'analytics' },
-                  { label: 'Trading Journal', icon: Activity, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'journal' },
-                  { label: 'Buy Challenge', icon: Plus, color: '#FF5C00', bg: 'rgba(255,92,0,0.08)', border: 'rgba(255,92,0,0.2)', page: 'challenge' },
-                  { label: 'Economic Calendar', icon: Target, color: '#00F5A0', bg: 'rgba(0,245,160,0.08)', border: 'rgba(0,245,160,0.2)', page: 'calendar' },
+                  { label: 'Request Payout', icon: DollarSign, page: 'withdrawals' },
+                  { label: 'View Analytics', icon: BarChart3, page: 'analytics' },
+                  { label: 'Trading Journal', icon: Activity, page: 'journal' },
+                  { label: 'Buy Challenge', icon: Plus, page: 'challenge', primary: true },
+                  { label: 'Economic Calendar', icon: Target, page: 'calendar' },
                 ].map((a, idx) => {
                   const Icon = a.icon;
                   return (
-                    <motion.button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.45 + idx * 0.05 }}
-                      whileHover={{ scale: 1.05, x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center gap-3 p-4 rounded-xl transition-all group"
-                       style={{ background: a.bg, border: `1px solid ${a.border}` }}>
-                       <motion.div whileHover={{ scale: 1.15, rotate: 10 }}>
-                         <Icon className="w-4 h-4" style={{ color: a.color }} />
-                       </motion.div>
+                    <button key={a.label} onClick={() => onNavigate && onNavigate(a.page)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/[0.05] group"
+                      style={a.primary ? { background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' } : { border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${a.primary ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
                       <span className="text-sm font-medium text-foreground">{a.label}</span>
-                      <motion.div className="w-3 h-3 text-muted-foreground ml-auto"
-                        whileHover={{ x: 4 }}>
-                        <Zap className="w-3 h-3" />
-                      </motion.div>
-                    </motion.button>
+                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 ml-auto" />
+                    </button>
                   );
                 })}
               </div>
@@ -258,12 +235,11 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
           {/* Equity Curve — real data or flat line if no trades */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: 'spring' }}
-            className="rounded-2xl p-6 relative overflow-hidden group"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            className="rounded-2xl p-6"
             style={{
-              background: 'linear-gradient(135deg, rgba(0,245,160,0.06), rgba(0,200,150,0.03))',
-              border: '1px solid rgba(0,245,160,0.2)',
-              boxShadow: `0 8px 32px ${totalPnl >= 0 ? 'rgba(0,245,160,0.08)' : 'rgba(239,68,68,0.08)'}`,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
             <div className="flex items-center justify-between mb-6 relative z-10">
@@ -271,11 +247,9 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                 <div className="text-sm font-bold text-foreground">Portfolio Equity Curve</div>
                 <div className="text-xs text-muted-foreground font-mono">Real-time balance across all accounts</div>
               </div>
-              <motion.span className={`text-lg font-black`} style={{ color: totalPnl >= 0 ? '#00F5A0' : '#ff6b6b' }}
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}>
+              <span className={`text-lg font-bold ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </motion.span>
+              </span>
             </div>
             {totalPnl === 0 ? (
               <div className="flex items-center justify-center h-24 rounded-xl"
