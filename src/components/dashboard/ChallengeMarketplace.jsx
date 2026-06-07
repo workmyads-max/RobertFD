@@ -168,21 +168,69 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <div className="mb-4 sm:mb-6">
         <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          {PLATFORMS.map(p => (
-            <button key={p.id} onClick={() => setPlatform(p.id)}
-              className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all hover:scale-[1.02]"
-              style={{
-                background: platform === p.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${platform === p.id ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.09)'}`,
-              }}>
-              <span className="text-base sm:text-lg">{p.icon}</span>
-              <div className="text-left min-w-0">
-                <div className={`text-xs sm:text-sm font-bold ${platform === p.id ? 'text-primary' : 'text-foreground'} truncate max-w-[120px] sm:max-w-none`}>{p.label}</div>
-                <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">{p.desc}</div>
-              </div>
-              {platform === p.id && <div className="w-2 h-2 rounded-full bg-primary ml-auto flex-shrink-0" />}
-            </button>
-          ))}
+          {PLATFORMS.map(p => {
+            const isSelected = platform === p.id;
+            return (
+              <button key={p.id} onClick={() => setPlatform(p.id)}
+                className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02] group"
+                style={{
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(0,102,204,0.18) 0%, rgba(0,60,120,0.12) 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${isSelected ? 'rgba(0,122,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: isSelected ? '0 0 24px rgba(0,102,204,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+                }}>
+                {/* MT5 Official Logo SVG */}
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #0066CC 0%, #004499 60%, #002266 100%)',
+                    boxShadow: isSelected ? '0 4px 16px rgba(0,102,204,0.4)' : '0 2px 8px rgba(0,0,0,0.3)',
+                  }}>
+                  <svg viewBox="0 0 40 40" className="w-7 h-7 sm:w-8 sm:h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* MT5 Logo — stylized M + chart bars */}
+                    <rect width="40" height="40" rx="8" fill="url(#mt5grad)" />
+                    <defs>
+                      <linearGradient id="mt5grad" x1="0" y1="0" x2="40" y2="40">
+                        <stop offset="0%" stopColor="#1a8cff" />
+                        <stop offset="100%" stopColor="#003399" />
+                      </linearGradient>
+                    </defs>
+                    {/* Bars */}
+                    <rect x="6" y="22" width="5" height="11" rx="1.5" fill="rgba(255,255,255,0.5)" />
+                    <rect x="13" y="16" width="5" height="17" rx="1.5" fill="rgba(255,255,255,0.7)" />
+                    <rect x="20" y="10" width="5" height="23" rx="1.5" fill="white" />
+                    <rect x="27" y="14" width="5" height="19" rx="1.5" fill="rgba(255,255,255,0.7)" />
+                    {/* MT text */}
+                    <text x="5" y="9" fontSize="7" fontWeight="800" fill="white" fontFamily="Arial" letterSpacing="0.5">MT5</text>
+                  </svg>
+                </div>
+
+                <div className="text-left min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`text-sm sm:text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                      {p.label}
+                    </div>
+                    {isSelected && (
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
+                        style={{ background: 'rgba(0,122,255,0.25)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-mono mt-0.5" style={{ color: isSelected ? 'rgba(147,197,253,0.8)' : 'rgba(255,255,255,0.35)' }}>
+                    {p.desc}
+                  </div>
+                </div>
+
+                {/* Selected indicator dot */}
+                {isSelected && (
+                  <div className="flex-shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400" style={{ boxShadow: '0 0 8px rgba(96,165,250,0.8)' }} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
