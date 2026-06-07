@@ -134,6 +134,10 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
       {!hasAccounts && pendingActivation.length === 0 && (
         <div className="rounded-xl border border-dashed py-20 flex flex-col items-center justify-center text-center"
           style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+            style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
+            <Plus className="w-5 h-5 text-primary" />
+          </div>
           <div className="text-base font-semibold text-foreground mb-2">No active accounts</div>
           <div className="text-sm text-muted-foreground mb-6 max-w-sm">
             Purchase a challenge to access the trading terminal, analytics, and funded capital.
