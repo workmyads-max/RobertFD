@@ -59,7 +59,7 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
 
       {/* Tier status — large institutional panel */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
-        <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
 
           {/* Current tier */}
           <div className="p-8">
@@ -114,16 +114,16 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
 
       {/* KPI strip */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4" style={{ borderColor: 'hsl(var(--border))' }}>
           {[
             { label: 'Total Earned', value: totalEarned, prefix: '$', sub: `${commissions.length} commissions`, color: 'text-foreground' },
             { label: 'Pending Approval', value: totalPending, prefix: '$', sub: 'Awaiting review', color: 'text-yellow-400' },
             { label: 'Approved', value: totalApproved, prefix: '$', sub: 'Ready for payout', color: 'text-emerald-400' },
             { label: 'Total Paid', value: totalPaid, prefix: '$', sub: 'Processed', color: 'text-foreground' },
           ].map(s => (
-            <div key={s.label} className="p-6 border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">{s.label}</div>
-              <div className={`text-3xl font-semibold tracking-tight mb-1 ${s.color}`}>
+            <div key={s.label} className="p-4 sm:p-6 border-b lg:border-b-0 border-r even:border-r-0 lg:even:border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2 sm:mb-3">{s.label}</div>
+              <div className={`text-xl sm:text-3xl font-semibold tracking-tight mb-1 ${s.color}`}>
                 <AnimatedNumber value={s.value} prefix={s.prefix} />
               </div>
               <div className="text-xs text-muted-foreground">{s.sub}</div>
@@ -133,7 +133,7 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
       </div>
 
       {/* Two-column breakdown */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Commission by type */}
         <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>

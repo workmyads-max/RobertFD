@@ -119,7 +119,7 @@ export default function Checkout() {
     <div className="min-h-screen bg-background text-foreground font-inter">
       {/* Header */}
       <div className="border-b border-white/5" style={{ background: 'rgba(8,8,10,0.98)' }}>
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1506)', border: '1px solid rgba(255,92,0,0.4)' }}>
@@ -130,9 +130,9 @@ export default function Checkout() {
               <span className="text-primary font-black text-sm">Funds</span>
             </div>
           </a>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {isLoggedIn && (
-              <span className="text-[10px] font-mono px-2 py-1 rounded-full text-emerald-400"
+              <span className="hidden sm:inline text-[10px] font-mono px-2 py-1 rounded-full text-emerald-400"
                 style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
                 ● Signed in · {order.email}
               </span>
@@ -146,7 +146,7 @@ export default function Checkout() {
 
       {/* Progress Bar */}
       <div className="border-b border-white/5" style={{ background: 'rgba(8,8,10,0.7)' }}>
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-0">
             {STEPS.map((s, i) => {
               const num = i + 1;
@@ -172,7 +172,7 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

@@ -198,7 +198,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-3 sm:space-y-4 mt-14 sm:mt-4">
 
         {/* Welcome Header */}
         <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />

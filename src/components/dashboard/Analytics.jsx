@@ -32,21 +32,16 @@ function ObjectiveBar({ label, current, target, color, passed, danger }) {
   const status = passed ? 'On Track' : danger ? 'At Risk' : 'In Progress';
   const statusColor = passed ? 'text-emerald-400' : danger ? 'text-red-400' : 'text-muted-foreground';
   return (
-    <div className="flex items-center gap-5 py-3.5 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
-      <div className="w-36 flex-shrink-0">
+    <div className="py-3.5 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="flex items-center justify-between mb-2">
         <div className="text-sm font-medium text-foreground">{label}</div>
-      </div>
-      <div className="flex-1">
-        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-foreground">{current.toFixed(2)}%<span className="text-muted-foreground"> / {target}%</span></span>
+          <span className={`text-xs font-medium ${statusColor} hidden sm:inline`}>{status}</span>
         </div>
       </div>
-      <div className="w-24 text-right flex-shrink-0">
-        <span className="text-sm font-mono text-foreground">{current.toFixed(2)}%</span>
-        <span className="text-xs text-muted-foreground"> / {target}%</span>
-      </div>
-      <div className="w-20 text-right flex-shrink-0">
-        <span className={`text-xs font-medium ${statusColor}`}>{status}</span>
+      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
   );
@@ -166,32 +161,32 @@ export default function Analytics({ onStartChallenge }) {
       </div>
 
       {/* Account context bar */}
-      <div className="flex items-center gap-4 px-5 py-3 rounded-lg text-sm"
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-4 sm:px-5 py-3 rounded-lg text-sm"
         style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span className="font-medium text-foreground">{account.account_id}</span>
+          <span className="font-medium text-foreground text-xs sm:text-sm">{account.account_id}</span>
         </div>
-        <span className="text-muted-foreground/30">|</span>
-        <span className="text-muted-foreground">${(account.account_size || 0).toLocaleString()}</span>
-        <span className="text-muted-foreground/30">|</span>
-        <span className="text-muted-foreground capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
-        <span className="text-muted-foreground/30">|</span>
-        <span className="capitalize" style={{ color: account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00' : '#888' }}>{account.status}</span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span className="text-muted-foreground text-xs sm:text-sm">${(account.account_size || 0).toLocaleString()}</span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span className="text-muted-foreground capitalize text-xs sm:text-sm">{account.phase?.replace('phase', 'Phase ')}</span>
+        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+        <span className="capitalize text-xs sm:text-sm" style={{ color: account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00' : '#888' }}>{account.status}</span>
       </div>
 
       {/* KPI strip */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4" style={{ borderColor: 'hsl(var(--border))' }}>
           {[
             { label: 'Total P&L', value: `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, sub: `${account.account_size ? ((totalPnl / account.account_size) * 100).toFixed(2) : '0.00'}% of account`, color: totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
             { label: 'Win Rate', value: `${winRate.toFixed(1)}%`, sub: `${totalTrades} total trades`, color: winRate >= 50 ? 'text-foreground' : 'text-yellow-400' },
             { label: 'Daily DD Used', value: `${dailyDD.toFixed(2)}%`, sub: 'of 5% limit', color: dailyDD > 4 ? 'text-red-400' : 'text-foreground' },
             { label: 'Max DD Used', value: `${maxDD.toFixed(2)}%`, sub: 'of 10% limit', color: maxDD > 7 ? 'text-red-400' : 'text-foreground' },
           ].map(s => (
-            <div key={s.label} className="p-6 border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">{s.label}</div>
-              <div className={`text-3xl font-semibold tracking-tight mb-1 ${s.color}`}>{s.value}</div>
+            <div key={s.label} className="p-4 sm:p-6 border-b lg:border-b-0 border-r last:border-r-0 even:border-r-0 lg:even:border-r" style={{ borderColor: 'hsl(var(--border))' }}>
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2 sm:mb-3">{s.label}</div>
+              <div className={`text-xl sm:text-3xl font-semibold tracking-tight mb-1 ${s.color}`}>{s.value}</div>
               <div className="text-xs text-muted-foreground">{s.sub}</div>
             </div>
           ))}
@@ -211,7 +206,7 @@ export default function Analytics({ onStartChallenge }) {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
           <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
             <div className="text-sm font-semibold text-foreground">Equity Curve</div>
@@ -263,7 +258,7 @@ export default function Analytics({ onStartChallenge }) {
       </div>
 
       {/* Stats tables */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
           <div className="px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
             <div className="text-sm font-semibold text-foreground">Trade Performance</div>

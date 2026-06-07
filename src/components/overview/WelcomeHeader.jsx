@@ -153,7 +153,7 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
         </div>
 
         {/* Bottom row: Motivational Quote (hidden on mobile, visible on lg+) */}
-        <div className="hidden lg:flex flex-col justify-center flex-1 pl-6 border-t lg:border-t-0 lg:border-l pt-4 lg:pt-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="hidden lg:flex flex-col justify-center flex-1 pl-6 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <span className="text-[9px] sm:text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2 block">Daily Quote</span>
           <p className="text-xs sm:text-sm md:text-base font-medium text-white/80 leading-relaxed italic line-clamp-2">
             "{dailyQuote}"

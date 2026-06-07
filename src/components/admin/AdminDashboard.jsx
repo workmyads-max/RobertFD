@@ -64,12 +64,12 @@ export default function AdminDashboard() {
         ) : recentOrders.map((o, i) => {
           const statusColor = o.payment_status === 'confirmed' ? '#10b981' : o.payment_status === 'pending' ? '#f59e0b' : '#ef4444';
           return (
-            <div key={o.id} className="flex items-center gap-4 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-              <div className="text-xs font-mono text-muted-foreground w-28 truncate">{o.order_id || `ORD-${o.id?.slice(0,6)}`}</div>
-              <div className="flex-1 text-xs text-foreground">{o.full_name || o.email || '—'}</div>
-              <div className="text-xs text-muted-foreground">${(o.account_size||0).toLocaleString()} {o.challenge_type === 'two-step' ? '2-Step' : 'Instant'}</div>
-              <div className="text-xs font-bold text-foreground">${o.price}</div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full capitalize" style={{ color: statusColor, background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}>
+            <div key={o.id} className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+              <div className="text-xs font-mono text-muted-foreground w-20 sm:w-28 truncate flex-shrink-0">{o.order_id || `ORD-${o.id?.slice(0,6)}`}</div>
+              <div className="flex-1 text-xs text-foreground truncate min-w-0">{o.full_name || o.email || '—'}</div>
+              <div className="hidden sm:block text-xs text-muted-foreground flex-shrink-0">${(o.account_size||0).toLocaleString()}</div>
+              <div className="text-xs font-bold text-foreground flex-shrink-0">${o.price}</div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full capitalize flex-shrink-0" style={{ color: statusColor, background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}>
                 {o.payment_status}
               </span>
             </div>
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick stats grid */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: 'Pending Withdrawals', count: pendingWithdrawals.length, color: '#f59e0b' },
           { label: 'Open Support Tickets', count: openTickets.length, color: '#60a5fa' },

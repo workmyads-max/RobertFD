@@ -258,7 +258,7 @@ export default function Withdrawals({ user }) {
 
       {/* Per-account funded breakdown */}
       {fundedAccounts.length > 0 && (
-        <div className="grid md:grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {fundedAccounts.map(acc => {
             const profit = Math.max(0, acc.pnl || 0);
             const traderShare = profit * 0.8;
@@ -291,19 +291,19 @@ export default function Withdrawals({ user }) {
       )}
 
       {/* Profit split info banner */}
-      <div className="rounded-2xl p-5 mb-6 flex items-start gap-4"
+      <div className="rounded-2xl p-4 sm:p-5 mb-6"
         style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.2)' }}>
-        <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <div className="text-sm font-bold text-foreground mb-1">80/20 Profit Split — Fully Transparent</div>
-          <div className="text-xs text-muted-foreground">You keep <span className="text-emerald-400 font-bold">80%</span> of all profits.
-            Robert Funds retains <span className="text-red-400 font-bold">20%</span>.
-            A $25 processing fee and any applicable affiliate rewards are deducted from your 80% share before payout.</div>
+        <div className="flex items-center justify-between mb-2 gap-4">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-primary flex-shrink-0" />
+            <div className="text-sm font-bold text-foreground">80/20 Profit Split</div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-lg font-black text-emerald-400">${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-[10px] font-mono text-muted-foreground">Available Profit</div>
+          </div>
         </div>
-        <div className="text-right flex-shrink-0">
-          <div className="text-xl font-black text-emerald-400">${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-          <div className="text-[10px] font-mono text-muted-foreground">Available Profit</div>
-        </div>
+        <div className="text-xs text-muted-foreground">You keep <span className="text-emerald-400 font-bold">80%</span> of all profits. Robert Funds retains <span className="text-red-400 font-bold">20%</span>. A $25 processing fee and any applicable affiliate rewards are deducted from your 80% share before payout.</div>
       </div>
 
       {/* Withdrawal list */}

@@ -42,16 +42,23 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [platform, setPlatform] = useState('mt5');
 
   const { data: allPlans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['challenge-plans'],
-    queryFn: () => base44.entities.ChallengePlan.list('sort_order', 100),
+    queryKey: ['challenge-plans-all'],
+    queryFn: async () => {
+      const data = await base44.entities.ChallengePlan.list('sort_order', 200);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
-  const plans = allPlans.filter(p =>
-    p.type === challengeType &&
-    p.account_type === accountType &&
-    p.is_visible !== false &&
-    p.is_active !== false
-  );
+  const plans = allPlans
+    .filter(p =>
+      p.type === challengeType &&
+      p.account_type === accountType &&
+      p.is_visible !== false
+    )
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   const { data: platformSettings = [] } = useQuery({
     queryKey: ['platform-settings-trading'],
@@ -311,9 +318,12 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 </motion.div>
               );
             })}
-            {plans.length === 0 && (
+            {plans.length === 0 && !plansLoading && (
               <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
-                No active plans for this challenge type and account model.
+                {allPlans.length === 0
+                  ? 'Loading challenge plans...'
+                  : `No plans available for ${challengeType.replace('-', ' ')} ${accountType} accounts.`
+                }
               </div>
             )}
           </motion.div>

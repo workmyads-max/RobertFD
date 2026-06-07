@@ -9,13 +9,13 @@ import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 function KpiPanel({ label, value, sub, trend, trendLabel }) {
   const isPos = trend >= 0;
   return (
-    <div className="flex flex-col justify-between p-6 border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
-      <div className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">{label}</div>
-      <div className="text-3xl font-semibold text-foreground tracking-tight mb-2">{value}</div>
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col justify-between p-4 sm:p-6 border-b lg:border-b-0 border-r even:border-r-0 lg:even:border-r last:border-r-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2 sm:mb-3">{label}</div>
+      <div className="text-xl sm:text-3xl font-semibold text-foreground tracking-tight mb-1 sm:mb-2">{value}</div>
+      <div className="flex items-center gap-2 flex-wrap">
         {trendLabel && (
           <span className={`text-xs font-medium ${isPos ? 'text-emerald-400' : 'text-red-400'}`}>
-            {isPos ? '↑' : '↓'} {trendLabel}
+            {isPos ? '↑' : '↓'} <span className="hidden sm:inline">{trendLabel}</span>
           </span>
         )}
         {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
@@ -29,21 +29,16 @@ function ObjectiveRow({ label, current, target, color, passed, danger }) {
   const status = passed ? 'On Track' : danger ? 'At Risk' : 'Active';
   const statusColor = passed ? 'text-emerald-400' : danger ? 'text-red-400' : 'text-muted-foreground';
   return (
-    <div className="flex items-center gap-6 py-4 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
-      <div className="w-32 flex-shrink-0">
+    <div className="py-4 border-b last:border-b-0" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="flex items-center justify-between mb-2">
         <div className="text-sm font-medium text-foreground">{label}</div>
-      </div>
-      <div className="flex-1">
-        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-foreground">{current.toFixed(2)}%<span className="text-muted-foreground"> / {target}%</span></span>
+          <span className={`text-xs font-medium ${statusColor} hidden sm:inline`}>{status}</span>
         </div>
       </div>
-      <div className="w-28 text-right flex-shrink-0">
-        <span className="text-sm font-mono text-foreground">{current.toFixed(2)}%</span>
-        <span className="text-xs text-muted-foreground"> / {target}%</span>
-      </div>
-      <div className="w-16 text-right flex-shrink-0">
-        <span className={`text-xs font-medium ${statusColor}`}>{status}</span>
+      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
   );
@@ -154,7 +149,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
         <>
           {/* KPI strip — institutional proportions */}
           <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="grid grid-cols-2 lg:grid-cols-4" style={{ borderColor: 'hsl(var(--border))' }}>
               <KpiPanel
                 label="Total Balance"
                 value={`$${totalBalance.toLocaleString()}`}
@@ -185,10 +180,10 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
           </div>
 
           {/* Main 2-col layout */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Left — objectives + equity */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="col-span-1 lg:col-span-2 space-y-6">
 
               {/* Trading Objectives */}
               <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
