@@ -181,12 +181,14 @@ export default function Analytics({ onStartChallenge }) {
           return (
             <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
               className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.label}</span>
-                <Icon className={`w-4 h-4 ${s.color}`} />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{s.label}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <Icon className={`w-3.5 h-3.5 ${s.color}`} />
+                </div>
               </div>
-              <div className={`text-2xl font-black ${s.color} mb-0.5`}>{s.value}</div>
-              <div className="text-xs text-muted-foreground font-mono">{s.sub}</div>
+              <div className={`text-2xl font-bold ${s.color} mb-0.5`}>{s.value}</div>
+              <div className="text-xs text-muted-foreground">{s.sub}</div>
             </motion.div>
           );
         })}

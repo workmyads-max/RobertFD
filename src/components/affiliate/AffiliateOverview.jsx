@@ -56,34 +56,33 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
       {/* Tier Banner */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
         className="rounded-2xl p-5 mb-6 flex items-center gap-5 flex-wrap"
-        style={{ background: `${currentTier.color}0d`, border: `1px solid ${currentTier.color}30` }}>
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{ background: `${currentTier.color}20`, border: `1px solid ${currentTier.color}40` }}>
-          <Star className="w-7 h-7" style={{ color: currentTier.color }} />
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'rgba(255,92,0,0.1)' }}>
+          <Star className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1">
-          <div className="text-[10px] font-mono uppercase tracking-widest mb-0.5" style={{ color: currentTier.color }}>
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
             Current Tier
           </div>
-          <div className="text-2xl font-black" style={{ color: currentTier.color }}>{currentTier.label}</div>
-          <div className="text-xs text-muted-foreground font-mono">
-            Payout Reward Rate: <span className="font-bold" style={{ color: currentTier.color }}>{currentTier.rate}%</span>
+          <div className="text-xl font-bold text-foreground">{currentTier.label}</div>
+          <div className="text-xs text-muted-foreground">
+            Payout Reward Rate: <span className="font-bold text-primary">{currentTier.rate}%</span>
             {nextTier && (
               <span className="ml-3">→ {nextTier.min - activeFunded} more traders for {nextTier.label} ({nextTier.rate}%)</span>
             )}
           </div>
         </div>
         {/* Tier progress */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           {TIERS.map((t, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
-              <div className={`w-3 h-3 rounded-full border-2 transition-all`}
+              <div className="w-2.5 h-2.5 rounded-full border-2 transition-all"
                 style={{
                   background: activeFunded >= t.min ? t.color : 'transparent',
-                  borderColor: t.color,
-                  boxShadow: activeFunded >= t.min ? `0 0 8px ${t.color}` : 'none'
+                  borderColor: activeFunded >= t.min ? t.color : 'rgba(255,255,255,0.2)',
                 }} />
-              <span className="text-[9px] font-mono" style={{ color: t.color }}>{t.rate}%</span>
+              <span className="text-[9px] font-medium text-muted-foreground">{t.rate}%</span>
             </div>
           ))}
         </div>

@@ -252,9 +252,8 @@ function CertCard({ cert, index, onPreview }) {
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -4 }}
-      className="group relative rounded-3xl overflow-hidden"
-      style={{ background: 'rgba(6,8,18,0.98)', border: `1px solid ${cfg.color}30` }}
+      className="group relative rounded-2xl overflow-hidden"
+      style={{ background: 'rgba(14,15,22,0.98)', border: `1px solid ${cfg.color}25` }}
     >
       <div className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}, ${cfg.color}90, transparent)` }} />
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full pointer-events-none"
@@ -272,13 +271,10 @@ function CertCard({ cert, index, onPreview }) {
         </div>
 
         <div className="flex items-center gap-5 mb-5">
-          <motion.div
-            animate={{ y: [-2, 2, -2] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: cfg.bg, border: `1px solid ${cfg.color}40`, boxShadow: `0 0 24px ${cfg.glow}` }}>
-            <Icon className="w-8 h-8" style={{ color: cfg.color }} />
-          </motion.div>
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: cfg.bg, border: `1px solid ${cfg.color}30` }}>
+            <Icon className="w-7 h-7" style={{ color: cfg.color }} />
+          </div>
           <div>
             <div className="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-0.5">{cfg.title}</div>
             <div className="text-4xl font-black" style={{ color: cfg.color, textShadow: `0 0 20px ${cfg.glow}` }}>
@@ -449,14 +445,14 @@ export default function Certificates({ user }) {
             <motion.div key={s.label}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
               className="rounded-2xl p-4 flex items-center gap-3"
-              style={{ background: `${s.color}08`, border: `1px solid ${s.color}20` }}>
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${s.color}12`, border: `1px solid ${s.color}25` }}>
-                <Icon className="w-4 h-4" style={{ color: s.color }} />
+                style={{ background: 'rgba(255,92,0,0.1)' }}>
+                <Icon className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
-                <div className="text-[9px] font-mono text-white/25">{s.label}</div>
+                <div className="text-xl font-bold text-foreground">{s.value}</div>
+                <div className="text-xs text-muted-foreground">{s.label}</div>
               </div>
             </motion.div>
           );
