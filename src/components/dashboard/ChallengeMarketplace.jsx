@@ -128,61 +128,69 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-      <div className="mb-8 sm:mb-10">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/30 mb-2">Challenge Marketplace</p>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight mb-2">
-          Choose your <span className="text-primary">account size</span>
-        </h1>
-        <p className="text-sm text-white/40">
-          Funded capital from $5K to $200K. Pass the challenge, keep up to 80% of profits.
-        </p>
-      </div>
+       <div className="mb-6 sm:mb-8">
+         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3 sm:mb-4"
+           style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
+           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+           <span className="text-[10px] sm:text-xs font-mono text-primary uppercase tracking-widest">Challenge Marketplace</span>
+         </div>
+         <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
+           Choose Your <span className="text-primary">Capital Tier</span>
+         </h1>
+         <p className="text-xs sm:text-sm text-muted-foreground">
+           Institutional funding from $5K to $200K. Select your challenge type and account model.
+         </p>
+       </div>
 
-      {/* Step 1 — Challenge Type */}
-      <div className="mb-8">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/25 mb-3">Challenge Type</p>
-        <div className="inline-flex rounded-xl p-1 gap-0.5"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Challenge type toggle */}
+      <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+        <div className="inline-flex rounded-xl p-1 flex-wrap gap-1 sm:flex-nowrap" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step' },
-            { id: 'instant', label: 'Instant' },
-            { id: 'instant_light', label: 'Light' },
+            { id: 'two-step', label: '⚡ Two-Step' },
+            { id: 'instant', label: '🚀 Instant' },
+            { id: 'instant_light', label: '💡 Light' },
           ].map(t => (
-            <button key={t.id}
-              onClick={() => { setChallengeType(t.id); setSelected(null); }}
-              className="px-4 sm:px-5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              style={{
-                background: challengeType === t.id ? 'rgba(255,92,0,0.15)' : 'transparent',
-                border: challengeType === t.id ? '1px solid rgba(255,92,0,0.3)' : '1px solid transparent',
-                color: challengeType === t.id ? '#FF7A2F' : 'rgba(255,255,255,0.4)',
-              }}>
+            <button key={t.id} onClick={() => { setChallengeType(t.id); setSelected(null); }}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                challengeType === t.id ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
+              }`}>
               {t.label}
-              {t.id === 'instant_light' && challengeType === 'instant_light' && (
-                <span className="ml-2 text-[10px] font-semibold" style={{ color: '#CCFF00' }}>50% OFF</span>
-              )}
             </button>
           ))}
         </div>
+        {challengeType === 'instant_light' && (
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-mono"
+            style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.2)', color: '#CCFF00' }}>
+            50% OFF
+          </div>
+        )}
       </div>
 
-      {/* Step 2 — Platform */}
-      <div className="mb-8">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/25 mb-3">Trading Platform</p>
-        <div className="flex flex-wrap gap-3">
+      {/* Platform selector */}
+      <div className="mb-4 sm:mb-6">
+        <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
             return (
               <button key={p.id} onClick={() => setPlatform(p.id)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02]"
                 style={{
-                  background: isSelected ? 'rgba(0,102,204,0.1)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${isSelected ? 'rgba(0,122,255,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(0,102,204,0.18) 0%, rgba(0,60,120,0.12) 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${isSelected ? 'rgba(0,122,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: isSelected ? '0 0 24px rgba(0,102,204,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                 }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                  style={{ background: 'linear-gradient(135deg, #1a8cff, #003399)' }}>
-                  <svg viewBox="0 0 40 40" className="w-6 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #0066CC 0%, #004499 60%, #002266 100%)',
+                    boxShadow: isSelected ? '0 4px 16px rgba(0,102,204,0.4)' : '0 2px 8px rgba(0,0,0,0.3)',
+                  }}>
+                  <svg viewBox="0 0 40 40" className="w-7 h-7 sm:w-8 sm:h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="url(#mt5grad)" />
                     <defs>
-                      <linearGradient id="mt5grad2" x1="0" y1="0" x2="40" y2="40">
+                      <linearGradient id="mt5grad" x1="0" y1="0" x2="40" y2="40">
                         <stop offset="0%" stopColor="#1a8cff" />
                         <stop offset="100%" stopColor="#003399" />
                       </linearGradient>
@@ -194,12 +202,26 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                     <text x="5" y="9" fontSize="7" fontWeight="800" fill="white" fontFamily="Arial" letterSpacing="0.5">MT5</text>
                   </svg>
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-medium" style={{ color: isSelected ? '#93c5fd' : 'rgba(255,255,255,0.7)' }}>{p.label}</div>
-                  <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{p.desc}</div>
+                <div className="text-left min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`text-sm sm:text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                      {p.label}
+                    </div>
+                    {isSelected && (
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
+                        style={{ background: 'rgba(0,122,255,0.25)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-mono mt-0.5" style={{ color: isSelected ? 'rgba(147,197,253,0.8)' : 'rgba(255,255,255,0.35)' }}>
+                    {p.desc}
+                  </div>
                 </div>
                 {isSelected && (
-                  <div className="ml-2 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                  <div className="flex-shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400" style={{ boxShadow: '0 0 8px rgba(96,165,250,0.8)' }} />
+                  </div>
                 )}
               </button>
             );
@@ -207,55 +229,42 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         </div>
       </div>
 
-      {/* Step 3 — Account Model */}
-      <div className="mb-10">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/25 mb-3">Account Model</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
-          {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
-            const isActive = accountType === key;
-            return (
-              <button key={key} onClick={() => setAccountType(key)}
-                className="rounded-xl p-4 text-left transition-all"
-                style={{
-                  background: isActive ? 'rgba(255,92,0,0.07)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${isActive ? 'rgba(255,92,0,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ background: isActive ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.05)' }}>
-                      {key === 'standard'
-                        ? <Zap className="w-3.5 h-3.5" style={{ color: isActive ? '#FF5C00' : 'rgba(255,255,255,0.4)' }} />
-                        : <Shield className="w-3.5 h-3.5" style={{ color: isActive ? '#FF5C00' : 'rgba(255,255,255,0.4)' }} />}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold" style={{ color: isActive ? '#FF7A2F' : 'rgba(255,255,255,0.8)' }}>{cfg.label}</div>
-                      <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{cfg.leverage} leverage</div>
-                    </div>
-                  </div>
-                  {isActive && (
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: '#FF5C00' }}>
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
+      {/* Account type */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-full mb-6 sm:mb-8">
+        {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => (
+          <motion.button key={key} onClick={() => setAccountType(key)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            className="rounded-xl p-3 sm:p-4 text-left transition-all"
+            style={{
+              background: accountType === key ? 'rgba(255,92,0,0.08)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${accountType === key ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            }}>
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: accountType === key ? 'rgba(255,92,0,0.2)' : 'rgba(255,255,255,0.06)' }}>
+                {key === 'standard'
+                  ? <Zap className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${accountType === key ? 'text-primary' : 'text-muted-foreground'}`} />
+                  : <Shield className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${accountType === key ? 'text-primary' : 'text-muted-foreground'}`} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className={`text-xs sm:text-sm font-bold truncate ${accountType === key ? 'text-primary' : 'text-foreground'}`}>{cfg.label}</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate">{cfg.leverage} leverage</div>
+              </div>
+              {accountType === key && (
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-white" />
                 </div>
-                <div className="space-y-1.5">
-                  {cfg.features.map(f => (
-                    <div key={f.text} className="flex items-center gap-2">
-                      <div className="w-1 h-1 rounded-full flex-shrink-0"
-                        style={{ background: f.ok ? '#10b981' : 'rgba(255,255,255,0.15)' }} />
-                      <span className="text-[11px]"
-                        style={{ color: f.ok ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)' }}>
-                        {f.text}
-                      </span>
-                    </div>
-                  ))}
+              )}
+            </div>
+            <div className="space-y-1">
+              {cfg.features.map(f => (
+                <div key={f.text} className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${f.ok ? 'bg-emerald-400' : 'bg-red-400/60'}`} />
+                  <span className={`text-[10px] sm:text-[11px] ${f.ok ? 'text-foreground' : 'text-muted-foreground'} truncate`}>{f.text}</span>
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+          </motion.button>
+        ))}
       </div>
 
       {/* Plans grid */}
@@ -265,16 +274,15 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={`${challengeType}-${accountType}`}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="grid gap-3 sm:gap-4 mb-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
           >
             {plans.map((plan, i) => {
               const isPopular = !!plan.is_popular;
               let badge = null;
               let badgeColor = '';
               if (isPopular) {
-                badge = 'Most Popular';
+                badge = '🔥 Most Popular';
                 badgeColor = 'bg-orange-500/90';
               } else if (plan.type === 'instant_light') {
                 badge = '50% Cheaper';
@@ -283,9 +291,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.1, type: 'spring', stiffness: 200, damping: 22 }}
                 >
                   <ChallengeCard
                     plan={plan}
@@ -297,7 +305,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               );
             })}
             {plans.length === 0 && !plansLoading && (
-              <div className="col-span-full text-center py-12 text-white/25 text-sm">
+              <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
                 {allPlans.length === 0
                   ? 'Loading challenge plans...'
                   : `No plans available for ${challengeType.replace('-', ' ')} ${accountType} accounts.`
@@ -308,25 +316,23 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         </AnimatePresence>
       )}
 
-      {/* Platform highlights */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-10 rounded-xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.06)' }}>
+      {/* Quick highlights */}
+      <div className="rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 mb-8 sm:mb-10"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         {[
-          { icon: TrendingUp, title: 'Up to 80% Profit Split', desc: 'Scaling plan available on all funded accounts.' },
-          { icon: Clock, title: 'Bi-weekly Payouts', desc: 'Request every 14 days. Processed within 24–48 hours.' },
-          { icon: BarChart2, title: `${accCfg.label} Account`, desc: `${accCfg.leverage} leverage. ${accountType === 'swing' ? 'News & overnight trading allowed.' : 'Standard trading model.'}` },
+          { icon: TrendingUp, title: 'Profit Split', desc: 'Up to 80% profit split. Scaling plan available on all funded accounts.' },
+          { icon: Clock, title: 'Payout Schedule', desc: 'Request payouts every 14 days. Processed within 24-48 hours.' },
+          { icon: BarChart2, title: 'Trading Rules', desc: `${accCfg.label}: ${accCfg.leverage} leverage. ${accountType === 'swing' ? 'News & overnight trading allowed.' : 'Standard trading model.'}` },
         ].map(f => {
           const Icon = f.icon;
           return (
-            <div key={f.title} className="flex items-start gap-3 px-5 py-4"
-              style={{ background: 'hsl(var(--card))' }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}>
-                <Icon className="w-3.5 h-3.5 text-primary" />
+            <div key={f.title} className="flex gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
-              <div>
-                <div className="text-sm font-medium text-white/80 mb-0.5">{f.title}</div>
-                <div className="text-xs text-white/35 leading-relaxed">{f.desc}</div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold text-foreground mb-0.5">{f.title}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
               </div>
             </div>
           );
