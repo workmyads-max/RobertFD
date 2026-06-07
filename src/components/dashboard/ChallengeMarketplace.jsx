@@ -343,67 +343,68 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         })}
       </div>
 
-      {/* Challenge Rules — single unified card */}
-      <div className="rounded-2xl overflow-hidden mb-8"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        {/* Card header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b"
-          style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(255,92,0,0.12)' }}>
-              <Shield className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-foreground">Challenge Rules</div>
-              <div className="text-xs text-muted-foreground">Violations result in immediate account termination</div>
-            </div>
+      {/* Challenge Rules — single institutional card */}
+      <div className="rounded-xl overflow-hidden mb-8"
+        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div>
+            <div className="text-sm font-semibold text-foreground">Challenge Rules</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Read carefully — violations result in immediate termination</div>
           </div>
-          <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
-            style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-            Strictly Enforced
+          <span className="text-xs font-medium px-2.5 py-1 rounded"
+            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.18)' }}>
+            Binding
           </span>
         </div>
 
-        {/* Rules list */}
-        <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          {CHALLENGE_RULES.map((rule, i) => {
-            const Icon = rule.icon;
-            return (
-              <div key={rule.title}
-                className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-white/[0.02] group">
-                {/* Index + icon */}
-                <div className="flex items-center gap-3 flex-shrink-0 w-8">
-                  <span className="text-xs font-mono text-muted-foreground/40 w-4 text-right select-none">{String(i + 1).padStart(2, '0')}</span>
-                </div>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${rule.color}10`, border: `1px solid ${rule.color}20` }}>
-                  <Icon className="w-4 h-4" style={{ color: rule.color }} />
-                </div>
-                {/* Rule content */}
-                <div className="flex-1 min-w-0 sm:flex sm:items-baseline sm:gap-6">
-                  <div className="text-sm font-semibold text-foreground whitespace-nowrap mb-0.5 sm:mb-0 sm:w-44 flex-shrink-0">{rule.title}</div>
-                  <div className="text-xs text-muted-foreground leading-relaxed">{rule.body}</div>
-                </div>
-                {/* Pill badge */}
-                <div className="hidden md:flex flex-shrink-0 items-center">
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                    style={{ background: `${rule.color}10`, color: rule.color, border: `1px solid ${rule.color}20` }}>
-                    {i < 3 ? 'Core' : i < 6 ? 'Conduct' : 'Security'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+        {/* Table header */}
+        <div className="hidden md:grid grid-cols-[2rem_10rem_1fr_5rem] gap-4 px-5 py-2 border-b"
+          style={{ borderColor: 'hsl(var(--border))', background: 'rgba(255,255,255,0.02)' }}>
+          <div />
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">Rule</div>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">Description</div>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 text-right">Category</div>
         </div>
 
-        {/* Card footer */}
-        <div className="px-6 py-3 flex items-center gap-2 border-t"
-          style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
-          <AlertTriangle className="w-3.5 h-3.5 text-yellow-400/60 flex-shrink-0" />
-          <span className="text-[11px] text-muted-foreground/60">
-            By purchasing a challenge you confirm you have read and agree to all rules above.
+        {/* Rows */}
+        {CHALLENGE_RULES.map((rule, i) => {
+          const Icon = rule.icon;
+          const category = i < 3 ? 'Risk' : i < 6 ? 'Conduct' : 'Security';
+          const categoryColor = i < 3 ? '#f59e0b' : i < 6 ? '#60a5fa' : '#10b981';
+          return (
+            <div key={rule.title}
+              className="grid grid-cols-1 md:grid-cols-[2rem_10rem_1fr_5rem] gap-x-4 gap-y-1 items-start px-5 py-3.5 border-b hover:bg-white/[0.015] transition-colors"
+              style={{ borderColor: 'hsl(var(--border))' }}>
+              {/* Icon */}
+              <div className="hidden md:flex items-center justify-center w-6 h-6 rounded flex-shrink-0 mt-0.5"
+                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              {/* Title */}
+              <div className="flex items-center gap-2 md:block">
+                <Icon className="md:hidden w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm font-medium text-foreground">{rule.title}</span>
+              </div>
+              {/* Body */}
+              <div className="text-xs text-muted-foreground leading-relaxed pl-5 md:pl-0">{rule.body}</div>
+              {/* Category */}
+              <div className="hidden md:flex justify-end">
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded"
+                  style={{ color: categoryColor, background: `${categoryColor}12`, border: `1px solid ${categoryColor}20` }}>
+                  {category}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Footer */}
+        <div className="px-5 py-3 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.01)' }}>
+          <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
+          <span className="text-xs text-muted-foreground/50">
+            Purchasing a challenge constitutes full acceptance of all rules listed above.
           </span>
         </div>
       </div>
