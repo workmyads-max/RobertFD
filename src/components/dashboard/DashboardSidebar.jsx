@@ -60,7 +60,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center border-b ${collapsed ? 'justify-center px-3 py-4' : 'px-4 py-5'}`}
+      <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-4' : 'px-4 py-5'}`}
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <button 
           onClick={() => setCollapsed?.(!collapsed)}
@@ -73,7 +73,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
 
       {/* Nav */}
-      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', marginTop: collapsed ? '0' : '68px' }}>
+      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -268,15 +268,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       {/* Desktop sidebar */}
       <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[70px]' : 'w-64'}`}
         style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-        {collapsed ? (
-          <div className="flex flex-col items-center py-4 space-y-4">
-            <button onClick={() => setCollapsed?.(false)} title="Expand sidebar" className="text-white/30 hover:text-white/60">
-              <PanelLeftOpen className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          <SidebarContent />
-        )}
+        <SidebarContent />
       </div>
 
       {/* Mobile drawer */}
