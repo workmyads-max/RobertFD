@@ -74,7 +74,11 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusCfg.icon;
   const isPnlPos = (account.pnl || 0) >= 0;
-  const profitTarget = account.challenge_type === 'two-step' ? (account.phase === 'phase1' ? 10 : 5) : 8;
+  // Read from rule_snapshot — NOT hardcoded
+  const snap = account.rule_snapshot || {};
+  const profitTarget = account.phase === 'phase2'
+    ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? (account.challenge_type === 'two-step' ? 10 : 8));
 
   return (
     <motion.div

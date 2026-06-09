@@ -61,7 +61,8 @@ export default function AdminAffiliate() {
   });
 
   const updateCommissionMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.AffiliateCommission.update(id, data),
+    mutationFn: ({ id, new_status }) =>
+      base44.functions.invoke('adminApproveCommission', { commission_id: id, new_status }),
     onSuccess: () => qc.invalidateQueries(['all-commissions']),
   });
 
@@ -290,7 +291,7 @@ export default function AdminAffiliate() {
                   <div className="text-sm font-bold text-emerald-400">${(c.commission_amount || 0).toFixed(2)}</div>
                   <div className="flex gap-1 flex-wrap">
                     {['pending', 'approved', 'paid', 'rejected'].map(st => (
-                      <button key={st} onClick={() => updateCommissionMutation.mutate({ id: c.id, data: { status: st } })}
+                      <button key={st} onClick={() => updateCommissionMutation.mutate({ id: c.id, new_status: st })}
                         className="px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-all"
                         style={{
                           background: c.status === st

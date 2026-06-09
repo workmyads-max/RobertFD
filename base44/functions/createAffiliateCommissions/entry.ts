@@ -28,23 +28,39 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, commissions_created: 0, reason: 'No referral chain for this user' });
     }
 
+    // IDEMPOTENCY: Check if commissions already exist for this order_id
+    if (order_id) {
+      const existingComms = await sr.entities.AffiliateCommission.filter({ order_id });
+      if (existingComms.length > 0) {
+        console.log(`[createAffiliateCommissions] Commissions already exist for order_id=${order_id} — skipping duplicate`);
+        return Response.json({ success: true, commissions_created: 0, reason: 'Duplicate: commissions already created for this order_id', order_id });
+      }
+    }
+
+    // Read rates from AffiliateSettings entity — fallback to original defaults only if missing
+    const settingsList = await sr.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
+    const settings = settingsList[0];
+    const L1_RATE = settings?.l1_rate ?? 8;
+    const L2_RATE = settings?.l2_rate ?? 2;
+    const L3_RATE = settings?.l3_rate ?? 1;
+    console.log(`[createAffiliateCommissions] Rates — L1: ${L1_RATE}%, L2: ${L2_RATE}%, L3: ${L3_RATE}% (source: ${settings ? 'AffiliateSettings.global_config' : 'fallback defaults'})`);
+
+    // Build referral chain: buyer → L1 sponsor → L2 sponsor → L3 sponsor
     const RATES = [
-      { level: 1, email: buyerProfile.referred_by_email, rate: 8 },
+      { level: 1, email: buyerProfile.referred_by_email, rate: L1_RATE },
     ];
 
     // L2: referrer's referrer
-    if (buyerProfile.referred_by_email) {
-      const l1Profiles = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
-      const l1Profile = l1Profiles[0];
-      if (l1Profile?.referred_by_email) {
-        RATES.push({ level: 2, email: l1Profile.referred_by_email, rate: 2 });
+    const l1Profiles = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
+    const l1Profile = l1Profiles[0];
+    if (l1Profile?.referred_by_email) {
+      RATES.push({ level: 2, email: l1Profile.referred_by_email, rate: L2_RATE });
 
-        // L3: depth 3
-        const l2Profiles = await sr.entities.AffiliateProfile.filter({ user_email: l1Profile.referred_by_email });
-        const l2Profile = l2Profiles[0];
-        if (l2Profile?.referred_by_email) {
-          RATES.push({ level: 3, email: l2Profile.referred_by_email, rate: 1 });
-        }
+      // L3: depth 3
+      const l2Profiles = await sr.entities.AffiliateProfile.filter({ user_email: l1Profile.referred_by_email });
+      const l2Profile = l2Profiles[0];
+      if (l2Profile?.referred_by_email) {
+        RATES.push({ level: 3, email: l2Profile.referred_by_email, rate: L3_RATE });
       }
     }
 

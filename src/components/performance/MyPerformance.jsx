@@ -158,8 +158,8 @@ export default function MyPerformance({ user }) {
         {[
           { label: 'Risk Score', value: `${riskScore.score}/100`, color: riskColor, sub: riskScore.level.toUpperCase() },
           { label: 'Win Rate', value: `${(selectedAccount?.win_rate || 0).toFixed(1)}%`, color: '#10b981', sub: `${closedTrades.length} trades` },
-          { label: 'Daily DD Used', value: `${(selectedAccount?.daily_drawdown_used || 0).toFixed(2)}%`, color: (selectedAccount?.daily_drawdown_used || 0) > 3 ? '#ef4444' : '#10b981', sub: 'Resets 03:00 GMT+4' },
-          { label: 'Max DD Used', value: `${(selectedAccount?.max_drawdown_used || 0).toFixed(2)}%`, color: (selectedAccount?.max_drawdown_used || 0) > 6 ? '#ef4444' : '#f59e0b', sub: 'Overall limit: 10%' },
+          { label: 'Daily DD Used', value: `${(selectedAccount?.daily_drawdown_used || 0).toFixed(2)}%`, color: (selectedAccount?.daily_drawdown_used || 0) > (selectedAccount?.rule_snapshot?.daily_dd_limit ?? 5) * 0.7 ? '#ef4444' : '#10b981', sub: `Limit: ${selectedAccount?.rule_snapshot?.daily_dd_limit ?? 5}%` },
+          { label: 'Max DD Used', value: `${(selectedAccount?.max_drawdown_used || 0).toFixed(2)}%`, color: (selectedAccount?.max_drawdown_used || 0) > (selectedAccount?.rule_snapshot?.max_dd_limit ?? 10) * 0.7 ? '#ef4444' : '#f59e0b', sub: `Limit: ${selectedAccount?.rule_snapshot?.max_dd_limit ?? 10}%` },
           { label: 'Profit Target', value: `${(selectedAccount?.profit_target_progress || 0).toFixed(1)}%`, color: '#6366f1', sub: 'Progress' },
           { label: 'Violations', value: violations.length, color: violations.length > 0 ? '#ef4444' : '#10b981', sub: violations.length ? 'Action Required' : 'Clear' },
         ].map((kpi, i) => (

@@ -25,22 +25,27 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
   const [submitted, setSubmitted] = useState(false);
   const qc = useQueryClient();
 
+  // Display-only: approved balance for UI rendering
   const available = commissions.filter(c => c.status === 'approved').reduce((s, c) => s + (c.commission_amount || 0), 0);
-  const MIN_WITHDRAWAL = 50;
+  const [submitError, setSubmitError] = useState('');
 
   const submitMutation = useMutation({
-    mutationFn: () => base44.entities.WithdrawalRequest.create({
-      user_email: profile?.user_email,
-      account_id: 'affiliate',
-      amount: parseFloat(amount),
-      method,
-      wallet_address: wallet,
-      status: 'pending',
-      notes: 'Affiliate commission withdrawal',
-    }),
+    mutationFn: async () => {
+      setSubmitError('');
+      // All validation is backend-secured via requestAffiliateWithdrawal function
+      const res = await base44.functions.invoke('requestAffiliateWithdrawal', {
+        amount: parseFloat(amount),
+        method,
+        wallet_address: wallet,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      return res.data;
+    },
     onSuccess: () => { setSubmitted(true); qc.invalidateQueries(['affiliate-withdrawals']); },
+    onError: (err) => setSubmitError(err.message),
   });
 
+  const MIN_WITHDRAWAL = 50; // display only — backend enforces from settings
   const canSubmit = parseFloat(amount) >= MIN_WITHDRAWAL && parseFloat(amount) <= available && wallet.trim();
 
   return (
@@ -119,6 +124,9 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }} />
             </div>
 
+            {submitError && (
+              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">{submitError}</div>
+            )}
             <button onClick={() => submitMutation.mutate()} disabled={!canSubmit || submitMutation.isPending}
               className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
               style={{ background: canSubmit ? 'linear-gradient(90deg,#FF5C00,#cc4900)' : 'rgba(255,255,255,0.06)', boxShadow: canSubmit ? '0 4px 20px rgba(255,92,0,0.3)' : 'none' }}>

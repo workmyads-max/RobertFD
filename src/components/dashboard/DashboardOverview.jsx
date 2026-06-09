@@ -74,9 +74,13 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
   const hasAccounts = activeAccounts.length > 0;
   const primaryAccount = activeAccounts[0];
-  const profitTarget = primaryAccount?.challenge_type === 'instant' ? 8 : (primaryAccount?.phase === 'phase2' ? 5 : 10);
-  const dailyDDLimit = 5;
-  const maxDDLimit = 10;
+  // Read limits from rule_snapshot — NOT hardcoded
+  const snap = primaryAccount?.rule_snapshot || {};
+  const dailyDDLimit = snap.daily_dd_limit ?? 5;
+  const maxDDLimit = snap.max_dd_limit ?? 10;
+  const profitTarget = primaryAccount?.phase === 'phase2'
+    ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? (primaryAccount?.challenge_type === 'instant' ? 8 : 10));
 
   const quickActions = [
     { label: 'Request Payout', page: 'withdrawals' },
@@ -176,6 +180,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                 trend={-(worstDD)}
                 trendLabel={worstDD > dailyDDLimit * 0.7 ? 'Approaching limit' : 'Within range'}
               />
+              {/* dailyDDLimit and maxDDLimit read from primaryAccount.rule_snapshot */}
             </div>
           </div>
 

@@ -18,30 +18,25 @@ const METHODS = [
   { id: 'bank_wire', label: 'Bank Wire', icon: '🏦' },
 ];
 
-const PROFIT_SPLIT = 0.80; // 80% trader
-const WITHDRAWAL_FEE = 25;
-
-function calcBreakdown(grossAmount) {
-  const traderShare = grossAmount * PROFIT_SPLIT;
-  const companyShare = grossAmount * (1 - PROFIT_SPLIT);
-  const affiliateReward = traderShare * 0.09; // 9% to sponsor if exists
-  const finalAmount = traderShare - WITHDRAWAL_FEE;
-  return { grossAmount, companyShare, traderShare, affiliateReward, withdrawalFee: WITHDRAWAL_FEE, finalAmount };
-}
+// NOTE: All payout calculations are now backend-driven via requestTraderWithdrawal function.
+// These constants are DISPLAY ONLY for the pre-submission breakdown preview.
+// The backend is the source of truth.
+const DISPLAY_PROFIT_SPLIT = 0.80;
+const DISPLAY_WITHDRAWAL_FEE = 25;
 
 function PayoutBreakdown({ amount, affiliateReward = 0 }) {
   const gross = parseFloat(amount) || 0;
-  const traderShare = gross * PROFIT_SPLIT;
+  const traderShare = gross * DISPLAY_PROFIT_SPLIT;
   const companyShare = gross * 0.2;
-  const finalAmount = traderShare - WITHDRAWAL_FEE;
+  const finalAmount = traderShare - DISPLAY_WITHDRAWAL_FEE;
 
   const rows = [
     { label: 'Requested Amount', value: `$${gross.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: 'text-foreground', bold: false },
     { label: 'Company Share (20%)', value: `-$${companyShare.toFixed(2)}`, color: 'text-red-400', bold: false },
     { label: 'Your Share (80%)', value: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400', bold: true },
-    { label: 'Sponsor Affiliate Reward (9%)', value: `-$${(traderShare * 0.09).toFixed(2)}`, color: 'text-yellow-400', bold: false },
-    { label: 'Withdrawal Processing Fee', value: `-$${WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground', bold: false },
-    { label: 'Final Payout Amount', value: `$${Math.max(0, finalAmount - traderShare * 0.09).toFixed(2)}`, color: 'text-primary', bold: true, divider: true },
+    { label: 'Sponsor Affiliate Reward (~9%)', value: `-$${(traderShare * 0.09).toFixed(2)}`, color: 'text-yellow-400', bold: false },
+    { label: 'Withdrawal Processing Fee', value: `-$${DISPLAY_WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground', bold: false },
+    { label: 'Est. Payout (preview only)', value: `$${Math.max(0, finalAmount - traderShare * 0.09).toFixed(2)}`, color: 'text-primary', bold: true, divider: true },
   ];
 
   return (
@@ -71,7 +66,7 @@ function WithdrawalCard({ w, i }) {
   const traderShare = (w.amount || 0) * (w.profit_split_pct / 100 || 0.8);
   const companyShare = (w.amount || 0) - traderShare;
   const affiliateReward = w.affiliate_reward || (traderShare * 0.09);
-  const fee = w.withdrawal_fee || WITHDRAWAL_FEE;
+  const fee = w.withdrawal_fee || DISPLAY_WITHDRAWAL_FEE;
   const final = w.final_amount || Math.max(0, traderShare - affiliateReward - fee);
 
   return (
@@ -121,7 +116,7 @@ function WithdrawalCard({ w, i }) {
               { label: 'Gross Amount', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
               { label: `Company Share (${100 - (w.profit_split_pct||80)}%)`, val: `-$${companyShare.toFixed(2)}`, color: 'text-red-400' },
               { label: `Trader Share (${w.profit_split_pct||80}%)`, val: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400' },
-              { label: 'Sponsor Reward (9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
+              { label: 'Sponsor Reward (~9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
               { label: 'Processing Fee', val: `-$${fee.toFixed(2)}`, color: 'text-muted-foreground' },
               { label: 'Final Processed', val: `$${final.toFixed(2)}`, color: 'text-primary', bold: true },
             ].map((row, i) => (
@@ -173,29 +168,17 @@ export default function Withdrawals({ user }) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => {
-      if (!kycApproved) throw new Error('KYC not approved');
+    mutationFn: async (data) => {
       const selectedAcc = fundedAccounts.find(a => a.account_id === data.account_id) || fundedAccounts[0];
       if (!selectedAcc) throw new Error('No funded account selected');
-      const gross = parseFloat(data.amount);
-      const traderShare = gross * 0.8;
-      const companyShare = gross * 0.2;
-      const affiliateReward = traderShare * 0.09;
-      const finalAmount = Math.max(0, traderShare - affiliateReward - WITHDRAWAL_FEE);
-      const withdrawalId = `WD-${Date.now().toString(36).toUpperCase()}`;
-      return base44.entities.WithdrawalRequest.create({
-        ...data,
-        withdrawal_id: withdrawalId,
+      // All validation and calculation is backend-driven
+      const res = await base44.functions.invoke('requestTraderWithdrawal', {
         account_id: selectedAcc.account_id,
-        user_email: user?.email,
-        status: 'pending',
-        profit_split_pct: 80,
-        company_share: companyShare,
-        trader_share: traderShare,
-        affiliate_reward: affiliateReward,
-        withdrawal_fee: WITHDRAWAL_FEE,
-        final_amount: finalAmount,
+        amount: parseFloat(data.amount),
+        method: data.method,
+        wallet_address: data.wallet_address,
       });
+      return res.data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['withdrawals'] });
@@ -204,10 +187,11 @@ export default function Withdrawals({ user }) {
     },
   });
 
+  // Display-only preview (backend recalculates on submission)
   const grossAmount = parseFloat(form.amount) || 0;
-  const traderShare = grossAmount * 0.8;
+  const traderShare = grossAmount * DISPLAY_PROFIT_SPLIT;
   const affiliateReward = traderShare * 0.09;
-  const finalAmount = Math.max(0, traderShare - affiliateReward - WITHDRAWAL_FEE);
+  const finalAmount = Math.max(0, traderShare - affiliateReward - DISPLAY_WITHDRAWAL_FEE);
 
   return (
     <div>
@@ -366,8 +350,8 @@ export default function Withdrawals({ user }) {
                       { label: 'Gross Profit', val: `$${grossAmount.toFixed(2)}`, color: 'text-foreground' },
                       { label: 'Company Share (20%)', val: `-$${(grossAmount * 0.2).toFixed(2)}`, color: 'text-red-400' },
                       { label: 'Your Share (80%)', val: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400' },
-                      { label: 'Sponsor Reward (9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
-                      { label: 'Processing Fee', val: `-$${WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground' },
+                      { label: 'Sponsor Reward (~9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
+                      { label: 'Processing Fee (est.)', val: `-$${DISPLAY_WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground' },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between px-4 py-2 border-b border-white/[0.04]">
                         <span className="text-xs text-muted-foreground">{row.label}</span>

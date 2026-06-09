@@ -7,63 +7,19 @@ import { base44 } from '@/api/base44Client';
 const STATUS_COLOR = { pending: '#f59e0b', approved: '#60a5fa', processing: '#FF5C00', paid: '#10b981', rejected: '#ef4444' };
 const STATUS_OPTS = ['pending','approved','processing','paid','rejected'];
 
-async function approveAndDistribute(withdrawal, qc) {
-  // 1. Mark approved
-  const traderShare = (withdrawal.amount || 0) * ((withdrawal.profit_split_pct || 80) / 100);
-  const companyShare = (withdrawal.amount || 0) - traderShare;
-  const affiliateReward = withdrawal.affiliate_reward || traderShare * 0.09;
-  const fee = withdrawal.withdrawal_fee || 25;
-  const finalAmount = Math.max(0, traderShare - affiliateReward - fee);
-
-  await base44.entities.WithdrawalRequest.update(withdrawal.id, {
-    status: 'approved',
-    trader_share: traderShare,
-    company_share: companyShare,
-    affiliate_reward: affiliateReward,
-    final_amount: finalAmount,
+async function approveAndDistribute(withdrawal, qc, overrideSplit, overrideFee, adminNotes) {
+  // All logic is now backend-secured via adminApproveWithdrawal function
+  // Idempotency, duplicate payout_reward protection, and audit trail are backend-enforced
+  const res = await base44.functions.invoke('adminApproveWithdrawal', {
+    withdrawal_id: withdrawal.id,
+    override_split_pct: overrideSplit ? parseFloat(overrideSplit) : undefined,
+    override_fee: overrideFee ? parseFloat(overrideFee) : undefined,
+    admin_notes: adminNotes || '',
   });
-
-  // 2. Distribute affiliate reward to direct sponsor
-  if (withdrawal.user_email) {
-    const profiles = await base44.entities.AffiliateProfile.filter({ user_email: withdrawal.user_email });
-    const traderProfile = profiles[0];
-    if (traderProfile?.referred_by_email) {
-      await base44.entities.AffiliateCommission.create({
-        affiliate_email: traderProfile.referred_by_email,
-        referred_email: withdrawal.user_email,
-        commission_type: 'payout_reward',
-        level: 1,
-        source_amount: traderShare,
-        commission_rate: 9,
-        commission_amount: affiliateReward,
-        withdrawal_id: withdrawal.id,
-        status: 'approved',
-        notes: `Payout reward from ${withdrawal.user_email} withdrawal of $${withdrawal.amount}`,
-      });
-    }
-  }
-
-  // 3. Issue first_payout certificate if not already issued
-  if (withdrawal.user_email) {
-    const existing = await base44.entities.Certificate.filter({ user_email: withdrawal.user_email, type: 'first_payout' });
-    if (existing.length === 0) {
-      const certId = `RF-CERT-${Date.now().toString(36).toUpperCase()}`;
-      await base44.entities.Certificate.create({
-        certificate_id: certId,
-        user_email: withdrawal.user_email,
-        trader_name: withdrawal.user_email,
-        type: 'first_payout',
-        title: 'First Profit Payout',
-        account_id: withdrawal.account_id,
-        account_size: withdrawal.amount,
-        issue_date: new Date().toISOString().split('T')[0],
-        is_verified: true,
-      });
-    }
-  }
-
+  if (res.data?.error) throw new Error(res.data.error);
   qc.invalidateQueries({ queryKey: ['admin-withdrawals'] });
   qc.invalidateQueries({ queryKey: ['withdrawals'] });
+  return res.data;
 }
 
 export default function AdminWithdrawals() {
@@ -88,7 +44,7 @@ export default function AdminWithdrawals() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (w) => approveAndDistribute(w, qc),
+    mutationFn: (w) => approveAndDistribute(w, qc, editSplit, editFee, document.getElementById('admin-notes')?.value),
     onSuccess: () => setSelected(null),
   });
 
