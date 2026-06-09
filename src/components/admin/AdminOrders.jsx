@@ -7,7 +7,7 @@ import { base44 } from '@/api/base44Client';
 /**
  * Confirm payment and provision MT5 account via manualCryptoReview backend.
  * This is the SAME path used by AdminPaymentReview and all automatic webhooks.
- * No duplicate ChallengeAccount creation — provisionMatchTraderAccount handles it.
+ * No duplicate ChallengeAccount creation — provisionMT5Account handles it.
  */
 async function confirmAndProvisionAccount(order) {
   const res = await base44.functions.invoke('manualCryptoReview', {

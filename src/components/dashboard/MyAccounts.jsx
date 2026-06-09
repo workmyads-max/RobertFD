@@ -20,10 +20,10 @@ function CredentialsModal({ account, onClose }) {
   const [copied, setCopied] = useState('');
   const copy = (val, key) => { navigator.clipboard.writeText(val); setCopied(key); setTimeout(() => setCopied(''), 2000); };
   const rows = [
-    { label: 'Platform', value: PLATFORM_LABELS[account.platform] || account.platform || 'XTrading' },
-    { label: 'Login ID', value: account.mt_login || account.login_credentials?.split('|')[0]?.replace('Login:', '')?.trim() || account.account_id, copyable: true },
-    { label: 'Password', value: account.mt_password || '••••••••••••', copyable: !!account.mt_password },
-    { label: 'Server', value: account.mt_server || account.server || 'mt.fundedfirms.com', copyable: true },
+    { label: 'Platform', value: 'MetaTrader 5', copyable: false },
+    { label: 'Login ID', value: account.mt_login || account.account_id, copyable: !!account.mt_login },
+    { label: 'Password', value: account.mt_password || 'Not Provisioned', copyable: !!account.mt_password },
+    { label: 'Server', value: account.mt_server || 'Not Provisioned', copyable: !!account.mt_server },
     { label: 'Account ID', value: account.account_id, copyable: true },
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Account Size', value: `$${(account.account_size || 0).toLocaleString()}` },

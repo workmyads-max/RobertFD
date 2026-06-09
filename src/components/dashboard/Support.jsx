@@ -99,21 +99,34 @@ export default function Support() {
           <div className="text-center py-10 rounded-2xl text-sm text-muted-foreground" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
             No tickets yet. Create one if you need help!
           </div>
-        ) : tickets.map((t, i) => {
-          const cfg = STATUS_CFG[t.status] || STATUS_CFG.open;
-          const Icon = cfg.icon;
-          return (
-            <div key={t.id} className="rounded-xl p-4 mb-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-semibold text-foreground">{t.subject}</span>
-                <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ color: cfg.color, background: `${cfg.color}15`, border: `1px solid ${cfg.color}30` }}>
-                  <Icon className="w-3 h-3" />{cfg.label}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground line-clamp-1">{t.message}</div>
-            </div>
-          );
-        })}
+        ) : (
+          <div className="space-y-3">
+            {tickets.map((t, i) => {
+              const cfg = STATUS_CFG[t.status] || STATUS_CFG.open;
+              const Icon = cfg.icon;
+              return (
+                <div key={t.id} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-foreground">{t.subject}</span>
+                    <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ color: cfg.color, background: `${cfg.color}15`, border: `1px solid ${cfg.color}30` }}>
+                      <Icon className="w-3 h-3" />{cfg.label}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-2">{t.message}</div>
+                  {t.admin_reply && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="text-[10px] font-mono text-muted-foreground mb-1">Admin Reply:</div>
+                      <div className="text-sm text-foreground/80 leading-relaxed">{t.admin_reply}</div>
+                    </div>
+                  )}
+                  <div className="text-[10px] text-muted-foreground/50 mt-2 font-mono">
+                    Status: {t.status} · {new Date(t.created_date).toLocaleDateString()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Form modal */}
