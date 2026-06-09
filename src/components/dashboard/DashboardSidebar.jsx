@@ -22,7 +22,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'analytics', label: 'Analytics', icon: Activity },
     { id: 'markets', label: 'Markets', icon: Globe },
-    { id: 'marketplace', label: '🛒 Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true },
+    { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
     { id: 'news', label: 'News', icon: Newspaper },
     { id: 'journal', label: 'Journal', icon: BookOpen },
