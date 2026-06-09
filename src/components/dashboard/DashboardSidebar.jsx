@@ -91,7 +91,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
                     : item.highlight && !isActive
                     ? 'text-primary hover:text-primary'
-                    : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
+                    : 'text-white/35 hover:text-primary/80 hover:bg-primary/[0.07]'
               }`}
               style={item.highlight && !isActive ? {
                 background: 'rgba(255,92,0,0.15)',
@@ -102,7 +102,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-white/60'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
               {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
@@ -119,19 +119,19 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <button
           onClick={() => handleNav('notifications')}
           title={collapsed ? 'Notifications' : undefined}
-          className={`w-full flex items-center rounded-xl text-[13px] font-medium transition-all duration-150 group relative ${
-            collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
+          className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-150 group relative ${
+          collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
           } ${
-            activePage === 'notifications'
-              ? 'text-white'
-              : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
+          activePage === 'notifications'
+          ? 'text-white'
+          : 'text-white/35 hover:text-primary/80 hover:bg-primary/[0.07]'
           }`}
           style={activePage === 'notifications' ? {
             background: collapsed ? 'rgba(255,92,0,0.15)' : 'rgba(255,92,0,0.1)',
             borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
           } : {}}
         >
-          <Bell className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${activePage === 'notifications' ? 'text-primary' : 'text-white/25 group-hover:text-white/60'}`} />
+          <Bell className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${activePage === 'notifications' ? 'text-primary' : 'text-white/25 group-hover:text-primary/70'}`} />
           {!collapsed && <span className="flex-1 text-left">Notifications</span>}
           {!collapsed && unreadCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#FF5C00' }}>{unreadCount}</span>
@@ -163,13 +163,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                   className={`w-full flex items-center rounded-xl text-[12px] font-medium transition-all duration-150 group ${
                     collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2'
                   } ${
-                    isActive ? 'text-white' : 'text-white/25 hover:text-white/70 hover:bg-white/[0.04]'
+                    isActive ? 'text-white' : 'text-white/25 hover:text-primary/70 hover:bg-primary/[0.06]'
                   }`}
                   style={isActive ? {
                     background: 'rgba(255,92,0,0.1)',
                     borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
                   } : {}}>
-                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
+                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-primary/60'}`} />
                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
                 </button>
               );
@@ -212,13 +212,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                   className={`w-full flex items-center rounded-xl text-[12px] font-medium transition-all duration-150 group ${
                     collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2'
                   } ${
-                    isActive ? 'text-white' : 'text-white/25 hover:text-white/70 hover:bg-white/[0.04]'
+                    isActive ? 'text-white' : 'text-white/25 hover:text-primary/70 hover:bg-primary/[0.06]'
                   }`}
                   style={isActive ? {
                     background: 'rgba(255,92,0,0.1)',
                     borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
                   } : {}}>
-                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-white/50'}`} />
+                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-primary/60'}`} />
                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
                   {!collapsed && isActive && <div className="w-1 h-1 rounded-full bg-primary/60" />}
                 </button>
