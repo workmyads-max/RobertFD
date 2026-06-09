@@ -75,8 +75,6 @@ export default function XFLogo({ size = 'md', animate = false }) {
 
   return (
     <div className="flex items-center gap-3">
-      <LogoIcon px={px} animate={animate} />
-
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
         {/* "XFunded" — bold, tight tracking */}
