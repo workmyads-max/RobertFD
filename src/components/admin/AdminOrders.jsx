@@ -4,86 +4,21 @@ import { ShoppingBag, CheckCircle, XCircle, Clock, Search, Eye } from 'lucide-re
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
+/**
+ * Confirm payment and provision MT5 account via manualCryptoReview backend.
+ * This is the SAME path used by AdminPaymentReview and all automatic webhooks.
+ * No duplicate ChallengeAccount creation — provisionMatchTraderAccount handles it.
+ */
 async function confirmAndProvisionAccount(order) {
-  // 1. Mark order as confirmed
-  await base44.entities.Order.update(order.id, { payment_status: 'confirmed' });
-
-  // 2. Create the funded challenge account
-  const accountId = `RF-${Date.now().toString(36).toUpperCase()}`;
-  
-  // Determine platform-specific provisioning strategy
-  const isMatchTrader = order.platform === 'match_trader';
-  const isMT5 = order.platform === 'mt5';
-  
-  // For Match Trader/MT5: set status to 'pending' and trigger API provisioning
-  // For xtrading: create active account with simulated credentials
-  const accountStatus = (isMatchTrader || isMT5) ? 'pending' : 'active';
-  const server = isMatchTrader ? 'broker-api-demo.match-trader.com' : isMT5 ? 'mt5-provisioning' : 'rf-live.robertfunds.com';
-  const credentials = (isMatchTrader || isMT5)
-    ? `Pending API provisioning...`
-    : `Login: ${accountId} | Pass: RF${Math.random().toString(36).slice(2,8).toUpperCase()}`;
-  
-  const accountData = {
-    account_id: accountId,
-    user_email: order.email,
-    challenge_type: order.challenge_type || 'two-step',
-    account_type: order.account_type || 'standard',
-    account_size: order.account_size,
-    platform: order.platform || 'xtrading',
-    leverage: order.leverage || '1:100',
-    status: accountStatus,
-    phase: 'phase1',
-    balance: order.account_size,
-    equity: order.account_size,
-    pnl: 0,
-    daily_pnl: 0,
-    daily_drawdown_used: 0,
-    max_drawdown_used: 0,
-    profit_target_progress: 0,
-    win_rate: 0,
-    total_trades: 0,
-    server,
-    login_credentials: credentials,
-  };
-
-  await base44.entities.ChallengeAccount.create(accountData);
-
-  // 3. For Match Trader/MT5: trigger API provisioning automatically
-  if (isMatchTrader || isMT5) {
-    try {
-      // Fire-and-forget: provision the account via API
-      base44.functions.invoke('provisionMatchTraderAccount', {
-        order_id: order.order_id || accountId,
-        account_id: accountId,
-        user_email: order.email,
-        challenge_type: order.challenge_type,
-        account_type: order.account_type,
-        account_size: order.account_size,
-        leverage: order.leverage,
-        platform: order.platform,
-      }).catch(err => console.error('Auto-provision failed:', err));
-    } catch (e) {
-      console.error('Failed to trigger provisioning:', e);
-    }
+  const res = await base44.functions.invoke('manualCryptoReview', {
+    action: 'approve_payment',
+    order_id: order.order_id,
+    notes: 'Confirmed via Admin Orders panel',
+  });
+  if (!res.data?.success) {
+    throw new Error(res.data?.error || 'Approval failed');
   }
-
-  // 4. Email user
-  try {
-    await base44.functions.invoke('emailService', {
-      action: 'send_notification',
-      to: order.email,
-      type: 'challenge_purchase',
-      data: {
-        name: order.full_name,
-        challenge_type: order.challenge_type,
-        account_size: order.account_size,
-        account_id: accountId,
-        platform: order.platform || 'xtrading'
-      }
-    });
-  } catch (e) { console.error('Email send failed:', e); }
-
-  return accountId;
+  return res.data;
 }
 
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
