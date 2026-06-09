@@ -63,7 +63,7 @@ export default function Login() {
 
           {/* Logo */}
           <div className="text-center">
-            <XFLogo size="lg" animate />
+            <XFLogo size="xl" animate />
           </div>
 
           {/* Header */}

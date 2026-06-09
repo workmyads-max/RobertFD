@@ -22,7 +22,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'analytics', label: 'Analytics', icon: Activity },
     { id: 'markets', label: 'Markets', icon: Globe },
-    { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true },
+    { id: 'marketplace', label: '🛒 Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
     { id: 'news', label: 'News', icon: Newspaper },
     { id: 'journal', label: 'Journal', icon: BookOpen },
@@ -94,8 +94,9 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     : 'text-white/35 hover:text-white/80 hover:bg-white/[0.05]'
               }`}
               style={item.highlight && !isActive ? {
-                background: 'rgba(255,92,0,0.12)',
-                border: '1px solid rgba(255,92,0,0.35)',
+                background: 'rgba(255,92,0,0.15)',
+                border: '1.5px solid rgba(255,92,0,0.5)',
+                boxShadow: '0 0 12px rgba(255,92,0,0.15)',
               } : isActive ? {
                 background: collapsed ? 'rgba(255,92,0,0.15)' : 'rgba(255,92,0,0.1)',
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
