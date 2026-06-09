@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
 };
 
 
-const PLATFORM_LABELS = { xtrading: 'XTrading Terminal', match_trader: 'Match Trader', mt5: 'MetaTrader 5', tradelocker: 'TradeLocker' };
+const PLATFORM_LABELS = { mt5: 'MetaTrader 5' };
 
 function CredentialsModal({ account, onClose }) {
   const [copied, setCopied] = useState('');
@@ -187,7 +187,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
         )}
 
         {/* Provisioning pending state */}
-        {account.status === 'pending' && account.platform === 'match_trader' && !account.mt_login && (
+        {account.status === 'pending' && account.platform === 'mt5' && !account.mt_login && (
           <div className="mb-4 rounded-xl p-3 flex items-center gap-3"
             style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
             <Loader2 className="w-4 h-4 text-yellow-400 animate-spin flex-shrink-0" />
@@ -207,18 +207,11 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 relative z-10">
-          {account.platform === 'match_trader' && account.mt_login ? (
-            <a href="https://app.match-trader.com" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105 flex-1 sm:flex-none justify-center">
-              <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Open Match Trader</span><span className="sm:hidden">MT</span>
-            </a>
-          ) : (
-            <a href="https://web.metatrader.app/terminal" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105 flex-1 sm:flex-none justify-center"
-              style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
-              <Monitor className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Open Terminal</span><span className="sm:hidden">Terminal</span>
-            </a>
-          )}
+          <a href="https://web.metatrader.app/terminal" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105 flex-1 sm:flex-none justify-center"
+            style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.25)' }}>
+            <Monitor className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Open Terminal</span><span className="sm:hidden">Terminal</span>
+          </a>
           <button onClick={() => onOpenAnalytics && onOpenAnalytics(account)}
             className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-white/5 flex-1 sm:flex-none justify-center"
             style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'hsl(var(--foreground))' }}>
@@ -273,7 +266,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
   // Only show active/funded/passed/pending accounts — failed ones go to Trash
-  const displayAccounts = accounts.filter(a => a.status !== 'failed');
+  const displayAccounts = accounts;
 
   return (
     <div>

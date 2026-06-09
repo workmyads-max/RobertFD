@@ -104,7 +104,13 @@ export default function AdminSupport() {
                 </div>
                 <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="text-xs font-mono text-muted-foreground mb-1">User Message</div>
-                  <div className="text-sm text-foreground leading-relaxed">{selected.message}</div>
+                                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{selected.message}</div>
+                  {selected.admin_reply && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <div className="text-xs font-mono text-muted-foreground mb-1">Admin Reply</div>
+                      <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{selected.admin_reply}</div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Admin Reply</label>

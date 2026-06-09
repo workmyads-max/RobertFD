@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
 
 const tabs = [
   { id: 'profile',  label: 'Profile',        icon: User },
@@ -178,6 +179,7 @@ const WALLET_TYPES = [
 export default function DashboardSettings({ user }) {
   const [activeTab, setActiveTab] = useState('profile');
   const [profile, setProfile] = useState({ full_name: user?.full_name || '', email: user?.email || '' });
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [wallets, setWallets] = useState({ usdt_trc20: user?.usdt_trc20 || '', bitcoin: user?.bitcoin || '', usdt_bep20: user?.usdt_bep20 || '', ethereum: user?.ethereum || '' });
   const [notifs, setNotifs] = useState({ email: true, payouts: true, news: false, marketing: false });
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -205,8 +207,30 @@ export default function DashboardSettings({ user }) {
   const [selectedWalletType, setSelectedWalletType] = useState(user?.payout_wallet_type || 'usdt_trc20');
 
   const saveMutation = useMutation({
-    mutationFn: (data) => base44.auth.updateMe(data),
-  });
+       mutationFn: (data) => base44.auth.updateMe(data),
+     });
+
+    const passwordUpdateMutation = useMutation({
+      mutationFn: (newPassword) => supabase.auth.updateUser({ password: newPassword }),
+      onSuccess: () => {
+        alert('Password updated successfully!');
+        setPasswords({ current: '', new: '', confirm: '' });
+      },
+      onError: (error) => {
+        alert(`Error updating password: ${error.message}`);
+      },
+    });
+
+    const handlePasswordUpdate = () => {
+      if (passwords.new !== passwords.confirm) {
+        return alert('New passwords do not match.');
+      }
+      if (passwords.new.length < 6) {
+        return alert('New password must be at least 6 characters long.');
+      }
+      // Supabase does not require the current password for an update when the user is logged in.
+      passwordUpdateMutation.mutate(passwords.new);
+    };
 
   const handlePhotoUpload = async (file) => {
     if (!file) return;
@@ -529,14 +553,16 @@ export default function DashboardSettings({ user }) {
                   {/* Password */}
                   <Card title="Password" subtitle="Update your login password">
                     <div className="space-y-3">
-                      <InputField label="Current Password" type="password" placeholder="••••••••" />
-                      <InputField label="New Password" type="password" placeholder="••••••••" hint="At least 8 characters with a mix of letters and numbers" />
-                      <InputField label="Confirm New Password" type="password" placeholder="••••••••" />
+                      <InputField label="New Password" type="password" placeholder="••••••••" value={passwords.new} onChange={e => setPasswords(p => ({...p, new: e.target.value}))} hint="At least 8 characters with a mix of letters and numbers" />
+                      <InputField label="Confirm New Password" type="password" placeholder="••••••••" value={passwords.confirm} onChange={e => setPasswords(p => ({...p, confirm: e.target.value}))} />
+                      
                     </div>
-                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                      style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
-                      <Save className="w-4 h-4" /> Update Password
-                    </button>
+                    <button onClick={handlePasswordUpdate}
+                                           disabled={passwordUpdateMutation.isPending}
+                                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                                           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                                           <Save className="w-4 h-4" /> {passwordUpdateMutation.isPending ? 'Updating...' : 'Update Password'}
+                                         </button>
                   </Card>
                 </>
               )}
