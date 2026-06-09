@@ -1,6 +1,12 @@
 {
   "name": "ChallengePlan",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "plan_id": {
       "type": "string",
