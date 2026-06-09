@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
       // Trigger account provisioning
       try {
-        await base44.functions.invoke('provisionMatchTraderAccount', {
+        await base44.asServiceRole.functions.invoke('provisionMatchTraderAccount', {
           account_id: order.account_id || order.order_id,
           order_id: order.order_id,
           user_email: order.email,
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       }
 
       // Affiliate commissions L1/L2/L3 — non-blocking
-      base44.functions.invoke('createAffiliateCommissions', {
+      base44.asServiceRole.functions.invoke('createAffiliateCommissions', {
         user_email: order.email,
         order_id: order.order_id,
         order_price: order.price,
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       }).catch(e => console.error('[Confirmo] Affiliate commission failed:', e.message));
 
       // Send confirmation email
-      await base44.functions.invoke('sendBrandedEmail', {
+      await base44.asServiceRole.functions.invoke('sendBrandedEmail', {
         to: order.email,
         template_type: 'payment_success',
         data: {

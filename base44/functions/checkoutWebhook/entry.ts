@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
 
         // Auto-provision challenge account (only triggered here — no manual bypass)
         try {
-          await base44.functions.invoke('provisionMatchTraderAccount', {
+          await base44.asServiceRole.functions.invoke('provisionMatchTraderAccount', {
             account_id: order.account_id || order.order_id,
             order_id: order.order_id,
             user_email: order.email,
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         }).catch(e => console.error('[Checkout.com] Affiliate commission failed:', e.message));
 
         try {
-          await base44.functions.invoke('sendBrandedEmail', {
+          await base44.asServiceRole.functions.invoke('sendBrandedEmail', {
             to: order.email, template_type: 'payment_success',
             data: { name: order.full_name, amount: order.price, order_id: order.order_id, challenge_type: order.challenge_type, account_size: order.account_size },
           });
