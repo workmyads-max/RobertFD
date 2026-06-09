@@ -41,21 +41,17 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [accountType, setAccountType] = useState('standard');
   const [platform, setPlatform] = useState('mt5');
 
-  const { data: allPlans = [], isLoading: plansLoading, refetch: refetchPlans } = useQuery({
+  const { data: allPlans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['challenge-plans-all'],
     queryFn: async () => {
-      const data = await base44.entities.ChallengePlan.list('-created_date', 200);
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      const data = res?.data?.plans || res?.plans || [];
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 60000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
-
-  React.useEffect(() => {
-    refetchPlans();
-  }, []);
 
   const plans = allPlans
     .filter(p => {

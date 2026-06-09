@@ -49,9 +49,12 @@ export default function ChallengeSelect() {
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ['challenge-plans'],
-    queryFn: () => base44.entities.ChallengePlan.list('-created_date', 200),
-    staleTime: 0,
-    gcTime: 0,
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      const data = res?.data?.plans || res?.plans || [];
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 60000,
     refetchOnMount: true,
   });
 
