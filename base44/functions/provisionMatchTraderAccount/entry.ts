@@ -21,11 +21,35 @@ function genPassword() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    // SECURITY: Only admin users may directly provision accounts.
-    // Internal payment webhook calls arrive without a user session — they are permitted.
-    if (user && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    
+    // ── SECURITY: Multi-layer authorization ───────────────────────────────────
+    // CRITICAL: Account provisioning - NEVER allow anonymous access
+    // Layer 1: Check for authenticated admin user (browser session)
+    // Layer 2: Check for scheduler secret token (internal automation)
+    // Layer 3: Reject ALL anonymous callers
+    const schedulerToken = req.headers.get('X-Scheduler-Token');
+    const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
+    
+    let authorized = false;
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role === 'admin') {
+        authorized = true; // Admin user session
+      }
+    } catch {
+      // No user session - will check scheduler token below
+    }
+    
+    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
+      authorized = true; // Valid scheduler token
+    }
+    
+    if (!authorized) {
+      console.log('[provisionMatchTraderAccount] BLOCKED: Unauthorized attempt to provision account');
+      return Response.json({ 
+        error: 'Forbidden: Admin authentication or valid scheduler token required',
+        code: 'UNAUTHORIZED_ACCESS'
+      }, { status: 403 });
     }
 
     const body = await req.json();

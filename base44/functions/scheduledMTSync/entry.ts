@@ -65,14 +65,34 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // SECURITY: Only admin users or internal scheduler calls are permitted.
-    // Browser-originated calls from regular users are rejected.
+    // ── SECURITY: Multi-layer authorization ───────────────────────────────────
+    // Layer 1: Check for authenticated admin user (browser session)
+    // Layer 2: Check for scheduler secret token (internal automation)
+    // Layer 3: Reject ALL anonymous callers
+    const schedulerToken = req.headers.get('X-Scheduler-Token');
+    const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
+    
+    let authorized = false;
     try {
       const user = await base44.auth.me();
-      if (user && user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden: Admin or scheduler access only' }, { status: 403 });
+      if (user && user.role === 'admin') {
+        authorized = true; // Admin user session
       }
-    } catch { /* No session = internal scheduler call — allow */ }
+    } catch {
+      // No user session - will check scheduler token below
+    }
+    
+    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
+      authorized = true; // Valid scheduler token
+    }
+    
+    if (!authorized) {
+      console.log('[scheduledMTSync] BLOCKED: Unauthorized caller - no admin session and no valid scheduler token');
+      return Response.json({ 
+        error: 'Forbidden: Admin authentication or valid scheduler token required',
+        code: 'UNAUTHORIZED_ACCESS'
+      }, { status: 403 });
+    }
 
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
     const activeAccounts = allAccounts.filter(a =>

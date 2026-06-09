@@ -17,20 +17,34 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'platform required' }, { status: 400 });
     }
 
-    // SECURITY: Only admin users or internal service-role callers may retrieve broker credentials.
-    // Service-role calls (from other backend functions) do not have an auth user — they bypass this check via asServiceRole.
-    // Direct calls from a browser session must be admin.
-    let callerIsAdmin = false;
+    // ── SECURITY: Multi-layer authorization ───────────────────────────────────
+    // CRITICAL: Broker API credentials - NEVER allow anonymous access
+    // Layer 1: Check for authenticated admin user (browser session)
+    // Layer 2: Check for scheduler secret token (internal automation)
+    // Layer 3: Reject ALL anonymous callers
+    const schedulerToken = req.headers.get('X-Scheduler-Token');
+    const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
+    
+    let authorized = false;
     try {
       const user = await base44.auth.me();
       if (user && user.role === 'admin') {
-        callerIsAdmin = true;
-      } else if (user && user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+        authorized = true; // Admin user session
       }
-      // If user is null, the call is coming from an internal function via service role — allow it
     } catch {
-      // No authenticated session — internal/scheduled call, allow
+      // No user session - will check scheduler token below
+    }
+    
+    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
+      authorized = true; // Valid scheduler token
+    }
+    
+    if (!authorized) {
+      console.log(`[getPlatformCredentials] BLOCKED: Unauthorized attempt to access ${platform} credentials`);
+      return Response.json({ 
+        error: 'Forbidden: Admin authentication or valid scheduler token required',
+        code: 'UNAUTHORIZED_ACCESS'
+      }, { status: 403 });
     }
 
     // Try database first

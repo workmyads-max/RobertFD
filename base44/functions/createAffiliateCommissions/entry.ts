@@ -14,14 +14,35 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
 
-    // SECURITY: Only internal service-role calls (from payment webhooks) are permitted.
-    // Direct calls from regular users are rejected.
+    // ── SECURITY: Multi-layer authorization ───────────────────────────────────
+    // CRITICAL: Financial function - NEVER allow anonymous access
+    // Layer 1: Check for authenticated admin user (browser session)
+    // Layer 2: Check for scheduler secret token (internal automation)
+    // Layer 3: Reject ALL anonymous callers
+    const schedulerToken = req.headers.get('X-Scheduler-Token');
+    const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
+    
+    let authorized = false;
     try {
       const user = await base44.auth.me();
-      if (user && user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden: Internal function only' }, { status: 403 });
+      if (user && user.role === 'admin') {
+        authorized = true; // Admin user session
       }
-    } catch { /* No session = internal webhook call — allow */ }
+    } catch {
+      // No user session - will check scheduler token below
+    }
+    
+    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
+      authorized = true; // Valid scheduler token
+    }
+    
+    if (!authorized) {
+      console.log('[createAffiliateCommissions] BLOCKED: Unauthorized attempt to create commissions');
+      return Response.json({ 
+        error: 'Forbidden: Admin authentication or valid scheduler token required',
+        code: 'UNAUTHORIZED_ACCESS'
+      }, { status: 403 });
+    }
 
     const body = await req.json();
     const { user_email, order_id, order_price, challenge_type, account_size } = body;
