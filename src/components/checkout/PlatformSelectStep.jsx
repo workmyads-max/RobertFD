@@ -1,68 +1,69 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Clock, Monitor } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 
-const ALL_PLATFORMS = [
+const PLATFORMS = [
+  {
+    id: 'mt5',
+    name: 'MetaTrader 5',
+    subtitle: 'Industry Standard',
+    description: "The world's most popular trading platform with advanced charting, Expert Advisors, and algorithmic trading support.",
+    features: ['Expert Advisors (EAs)', 'Advanced charting & indicators', 'Algorithmic trading support', 'Multi-asset trading'],
+    available: true,
+  },
   {
     id: 'match_trader',
     name: 'Match Trader',
     subtitle: 'Institutional Platform',
-    description: 'Professional Match Trader platform with real broker-level infrastructure and live market data.',
-    badge: 'Recommended',
-    badgeColor: '#10b981',
-    features: ['Mobile + Desktop', 'Real broker engine', 'Live MT credentials'],
-    icon: '📊',
+    description: 'Professional Match Trader platform with real broker-level infrastructure.',
+    features: ['Mobile + Desktop', 'Real broker engine', 'Live credentials'],
+    available: false,
   },
   {
     id: 'xtrading',
     name: 'XTrading',
     subtitle: 'Built-in Terminal',
-    description: 'Fully integrated simulated trading terminal built directly into the dashboard with real-time prices.',
-    badge: 'Built-in',
-    badgeColor: '#FF5C00',
+    description: 'Fully integrated simulated trading terminal built into the dashboard.',
     features: ['No download required', 'Real-time prices', 'Built-in dashboard'],
-    icon: '⚡',
-  },
-  {
-    id: 'mt5',
-    name: 'MetaTrader 5',
-    subtitle: 'Industry Standard',
-    description: "The world's most popular trading platform with advanced charting and algorithmic trading support.",
-    badge: 'Popular',
-    badgeColor: '#0066CC',
-    features: ['Expert Advisors', 'Advanced charting', 'Algorithmic trading'],
-    icon: '📈',
+    available: false,
   },
   {
     id: 'tradelocker',
     name: 'TradeLocker',
     subtitle: 'Next-Gen Platform',
-    description: 'Modern trading platform built for prop firms with advanced risk tools and multi-account management.',
-    badge: 'Modern',
-    badgeColor: '#8b5cf6',
+    description: 'Modern platform built for prop firms with advanced risk tools.',
     features: ['Modern UI', 'Advanced risk tools', 'Multi-account'],
-    icon: '🔓',
+    available: false,
   },
 ];
+
+// MT5 SVG logo
+function MT5Logo({ size = 48 }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="12" fill="url(#mt5g)" />
+      <defs>
+        <linearGradient id="mt5g" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor="#1a8cff" />
+          <stop offset="100%" stopColor="#003399" />
+        </linearGradient>
+      </defs>
+      <rect x="7" y="26" width="6" height="14" rx="2" fill="rgba(255,255,255,0.45)" />
+      <rect x="16" y="19" width="6" height="21" rx="2" fill="rgba(255,255,255,0.65)" />
+      <rect x="25" y="12" width="6" height="28" rx="2" fill="white" />
+      <rect x="34" y="16" width="6" height="24" rx="2" fill="rgba(255,255,255,0.65)" />
+      <text x="6" y="10" fontSize="8" fontWeight="900" fill="white" fontFamily="Arial" letterSpacing="0.8">MT5</text>
+    </svg>
+  );
+}
 
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   const selected = order.platform || '';
 
-  const { data: platformSettings = [] } = useQuery({
-    queryKey: ['platform-settings-trading'],
-    queryFn: () => base44.entities.PlatformSettings.filter({ category: 'trading' }),
-  });
-  const enabledMap = Object.fromEntries(
-    platformSettings.map(s => [s.setting_key, s.is_enabled !== false])
-  );
-
-  // If a platform has no setting record yet, default to enabled
-  const PLATFORMS = ALL_PLATFORMS.map(p => ({
-    ...p,
-    available: enabledMap[p.id] !== false,
-  }));
+  // Auto-select MT5 if nothing selected
+  useEffect(() => {
+    if (!selected) updateOrder({ platform: 'mt5' });
+  }, []);
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
@@ -77,65 +78,97 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
           <p className="text-sm text-muted-foreground ml-11">Choose where you'll trade. This is permanently assigned to your account.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {PLATFORMS.map((p, i) => {
-            const isSelected = selected === p.id;
-            return (
-              <motion.button
+        {/* MT5 — premium featured card */}
+        <motion.button
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.015 }}
+          whileTap={{ scale: 0.985 }}
+          onClick={() => updateOrder({ platform: 'mt5' })}
+          className="relative w-full rounded-2xl p-6 text-left transition-all"
+          style={{
+            background: selected === 'mt5'
+              ? 'linear-gradient(135deg, rgba(0,80,180,0.18) 0%, rgba(0,40,100,0.22) 100%)'
+              : 'linear-gradient(135deg, rgba(0,60,140,0.1) 0%, rgba(0,30,80,0.14) 100%)',
+            border: `1.5px solid ${selected === 'mt5' ? 'rgba(0,122,255,0.6)' : 'rgba(0,100,200,0.3)'}`,
+            boxShadow: selected === 'mt5'
+              ? '0 0 40px rgba(0,102,204,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+              : '0 0 20px rgba(0,80,160,0.08)',
+          }}
+        >
+          {/* Selected checkmark */}
+          {selected === 'mt5' && (
+            <div className="absolute top-4 right-4">
+              <CheckCircle2 className="w-5 h-5 text-blue-400" />
+            </div>
+          )}
+
+          {/* "Available" badge */}
+          <div className="absolute top-4 left-4">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black"
+              style={{ background: 'rgba(0,122,255,0.2)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.4)' }}>
+              ✓ Available Now
+            </span>
+          </div>
+
+          <div className="flex items-start gap-5 mt-8">
+            <div className="flex-shrink-0">
+              <MT5Logo size={56} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg font-black text-white mb-0.5">MetaTrader 5</div>
+              <div className="text-xs font-mono mb-3" style={{ color: 'rgba(147,197,253,0.7)' }}>Industry Standard Platform</div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                The world's most popular trading platform with advanced charting, Expert Advisors, and full algorithmic trading support.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {['Expert Advisors (EAs)', 'Advanced charting', 'Algorithmic trading', 'Multi-asset support'].map(f => (
+                  <div key={f} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(147,197,253,0.8)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-blue-400" />
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.button>
+
+        {/* Coming soon platforms — 3 in a row */}
+        <div>
+          <div className="text-xs font-mono text-muted-foreground/50 uppercase tracking-widest mb-3">Coming Soon</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {PLATFORMS.filter(p => !p.available).map((p, i) => (
+              <motion.div
                 key={p.id}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
-                whileHover={p.available ? { scale: 1.02 } : {}}
-                whileTap={p.available ? { scale: 0.98 } : {}}
-                onClick={() => p.available && updateOrder({ platform: p.id })}
-                disabled={!p.available}
-                className="relative rounded-2xl p-5 text-left transition-all"
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="relative rounded-xl p-4 text-left"
                 style={{
-                  background: isSelected ? 'rgba(255,92,0,0.08)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${isSelected ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: isSelected ? '0 0 28px rgba(255,92,0,0.15)' : 'none',
-                  opacity: p.available ? 1 : 0.45,
-                  cursor: p.available ? 'pointer' : 'not-allowed',
+                  background: 'rgba(255,255,255,0.025)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  opacity: 0.5,
+                  cursor: 'not-allowed',
                 }}
               >
-                {/* Badge */}
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black"
-                    style={{ background: `${p.badgeColor}20`, color: p.badgeColor, border: `1px solid ${p.badgeColor}40` }}>
-                    {p.available ? p.badge : 'Disabled'}
+                <div className="absolute top-2.5 right-2.5">
+                  <span className="px-2 py-0.5 rounded-full text-[8px] font-black"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    Coming Soon
                   </span>
                 </div>
-
-                {isSelected && (
-                  <div className="absolute top-3 left-3">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                  </div>
-                )}
-
-                <div className="text-3xl mb-3 mt-1">{p.icon}</div>
-                <div className="text-sm font-black text-foreground mb-0.5">{p.name}</div>
-                <div className="text-[10px] font-mono text-muted-foreground mb-2">{p.subtitle}</div>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.description}</p>
-
-                <div className="space-y-1">
-                  {p.features.map(f => (
-                    <div key={f} className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-                      <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: p.available ? p.badgeColor : '#555' }} />
-                      {f}
-                    </div>
-                  ))}
+                <div className="text-lg mb-2 mt-1">
+                  {p.id === 'match_trader' ? '📊' : p.id === 'xtrading' ? '⚡' : '🔓'}
                 </div>
-
-                {!p.available && (
-                  <div className="flex items-center gap-1.5 mt-3">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] font-mono text-muted-foreground">Currently Unavailable</span>
-                  </div>
-                )}
-              </motion.button>
-            );
-          })}
+                <div className="text-xs font-bold text-foreground/50 mb-0.5">{p.name}</div>
+                <div className="text-[9px] font-mono text-muted-foreground/40 mb-2">{p.subtitle}</div>
+                <div className="flex items-center gap-1 mt-2">
+                  <Clock className="w-3 h-3 text-muted-foreground/30" />
+                  <span className="text-[9px] font-mono text-muted-foreground/30">In Development</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -153,11 +186,7 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 { label: 'Account Size', value: `$${order.account_size?.toLocaleString()}`, highlight: true },
                 { label: 'Model', value: order.account_type === 'swing' ? 'Swing' : 'Standard' },
                 { label: 'Leverage', value: order.leverage || '1:100' },
-                {
-                  label: 'Platform',
-                  value: selected ? (PLATFORMS.find(p => p.id === selected)?.name || selected) : '— Select above',
-                  highlight: !!selected,
-                },
+                { label: 'Platform', value: 'MetaTrader 5', highlight: true },
               ].map(({ label, value, highlight }) => (
                 <div key={label} className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">{label}</span>
@@ -175,15 +204,13 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
 
           <motion.button
             onClick={onNext}
-            disabled={!selected}
-            whileHover={{ scale: selected ? 1.02 : 1 }}
-            whileTap={{ scale: selected ? 0.98 : 1 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="w-full py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
             style={{
-              background: selected ? 'linear-gradient(90deg, #FF5C00, #FF7A2F)' : 'rgba(255,255,255,0.07)',
-              boxShadow: selected ? '0 4px 24px rgba(255,92,0,0.35)' : 'none',
-              color: selected ? 'white' : 'rgba(255,255,255,0.3)',
-              cursor: selected ? 'pointer' : 'not-allowed',
+              background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
+              boxShadow: '0 4px 24px rgba(255,92,0,0.35)',
+              color: 'white',
             }}
           >
             Continue <ArrowRight className="w-4 h-4" />
