@@ -20,10 +20,16 @@ async function sendEmail(sr, to, type, data) {
   }
 }
 
+/**
+ * Read DD limits from the account's rule_snapshot (written at purchase time).
+ * Falls back to legacy hardcoded values only if snapshot is absent (pre-migration accounts).
+ */
 function getDDLimits(account) {
-  const dailyLimit = 5;
-  const overallLimit = account.challenge_type === 'instant_light' ? 6 : 10;
-  return { dailyLimit, overallLimit };
+  const snap = account.rule_snapshot || {};
+  const dailyLimit = snap.daily_dd_limit ?? 5;
+  const overallLimit = snap.max_dd_limit ?? (account.challenge_type === 'instant_light' ? 6 : 10);
+  const isTrailing = snap.trailing_dd ?? (account.challenge_type === 'instant_light');
+  return { dailyLimit, overallLimit, isTrailing };
 }
 
 Deno.serve(async (req) => {
@@ -89,7 +95,8 @@ Deno.serve(async (req) => {
           // Path 2: persistent stored values exceeded limits (safety net)
           if (maxDDUsed >= overallLimit) {
             breachReason = `Max drawdown limit: ${maxDDUsed.toFixed(2)}% / ${overallLimit}%`;
-            breachType = account.challenge_type === 'instant_light' ? 'trailing' : 'overall';
+            const { isTrailing } = getDDLimits(account);
+            breachType = isTrailing ? 'trailing' : 'overall';
           } else if (dailyDDUsed >= dailyLimit) {
             breachReason = `Daily drawdown limit: ${dailyDDUsed.toFixed(2)}% / ${dailyLimit}%`;
             breachType = 'daily';

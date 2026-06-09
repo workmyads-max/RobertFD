@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { order_id, account_id, user_email, challenge_type, account_type, account_size, leverage, platform } = body;
+    const { order_id, account_id, user_email, challenge_type, account_type, account_size, leverage, platform, rule_snapshot } = body;
 
     if (!['match_trader', 'mt5'].includes(platform)) {
       return Response.json({ error: 'Unsupported platform', skip: true });
@@ -127,6 +127,8 @@ Deno.serve(async (req) => {
         provisioned_at: new Date().toISOString(),
         login_credentials: `Login: ${mtLogin} | Password: ${password} | Server: ${mtServer}`,
         server: mtServer,
+        // Write rule snapshot from order — immutable from this point forward
+        ...(rule_snapshot ? { rule_snapshot } : {}),
       });
     }
 

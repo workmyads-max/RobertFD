@@ -28,17 +28,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get all active Standard accounts (not Swing)
-    const accounts = await sr.entities.ChallengeAccount.filter({ 
-      status: 'active',
-      account_type: 'standard'
-    });
+    // Get all active accounts; filter by per-account weekend_holding rule snapshot
+    const accounts = await sr.entities.ChallengeAccount.filter({ status: 'active' });
 
     const results = [];
     let totalClosed = 0;
 
     for (const account of accounts) {
       try {
+        // Check per-account rule: weekend_holding from snapshot, fallback to account_type heuristic
+        const weekendHoldingAllowed = account.rule_snapshot?.weekend_holding
+          ?? (account.account_type === 'swing');
+        if (weekendHoldingAllowed) continue; // This account is allowed to hold over weekend
+
         // Get open positions for this account
         const positions = await sr.entities.TradeRecord.filter({
           account_id: account.account_id,

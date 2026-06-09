@@ -27,8 +27,7 @@
     },
     "platform": {
       "type": "string",
-      "default": "xtrading",
-      "description": "xtrading | match_trader | mt5 | tradelocker"
+      "default": "xtrading"
     },
     "leverage": {
       "type": "string",
@@ -72,23 +71,19 @@
     },
     "daily_drawdown_used": {
       "type": "number",
-      "default": 0,
-      "description": "PERSISTENT within trading day: highest daily DD% reached today \u2014 calculated from daily_start_balance. Never decreases until daily reset at 23:00 UTC."
+      "default": 0
     },
     "max_drawdown_used": {
       "type": "number",
-      "default": 0,
-      "description": "PERSISTENT forever: highest overall DD% ever reached \u2014 Math.max only, never decreases, never resets."
+      "default": 0
     },
     "daily_start_balance": {
       "type": "number",
-      "default": 0,
-      "description": "Balance recorded at daily reset (23:00 UTC). Used as the baseline for true institutional daily DD calculation. Reset alongside daily_drawdown_used."
+      "default": 0
     },
     "high_water_mark": {
       "type": "number",
-      "default": 0,
-      "description": "Highest balance ever achieved \u2014 used for Instant Light trailing DD"
+      "default": 0
     },
     "profit_target_progress": {
       "type": "number",
@@ -104,16 +99,13 @@
     },
     "trading_days": {
       "type": "number",
-      "default": 0,
-      "description": "Number of days the trader has placed at least one trade"
+      "default": 0
     },
     "daily_reset_at": {
-      "type": "string",
-      "description": "UTC timestamp of last daily DD reset at 23:00 UTC (3:00 AM GMT+4)"
+      "type": "string"
     },
     "phase_passed_at": {
-      "type": "string",
-      "description": "Timestamp when phase was passed \u2014 used for 48h activation countdown"
+      "type": "string"
     },
     "login_credentials": {
       "type": "string"
@@ -125,33 +117,26 @@
       "type": "string"
     },
     "mt_login": {
-      "type": "string",
-      "description": "Match Trader login ID"
+      "type": "string"
     },
     "mt_password": {
-      "type": "string",
-      "description": "Match Trader password (encrypted at rest)"
+      "type": "string"
     },
     "mt_server": {
-      "type": "string",
-      "description": "Match Trader server address"
+      "type": "string"
     },
     "mt_group": {
-      "type": "string",
-      "description": "Match Trader account group"
+      "type": "string"
     },
     "provisioned_at": {
-      "type": "string",
-      "description": "ISO timestamp when the MT account was provisioned"
+      "type": "string"
     },
     "last_synced_at": {
-      "type": "string",
-      "description": "ISO timestamp of last sync with Match Trader API"
+      "type": "string"
     },
     "dd_breach_detected": {
       "type": "boolean",
-      "default": false,
-      "description": "PERMANENT: set to true the moment any DD breach is detected. NEVER reset to false \u2014 not by sync, not by recovery, not by daily reset."
+      "default": false
     },
     "dd_breach_type": {
       "type": "string",
@@ -159,16 +144,55 @@
         "daily",
         "overall",
         "trailing"
-      ],
-      "description": "Type of the first DD breach detected. Written once, never overwritten."
+      ]
     },
     "dd_breach_time": {
-      "type": "string",
-      "description": "ISO timestamp of when the DD breach was first detected. Written once, never overwritten."
+      "type": "string"
     },
     "dd_breach_value": {
-      "type": "number",
-      "description": "The exact DD % at time of breach detection. Written once, never overwritten."
+      "type": "number"
+    },
+    "rule_snapshot": {
+      "type": "object",
+      "description": "Immutable copy of ChallengePlan rules at time of purchase. Enforcement always reads from here, never from live ChallengePlan.",
+      "properties": {
+        "daily_dd_limit": {
+          "type": "number"
+        },
+        "max_dd_limit": {
+          "type": "number"
+        },
+        "trailing_dd": {
+          "type": "boolean"
+        },
+        "phase1_target": {
+          "type": "number"
+        },
+        "phase2_target": {
+          "type": "number"
+        },
+        "leverage": {
+          "type": "string"
+        },
+        "max_lots": {
+          "type": "number"
+        },
+        "weekend_holding": {
+          "type": "boolean"
+        },
+        "overnight_holding": {
+          "type": "boolean"
+        },
+        "news_trading": {
+          "type": "boolean"
+        },
+        "hedging": {
+          "type": "boolean"
+        },
+        "profit_split": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [

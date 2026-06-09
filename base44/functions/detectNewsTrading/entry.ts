@@ -48,10 +48,14 @@ Deno.serve(async (req) => {
       const accs = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email: email });
       accounts = accs;
     } else {
-      // Check all Standard accounts (Swing accounts are exempt)
+      // Fetch all active/passed/funded — filter per rule_snapshot below
       accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ 
         status: ['active', 'passed', 'funded'],
-        account_type: 'standard'
+      });
+      // Only keep accounts where news trading is NOT allowed per their snapshot
+      accounts = accounts.filter(a => {
+        const allowed = a.rule_snapshot?.news_trading ?? (a.account_type === 'swing');
+        return !allowed;
       });
     }
 

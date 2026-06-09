@@ -24,10 +24,16 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+/**
+ * Read DD limits from the account's rule_snapshot (written at purchase time).
+ * Falls back to legacy hardcoded values only if snapshot is absent (pre-migration accounts).
+ */
 function getDDLimits(acc) {
-  const dailyLimit = 5;
-  const overallLimit = acc.challenge_type === 'instant_light' ? 6 : 10;
-  return { dailyLimit, overallLimit };
+  const snap = acc.rule_snapshot || {};
+  const dailyLimit = snap.daily_dd_limit ?? 5;
+  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : 10);
+  const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  return { dailyLimit, overallLimit, isTrailing };
 }
 
 /**
@@ -36,7 +42,9 @@ function getDDLimits(acc) {
  */
 function calcOverallDD(acc, equity, newHWM) {
   const accountSize = acc.account_size || 100000;
-  if (acc.challenge_type === 'instant_light') {
+  // Use snapshot trailing_dd flag; fall back to challenge_type check for pre-migration accounts
+  const isTrailing = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  if (isTrailing) {
     const hwm = newHWM || accountSize;
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
   }
@@ -140,7 +148,7 @@ Deno.serve(async (req) => {
           if (!breachDetected) {
             if (persistentOverallDD >= overallLimit) {
               breachDetected = true;
-              breachType = acc.challenge_type === 'instant_light' ? 'trailing' : 'overall';
+              breachType = (acc.rule_snapshot?.trailing_dd ?? acc.challenge_type === 'instant_light') ? 'trailing' : 'overall';
               breachTime = new Date().toISOString();
               breachValue = persistentOverallDD;
               console.log(`[BREACH] ${acc.account_id} overall DD: ${persistentOverallDD.toFixed(2)}% / limit ${overallLimit}%`);

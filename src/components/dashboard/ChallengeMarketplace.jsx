@@ -85,6 +85,21 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     if (!availablePlatform?.available) return;
     setSelected(plan);
     const leverage = accountType === 'standard' ? plan.leverage_standard : plan.leverage_swing;
+    // Build rule snapshot from live plan at moment of selection
+    const ruleSnapshot = {
+      daily_dd_limit: plan.daily_dd,
+      max_dd_limit: plan.max_dd,
+      trailing_dd: plan.type === 'instant_light',
+      phase1_target: plan.phase1_target,
+      phase2_target: plan.phase2_target,
+      leverage,
+      max_lots: plan.max_lots,
+      weekend_holding: plan.weekend_holding,
+      overnight_holding: plan.overnight_holding,
+      news_trading: plan.news_trading,
+      hedging: plan.hedging,
+      profit_split: plan.profit_split,
+    };
     const order = {
       challenge_type: challengeType,
       account_type: accountType,
@@ -93,6 +108,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       price: plan.price,
       final_price: plan.price,
       platform,
+      rule_snapshot: ruleSnapshot,
     };
     setPendingOrder(order);
     setShowTerms(true);
@@ -112,18 +128,27 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     setPendingOrder(null);
   };
 
-  const CHALLENGE_RULES = [
-    { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: 'Max 5% loss per trading day. Resets at 3:00 AM GMT+4 daily.' },
-    { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: 'Total equity must never fall more than 10% below starting balance. This does NOT reset.' },
-    { icon: Target, color: '#10b981', title: 'Profit Target', body: 'Phase 1: 10% target. Phase 2: 5% target. Instant: maintain profitable operation.' },
+  // Build rules dynamically from the selected/first displayed plan's DB values
+  const displayPlan = plans[0] || null;
+  const CHALLENGE_RULES = displayPlan ? [
+    { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: `Max ${displayPlan.daily_dd}% loss per trading day. Resets at 3:00 AM GMT+4 daily.` },
+    { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: `Total equity must never fall more than ${displayPlan.max_dd}% below starting balance. This does NOT reset.` },
+    { icon: Target, color: '#10b981', title: 'Profit Target', body: displayPlan.type === 'two-step'
+      ? `Phase 1: ${displayPlan.phase1_target}% target. Phase 2: ${displayPlan.phase2_target}% target.`
+      : `Target: ${displayPlan.phase1_target}%. Maintain profitable operation.` },
     { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
-    { icon: Ban, color: '#ef4444', title: 'News Trading', body: '1:100 accounts may not hold during high-impact news (NFP, FOMC, CPI). 1:30 swing accounts are exempt.' },
-    { icon: Moon, color: '#8b5cf6', title: 'Overnight / Weekend', body: '1:100 accounts cannot hold past Friday 21:00 GMT. Swing (1:30) accounts may hold overnight and over weekends.' },
-    { icon: TrendingUp, color: '#FF5C00', title: 'Consistency Rule', body: 'No single trade may make up more than 50% of total profits. Consistent lot sizing required.' },
+    { icon: Ban, color: '#ef4444', title: 'News Trading', body: displayPlan.news_trading
+      ? 'News trading is ALLOWED on this account type.'
+      : 'Positions may not be held during high-impact news events (NFP, FOMC, CPI).' },
+    { icon: Moon, color: '#8b5cf6', title: 'Overnight / Weekend', body: [
+        displayPlan.overnight_holding ? 'Overnight holding ALLOWED.' : 'No overnight holding.',
+        displayPlan.weekend_holding ? 'Weekend holding ALLOWED.' : 'Positions must be closed before Friday 21:00 GMT.',
+      ].join(' ') },
+    { icon: TrendingUp, color: '#FF5C00', title: 'Max Lots', body: `Maximum position size: ${displayPlan.max_lots} lots per trade.` },
     { icon: Users, color: '#0ea5e9', title: 'Prohibited Activities', body: 'No tick scalping, arbitrage, copy trading (without approval), HFT, or price manipulation tools.' },
     { icon: Shield, color: '#10b981', title: 'Account Security', body: 'Credentials are personal and non-transferable. Account sharing or selling = immediate termination.' },
-    { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: '80% profit split for funded accounts. KYC required. Min 1 profitable cycle before withdrawal.' },
-  ];
+    { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: `${displayPlan.profit_split}% profit split for funded accounts. KYC required. Min 1 profitable cycle before withdrawal.` },
+  ] : [];
 
   return (
     <div className="w-full max-w-full overflow-x-hidden">

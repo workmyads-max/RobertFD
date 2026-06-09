@@ -345,9 +345,13 @@ Deno.serve(async (req) => {
           const model = account.account_type === 'swing' ? 'SWING' : 'STD';
           const groupName = `FF_FUNDED_${sizeK}K_${model}_LIVE`;
 
+          // Use leverage from rule_snapshot (set at purchase). Fallback to account.leverage then 100.
+          const fundedLeverage = parseInt(
+            ((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1])
+          ) || 100;
           fundedCredentials = await provisionMT5Account(
             creds.apiBase, creds.apiKey, creds.serverName,
-            account.user_email, groupName, 100, account.account_size
+            account.user_email, groupName, fundedLeverage, account.account_size
           );
         } else {
           console.error('[ApproveFunded] MT5 credentials not configured in Admin > Platforms API');

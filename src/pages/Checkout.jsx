@@ -5,14 +5,8 @@ import CheckoutStep2 from '../components/checkout/CheckoutStep2';
 import CheckoutStep3 from '../components/checkout/CheckoutStep3';
 import CheckoutStep4 from '../components/checkout/CheckoutStep4';
 import TermsModal from '../components/checkout/TermsModal';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-
-const PRICES = {
-  'two-step': { 5000: 49, 10000: 89, 25000: 235, 50000: 349, 100000: 517, 200000: 1089 },
-  'instant': { 10000: 270, 25000: 607, 50000: 1350, 100000: 2430, 200000: 4850 },
-  'instant_light': { 5000: 79, 10000: 137 },
-};
 
 // Steps differ based on whether user is already logged in
 const STEPS_GUEST  = ['Personal Info', 'Payment Method', 'Payment', 'Confirmation'];
@@ -21,6 +15,7 @@ const STEPS_MEMBER = ['Payment Method', 'Payment', 'Confirmation'];
 export default function Checkout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [planLoaded, setPlanLoaded] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [step, setStep] = useState(1);
@@ -30,26 +25,62 @@ export default function Checkout() {
     account_size: 100000,
     platform: 'xtrading',
     leverage: '1:100',
-    price: 517,
+    price: 0,
     discount_amount: 0,
-    final_price: 517,
+    final_price: 0,
     payment_method: '',
     full_name: '', username: '', email: '', phone: '',
     country: '', city: '', address: '', postal_code: '',
     coupon_code: '',
+    rule_snapshot: null,
   });
 
   useEffect(() => {
-    // Read params from URL
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type') || 'two-step';
     const size = parseInt(params.get('size') || '100000');
     const acctType = params.get('account_type') || 'standard';
-    const basePrice = PRICES[type]?.[size] || 517;
     const leverage = acctType === 'swing' ? '1:30' : '1:100';
-    
-    // Check auth status and pre-fill if logged in
-    base44.auth.me().then(user => {
+
+    // Fetch price and full rule snapshot from ChallengePlan DB
+    const loadPlan = async () => {
+      let basePrice = 0;
+      let ruleSnapshot = null;
+      try {
+        const res = await base44.functions.invoke('getChallengePlans', {});
+        const plans = res?.data?.plans || [];
+        const match = plans.find(p =>
+          p.type === type &&
+          (p.account_type || 'standard') === acctType &&
+          p.size === size &&
+          p.is_active !== false
+        );
+        if (match) {
+          basePrice = match.price;
+          // Build rule snapshot from live plan — stored on order/account at purchase time
+          ruleSnapshot = {
+            daily_dd_limit: match.daily_dd,
+            max_dd_limit: match.max_dd,
+            trailing_dd: match.type === 'instant_light',
+            phase1_target: match.phase1_target,
+            phase2_target: match.phase2_target,
+            leverage: acctType === 'swing' ? match.leverage_swing : match.leverage_standard,
+            max_lots: match.max_lots,
+            weekend_holding: match.weekend_holding,
+            overnight_holding: match.overnight_holding,
+            news_trading: match.news_trading,
+            hedging: match.hedging,
+            profit_split: match.profit_split,
+          };
+        }
+      } catch (e) {
+        console.error('Failed to load plan price from DB:', e.message);
+      }
+      return { basePrice, ruleSnapshot, leverage };
+    };
+
+    // Load plan + auth in parallel
+    Promise.all([loadPlan(), base44.auth.me().catch(() => null)]).then(([{ basePrice, ruleSnapshot, leverage }, user]) => {
       if (user?.email) {
         setIsLoggedIn(true);
         setOrder({
@@ -71,14 +102,13 @@ export default function Checkout() {
           address: user.address || '',
           postal_code: user.postal_code || '',
           coupon_code: '',
+          rule_snapshot: ruleSnapshot,
         });
       } else {
-        setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage, discount_amount: 0, final_price: basePrice }));
+        setOrder(o => ({ ...o, challenge_type: type, account_size: size, account_type: acctType, leverage, price: basePrice, discount_amount: 0, final_price: basePrice, rule_snapshot: ruleSnapshot }));
       }
       setAuthChecked(true);
-    }).catch(() => {
-      setOrder(o => ({ ...o, challenge_type: type, account_size: size, price: basePrice, account_type: acctType, leverage, discount_amount: 0, final_price: basePrice }));
-      setAuthChecked(true);
+      setPlanLoaded(true);
     });
   }, []);
 
@@ -107,10 +137,11 @@ export default function Checkout() {
     );
   }
 
-  if (!authChecked) {
+  if (!authChecked || !planLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <span className="text-sm text-muted-foreground font-mono">Loading plan details...</span>
       </div>
     );
   }
@@ -183,7 +214,7 @@ export default function Checkout() {
           >
             {/* Guest: show personal info on step 1 */}
             {!isLoggedIn && componentStep === 1 && (
-              <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={nextStep} prices={PRICES} />
+              <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={nextStep} />
             )}
             {/* Payment method (logged-in users start here) */}
             {componentStep === (isLoggedIn ? 1 : 2) && (
