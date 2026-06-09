@@ -49,10 +49,15 @@ export default function ChallengeSelect() {
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ['challenge-plans'],
-    queryFn: () => base44.entities.ChallengePlan.list('sort_order', 100),
+    queryFn: () => base44.entities.ChallengePlan.list('-created_date', 200),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
   });
 
-  const plans = allPlans.filter(p => p.type === challengeType && p.account_type === accountType);
+  const plans = allPlans
+    .filter(p => p.type === challengeType && (p.account_type || 'standard') === accountType && p.is_visible !== false)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   const accCfg = ACCOUNT_TYPES[accountType];
 
   const handleSelect = (plan) => {

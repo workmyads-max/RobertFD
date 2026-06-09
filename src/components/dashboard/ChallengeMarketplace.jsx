@@ -44,7 +44,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const { data: allPlans = [], isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ['challenge-plans-all'],
     queryFn: async () => {
-      const data = await base44.entities.ChallengePlan.list('sort_order', 200);
+      const data = await base44.entities.ChallengePlan.list('-created_date', 200);
       return Array.isArray(data) ? data : [];
     },
     staleTime: 0,
@@ -53,8 +53,6 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     refetchOnWindowFocus: true,
   });
 
-  // Force a fresh fetch every time this component renders into view
-  // (handles the case where renderPage() re-renders without unmounting)
   React.useEffect(() => {
     refetchPlans();
   }, []);
