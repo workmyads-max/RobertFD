@@ -4,6 +4,7 @@ import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
 import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
+import FundedShowcaseDemo from '../components/landing/FundedShowcaseDemo';
 import ChallengeTypes from '../components/landing/ChallengeTypes';
 import PricingSection from '../components/landing/PricingSection';
 import RulesSection from '../components/landing/RulesSection';
@@ -38,6 +39,18 @@ export default function Home() {
       <HeroSection heroImage={IMAGES.hero} />
       <TrustBar />
       <SliderSection images={[IMAGES.trading, IMAGES.dashboard, IMAGES.infrastructure]} />
+      <section className="py-20 max-w-[1200px] mx-auto px-6">
+        <div className="mb-12 text-center">
+          <span className="text-xs font-mono text-primary uppercase tracking-widest">Funded Account Features</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mt-4 mb-4">
+            Trade with Real Capital
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
+            Experience the power of funded trading with live animations and real-time analytics
+          </p>
+        </div>
+        <FundedShowcaseDemo />
+      </section>
       <DashboardPreview dashImage={IMAGES.dashboard} />
       <ChallengeTypes />
       <PricingSection />
