@@ -1,45 +1,31 @@
 {
   "name": "AffiliateSettings",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "setting_key": {
-      "type": "string",
-      "description": "Unique key e.g. global_config"
+      "type": "string"
     },
     "l1_rate": {
       "type": "number",
-      "default": 8,
-      "description": "Level 1 direct commission %"
+      "default": 8
     },
     "l2_rate": {
       "type": "number",
-      "default": 2,
-      "description": "Level 2 commission %"
+      "default": 2
     },
     "l3_rate": {
       "type": "number",
-      "default": 1,
-      "description": "Level 3 commission %"
+      "default": 1
     },
-    "payout_tier_0_rate": {
+    "payout_reward_rate": {
       "type": "number",
-      "default": 7,
-      "description": "Payout reward % for 0-9 live traders"
-    },
-    "payout_tier_10_rate": {
-      "type": "number",
-      "default": 11,
-      "description": "Payout reward % for 10+ live traders"
-    },
-    "payout_tier_25_rate": {
-      "type": "number",
-      "default": 17,
-      "description": "Payout reward % for 25+ live traders"
-    },
-    "payout_tier_50_rate": {
-      "type": "number",
-      "default": 25,
-      "description": "Payout reward % for 50+ live traders"
+      "default": 9
     },
     "min_withdrawal": {
       "type": "number",
@@ -52,6 +38,13 @@
     "is_program_active": {
       "type": "boolean",
       "default": true
+    },
+    "cookie_days": {
+      "type": "number",
+      "default": 30
+    },
+    "notes": {
+      "type": "string"
     }
   },
   "required": [

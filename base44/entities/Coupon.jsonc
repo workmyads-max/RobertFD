@@ -1,14 +1,15 @@
 {
   "name": "Coupon",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "code": {
-      "type": "string",
-      "description": "Coupon code (uppercase)"
-    },
-    "name": {
-      "type": "string",
-      "description": "Display name"
+      "type": "string"
     },
     "discount_type": {
       "type": "string",
@@ -19,49 +20,34 @@
       "default": "percentage"
     },
     "discount_value": {
-      "type": "number",
-      "description": "Percentage (0-100) or fixed dollar amount"
-    },
-    "is_active": {
-      "type": "boolean",
-      "default": true
+      "type": "number"
     },
     "max_uses": {
-      "type": "number",
-      "description": "0 = unlimited"
+      "type": "number"
     },
     "uses_count": {
       "type": "number",
       "default": 0
     },
-    "per_user_limit": {
-      "type": "number",
-      "default": 1
+    "min_order_amount": {
+      "type": "number"
+    },
+    "applicable_plans": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
     },
     "expires_at": {
       "type": "string",
       "format": "date-time"
     },
-    "applicable_challenge_types": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Empty = all types"
-    },
-    "applicable_account_sizes": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      },
-      "description": "Empty = all sizes"
-    },
-    "applicable_platforms": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Empty = all platforms"
+    "created_by": {
+      "type": "string"
     },
     "notes": {
       "type": "string"
@@ -69,7 +55,6 @@
   },
   "required": [
     "code",
-    "discount_type",
     "discount_value"
   ]
 }

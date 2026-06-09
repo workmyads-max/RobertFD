@@ -1,99 +1,62 @@
 {
   "name": "TradingJournalEntry",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "authenticated",
+    "update": "owner",
+    "delete": "owner"
+  },
   "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
     "entry_date": {
       "type": "string",
       "format": "date"
     },
-    "period_type": {
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "mood": {
       "type": "string",
       "enum": [
-        "daily",
-        "weekly",
-        "monthly"
-      ],
-      "default": "daily"
+        "great",
+        "good",
+        "neutral",
+        "bad",
+        "terrible"
+      ]
     },
-    "notes": {
-      "type": "string",
-      "description": "Free-form journal notes"
+    "pnl": {
+      "type": "number"
     },
-    "emotions": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "confident",
-          "fearful",
-          "greedy",
-          "disciplined",
-          "frustrated",
-          "calm",
-          "overexcited",
-          "patient"
-        ]
-      }
+    "trades_taken": {
+      "type": "number"
     },
-    "mistakes": {
+    "followed_plan": {
+      "type": "boolean"
+    },
+    "lessons_learned": {
       "type": "string"
     },
-    "strengths": {
-      "type": "string"
-    },
-    "strategy_notes": {
-      "type": "string"
-    },
-    "screenshot_urls": {
+    "tags": {
       "type": "array",
       "items": {
         "type": "string"
       }
     },
-    "total_trades": {
-      "type": "number",
-      "default": 0
-    },
-    "winning_trades": {
-      "type": "number",
-      "default": 0
-    },
-    "losing_trades": {
-      "type": "number",
-      "default": 0
-    },
-    "pnl": {
-      "type": "number",
-      "default": 0
-    },
-    "best_trade_pnl": {
-      "type": "number"
-    },
-    "worst_trade_pnl": {
-      "type": "number"
-    },
-    "win_rate": {
-      "type": "number"
-    },
-    "avg_rr": {
-      "type": "number"
-    },
-    "most_traded_symbol": {
-      "type": "string"
-    },
-    "discipline_score": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 10
-    },
-    "consistency_score": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 10
-    },
-    "ai_summary": {
-      "type": "string",
-      "description": "AI-generated weekly/monthly summary"
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

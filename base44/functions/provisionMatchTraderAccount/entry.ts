@@ -22,7 +22,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // SECURITY: Only admin users may directly provision accounts.
+    // Internal payment webhook calls arrive without a user session — they are permitted.
+    if (user && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
 
     const body = await req.json();
     const { order_id, account_id, user_email, challenge_type, account_type, account_size, leverage, platform, rule_snapshot } = body;

@@ -1,35 +1,35 @@
 {
   "name": "TradingPlatformProvider",
   "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "platform_name": {
       "type": "string",
       "enum": [
         "mt5",
         "tradelocker"
-      ],
-      "description": "Trading platform identifier"
+      ]
     },
     "api_key": {
-      "type": "string",
-      "description": "Platform API key"
+      "type": "string"
     },
     "api_secret": {
-      "type": "string",
-      "description": "Platform API secret"
+      "type": "string"
     },
     "server_url": {
-      "type": "string",
-      "description": "Platform REST API base URL e.g. https://api.yourprovider.com"
+      "type": "string"
     },
     "server_name": {
-      "type": "string",
-      "description": "MT5 trader-facing server name e.g. YourBroker-Live \u2014 shown to traders in credentials"
+      "type": "string"
     },
     "is_active": {
       "type": "boolean",
-      "default": true,
-      "description": "Whether this provider is active"
+      "default": true
     },
     "demo_api_key": {
       "type": "string"
@@ -41,8 +41,7 @@
       "type": "string"
     },
     "created_by_admin": {
-      "type": "string",
-      "description": "Admin email who created this"
+      "type": "string"
     },
     "notes": {
       "type": "string"

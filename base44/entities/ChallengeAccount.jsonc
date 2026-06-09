@@ -1,6 +1,12 @@
 {
   "name": "ChallengeAccount",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "account_id": {
       "type": "string"
@@ -61,8 +67,7 @@
         "approved",
         "rejected"
       ],
-      "default": "none",
-      "description": "Phase 1 review state. Set to pending_review by auto-detect; admin approves to trigger Phase 2 provisioning."
+      "default": "none"
     },
     "funded_review_status": {
       "type": "string",
@@ -72,8 +77,7 @@
         "approved",
         "rejected"
       ],
-      "default": "none",
-      "description": "Phase 2 / Funded review state. Set to pending_review by auto-detect; admin approves to trigger funded provisioning."
+      "default": "none"
     },
     "balance": {
       "type": "number",
@@ -176,7 +180,7 @@
     },
     "rule_snapshot": {
       "type": "object",
-      "description": "Immutable copy of ChallengePlan rules at time of purchase. Enforcement always reads from here, never from live ChallengePlan.",
+      "description": "Immutable copy of ChallengePlan rules at time of purchase.",
       "properties": {
         "daily_dd_limit": {
           "type": "number"

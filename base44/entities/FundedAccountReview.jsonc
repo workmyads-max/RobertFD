@@ -1,10 +1,15 @@
 {
   "name": "FundedAccountReview",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "account_id": {
-      "type": "string",
-      "description": "Challenge account ID under review"
+      "type": "string"
     },
     "user_email": {
       "type": "string"
@@ -17,8 +22,7 @@
       "enum": [
         "phase1",
         "phase2"
-      ],
-      "description": "Which phase triggered this review"
+      ]
     },
     "status": {
       "type": "string",
@@ -33,8 +37,7 @@
     },
     "risk_score": {
       "type": "number",
-      "default": 0,
-      "description": "0-100 risk score (higher = riskier)"
+      "default": 0
     },
     "red_flags_count": {
       "type": "number",
@@ -42,8 +45,7 @@
     },
     "consistency_score": {
       "type": "number",
-      "default": 0,
-      "description": "0-100 consistency (higher = better)"
+      "default": 0
     },
     "account_size": {
       "type": "number"
@@ -95,8 +97,7 @@
       "type": "string"
     },
     "funded_account_id": {
-      "type": "string",
-      "description": "Set after funded account is provisioned"
+      "type": "string"
     },
     "funded_mt5_login": {
       "type": "string"

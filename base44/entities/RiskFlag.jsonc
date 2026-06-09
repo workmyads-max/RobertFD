@@ -1,6 +1,12 @@
 {
   "name": "RiskFlag",
   "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "user_email": {
       "type": "string"
@@ -9,16 +15,7 @@
       "type": "string"
     },
     "flag_type": {
-      "type": "string",
-      "enum": [
-        "unusual_pnl",
-        "rapid_withdrawal",
-        "new_device",
-        "multiple_ips",
-        "account_takeover",
-        "kyc_mismatch",
-        "suspicious_login"
-      ]
+      "type": "string"
     },
     "severity": {
       "type": "string",
@@ -27,8 +24,7 @@
         "medium",
         "high",
         "critical"
-      ],
-      "default": "medium"
+      ]
     },
     "description": {
       "type": "string"
@@ -37,21 +33,29 @@
       "type": "string",
       "enum": [
         "active",
-        "reviewed",
-        "resolved"
+        "resolved",
+        "false_positive"
       ],
       "default": "active"
-    },
-    "admin_notes": {
-      "type": "string"
     },
     "triggered_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
     }
   },
   "required": [
     "user_email",
-    "flag_type"
+    "flag_type",
+    "severity"
   ]
 }

@@ -1,19 +1,22 @@
 {
   "name": "Promotion",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "title": {
-      "type": "string",
-      "description": "Promotion title (e.g. 'Get 30% off on your next challenge')"
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "Promotion description text"
+      "type": "string"
     },
     "discount_percent": {
       "type": "number",
-      "default": 0,
-      "description": "Discount percentage (0-100)"
+      "default": 0
     },
     "promotion_type": {
       "type": "string",
@@ -23,17 +26,14 @@
         "special_offer",
         "limited_time"
       ],
-      "default": "limited_time",
-      "description": "Type of promotion"
+      "default": "limited_time"
     },
     "tag": {
-      "type": "string",
-      "description": "Badge label (e.g. '\ud83c\udfaf LIMITED OFFER')"
+      "type": "string"
     },
     "is_active": {
       "type": "boolean",
-      "default": true,
-      "description": "Whether the promotion is currently active"
+      "default": true
     },
     "display_location": {
       "type": "string",
@@ -42,32 +42,26 @@
         "dashboard",
         "all"
       ],
-      "default": "welcome_header",
-      "description": "Where to display the promotion"
+      "default": "welcome_header"
     },
     "start_date": {
       "type": "string",
-      "format": "date-time",
-      "description": "When the promotion starts"
+      "format": "date-time"
     },
     "end_date": {
       "type": "string",
-      "format": "date-time",
-      "description": "When the promotion ends"
+      "format": "date-time"
     },
     "cta_text": {
       "type": "string",
-      "default": "Learn More",
-      "description": "Call-to-action button text"
+      "default": "Learn More"
     },
     "cta_url": {
-      "type": "string",
-      "description": "URL for the CTA button (optional)"
+      "type": "string"
     },
     "sort_order": {
       "type": "number",
-      "default": 0,
-      "description": "Display order (higher = shown first)"
+      "default": 0
     }
   },
   "required": [

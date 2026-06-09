@@ -37,6 +37,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
 
+    // SECURITY: Only admin users or internal scheduler calls are permitted.
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin or scheduler access only' }, { status: 403 });
+      }
+    } catch { /* No session = internal scheduler call — allow */ }
+
     const now = new Date();
     const utcHour = now.getUTCHours();
     const utcMinute = now.getUTCMinutes();

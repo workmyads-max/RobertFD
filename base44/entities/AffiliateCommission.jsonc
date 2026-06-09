@@ -1,6 +1,12 @@
 {
   "name": "AffiliateCommission",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "affiliate_email": {
       "type": "string"

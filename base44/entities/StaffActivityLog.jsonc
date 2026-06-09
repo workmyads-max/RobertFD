@@ -1,6 +1,12 @@
 {
   "name": "StaffActivityLog",
   "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "staff_email": {
       "type": "string"
@@ -12,8 +18,7 @@
       "type": "string"
     },
     "action": {
-      "type": "string",
-      "description": "e.g. approve_withdrawal, suspend_account, edit_challenge"
+      "type": "string"
     },
     "action_category": {
       "type": "string",
@@ -32,19 +37,16 @@
       ]
     },
     "target_entity": {
-      "type": "string",
-      "description": "e.g. WithdrawalRequest, ChallengeAccount"
+      "type": "string"
     },
     "target_id": {
       "type": "string"
     },
     "target_user_email": {
-      "type": "string",
-      "description": "Affected user if applicable"
+      "type": "string"
     },
     "details": {
-      "type": "object",
-      "description": "Additional context JSON"
+      "type": "object"
     },
     "ip_address": {
       "type": "string"

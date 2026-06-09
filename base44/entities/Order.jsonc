@@ -1,6 +1,12 @@
 {
   "name": "Order",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "order_id": {
       "type": "string"

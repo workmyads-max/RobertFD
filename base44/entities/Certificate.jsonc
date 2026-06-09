@@ -1,6 +1,12 @@
 {
   "name": "Certificate",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "certificate_id": {
       "type": "string"

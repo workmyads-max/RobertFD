@@ -1,6 +1,12 @@
 {
   "name": "TradeRecord",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "account_id": {
       "type": "string"

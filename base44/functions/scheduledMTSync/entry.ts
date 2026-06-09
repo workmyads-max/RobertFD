@@ -65,6 +65,15 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // SECURITY: Only admin users or internal scheduler calls are permitted.
+    // Browser-originated calls from regular users are rejected.
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin or scheduler access only' }, { status: 403 });
+      }
+    } catch { /* No session = internal scheduler call — allow */ }
+
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&

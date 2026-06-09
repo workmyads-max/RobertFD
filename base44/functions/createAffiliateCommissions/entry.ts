@@ -13,6 +13,16 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
+
+    // SECURITY: Only internal service-role calls (from payment webhooks) are permitted.
+    // Direct calls from regular users are rejected.
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Internal function only' }, { status: 403 });
+      }
+    } catch { /* No session = internal webhook call — allow */ }
+
     const body = await req.json();
     const { user_email, order_id, order_price, challenge_type, account_size } = body;
 

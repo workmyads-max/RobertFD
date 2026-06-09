@@ -1,6 +1,12 @@
 {
   "name": "WithdrawalRequest",
   "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "account_id": {
       "type": "string"

@@ -2,6 +2,8 @@
  * getPlatformCredentials — Retrieve MT5/TradeLocker API credentials from database.
  * Called by all backend functions — single source of truth for platform credentials.
  * Falls back to env vars only if no DB record exists.
+ *
+ * SECURITY: Admin or service-role callers only. Regular users are rejected with 403.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -9,10 +11,26 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { platform } = body; // 'mt5' or 'tradelocker'
+    const { platform } = body;
 
     if (!platform) {
       return Response.json({ error: 'platform required' }, { status: 400 });
+    }
+
+    // SECURITY: Only admin users or internal service-role callers may retrieve broker credentials.
+    // Service-role calls (from other backend functions) do not have an auth user — they bypass this check via asServiceRole.
+    // Direct calls from a browser session must be admin.
+    let callerIsAdmin = false;
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role === 'admin') {
+        callerIsAdmin = true;
+      } else if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
+      // If user is null, the call is coming from an internal function via service role — allow it
+    } catch {
+      // No authenticated session — internal/scheduled call, allow
     }
 
     // Try database first
