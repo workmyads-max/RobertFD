@@ -52,30 +52,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex relative">
-
-      {/* Centered Logo — sits on the border between both panels */}
-      <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex-col items-center justify-center"
-        style={{
-          background: 'hsl(var(--background))',
-          border: '2px solid rgba(255,92,0,0.35)',
-          borderRadius: 24,
-          padding: '20px 28px',
-          boxShadow: '0 0 48px rgba(255,92,0,0.18), 0 0 0 1px rgba(255,255,255,0.04)',
-        }}>
-        <XFLogo size="xl" animate />
-      </div>
-
+    <div className="min-h-screen bg-background flex">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 border-r border-border">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-8">
           {/* Back Button */}
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
 
-          {/* Logo — mobile only */}
-          <div className="text-center lg:hidden">
+          {/* Logo */}
+          <div className="text-center">
             <XFLogo size="lg" animate />
           </div>
 
