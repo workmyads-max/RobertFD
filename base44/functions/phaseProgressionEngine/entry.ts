@@ -202,18 +202,27 @@ Deno.serve(async (req) => {
     const { action, account_id } = body;
     const sr = base44.asServiceRole;
 
-    // ── MARK PHASE 1 PASSED → PROVISION PHASE 2 ───────────────────────────────
-    if (action === 'mark_phase1_passed') {
+    // ── APPROVE PHASE 1 REVIEW → PROVISION PHASE 2 MT5 ACCOUNT ──────────────
+    // Called by admin after auto-detection sets phase_review_status=pending_review.
+    // Also handles legacy manual action (mark_phase1_passed) for backward compat.
+    if (action === 'approve_phase1' || action === 'mark_phase1_passed') {
       if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
 
       const accounts = await sr.entities.ChallengeAccount.filter({ account_id });
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
+      // Prevent double-approval
+      if (account.phase_review_status === 'approved') {
+        return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.' }, { status: 409 });
+      }
+
+      // Mark review approved + advance to phase2 (reset progress for new phase)
       await sr.entities.ChallengeAccount.update(account.id, {
         status: 'passed',
         phase: 'phase2',
-        phase_passed_at: new Date().toISOString(),
+        phase_review_status: 'approved',
+        phase_passed_at: account.phase_passed_at || new Date().toISOString(),
         profit_target_progress: 0,
       });
 
@@ -236,8 +245,12 @@ Deno.serve(async (req) => {
           );
 
           if (phase2Credentials) {
+            // Phase 2 MT5 account provisioned — activate, advance phase, clear Phase 1 review flags
             await sr.entities.ChallengeAccount.update(account.id, {
               status: 'active',
+              phase: 'phase2',
+              phase_review_status: 'approved',
+              funded_review_status: 'none', // reset funded review for the new phase
               mt_login: phase2Credentials.mt_login,
               mt_password: phase2Credentials.mt_password,
               mt_server: phase2Credentials.mt_server,
@@ -250,7 +263,7 @@ Deno.serve(async (req) => {
               high_water_mark: account.account_size,
             });
           } else {
-            console.error('[Phase1Passed] MT5 Phase 2 provisioning returned null — account stays passed, admin must retry');
+            console.error('[approve_phase1] MT5 Phase 2 provisioning returned null — account stays passed, admin must retry');
           }
         } else {
           console.error('[Phase1Passed] MT5 credentials not configured in Admin > Platforms API');
@@ -275,7 +288,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, phase: 'phase2', credentials: phase2Credentials });
     }
 
-    // ── MARK PHASE 2 PASSED → PENDING MANUAL REVIEW ───────────────────────────
+    // ── MANUALLY MARK PHASE 2 PASSED → PENDING FUNDED REVIEW (admin/legacy) ──
+    // Auto-detection in scheduledMTSync now handles the normal path.
+    // This action is kept for admin override / edge cases.
+    // approve_funded is the action that triggers actual MT5 funded provisioning.
     if (action === 'mark_phase2_passed') {
       if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
 
@@ -283,11 +299,17 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
+      // Prevent overwriting an already-submitted funded review
+      if (account.funded_review_status === 'pending_review' || account.funded_review_status === 'approved') {
+        return Response.json({ error: 'Funded review already in progress or approved.' }, { status: 409 });
+      }
+
       const riskData = await computeRiskScore(sr, account);
 
       await sr.entities.ChallengeAccount.update(account.id, {
         status: 'passed',
         phase: 'funded',
+        funded_review_status: 'pending_review',
         phase_passed_at: new Date().toISOString(),
       });
 
@@ -358,10 +380,17 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Guard: prevent double-funded provisioning
+      if (account.status === 'funded') {
+        return Response.json({ error: 'Account is already funded — cannot approve again.' }, { status: 409 });
+      }
+
       const fundedId = `FUNDED-${Date.now()}`;
 
+      // funded_review_status=approved marks the funded provisioning as complete
       await sr.entities.ChallengeAccount.update(account.id, {
         status: 'funded',
+        funded_review_status: 'approved',
         account_id: fundedId,
         ...(fundedCredentials || {}),
         login_credentials: fundedCredentials

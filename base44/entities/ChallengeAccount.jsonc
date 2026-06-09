@@ -53,6 +53,28 @@
       ],
       "default": "phase1"
     },
+    "phase_review_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "none",
+      "description": "Phase 1 review state. Set to pending_review by auto-detect; admin approves to trigger Phase 2 provisioning."
+    },
+    "funded_review_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "none",
+      "description": "Phase 2 / Funded review state. Set to pending_review by auto-detect; admin approves to trigger funded provisioning."
+    },
     "balance": {
       "type": "number",
       "default": 0

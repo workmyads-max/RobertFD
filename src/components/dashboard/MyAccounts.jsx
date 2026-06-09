@@ -154,6 +154,34 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
           </div>
         </div>
 
+        {/* Phase 1 passed — awaiting admin approval for Phase 2 provisioning */}
+        {account.status === 'passed' && account.phase === 'phase2' && account.phase_review_status === 'pending_review' && (
+          <div className="mb-4 rounded-xl p-4 flex items-start gap-3"
+            style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.3)' }}>
+            <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="text-xs font-bold text-emerald-400 mb-1">✅ Phase 1 Passed — Under Review</div>
+              <div className="text-[11px] text-muted-foreground leading-relaxed">
+                Congratulations! You have passed Phase 1. Your account is under review. Phase 2 credentials will be issued after admin approval.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 2 passed — awaiting admin approval for funded provisioning */}
+        {account.status === 'passed' && account.phase === 'funded' && account.funded_review_status === 'pending_review' && (
+          <div className="mb-4 rounded-xl p-4 flex items-start gap-3"
+            style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.3)' }}>
+            <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="text-xs font-bold text-blue-400 mb-1">✅ Phase 2 Passed — Funded Review In Progress</div>
+              <div className="text-[11px] text-muted-foreground leading-relaxed">
+                Congratulations! You have passed Phase 2. Your funded account is under review. Expected processing time: 3–5 business days.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Provisioning pending state */}
         {account.status === 'pending' && account.platform === 'match_trader' && !account.mt_login && (
           <div className="mb-4 rounded-xl p-3 flex items-center gap-3"

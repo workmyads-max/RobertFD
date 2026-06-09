@@ -209,6 +209,81 @@ Deno.serve(async (req) => {
 
           await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, updates);
 
+          // ── AUTOMATED PHASE PASS DETECTION ────────────────────────────────
+          // Only runs for active (non-failed, non-breached) accounts.
+          // Sets status=passed and review_status=pending_review.
+          // NEVER provisions MT5 credentials — that requires admin approval.
+          // Idempotent: skips if already passed or already in review.
+          if (
+            !breachDetected &&
+            acc.status === 'active' &&
+            acc.phase === 'phase1' &&
+            (!acc.phase_review_status || acc.phase_review_status === 'none')
+          ) {
+            const phase1Target = acc.rule_snapshot?.phase1_target ?? 10;
+            const currentProgress = updates.profit_target_progress;
+            if (currentProgress >= phase1Target) {
+              console.log(`[PHASE1-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase1Target}%`);
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                status: 'passed',
+                phase_review_status: 'pending_review',
+                phase_passed_at: new Date().toISOString(),
+              });
+              // Notify trader — non-blocking
+              base44.asServiceRole.entities.Notification.create({
+                title: '🎉 Phase 1 Passed — Under Review',
+                message: 'Congratulations! You have passed Phase 1. Your account is under review. Phase 2 credentials will be issued after approval.',
+                type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+              }).catch(() => {});
+              console.log(`[PHASE1-PASS] ${acc.account_id} → status=passed, phase_review_status=pending_review`);
+            }
+          }
+
+          // Phase 2 pass detection — only for active phase2 accounts not yet in funded review
+          if (
+            !breachDetected &&
+            acc.status === 'active' &&
+            acc.phase === 'phase2' &&
+            (!acc.funded_review_status || acc.funded_review_status === 'none')
+          ) {
+            const phase2Target = acc.rule_snapshot?.phase2_target ?? 5;
+            const currentProgress = updates.profit_target_progress;
+            if (currentProgress >= phase2Target) {
+              console.log(`[PHASE2-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase2Target}%`);
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                status: 'passed',
+                funded_review_status: 'pending_review',
+                phase_passed_at: new Date().toISOString(),
+              });
+              // Create FundedAccountReview record — idempotent: only if none exists
+              const existingReviews = await base44.asServiceRole.entities.FundedAccountReview.filter({ account_id: acc.account_id });
+              if (existingReviews.length === 0) {
+                await base44.asServiceRole.entities.FundedAccountReview.create({
+                  account_id: acc.account_id,
+                  user_email: acc.user_email,
+                  trader_name: acc.user_email,
+                  phase_passed: 'phase2',
+                  status: 'pending_review',
+                  account_size: acc.account_size,
+                  challenge_type: acc.challenge_type,
+                  total_trades: updates.total_trades,
+                  win_rate: updates.win_rate,
+                  max_dd_used: persistentOverallDD,
+                  trading_days: acc.trading_days || 0,
+                  gross_pnl: updates.pnl,
+                });
+                console.log(`[PHASE2-PASS] FundedAccountReview created for ${acc.account_id}`);
+              }
+              // Notify trader — non-blocking
+              base44.asServiceRole.entities.Notification.create({
+                title: '🎉 Phase 2 Passed — Under Review',
+                message: 'Congratulations! You have passed Phase 2. Your funded account is under review. Expected processing time: 3–5 business days.',
+                type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+              }).catch(() => {});
+              console.log(`[PHASE2-PASS] ${acc.account_id} → status=passed, funded_review_status=pending_review`);
+            }
+          }
+
           // ── WRITE TRADERECORD ENTITIES FOR EACH CLOSED DEAL ───────────────
           // Upsert by trade_id — skip if already exists (idempotent)
           const existingTrades = await base44.asServiceRole.entities.TradeRecord.filter({ account_id: acc.account_id });
