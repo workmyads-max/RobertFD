@@ -44,7 +44,7 @@ export default function Navbar() {
       >
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#"><XFLogo size="lg" animate /></a>
+          <a href="#"><XFLogo size="xl" animate /></a>
 
           {/* Desktop Links */}
           <div className="hidden lg:flex items-center gap-1">

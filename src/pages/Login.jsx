@@ -62,7 +62,7 @@ export default function Login() {
           </Link>
 
           {/* Logo */}
-          <div className="text-center">
+          <div className="flex justify-center">
             <XFLogo size="xl" animate />
           </div>
 

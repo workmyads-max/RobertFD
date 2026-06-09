@@ -22,7 +22,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'analytics', label: 'Analytics', icon: Activity },
     { id: 'markets', label: 'Markets', icon: Globe },
-    { id: 'marketplace', label: '🛒 Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true },
+    { id: 'marketplace', label: '🛒 Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
     { id: 'news', label: 'News', icon: Newspaper },
     { id: 'journal', label: 'Journal', icon: BookOpen },
@@ -66,7 +66,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           onClick={() => setCollapsed?.(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className="hover:opacity-80 transition-opacity">
-          <XFLogo size={collapsed ? 'sm' : 'md'} animate />
+          <XFLogo size={collapsed ? 'sm' : 'lg'} animate />
         </button>
       </div>
 
@@ -82,8 +82,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               key={item.id}
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative text-sm font-medium ${
-                collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
+              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative font-medium ${
+                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-4 py-3.5 text-sm' : 'gap-2.5 px-3 py-2.5 text-sm'
               } ${
                 isActive
                   ? (item.highlight ? 'text-primary' : 'text-white')
@@ -102,7 +102,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-white/25 group-hover:text-white/60'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-white/60'}`} />
               {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
