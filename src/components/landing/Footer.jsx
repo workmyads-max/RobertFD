@@ -1,80 +1,234 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import XFLogo from '@/components/shared/XFLogo';
+import { Mail, MapPin, Phone, ExternalLink, Twitter, MessageCircle, Send, Instagram, Linkedin } from 'lucide-react';
 
-const links = {
-  Product: ['Start Challenge', 'Instant Funding', 'Pricing', 'Platforms', 'Leaderboard'],
-  Company: ['About Us', 'Careers', 'Press Kit', 'Blog', 'Contact'],
-  Legal: ['Terms & Conditions', 'Privacy Policy', 'Risk Disclosure', 'AML Policy'],
-  Support: ['Help Center', 'FAQ', 'Live Chat', 'Email Support'],
-};
+const PRODUCT_LINKS = [
+  { label: 'Start Challenge', href: '/challenges' },
+  { label: 'Instant Funding', href: '/challenges' },
+  { label: 'Pricing', href: '/#pricing' },
+  { label: 'Platforms', href: '/#platforms' },
+  { label: 'Leaderboard', href: '/dashboard' },
+];
+
+const COMPANY_LINKS = [
+  { label: 'About Us', href: '/#about' },
+  { label: 'Careers', href: 'mailto:careers@xfundedtrader.com' },
+  { label: 'Press Kit', href: 'mailto:press@xfundedtrader.com' },
+  { label: 'Blog', href: '#' },
+  { label: 'Contact', href: 'mailto:support@xfundedtrader.com' },
+];
+
+const LEGAL_LINKS = [
+  { label: 'Terms & Conditions', href: '/terms' },
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Risk Disclosure', href: '/risk-disclosure' },
+  { label: 'AML Policy', href: '/aml-policy' },
+];
+
+const SUPPORT_LINKS = [
+  { label: 'Help Center', href: '#faq' },
+  { label: 'FAQ', href: '#faq' },
+  { label: 'Live Chat', href: '#', isChat: true },
+  { label: 'Email Support', href: 'mailto:support@xfundedtrader.com', isMail: true },
+];
+
+const SOCIALS = [
+  { label: 'Twitter / X', icon: Twitter, href: '#' },
+  { label: 'Discord', icon: MessageCircle, href: '#' },
+  { label: 'Telegram', icon: Send, href: '#' },
+  { label: 'Instagram', icon: Instagram, href: '#' },
+  { label: 'LinkedIn', icon: Linkedin, href: '#' },
+];
+
+function FooterLink({ item }) {
+  const cls = "text-sm text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1 group";
+
+  const isExternal = item.href?.startsWith('mailto:') || item.href?.startsWith('http');
+
+  if (item.isChat) {
+    return (
+      <button
+        onClick={() => {
+          const chatBtn = document.querySelector('[data-livechat]') || document.querySelector('.live-chat-trigger');
+          if (chatBtn) chatBtn.click();
+        }}
+        className={cls}
+      >
+        {item.label}
+      </button>
+    );
+  }
+
+  if (isExternal) {
+    return (
+      <a href={item.href} className={cls} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
+        {item.label}
+        {item.href.startsWith('http') && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />}
+      </a>
+    );
+  }
+
+  return (
+    <Link to={item.href} className={cls}>
+      {item.label}
+    </Link>
+  );
+}
 
 export default function Footer() {
   return (
-    <footer id="contact" className="relative pt-32 pb-12 overflow-hidden">
-      {/* Watermark */}
-      <div className="absolute bottom-0 left-0 right-0 text-center pointer-events-none select-none">
-        <span className="text-[12vw] font-black text-foreground/[0.015] leading-none tracking-tighter font-mono">
+    <footer id="contact" className="relative overflow-hidden" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+
+      {/* Subtle bg watermark */}
+      <div className="absolute bottom-0 left-0 right-0 text-center pointer-events-none select-none overflow-hidden">
+        <span className="text-[10vw] font-black text-foreground/[0.018] leading-none tracking-tighter font-mono">
           XFUNDED TRADER
         </span>
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6">
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
-          {/* Brand */}
-          <div className="lg:col-span-1">
+      {/* Main footer content */}
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 pt-16 pb-0">
+
+        {/* Top grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
+
+          {/* Brand column — 2 cols wide */}
+          <div className="sm:col-span-2 lg:col-span-2">
+            {/* Logo — large */}
             <div className="mb-6">
-              <XFLogo size="sm" />
+              <XFLogo size="xl" animate />
             </div>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Dubai-based institutional proprietary trading firm. Empowering elite traders worldwide.
+
+            <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-xs">
+              Dubai-based institutional proprietary trading firm. We fund elite traders with up to $200,000 in capital and share up to 80% of profits.
             </p>
-            <p className="text-xs text-primary/70 font-mono mb-4">Established Since 2026</p>
-            <div className="text-xs text-muted-foreground">
-              <p>support@xfundedtrader.com</p>
-              <p className="mt-1">Dubai International Financial Centre, UAE</p>
+
+            {/* Company registration */}
+            <div className="mb-5 p-3 rounded-xl text-xs font-mono space-y-1"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-primary/80 font-semibold mb-1 uppercase tracking-widest text-[10px]">Company Info</div>
+              <div className="flex items-start gap-2 text-muted-foreground">
+                <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0 text-primary/60" />
+                <span>Dubai International Financial Centre, UAE</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Mail className="w-3 h-3 flex-shrink-0 text-primary/60" />
+                <a href="mailto:support@xfundedtrader.com" className="hover:text-primary transition-colors">
+                  support@xfundedtrader.com
+                </a>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Phone className="w-3 h-3 flex-shrink-0 text-primary/60" />
+                <span>Available via Live Chat & Email</span>
+              </div>
+              <div className="text-muted-foreground/50 text-[10px] pt-1">
+                Reg. No: XFT-2026-DIFC · Established 2026
+              </div>
+            </div>
+
+            {/* Social icons */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {SOCIALS.map(s => {
+                const Icon = s.icon;
+                return (
+                  <a key={s.label} href={s.href} title={s.label} target="_blank" rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Links */}
-          {Object.entries(links).map(([title, items]) => (
-            <div key={title}>
-              <h4 className="text-sm font-semibold text-foreground mb-4">{title}</h4>
-              <ul className="space-y-2.5">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+          {/* Product */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-foreground mb-4"
+              style={{ color: 'rgba(255,92,0,0.9)' }}>Product</h4>
+            <ul className="space-y-3">
+              {PRODUCT_LINKS.map(item => (
+                <li key={item.label}><FooterLink item={item} /></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(255,92,0,0.9)' }}>Company</h4>
+            <ul className="space-y-3">
+              {COMPANY_LINKS.map(item => (
+                <li key={item.label}><FooterLink item={item} /></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(255,92,0,0.9)' }}>Legal</h4>
+            <ul className="space-y-3">
+              {LEGAL_LINKS.map(item => (
+                <li key={item.label}><FooterLink item={item} /></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: 'rgba(255,92,0,0.9)' }}>Support</h4>
+            <ul className="space-y-3">
+              {SUPPORT_LINKS.map(item => (
+                <li key={item.label}><FooterLink item={item} /></li>
+              ))}
+            </ul>
+            {/* Response time badge */}
+            <div className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+              Avg. response under 4 hours
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-border/30 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} XFunded Trader. All rights reserved. — Established Since 2026
-            </p>
-            <div className="flex items-center gap-6">
-              {['Twitter', 'Discord', 'Telegram', 'Instagram', 'LinkedIn'].map((social) => (
-                <a key={social} href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                  {social}
-                </a>
-              ))}
+        {/* Risk Disclosure Block */}
+        <div className="rounded-2xl p-5 mb-0"
+          style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-start gap-3">
+            <div className="w-1 flex-shrink-0 self-stretch rounded-full bg-primary/40 mt-0.5" />
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-primary/70 mb-2">Risk Disclosure</div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Trading leveraged financial instruments including foreign exchange, CFDs, and cryptocurrencies carries a 
+                significant level of risk and may not be suitable for all investors. You may lose all invested capital. 
+                XFunded Trader is a proprietary trading firm and does not manage client funds or provide investment advice. 
+                Our challenges and funded accounts are simulated trading environments designed to evaluate trader performance. 
+                Past performance of any trader or strategy does not guarantee or predict future results. Please ensure you 
+                fully understand the risks involved and seek independent financial advice if necessary.
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-8 p-4 glass-light rounded-xl">
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              <strong>Risk Disclosure:</strong> Trading foreign exchange, cryptocurrencies, and CFDs carries a
-              high level of risk and may not be suitable for all investors. XFunded Trader does not provide financial
-              advice. Past performance is not indicative of future results. By using our services, you acknowledge
-              and accept the risks involved in trading financial instruments.
-            </p>
+      {/* Bottom copyright bar */}
+      <div className="relative z-10 mt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)' }}>
+        <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground/70 text-center sm:text-left">
+            © {new Date().getFullYear()} XFunded Trader. All Rights Reserved. · Dubai International Financial Centre, UAE
+          </p>
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            {[
+              { label: 'Terms', href: '/terms' },
+              { label: 'Privacy', href: '/privacy' },
+              { label: 'Risk Disclosure', href: '/risk-disclosure' },
+            ].map(link => (
+              <Link key={link.label} to={link.href}
+                className="text-xs text-muted-foreground/60 hover:text-primary transition-colors whitespace-nowrap">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

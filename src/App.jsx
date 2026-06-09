@@ -10,6 +10,7 @@ import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import LegalPage from './pages/LegalPage';
 
 const LoginRoute = () => {
   const { user } = useSupabaseAuth();
@@ -37,6 +38,10 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       <Route path="/challenges" element={<ChallengeSelect />} />
+      <Route path="/terms" element={<LegalPage />} />
+      <Route path="/privacy" element={<LegalPage />} />
+      <Route path="/risk-disclosure" element={<LegalPage />} />
+      <Route path="/aml-policy" element={<LegalPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
