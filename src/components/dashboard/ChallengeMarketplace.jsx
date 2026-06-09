@@ -41,16 +41,23 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [accountType, setAccountType] = useState('standard');
   const [platform, setPlatform] = useState('mt5');
 
-  const { data: allPlans = [], isLoading: plansLoading } = useQuery({
+  const { data: allPlans = [], isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ['challenge-plans-all'],
     queryFn: async () => {
       const data = await base44.entities.ChallengePlan.list('sort_order', 200);
       return Array.isArray(data) ? data : [];
     },
     staleTime: 0,
-    refetchOnMount: 'always',
+    gcTime: 0,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+
+  // Force a fresh fetch every time this component renders into view
+  // (handles the case where renderPage() re-renders without unmounting)
+  React.useEffect(() => {
+    refetchPlans();
+  }, []);
 
   const plans = allPlans
     .filter(p => {
