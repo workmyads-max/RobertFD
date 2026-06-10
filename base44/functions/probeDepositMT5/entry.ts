@@ -1,35 +1,37 @@
 /**
- * probeDepositMT5 — Tests ALL deposit methods on Tritech API
- * to find which one actually works for the contest.1 group.
- *
- * Tests: deposit, depositwithbal, creditin, bonusin
+ * probeDepositMT5 — Tests setting balance AT creation time via useradd Balance field
  * Admin only.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 function mt5Headers(apiKey) {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
-    'ApiKey': apiKey,
-  };
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
+}
+function genPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+  let p = 'A' + 'a' + '2' + '!';
+  for (let i = 4; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p.split('').sort(() => Math.random() - 0.5).join('');
 }
 
-async function probe(apiBase, headers, label, path, body) {
-  console.log(`[PROBE] ${label} → POST ${path} body=${JSON.stringify(body)}`);
-  try {
-    const res = await fetch(`${apiBase}${path}`, {
-      method: 'POST', headers, body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    let parsed;
-    try { parsed = JSON.parse(text); } catch { parsed = text || '(empty)'; }
-    console.log(`[PROBE] ${label}: HTTP ${res.status}, body=${text.slice(0, 400)}`);
-    return { label, status: res.status, response: parsed };
-  } catch (e) {
-    console.error(`[PROBE] ${label}: EXCEPTION — ${e.message}`);
-    return { label, status: 'EXCEPTION', error: e.message };
-  }
+async function createAndCheck(apiBase, headers, apiKey, label, body, depositAmount) {
+  console.log(`\n[${label}] useradd body: ${JSON.stringify(body)}`);
+  const res = await fetch(`${apiBase}/api/v1/user/useradd`, { method: 'POST', headers, body: JSON.stringify(body) });
+  const text = await res.text();
+  const data = JSON.parse(text);
+  const login = data?.data?.login;
+  console.log(`[${label}] useradd HTTP ${res.status}, login=${login}, raw=${text.slice(0, 400)}`);
+  if (!login) return { label, status: res.status, error: 'no login', raw: data };
+
+  // Wait 3s then check balance
+  await new Promise(r => setTimeout(r, 3000));
+  const checkRes = await fetch(`${apiBase}/api/v1/user/userget`, {
+    method: 'POST', headers, body: JSON.stringify({ Login: login, apikey: apiKey }),
+  });
+  const checkData = checkRes.ok ? await checkRes.json() : {};
+  const bal = parseFloat(checkData?.data?.Balance ?? checkData?.data?.balance ?? 0);
+  console.log(`[${label}] balance after 3s: ${bal}`);
+  return { label, login, balance_after_3s: bal, balance_worked: bal > 0 };
 }
 
 Deno.serve(async (req) => {
@@ -41,10 +43,8 @@ Deno.serve(async (req) => {
     } catch { return Response.json({ error: 'Forbidden' }, { status: 403 }); }
 
     const body = await req.json();
-    const { mt_login, amount } = body;
-    if (!mt_login) return Response.json({ error: 'mt_login required' }, { status: 400 });
-
-    const depositAmount = amount || 100000;
+    const depositAmount = body.amount || 100000;
+    const groupName = body.group || 'HAR\\MAN15\\contest.1';
 
     const providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
     const provider = providers[0];
@@ -53,106 +53,52 @@ Deno.serve(async (req) => {
     if (!apiBase || !apiKey) return Response.json({ error: 'MT5 credentials not configured' }, { status: 500 });
 
     const headers = mt5Headers(apiKey);
-    const loginNum = parseInt(mt_login);
+    const ts = Date.now();
 
-    // First check current balance
-    const beforeRes = await fetch(`${apiBase}/api/v1/user/userget`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
-    });
-    const beforeData = beforeRes.ok ? await beforeRes.json() : {};
-    const balBefore = parseFloat(beforeData?.data?.Balance ?? beforeData?.data?.balance ?? 0);
-    console.log(`[BEFORE] login ${loginNum}: balance=${balBefore}`);
+    // Test: useradd WITH Balance field set at creation
+    const r1 = await createAndCheck(apiBase, headers, apiKey, 'useradd_with_Balance', {
+      Login: 0,
+      MasterPassword: genPassword(),
+      InvestorPassword: genPassword(),
+      Name: 'probe_bal',
+      Email: `probe_bal_${ts}@xfunded.com`,
+      Group: groupName,
+      Leverage: 100,
+      Balance: depositAmount,    // <-- set balance at creation
+      Country: 'AE',
+      Comment: 'Balance at creation test',
+      Status: 0,
+      apikey: apiKey,
+    }, depositAmount);
 
-    // Try ALL deposit endpoints with different body schemas
-    const results = await Promise.all([
+    // Test: useradd WITH Balance + Rights field (some MT5 managers need Rights=0x0000007f)
+    const r2 = await createAndCheck(apiBase, headers, apiKey, 'useradd_Balance_Rights', {
+      Login: 0,
+      MasterPassword: genPassword(),
+      InvestorPassword: genPassword(),
+      Name: 'probe_rights',
+      Email: `probe_rights_${ts}@xfunded.com`,
+      Group: groupName,
+      Leverage: 100,
+      Balance: depositAmount,
+      Rights: 127,              // standard trader rights
+      Country: 'AE',
+      Comment: 'Balance + Rights test',
+      Status: 0,
+      apikey: apiKey,
+    }, depositAmount);
 
-      // 1. depositwithbal — current impl (broken for contest.1)
-      probe(apiBase, headers, 'depositwithbal_current', '/api/v1/user/depositwithbal', {
-        Login: loginNum,
-        Balance: depositAmount,
-        Comment: 'Test deposit v1',
-        apikey: apiKey,
-      }),
-
-      // 2. deposit — different endpoint, may use different MT5 path
-      probe(apiBase, headers, 'deposit_Login_Balance', '/api/v1/user/deposit', {
-        Login: loginNum,
-        Balance: depositAmount,
-        Comment: 'Test deposit v2',
-        apikey: apiKey,
-      }),
-
-      // 3. deposit with Amount field instead of Balance
-      probe(apiBase, headers, 'deposit_Login_Amount', '/api/v1/user/deposit', {
-        Login: loginNum,
-        Amount: depositAmount,
-        Comment: 'Test deposit v3',
-        apikey: apiKey,
-      }),
-
-      // 4. creditin — MT5 credit operation (different from balance deposit)
-      probe(apiBase, headers, 'creditin', '/api/v1/user/creditin', {
-        Login: loginNum,
-        Balance: depositAmount,
-        Comment: 'Test credit in',
-        apikey: apiKey,
-      }),
-
-      // 5. bonusin — bonus credit
-      probe(apiBase, headers, 'bonusin', '/api/v1/user/bonusin', {
-        Login: loginNum,
-        Balance: depositAmount,
-        Comment: 'Test bonus in',
-        apikey: apiKey,
-      }),
-
-      // 6. depositwithbal with Amount instead of Balance
-      probe(apiBase, headers, 'depositwithbal_Amount', '/api/v1/user/depositwithbal', {
-        Login: loginNum,
-        Amount: depositAmount,
-        Comment: 'Test deposit v4',
-        apikey: apiKey,
-      }),
-
-      // 7. deposit with integer Balance (no decimal)
-      probe(apiBase, headers, 'deposit_integer', '/api/v1/user/deposit', {
-        Login: loginNum,
-        Balance: parseInt(depositAmount),
-        Comment: 'Test deposit integer',
-        apikey: apiKey,
-      }),
-    ]);
-
-    // Wait 3 seconds then check balance again
-    await new Promise(r => setTimeout(r, 3000));
-
-    const afterRes = await fetch(`${apiBase}/api/v1/user/userget`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
-    });
-    const afterData = afterRes.ok ? await afterRes.json() : {};
-    const balAfter = parseFloat(afterData?.data?.Balance ?? afterData?.data?.balance ?? 0);
-    console.log(`[AFTER 3s] login ${loginNum}: balance=${balAfter}`);
-
-    const balanceChanged = balAfter !== balBefore;
-    const netDeposited = balAfter - balBefore;
+    const working = [r1, r2].filter(r => r.balance_worked);
 
     return Response.json({
       success: true,
-      login: loginNum,
-      balance_before: balBefore,
-      balance_after_3s: balAfter,
-      balance_changed: balanceChanged,
-      net_deposited: netDeposited,
-      diagnosis: balanceChanged
-        ? `✅ DEPOSIT WORKED — balance went from ${balBefore} to ${balAfter} (+${netDeposited})`
-        : `❌ NO BALANCE CHANGE — all deposit methods failed or are async pending`,
-      results,
+      results: [r1, r2],
+      diagnosis: working.length > 0
+        ? `✅ BALANCE AT CREATION WORKS: ${working.map(r => `${r.label} login=${r.login} bal=${r.balance_after_3s}`).join(', ')}`
+        : `❌ Balance field in useradd also does not work for this group`,
     });
 
   } catch (error) {
-    console.error('[probeDepositMT5] Error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
