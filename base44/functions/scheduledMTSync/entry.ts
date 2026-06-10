@@ -144,6 +144,7 @@ Deno.serve(async (req) => {
           const toDate = new Date().toISOString();
 
           // Tritech API: all endpoints are POST with JSON body (apikey required in body)
+          // get-deal-history uses ISO datetime strings (not Unix timestamps)
           const [infoRes, histRes] = await Promise.all([
             fetch(`${apiBase}/api/v1/user/get-account-details`, {
               method: 'POST', headers,
@@ -152,25 +153,35 @@ Deno.serve(async (req) => {
             fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
               method: 'POST', headers,
               body: JSON.stringify({ Login: loginNum, From: fromDate, To: toDate, apikey: apiKey }),
-            }),
+            }).catch(() => ({ ok: false })),
           ]);
 
           let mtData = {};
           let deals = [];
           if (infoRes.ok) {
-            const r = await infoRes.json();
-            // Tritech response: { data: { balance, equity, ... }, resultCode: "200" }
-            mtData = r?.data || r?.User || r?.Data || r || {};
+            try {
+              const r = await infoRes.json();
+              // Tritech response: { data: { balance, equity, ... }, resultCode: "200" }
+              mtData = r?.data || r?.User || r?.Data || r || {};
+            } catch { /* use empty mtData, will fallback to DB values */ }
           }
           if (histRes.ok) {
-            const r = await histRes.json();
-            // Tritech deal history: { data: [...deals], resultCode: "200" }
-            const dealArr = r?.data || r?.Deals || r?.Data || r;
-            deals = Array.isArray(dealArr) ? dealArr : [];
+            try {
+              const r = await histRes.json();
+              // Tritech deal history: { data: [...deals], resultCode: "200" }
+              const dealArr = r?.data || r?.Deals || r?.Data || r;
+              deals = Array.isArray(dealArr) ? dealArr : [];
+            } catch { /* no trades this cycle */ }
+          } else {
+            console.warn(`[sync] get-deal-history returned non-OK for ${acc.account_id} — skipping trade records this cycle`);
           }
 
-          const balance = parseFloat(mtData?.Balance ?? mtData?.balance ?? acc.balance ?? 0);
-          const equity = parseFloat(mtData?.Equity ?? mtData?.equity ?? balance);
+          // Use live API values only if non-zero; fallback to DB values to prevent
+          // false breach detection caused by empty accounts or API returning stale 0
+          const rawBalance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0);
+          const rawEquity = parseFloat(mtData?.Equity ?? mtData?.equity ?? 0);
+          const balance = rawBalance > 0 ? rawBalance : (acc.balance || acc.account_size || 0);
+          const equity = rawEquity > 0 ? rawEquity : (rawBalance > 0 ? rawBalance : (acc.equity || acc.balance || acc.account_size || 0));
           // MT5 deal Entry field: 0=IN (open), 1=OUT (close), 2=INOUT
           const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
           const wins = closedTrades.filter(d => (d.Profit ?? d.profit ?? 0) > 0).length;
@@ -240,12 +251,20 @@ Deno.serve(async (req) => {
               (async () => {
                 try {
                   // Tritech API: POST /api/v1/user/move-disabled
+                  // Note: MT_RET_ERR_PARAMS (3) means the account's group has no
+                  // corresponding disabled group configured on the MT5 Manager.
+                  // Contact your MT5 broker to configure disabled sub-groups.
                   const disableRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
                     method: 'POST', headers,
                     body: JSON.stringify({ Login: parseInt(acc.mt_login), apikey: apiKey }),
                   });
-                  const disableText = await disableRes.text();
-                  console.log(`[MT5-DISABLE] move-disabled ${acc.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);
+                  const disableData = await disableRes.json().catch(() => ({}));
+                  const disableErrCode = disableData?.data?.errorcode;
+                  if (disableErrCode === 3) {
+                    console.warn(`[MT5-DISABLE] MT_RET_ERR_PARAMS for ${acc.mt_login} — group "${acc.mt_group}" has no disabled sub-group configured on MT5 Manager. Account disabled in DB only.`);
+                  } else {
+                    console.log(`[MT5-DISABLE] move-disabled ${acc.mt_login}: code=${disableErrCode} msg=${disableData?.data?.errormsg}`);
+                  }
                 } catch (e) {
                   console.error(`[MT5-DISABLE] Failed for ${acc.mt_login}:`, e.message);
                 }

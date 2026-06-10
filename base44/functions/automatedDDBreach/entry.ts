@@ -150,8 +150,13 @@ Deno.serve(async (req) => {
                     method: 'POST', headers,
                     body: JSON.stringify({ Login: parseInt(account.mt_login), apikey: api_key }),
                   });
-                  const disableText = await disableRes.text();
-                  console.log(`[MT5-DISABLE] move-disabled ${account.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);
+                  const disableData = await disableRes.json().catch(() => ({}));
+                  const disableErrCode = disableData?.data?.errorcode;
+                  if (disableErrCode === 3) {
+                    console.warn(`[MT5-DISABLE] MT_RET_ERR_PARAMS for ${account.mt_login} — group has no disabled sub-group. Account failed in DB only.`);
+                  } else {
+                    console.log(`[MT5-DISABLE] move-disabled ${account.mt_login}: code=${disableErrCode} msg=${disableData?.data?.errormsg}`);
+                  }
                 }
               } catch (e) {
                 console.error(`[MT5-DISABLE] Failed for ${account.mt_login}:`, e.message);
