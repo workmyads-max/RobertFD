@@ -140,12 +140,12 @@ Deno.serve(async (req) => {
 
           const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
           const loginNum = parseInt(acc.mt_login);
-          // Tritech requires "YYYY-MM-DD HH:MM:SS" format (no T, no ms, no Z)
-          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
-          const toDate = new Date().toISOString().replace('T', ' ').split('.')[0];
+          // ISO date format required by the full Tritech schema
+          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+          const toDate = new Date().toISOString();
 
           // PRIMARY: userget — confirmed working, returns balance/equity/group
-          // SECONDARY: get-deal-history — may 500 on some groups; non-blocking
+          // SECONDARY: get-deal-history — uses full schema (groups+logins arrays) confirmed working
           const [infoRes, histRes] = await Promise.all([
             fetch(`${apiBase}/api/v1/user/userget`, {
               method: 'POST', headers,
@@ -153,7 +153,22 @@ Deno.serve(async (req) => {
             }),
             fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
               method: 'POST', headers,
-              body: JSON.stringify({ Login: loginNum, From: fromDate, To: toDate, apikey: apiKey }),
+              body: JSON.stringify({
+                groups: acc.mt_group ? [acc.mt_group] : [],
+                logins: [loginNum],
+                from: fromDate,
+                to: toDate,
+                dateFrom: fromDate,
+                dateTo: toDate,
+                actionTypes: [],
+                orderTypes: [],
+                orderStates: [],
+                entryStates: [],
+                isFilterPosition: false,
+                apikey: apiKey,
+                pageOffset: 0,
+                pageSize: 500,
+              }),
             }).catch(() => ({ ok: false })),
           ]);
 

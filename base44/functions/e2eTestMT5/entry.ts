@@ -1,8 +1,8 @@
 /**
- * e2eTestMT5 — Account-Number-Wise Trade Data Probe
+ * e2eTestMT5 — Full Schema Deal History Probe
  *
- * Tries every known Tritech endpoint variant that accepts an account/login number,
- * using different field names, casing, and body structures.
+ * Uses the correct Tritech API schema:
+ * { groups, logins, from, to, actionTypes, orderTypes, orderStates, entryStates, isFilterPosition, apikey, dateFrom, dateTo, pageOffset, pageSize }
  *
  * Usage: { "mt_login": "900909613752" }
  */
@@ -16,17 +16,18 @@ function mt5Headers(apiKey) {
   };
 }
 
-async function probe(apiBase, headers, apiKey, label, path, body) {
+async function probe(apiBase, headers, label, path, body) {
   const url = `${apiBase}${path}`;
-  console.log(`[PROBE] ${label} → POST ${path} | body: ${JSON.stringify(body)}`);
+  console.log(`[PROBE] ${label} → POST ${path}`);
+  console.log(`[PROBE] ${label} body: ${JSON.stringify(body)}`);
   try {
     const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
     const text = await res.text();
     let parsed;
     try { parsed = JSON.parse(text); } catch { parsed = text || '(empty)'; }
     const dealCount = Array.isArray(parsed?.data) ? parsed.data.length : null;
-    const result = { status: res.status, deal_count: dealCount, response: typeof parsed === 'string' ? parsed.slice(0, 400) : parsed };
-    console.log(`[PROBE] ${label}: HTTP ${res.status}, deals=${dealCount ?? 'N/A'}, preview=${text.slice(0, 200)}`);
+    const result = { status: res.status, deal_count: dealCount, response: typeof parsed === 'string' ? parsed.slice(0, 600) : parsed };
+    console.log(`[PROBE] ${label}: HTTP ${res.status}, deals=${dealCount ?? 'N/A'}, body=${text.slice(0, 300)}`);
     return result;
   } catch (e) {
     console.error(`[PROBE] ${label}: EXCEPTION — ${e.message}`);
@@ -55,110 +56,113 @@ Deno.serve(async (req) => {
     const headers = mt5Headers(apiKey);
     const loginNum = parseInt(mt_login);
 
-    // Standard date range
-    const From = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
-    const To   = new Date().toISOString().replace('T', ' ').split('.')[0];
+    // Get the account's group from DB
+    const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ mt_login: mt_login });
+    const acc = accounts[0];
+    const group = acc?.mt_group || '';
 
-    console.log(`\n${'='.repeat(60)}\nACCOUNT-NUMBER-WISE PROBE — login: ${loginNum}\n${'='.repeat(60)}`);
+    // Date range — ISO format as shown in the schema
+    const now = new Date();
+    const past90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const fromISO = past90.toISOString();
+    const toISO   = now.toISOString();
 
-    // Run all probes in parallel for speed
+    console.log(`\n${'='.repeat(60)}\nFULL-SCHEMA DEAL HISTORY PROBE — login: ${loginNum}, group: ${group}\n${'='.repeat(60)}`);
+
+    // Build the correct full schema body as documented
+    const fullSchemaBase = {
+      groups: group ? [group] : [],
+      logins: [loginNum],
+      from: fromISO,
+      to: toISO,
+      dateFrom: fromISO,
+      dateTo: toISO,
+      actionTypes: [],
+      orderTypes: [],
+      orderStates: [],
+      entryStates: [],
+      isFilterPosition: false,
+      apikey: apiKey,
+      pageOffset: 0,
+      pageSize: 100,
+    };
+
     const [
-      // ── FIELD NAME VARIANTS for deal/history ─────────────────────────────
-      r01, r02, r03, r04, r05,
-      // ── ACCOUNT field instead of Login ───────────────────────────────────
-      r06, r07,
-      // ── Different endpoint paths ──────────────────────────────────────────
-      r08, r09, r10, r11, r12, r13,
-      // ── GET method variants ───────────────────────────────────────────────
+      // 1. Full schema — all arrays empty, isFilterPosition false
+      r01,
+      // 2. Full schema — isFilterPosition true (closed only)
+      r02,
+      // 3. Full schema — entryStates [1] = OUT (closed deals)
+      r03,
+      // 4. Full schema — actionTypes [0,1] (buy+sell)
+      r04,
+      // 5. Full schema — no groups array (login only)
+      r05,
+      // 6. Full schema — pageSize 0 (unlimited)
+      r06,
+      // 7. Full schema — orderStates [2] (filled/closed)
+      r07,
+      // 8. Full schema on /api/v1/deal/get-deal-details
+      r08,
     ] = await Promise.all([
 
-      // 1. Login (int) + From/To — standard
-      probe(apiBase, headers, apiKey, '01_login_int_from_to',
+      probe(apiBase, headers, '01_full_schema_base',
         '/api/v1/deal/get-deal-history',
-        { Login: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase }),
 
-      // 2. login (lowercase) + From/To
-      probe(apiBase, headers, apiKey, '02_login_lower',
+      probe(apiBase, headers, '02_isFilterPosition_true',
         '/api/v1/deal/get-deal-history',
-        { login: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase, isFilterPosition: true }),
 
-      // 3. AccountId field
-      probe(apiBase, headers, apiKey, '03_accountid_field',
+      probe(apiBase, headers, '03_entryStates_OUT',
         '/api/v1/deal/get-deal-history',
-        { AccountId: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase, entryStates: [1] }),
 
-      // 4. account field (lowercase)
-      probe(apiBase, headers, apiKey, '04_account_lower',
+      probe(apiBase, headers, '04_actionTypes_buy_sell',
         '/api/v1/deal/get-deal-history',
-        { account: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase, actionTypes: [0, 1] }),
 
-      // 5. Login as string instead of int
-      probe(apiBase, headers, apiKey, '05_login_string',
+      probe(apiBase, headers, '05_no_groups',
         '/api/v1/deal/get-deal-history',
-        { Login: String(loginNum), From, To, apikey: apiKey }),
+        { ...fullSchemaBase, groups: [] }),
 
-      // 6. AccountNumber field
-      probe(apiBase, headers, apiKey, '06_account_number_field',
+      probe(apiBase, headers, '06_pageSize_zero',
         '/api/v1/deal/get-deal-history',
-        { AccountNumber: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase, pageSize: 0 }),
 
-      // 7. UserId field
-      probe(apiBase, headers, apiKey, '07_userid_field',
+      probe(apiBase, headers, '07_orderStates_filled',
         '/api/v1/deal/get-deal-history',
-        { UserId: loginNum, From, To, apikey: apiKey }),
+        { ...fullSchemaBase, orderStates: [2] }),
 
-      // 8. Different path: /api/v1/history/deals
-      probe(apiBase, headers, apiKey, '08_history_deals_path',
-        '/api/v1/history/deals',
-        { Login: loginNum, From, To, apikey: apiKey }),
-
-      // 9. /api/v1/deal/history
-      probe(apiBase, headers, apiKey, '09_deal_history_alt_path',
-        '/api/v1/deal/history',
-        { Login: loginNum, From, To, apikey: apiKey }),
-
-      // 10. /api/v1/trade/get-history
-      probe(apiBase, headers, apiKey, '10_trade_get_history',
-        '/api/v1/trade/get-history',
-        { Login: loginNum, From, To, apikey: apiKey }),
-
-      // 11. /api/v1/trade/history
-      probe(apiBase, headers, apiKey, '11_trade_history',
-        '/api/v1/trade/history',
-        { Login: loginNum, From, To, apikey: apiKey }),
-
-      // 12. get-deal-history with Logins (array)
-      probe(apiBase, headers, apiKey, '12_logins_array',
-        '/api/v1/deal/get-deal-history',
-        { Logins: [loginNum], From, To, apikey: apiKey }),
-
-      // 13. /api/v1/deal/get-closed-positions
-      probe(apiBase, headers, apiKey, '13_get_closed_positions',
-        '/api/v1/deal/get-closed-positions',
-        { Login: loginNum, From, To, apikey: apiKey }),
+      probe(apiBase, headers, '08_get_deal_details',
+        '/api/v1/deal/get-deal-details',
+        { ...fullSchemaBase }),
     ]);
 
-    const results = { r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13 };
+    const results = { r01, r02, r03, r04, r05, r06, r07, r08 };
 
-    // Find any that returned 200 with actual data
-    const working = Object.entries(results).filter(([, v]) => v.status === 200 && v.deal_count !== null);
-    const partial = Object.entries(results).filter(([, v]) => v.status === 200 && v.deal_count === null);
-    const notFound = Object.entries(results).filter(([, v]) => v.status === 404);
-    const errors   = Object.entries(results).filter(([, v]) => v.status === 500 || v.status === 400);
+    const working = Object.entries(results).filter(([, v]) => v.status === 200 && v.deal_count !== null && v.deal_count > 0);
+    const partial = Object.entries(results).filter(([, v]) => v.status === 200);
+    const errors  = Object.entries(results).filter(([, v]) => v.status !== 200);
 
     const diagnosis = working.length > 0
-      ? `✅ FOUND WORKING VARIANT(S): ${working.map(([k]) => k).join(', ')}`
+      ? `✅ WORKING: ${working.map(([k, v]) => `${k} (${v.deal_count} deals)`).join(', ')}`
       : partial.length > 0
-        ? `⚠️ HTTP 200 but no data array in: ${partial.map(([k]) => k).join(', ')} — check full response`
-        : `❌ ALL VARIANTS FAILED. 404s: ${notFound.length}, 500/400s: ${errors.length}. Bridge does not expose deal history by account number.`;
+        ? `⚠️ HTTP 200 but 0 deals in all variants — check responses for structure`
+        : `❌ ALL FAILED — HTTP 500/404 on all variants`;
 
     console.log(`\nDIAGNOSIS: ${diagnosis}`);
+    console.log(`Group used: ${group}`);
 
     return Response.json({
       success: true,
       diagnosis,
+      group_used: group,
+      login_used: loginNum,
+      full_schema_used: fullSchemaBase,
       working_variants: working.map(([k, v]) => ({ key: k, deals: v.deal_count })),
-      partial_200s: partial.map(([k, v]) => ({ key: k, response: v.response })),
+      all_200s: partial.map(([k, v]) => ({ key: k, status: v.status, deals: v.deal_count, response: v.response })),
+      errors: errors.map(([k, v]) => ({ key: k, status: v.status })),
       results,
     });
 
