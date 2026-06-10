@@ -73,30 +73,40 @@ Deno.serve(async (req) => {
         const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
         const toDate   = new Date().toISOString();
 
-        // Query by LOGIN NUMBER ONLY — no groups dependency
-        const [infoRes, histRes] = await Promise.all([
+        const dealHistoryBody = {
+          Login: loginNum,
+          logins: [loginNum],
+          groups: [],
+          from: fromDate,
+          to: toDate,
+          dateFrom: fromDate,
+          dateTo: toDate,
+          actionTypes: [],
+          orderTypes: [],
+          orderStates: [],
+          entryStates: [],
+          isFilterPosition: false,
+          apikey: MT5_KEY,
+          pageOffset: 0,
+          pageSize: 500,
+        };
+
+        const [infoRes, hist1Res, hist2Res, hist3Res] = await Promise.all([
           fetch(`${MT5_BASE}/api/v1/user/userget`, {
             method: 'POST', headers,
             body: JSON.stringify({ Login: loginNum, apikey: MT5_KEY }),
           }),
           fetch(`${MT5_BASE}/api/v1/deal/get-deal-history`, {
             method: 'POST', headers,
-            body: JSON.stringify({
-              logins: [loginNum],   // ← login-based, NOT groups
-              groups: [],           // empty — do not filter by group
-              from: fromDate,
-              to: toDate,
-              dateFrom: fromDate,
-              dateTo: toDate,
-              actionTypes: [],
-              orderTypes: [],
-              orderStates: [],
-              entryStates: [],
-              isFilterPosition: false,
-              apikey: MT5_KEY,
-              pageOffset: 0,
-              pageSize: 500,
-            }),
+            body: JSON.stringify(dealHistoryBody),
+          }).catch(() => ({ ok: false })),
+          fetch(`${MT5_BASE}/api/v1/order/get-order-history`, {
+            method: 'POST', headers,
+            body: JSON.stringify(dealHistoryBody),
+          }).catch(() => ({ ok: false })),
+          fetch(`${MT5_BASE}/api/v1/deal/get-deal-history`, {
+            method: 'POST', headers,
+            body: JSON.stringify({ Login: loginNum, from: fromDate, to: toDate, apikey: MT5_KEY, pageOffset: 0, pageSize: 500 }),
           }).catch(() => ({ ok: false })),
         ]);
 
@@ -107,10 +117,17 @@ Deno.serve(async (req) => {
           const r = await infoRes.json().catch(() => ({}));
           mtData = r?.data || r?.User || r?.Data || r || {};
         }
-        if (histRes.ok) {
-          const r = await histRes.json().catch(() => ({}));
-          const dealArr = r?.data || r?.Deals || r?.Data || r;
-          deals = Array.isArray(dealArr) ? dealArr : [];
+
+        for (const res of [hist1Res, hist2Res, hist3Res]) {
+          if (!res.ok) continue;
+          try {
+            const r = await res.json();
+            const arr = r?.data || r?.Deals || r?.Data || r;
+            if (Array.isArray(arr) && arr.length > 0) {
+              deals = arr;
+              break;
+            }
+          } catch { /* try next */ }
         }
 
         const rawBalance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0);

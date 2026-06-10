@@ -140,58 +140,78 @@ Deno.serve(async (req) => {
 
           const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
           const loginNum = parseInt(acc.mt_login);
-          // ISO date format required by the full Tritech schema
           const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
           const toDate = new Date().toISOString();
 
-          // PRIMARY: userget — confirmed working, returns balance/equity
-          // SECONDARY: get-deal-history — queried by LOGIN NUMBER ONLY (no groups dependency)
-          const [infoRes, histRes] = await Promise.all([
+          // Shared deal history body — login-only, no groups
+          const dealHistoryBody = {
+            Login: loginNum,          // singular capital (some Tritech versions)
+            logins: [loginNum],       // array lowercase (other versions)
+            groups: [],
+            from: fromDate,
+            to: toDate,
+            dateFrom: fromDate,
+            dateTo: toDate,
+            actionTypes: [],
+            orderTypes: [],
+            orderStates: [],
+            entryStates: [],
+            isFilterPosition: false,
+            apikey: apiKey,
+            pageOffset: 0,
+            pageSize: 500,
+          };
+
+          // Fetch userget + 3 deal history endpoints in parallel
+          const [infoRes, hist1Res, hist2Res, hist3Res] = await Promise.all([
             fetch(`${apiBase}/api/v1/user/userget`, {
               method: 'POST', headers,
               body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
             }),
+            // Primary: get-deal-history
             fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
               method: 'POST', headers,
-              body: JSON.stringify({
-                logins: [loginNum],   // ← login-based query, NOT groups
-                groups: [],           // empty — do not filter by group
-                from: fromDate,
-                to: toDate,
-                dateFrom: fromDate,
-                dateTo: toDate,
-                actionTypes: [],
-                orderTypes: [],
-                orderStates: [],
-                entryStates: [],
-                isFilterPosition: false,
-                apikey: apiKey,
-                pageOffset: 0,
-                pageSize: 500,
-              }),
+              body: JSON.stringify(dealHistoryBody),
+            }).catch(() => ({ ok: false })),
+            // Fallback 1: get-order-history (different endpoint, same data)
+            fetch(`${apiBase}/api/v1/order/get-order-history`, {
+              method: 'POST', headers,
+              body: JSON.stringify(dealHistoryBody),
+            }).catch(() => ({ ok: false })),
+            // Fallback 2: deal history with Login singular only (no logins array)
+            fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
+              method: 'POST', headers,
+              body: JSON.stringify({ Login: loginNum, from: fromDate, to: toDate, apikey: apiKey, pageOffset: 0, pageSize: 500 }),
             }).catch(() => ({ ok: false })),
           ]);
 
           let mtData = {};
           let deals = [];
+
           if (infoRes.ok) {
             try {
               const r = await infoRes.json();
-              // Tritech userget response: { data: { balance, equity, ... }, resultCode: "200" }
               mtData = r?.data || r?.User || r?.Data || r || {};
-            } catch { /* use empty mtData, will fallback to DB values */ }
+            } catch { /* fallback to DB values */ }
           } else {
             console.warn(`[sync] userget returned non-OK for ${acc.account_id} (login ${loginNum})`);
           }
-          if (histRes.ok) {
+
+          // Try each history endpoint in order — use first one that returns deals
+          for (const res of [hist1Res, hist2Res, hist3Res]) {
+            if (!res.ok) continue;
             try {
-              const r = await histRes.json();
-              // Tritech deal history: { data: [...deals], resultCode: "200" }
-              const dealArr = r?.data || r?.Deals || r?.Data || r;
-              deals = Array.isArray(dealArr) ? dealArr : [];
-            } catch { /* no trades this cycle */ }
-          } else {
-            console.warn(`[sync] get-deal-history returned non-OK for ${acc.account_id} — skipping trade records this cycle`);
+              const r = await res.json();
+              const arr = r?.data || r?.Deals || r?.Data || r;
+              if (Array.isArray(arr) && arr.length > 0) {
+                deals = arr;
+                console.log(`[sync] ${acc.account_id}: got ${deals.length} deals`);
+                break;
+              }
+            } catch { /* try next */ }
+          }
+          if (deals.length === 0) {
+            console.warn(`[sync] ${acc.account_id}: all deal history endpoints returned empty`);
           }
 
           // Use live API values ONLY if non-zero.
