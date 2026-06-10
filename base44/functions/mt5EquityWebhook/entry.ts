@@ -37,19 +37,22 @@
  *   C) Python/Node.js script on VPS using MetaApi (https://metaapi.cloud)
  *   D) Any REST-capable MT5 connector that has equity access
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ── Shared helpers (duplicated from scheduledMTSync — no local imports in Deno) ──
 
 function getDDLimits(acc) {
-  const dailyLimit = 5;
-  const overallLimit = acc.challenge_type === 'instant_light' ? 6 : 10;
-  return { dailyLimit, overallLimit };
+  const snap = acc.rule_snapshot || {};
+  const dailyLimit = snap.daily_dd_limit ?? 5;
+  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : 10);
+  const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  return { dailyLimit, overallLimit, isTrailing };
 }
 
 function calcOverallDD(acc, equity, newHWM) {
   const accountSize = acc.account_size || 100000;
-  if (acc.challenge_type === 'instant_light') {
+  const isTrailing = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  if (isTrailing) {
     const hwm = newHWM || accountSize;
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
   }

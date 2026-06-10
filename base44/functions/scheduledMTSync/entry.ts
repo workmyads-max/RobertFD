@@ -144,8 +144,8 @@ Deno.serve(async (req) => {
           const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
           const toDate = new Date().toISOString();
 
-          // PRIMARY: userget — confirmed working, returns balance/equity/group
-          // SECONDARY: get-deal-history — uses full schema (groups+logins arrays) confirmed working
+          // PRIMARY: userget — confirmed working, returns balance/equity
+          // SECONDARY: get-deal-history — queried by LOGIN NUMBER ONLY (no groups dependency)
           const [infoRes, histRes] = await Promise.all([
             fetch(`${apiBase}/api/v1/user/userget`, {
               method: 'POST', headers,
@@ -154,8 +154,8 @@ Deno.serve(async (req) => {
             fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
               method: 'POST', headers,
               body: JSON.stringify({
-                groups: acc.mt_group ? [acc.mt_group] : [],
-                logins: [loginNum],
+                logins: [loginNum],   // ← login-based query, NOT groups
+                groups: [],           // empty — do not filter by group
                 from: fromDate,
                 to: toDate,
                 dateFrom: fromDate,
