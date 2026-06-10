@@ -140,13 +140,14 @@ Deno.serve(async (req) => {
 
           const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
           const loginNum = parseInt(acc.mt_login);
-          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-          const toDate = new Date().toISOString();
+          // Tritech requires "YYYY-MM-DD HH:MM:SS" format (no T, no ms, no Z)
+          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
+          const toDate = new Date().toISOString().replace('T', ' ').split('.')[0];
 
-          // Tritech API: all endpoints are POST with JSON body (apikey required in body)
-          // get-deal-history uses ISO datetime strings (not Unix timestamps)
+          // PRIMARY: userget — confirmed working, returns balance/equity/group
+          // SECONDARY: get-deal-history — may 500 on some groups; non-blocking
           const [infoRes, histRes] = await Promise.all([
-            fetch(`${apiBase}/api/v1/user/get-account-details`, {
+            fetch(`${apiBase}/api/v1/user/userget`, {
               method: 'POST', headers,
               body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
             }),
@@ -161,9 +162,11 @@ Deno.serve(async (req) => {
           if (infoRes.ok) {
             try {
               const r = await infoRes.json();
-              // Tritech response: { data: { balance, equity, ... }, resultCode: "200" }
+              // Tritech userget response: { data: { balance, equity, ... }, resultCode: "200" }
               mtData = r?.data || r?.User || r?.Data || r || {};
             } catch { /* use empty mtData, will fallback to DB values */ }
+          } else {
+            console.warn(`[sync] userget returned non-OK for ${acc.account_id} (login ${loginNum})`);
           }
           if (histRes.ok) {
             try {

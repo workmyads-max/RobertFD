@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // ── TEST 2: getaccountsdrawdown ────────────────────────────────────────
     const ddRes = await fetch(`${apiBase}/api/v1/user/getaccountsdrawdown`, {
       method: 'POST', headers,
-      body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
+      body: JSON.stringify({ Login: [loginNum], apikey: apiKey }),
     });
     const ddText = await ddRes.text();
     results.getaccountsdrawdown = { status: ddRes.status, body: (() => { try { return JSON.parse(ddText); } catch { return ddText; }})() };
