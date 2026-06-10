@@ -30,16 +30,24 @@ async function sendEmail(sr, to, type, data) {
  * Returns { apiKey, apiBase, serverName } or null if not configured.
  */
 async function loadMT5Creds(sr) {
-  const credRes = await sr.functions.invoke('getPlatformCredentials', { platform: 'mt5' });
-  if (!credRes.data?.success) {
-    console.error('[phaseProgressionEngine] MT5 credentials not configured:', credRes.data?.error);
+  // Read directly from entity — avoids getPlatformCredentials auth chain issues
+  const providers = await sr.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
+  if (providers.length > 0) {
+    const p = providers[0];
+    return {
+      apiKey: p.api_key,
+      apiBase: p.server_url || Deno.env.get('MT5_API_BASE_URL'),
+      serverName: p.server_name || Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
+    };
+  }
+  // Fallback to env vars
+  const apiKey = Deno.env.get('MT5_API_KEY');
+  const apiBase = Deno.env.get('MT5_API_BASE_URL');
+  if (!apiKey || !apiBase) {
+    console.error('[phaseProgressionEngine] MT5 credentials not configured in DB or env vars');
     return null;
   }
-  return {
-    apiKey: credRes.data.api_key,
-    apiBase: credRes.data.server_url,
-    serverName: credRes.data.server_name || 'mt5-live.server.com',
-  };
+  return { apiKey, apiBase, serverName: Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server' };
 }
 
 /**
@@ -50,6 +58,7 @@ function mt5Headers(apiKey) {
     'Content-Type': 'application/json',
     'api-key': apiKey,
     'Authorization': `Bearer ${apiKey}`,
+    'ApiKey': apiKey,
   };
 }
 
@@ -58,47 +67,63 @@ function mt5Headers(apiKey) {
  * Returns { mt_login, mt_password, mt_server, mt_group } or null on failure.
  */
 async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, groupName, leverage, balance) {
-  const password = genPassword();
+  const masterPassword = genPassword();
+  const investorPassword = genPassword();
   try {
-    const createRes = await fetch(`${apiBase}/accounts`, {
+    // Tritech API: POST /api/v1/user/useradd
+    const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
       method: 'POST',
       headers: mt5Headers(apiKey),
       body: JSON.stringify({
-        login: userEmail,
-        password,
-        email: userEmail,
-        group: groupName,
-        leverage,
-        balance,
-        name: userEmail.split('@')[0],
-        currency: 'USD',
-        sendEmail: false,
+        Login: 0,            // 0 = auto-assign
+        MasterPassword: masterPassword,
+        InvestorPassword: investorPassword,
+        Name: userEmail.split('@')[0],
+        Email: userEmail,
+        Group: groupName,
+        Leverage: leverage,
+        Country: 'AE',
+        Comment: `XFunded ${groupName}`,
+        Status: 0,
       }),
     });
 
     const responseText = await createRes.text();
-    console.log(`[MT5] POST /accounts response (${createRes.status}):`, responseText);
+    console.log(`[Tritech/useradd] Status ${createRes.status}: ${responseText.slice(0, 200)}`);
 
     if (!createRes.ok) {
-      console.error('[MT5] Account creation failed:', responseText);
+      console.error('[Tritech/useradd] Account creation failed:', responseText);
       return null;
     }
 
-    const mtAccount = JSON.parse(responseText);
-    const mtLogin = mtAccount?.login || mtAccount?.accountId || mtAccount?.id;
-    if (!mtLogin) {
-      console.error('[MT5] No login returned from API:', mtAccount);
+    const result = JSON.parse(responseText);
+    // Tritech response: { AnswerCode: 0, User: { Login: 12345, ... } }
+    const mtLogin = result?.User?.Login || result?.Login || result?.login;
+
+    if (!mtLogin || mtLogin === 0) {
+      console.error('[Tritech/useradd] No Login in response:', result);
       return null;
+    }
+
+    // Set initial balance
+    if (balance > 0) {
+      const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+        method: 'POST',
+        headers: mt5Headers(apiKey),
+        body: JSON.stringify({ Login: parseInt(mtLogin), Balance: balance, Comment: 'Initial challenge deposit' }),
+      });
+      const depText = await depRes.text();
+      console.log(`[Tritech/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 100)}`);
     }
 
     return {
       mt_login: String(mtLogin),
-      mt_password: password,
+      mt_password: masterPassword,
       mt_server: serverName,
       mt_group: groupName,
     };
   } catch (e) {
-    console.error('[MT5] provisionMT5Account error:', e.message);
+    console.error('[Tritech/useradd] error:', e.message);
     return null;
   }
 }
@@ -110,33 +135,22 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
  */
 async function disableMT5AccountAtBroker(apiBase, apiKey, mtLogin, reason) {
   if (!apiBase || !apiKey || !mtLogin) {
-    console.warn('[MT5-DISABLE] Missing credentials or login — skipping broker disable');
+    console.warn('[MT5-DISABLE] Missing credentials or login — skipping');
     return;
   }
   try {
-    // Attempt 1: dedicated disable endpoint
-    const res1 = await fetch(`${apiBase}/accounts/${mtLogin}/disable`, {
-      method: 'PUT',
+    // Tritech API: POST /api/v1/user/move-disabled
+    const disableRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
+      method: 'POST',
       headers: mt5Headers(apiKey),
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ Login: parseInt(mtLogin) }),
     });
-    if (res1.ok) {
-      console.log(`[MT5-DISABLE] ✅ Account ${mtLogin} disabled at broker via PUT /accounts/${mtLogin}/disable`);
-      return;
+    const disableText = await disableRes.text();
+    if (disableRes.ok) {
+      console.log(`[MT5-DISABLE] ✅ Account ${mtLogin} disabled via Tritech move-disabled: ${disableText.slice(0, 100)}`);
+    } else {
+      console.error(`[MT5-DISABLE] ❌ move-disabled failed for ${mtLogin}: ${disableRes.status} — ${disableText}`);
     }
-    console.warn(`[MT5-DISABLE] disable endpoint returned ${res1.status} — trying fallback`);
-
-    // Attempt 2: update account with enabled:false
-    const res2 = await fetch(`${apiBase}/accounts/${mtLogin}`, {
-      method: 'PUT',
-      headers: mt5Headers(apiKey),
-      body: JSON.stringify({ enabled: false, readonly: true, reason }),
-    });
-    if (res2.ok) {
-      console.log(`[MT5-DISABLE] ✅ Account ${mtLogin} disabled at broker via PUT /accounts/${mtLogin} enabled:false`);
-      return;
-    }
-    console.error(`[MT5-DISABLE] ❌ Both disable attempts failed for ${mtLogin}. Status: ${res2.status}`);
   } catch (e) {
     console.error(`[MT5-DISABLE] ❌ Exception disabling ${mtLogin}:`, e.message);
   }

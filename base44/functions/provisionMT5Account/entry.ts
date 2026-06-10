@@ -1,181 +1,211 @@
 /**
- * provisionMT5Account — Create MT5 trading account after payment confirmation.
- * 
- * ⚠️ CRITICAL: This function requires REAL MT5 infrastructure.
- * 
- * CURRENT STATUS: SIMULATED (no real MT5 integration)
- * 
- * To make this production-ready, you need:
- * 1. MT5 Manager API access from your broker (not REST API)
- * 2. Options:
- *    - MetaApi Cloud Bridge: https://metaapi.cloud/docs/manager/
- *    - FINXSOL MT5 API: https://finxsol.com/mt5-api/
- *    - Custom bridge service wrapping MT5 Manager DLL
- * 
- * Required credentials from broker:
- * - MT5 Manager login + password
- * - MT5 Server host + port
- * - Direct database access (MSSQL) OR Manager API bridge
- * 
- * MT5 does NOT provide a native REST API.
- * The fake endpoints (/accounts/{login}, /disable, etc.) do not exist.
+ * provisionMT5Account — Create real MT5 account via Tritech API
+ *
+ * API Base: https://mt5-apiapp-c0fvbqekh5hrb5h8.canadacentral-01.azurewebsites.net
+ * Broker:   Xylo Markets LTD (XyloMarkets-Server)
+ * Auth:     Authorization: Bearer <api_key>
+ *
+ * Flow: useradd → depositwithbal → ChallengeAccount.create
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+const TRITECH_BASE = 'https://mt5-apiapp-c0fvbqekh5hrb5h8.canadacentral-01.azurewebsites.net';
+
+function genPassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$';
+  let p = upper[Math.floor(Math.random() * upper.length)]
+        + lower[Math.floor(Math.random() * lower.length)]
+        + digits[Math.floor(Math.random() * digits.length)]
+        + special[Math.floor(Math.random() * special.length)];
+  const all = upper + lower + digits + special;
+  for (let i = 4; i < 12; i++) p += all[Math.floor(Math.random() * all.length)];
+  return p.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+function mt5Headers(apiKey) {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
+    'ApiKey': apiKey,
+  };
+}
+
+function getGroupName(challenge_type, account_type, account_size, phase) {
+  // Override via env vars to match your Xylo Markets MT5 server groups
+  if (phase === 'funded') return Deno.env.get('MT5_FUNDED_GROUP') || 'real\\funded';
+  if (phase === 'phase2') return Deno.env.get('MT5_PHASE2_GROUP') || 'real\\challenge';
+  return Deno.env.get('MT5_PHASE1_GROUP') || 'real\\challenge';
+}
+
+async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, leverage, accountSize, comment }) {
+  const masterPassword = genPassword();
+  const investorPassword = genPassword();
+  const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : (leverage || 100);
+
+  console.log(`[Tritech/useradd] Creating account: email=${userEmail}, group=${groupName}, leverage=${leverageInt}`);
+
+  const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
+    method: 'POST',
+    headers: mt5Headers(apiKey),
+    body: JSON.stringify({
+      Login: 0,            // 0 = auto-assign by MT5 server
+      MasterPassword: masterPassword,
+      InvestorPassword: investorPassword,
+      Name: userEmail.split('@')[0],
+      Email: userEmail,
+      Group: groupName,
+      Leverage: leverageInt,
+      Country: 'AE',
+      Comment: comment || 'XFunded Challenge Account',
+      Status: 0,           // 0 = active
+    }),
+  });
+
+  const responseText = await createRes.text();
+  console.log(`[Tritech/useradd] Status ${createRes.status}: ${responseText.slice(0, 300)}`);
+
+  if (!createRes.ok) {
+    throw new Error(`Tritech useradd failed (${createRes.status}): ${responseText}`);
+  }
+
+  const result = JSON.parse(responseText);
+  // Tritech response: { AnswerCode: 0, User: { Login: 12345, ... } }
+  const mtLogin = result?.User?.Login || result?.Login || result?.login;
+
+  if (!mtLogin || mtLogin === 0) {
+    throw new Error(`useradd returned no Login. Response: ${responseText}`);
+  }
+
+  // Set initial account balance via depositwithbal
+  if (accountSize > 0) {
+    const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+      method: 'POST',
+      headers: mt5Headers(apiKey),
+      body: JSON.stringify({
+        Login: parseInt(mtLogin),
+        Balance: accountSize,
+        Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+      }),
+    });
+    const depText = await depRes.text();
+    console.log(`[Tritech/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 100)}`);
+    if (!depRes.ok) {
+      console.warn(`[Tritech/depositwithbal] Warning: balance set may have failed for login ${mtLogin}`);
+    }
+  }
+
+  const serverName = Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server';
+  return {
+    mt_login: String(mtLogin),
+    mt_password: masterPassword,
+    mt_server: serverName,
+    mt_group: groupName,
+  };
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
-    // ── SECURITY: Multi-layer authorization ───────────────────────────────────
+
+    // Multi-layer auth: admin session OR scheduler token
     const schedulerToken = req.headers.get('X-Scheduler-Token');
     const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
-    
     let authorized = false;
     try {
       const user = await base44.auth.me();
-      if (user && user.role === 'admin') {
-        authorized = true;
-      }
+      if (user?.role === 'admin') authorized = true;
     } catch {}
-    
-    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
-      authorized = true;
-    }
-    
-    if (!authorized) {
-      return Response.json({ 
-        error: 'Forbidden: Admin or scheduler token required',
-        code: 'UNAUTHORIZED_ACCESS'
-      }, { status: 403 });
-    }
+    if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) authorized = true;
+    if (!authorized) return Response.json({ error: 'Forbidden', code: 'UNAUTHORIZED_ACCESS' }, { status: 403 });
 
     const body = await req.json();
-    const {
-      account_id,
-      order_id,
-      user_email,
-      challenge_type,
-      account_type,
-      account_size,
-      leverage,
-      platform,
-      rule_snapshot,
-    } = body;
+    const { account_id, order_id, user_email, challenge_type, account_type, account_size, leverage, rule_snapshot } = body;
 
     if (!user_email || !account_size) {
-      return Response.json({ error: 'user_email and account_size required' }, { status: 400 });
+      return Response.json({ error: 'user_email and account_size are required' }, { status: 400 });
     }
 
-    // ── CHECK FOR EXISTING ACCOUNT (idempotency) ──────────────────────────────
-    const existing = await base44.asServiceRole.entities.ChallengeAccount.filter({
-      user_email,
-      status: ['pending', 'active', 'funded'],
-    });
-    
-    if (existing.length > 0) {
-      console.log(`[provisionMT5Account] Account already exists for ${user_email}`);
-      return Response.json({ 
-        success: true, 
-        message: 'Account already provisioned',
-        account_id: existing[0].account_id,
-      });
+    // Idempotency — skip if already provisioned for this user+size
+    const existing = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email });
+    const alreadyProvisioned = existing.find(a =>
+      a.mt_login && ['pending', 'active', 'funded'].includes(a.status) && a.account_size === account_size
+    );
+    if (alreadyProvisioned) {
+      console.log(`[provisionMT5Account] Already provisioned: ${alreadyProvisioned.account_id}`);
+      return Response.json({ success: true, message: 'Account already provisioned', account_id: alreadyProvisioned.account_id });
     }
 
-    // ── GET MT5 CREDENTIALS FROM DATABASE ─────────────────────────────────────
-    const providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({
-      platform_name: 'mt5',
-      is_active: true,
-    });
-
-    if (providers.length === 0) {
-      console.error('[provisionMT5Account] NO MT5 PROVIDER CONFIGURED');
-      return Response.json({
-        success: false,
-        error: 'MT5 provider not configured. Admin must add MT5 credentials in Admin > Platform API.',
-        action_required: 'Configure MT5 credentials in Admin > Platform API > MetaTrader 5',
-      }, { status: 500 });
-    }
-
+    // Load MT5 credentials from TradingPlatformProvider (read entity directly — no auth chain)
+    const providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
     const provider = providers[0];
-    
-    // ── ⚠️ SIMULATED MT5 ACCOUNT CREATION ─────────────────────────────────────
-    // REAL IMPLEMENTATION REQUIRED:
-    // 
-    // Option 1: MetaApi Cloud
-    // const mt5Res = await fetch('https://api.metaapi.cloud/v1/trading/accounts', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${provider.api_key}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     group: `funded_firms\\${challenge_type}\\${account_size}`,
-    //     balance: account_size,
-    //     leverage: parseInt(leverage.replace('1:', '')),
-    //   }),
-    // });
-    // const mt5Data = await mt5Res.json();
-    // const mt_login = mt5Data.login;
-    // const mt_password = generated_password;
-    // const mt_server = provider.server_name;
-    //
-    // Option 2: Direct MT5 Database (MSSQL)
-    // - Insert into mt5.trades accounts table
-    // - Requires broker database access
-    //
-    // Option 3: FINXSOL or similar bridge service
-    
-    // SIMULATED for now (REMOVE THIS when real MT5 is integrated)
-    const generatedPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
-    const mt_login = Math.floor(10000000 + Math.random() * 90000000).toString();
-    const mt_server = provider.server_name || 'FundedFirms-Live';
-    
-    console.log(`[provisionMT5Account] ⚠️ SIMULATED: Creating MT5 account ${mt_login} for ${user_email}`);
-    console.log('[provisionMT5Account] ⚠️ WARNING: No real MT5 integration — credentials are simulated');
+    const apiBase = provider?.server_url || Deno.env.get('MT5_API_BASE_URL') || TRITECH_BASE;
+    const apiKey = provider?.api_key || Deno.env.get('MT5_API_KEY');
 
-    // ── CREATE CHALLENGE ACCOUNT IN DATABASE ──────────────────────────────────
+    if (!apiKey) {
+      return Response.json({ success: false, error: 'MT5 API key not configured. Add credentials in Admin > Platform API.' }, { status: 500 });
+    }
+
+    const leverageStr = leverage || '1:100';
+    const groupName = getGroupName(challenge_type, account_type || 'standard', account_size, 'phase1');
+
+    // Create real MT5 account via Tritech API
+    const mt5Creds = await tritechCreateAccount(apiBase, apiKey, {
+      userEmail: user_email,
+      groupName,
+      leverage: leverageStr,
+      accountSize: account_size,
+      comment: `${challenge_type || 'challenge'} ${account_size}`,
+    });
+
+    // Persist to ChallengeAccount
     const newAccount = await base44.asServiceRole.entities.ChallengeAccount.create({
-      account_id: account_id || order_id || `MT5-${mt_login}`,
-      challenge_type,
+      account_id: account_id || order_id || `MT5-${mt5Creds.mt_login}`,
+      challenge_type: challenge_type || 'two-step',
       account_type: account_type || 'standard',
       account_size,
       platform: 'mt5',
-      leverage,
-      status: 'pending',
+      leverage: leverageStr,
+      status: 'active',
       phase: 'phase1',
+      phase_review_status: 'none',
+      funded_review_status: 'none',
       balance: account_size,
       equity: account_size,
       pnl: 0,
+      daily_pnl: 0,
+      daily_drawdown_used: 0,
+      max_drawdown_used: 0,
+      profit_target_progress: 0,
       user_email,
-      mt_login,
-      mt_password: generatedPassword,
-      mt_server,
-      mt_group: `funded_firms\\${challenge_type}\\${account_size}`,
+      mt_login: mt5Creds.mt_login,
+      mt_password: mt5Creds.mt_password,
+      mt_server: mt5Creds.mt_server,
+      mt_group: mt5Creds.mt_group,
+      login_credentials: `Login: ${mt5Creds.mt_login} | Password: ${mt5Creds.mt_password} | Server: ${mt5Creds.mt_server}`,
+      server: mt5Creds.mt_server,
       provisioned_at: new Date().toISOString(),
+      high_water_mark: account_size,
+      daily_start_balance: account_size,
       rule_snapshot: rule_snapshot || null,
     });
 
-    console.log(`[provisionMT5Account] ✅ Account created: ${newAccount.id}`);
-
-    // ── NOTIFY USER ───────────────────────────────────────────────────────────
     await base44.asServiceRole.entities.Notification.create({
-      title: '🎉 Trading Account Ready',
-      message: `Your MT5 account (${mt_login}) has been provisioned. Login credentials are available in My Accounts.`,
-      type: 'payout',
-      priority: 'high',
-      display_mode: 'popup',
-      is_active: true,
-      target: 'challenge',
+      title: '🎉 MT5 Account Activated',
+      message: `Your MT5 account is live. Login: ${mt5Creds.mt_login} | Server: ${mt5Creds.mt_server}. Credentials are available in My Accounts.`,
+      type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
     });
+
+    console.log(`[provisionMT5Account] ✅ Real MT5 account created: login=${mt5Creds.mt_login}, user=${user_email}`);
 
     return Response.json({
       success: true,
-      message: 'MT5 account provisioned successfully',
+      message: 'MT5 account provisioned via Tritech API (Xylo Markets)',
       account_id: newAccount.id,
-      mt_login,
-      // ⚠️ In production, NEVER return password in API response
-      // Send via secure email instead
-      warning: 'SIMULATED — No real MT5 integration',
+      mt_login: mt5Creds.mt_login,
+      mt_server: mt5Creds.mt_server,
     });
 
   } catch (error) {

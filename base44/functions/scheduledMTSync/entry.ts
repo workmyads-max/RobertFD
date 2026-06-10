@@ -98,15 +98,24 @@ Deno.serve(async (req) => {
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
       ['active', 'funded', 'passed'].includes(a.status) &&
-      ['mt5', 'match_trader'].includes(a.platform)
+      a.platform === 'mt5'
     );
 
-    // Pre-fetch credentials for both platforms to avoid repeated database lookups
-    const mt5CredsRes = await base44.asServiceRole.functions.invoke('getPlatformCredentials', { platform: 'mt5' });
-    const mtCredsRes = await base44.asServiceRole.functions.invoke('getPlatformCredentials', { platform: 'match_trader' });
-    
-    const mt5Creds = mt5CredsRes.data?.success ? mt5CredsRes.data : null;
-    const mtCreds = mtCredsRes.data?.success ? mtCredsRes.data : null;
+    // Pre-fetch MT5 credentials directly from entity (avoids function auth chain issues)
+    const mt5Providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
+    const mt5Provider = mt5Providers[0];
+    const mt5Creds = mt5Provider ? {
+      api_key: mt5Provider.api_key,
+      server_url: mt5Provider.server_url || Deno.env.get('MT5_API_BASE_URL'),
+      server_name: mt5Provider.server_name || Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
+      success: true,
+    } : (Deno.env.get('MT5_API_KEY') ? {
+      api_key: Deno.env.get('MT5_API_KEY'),
+      server_url: Deno.env.get('MT5_API_BASE_URL'),
+      server_name: Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
+      success: true,
+    } : null);
+    const mtCreds = null; // MatchTrader removed — MT5-only architecture
 
     const results = [];
     const BATCH_SIZE = 50;
@@ -116,43 +125,54 @@ Deno.serve(async (req) => {
 
       const batchResults = await Promise.all(batch.map(async (acc) => {
         try {
-          const isMT5 = acc.platform === 'mt5';
-          const creds = isMT5 ? mt5Creds : mtCreds;
+          const creds = mt5Creds; // MT5-only
 
           if (!creds) {
             return { account_id: acc.account_id, ok: false, error: `Missing API credentials for ${acc.platform}` };
           }
 
-          const apiBase = creds.server_url || (isMT5 
-            ? Deno.env.get('MT5_API_BASE_URL')
-            : Deno.env.get('MATCH_TRADER_BASE_URL'));
+          const apiBase = creds.server_url || Deno.env.get('MT5_API_BASE_URL');
           const apiKey = creds.api_key;
 
           if (!apiBase || !apiKey) {
-            return { account_id: acc.account_id, ok: false, error: `Invalid API config: ${acc.platform}` };
+            return { account_id: acc.account_id, ok: false, error: 'Invalid MT5 API config' };
           }
 
-          const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'api-key': apiKey,
-          };
+          const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
+          const loginNum = parseInt(acc.mt_login);
+          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+          const toDate = new Date().toISOString();
 
-          const [infoRes, , histRes] = await Promise.all([
-            fetch(`${apiBase}/accounts/${acc.mt_login}`, { headers }),
-            fetch(`${apiBase}/accounts/${acc.mt_login}/positions`, { headers }),
-            fetch(`${apiBase}/accounts/${acc.mt_login}/deals?limit=100`, { headers }),
+          // Tritech API: all endpoints are POST with JSON body
+          const [infoRes, histRes] = await Promise.all([
+            fetch(`${apiBase}/api/v1/user/get-account-details`, {
+              method: 'POST', headers,
+              body: JSON.stringify({ Login: loginNum }),
+            }),
+            fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
+              method: 'POST', headers,
+              body: JSON.stringify({ Login: loginNum, From: fromDate, To: toDate }),
+            }),
           ]);
 
           let mtData = {};
           let deals = [];
-          if (infoRes.ok) mtData = await infoRes.json();
-          if (histRes.ok) { const d = await histRes.json(); deals = d?.deals || d || []; }
+          if (infoRes.ok) {
+            const r = await infoRes.json();
+            // Tritech response: { AnswerCode: 0, User: { Balance, Equity, ... } }
+            mtData = r?.User || r?.Data || r || {};
+          }
+          if (histRes.ok) {
+            const r = await histRes.json();
+            const dealArr = r?.Deals || r?.Data || r;
+            deals = Array.isArray(dealArr) ? dealArr : [];
+          }
 
-          const balance = mtData?.balance ?? acc.balance ?? 0;
-          const equity = mtData?.equity ?? acc.equity ?? 0;
-          const closedTrades = deals.filter(d => d.entry === 'OUT' || d.positionId);
-          const wins = closedTrades.filter(d => (d.profit || 0) > 0).length;
+          const balance = parseFloat(mtData?.Balance ?? mtData?.balance ?? acc.balance ?? 0);
+          const equity = parseFloat(mtData?.Equity ?? mtData?.equity ?? balance);
+          // MT5 deal Entry field: 0=IN (open), 1=OUT (close), 2=INOUT
+          const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
+          const wins = closedTrades.filter(d => (d.Profit ?? d.profit ?? 0) > 0).length;
           const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
@@ -218,17 +238,13 @@ Deno.serve(async (req) => {
               const disableReason = `DD breach: ${breachType} at ${breachValue?.toFixed(2)}%`;
               (async () => {
                 try {
-                  const res1 = await fetch(`${apiBase}/accounts/${acc.mt_login}/disable`, {
-                    method: 'PUT', headers,
-                    body: JSON.stringify({ reason: disableReason }),
+                  // Tritech API: POST /api/v1/user/move-disabled
+                  const disableRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
+                    method: 'POST', headers,
+                    body: JSON.stringify({ Login: parseInt(acc.mt_login) }),
                   });
-                  if (!res1.ok) {
-                    await fetch(`${apiBase}/accounts/${acc.mt_login}`, {
-                      method: 'PUT', headers,
-                      body: JSON.stringify({ enabled: false, readonly: true, reason: disableReason }),
-                    });
-                  }
-                  console.log(`[MT5-DISABLE] Account ${acc.mt_login} disabled at broker`);
+                  const disableText = await disableRes.text();
+                  console.log(`[MT5-DISABLE] move-disabled ${acc.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);
                 } catch (e) {
                   console.error(`[MT5-DISABLE] Failed for ${acc.mt_login}:`, e.message);
                 }
@@ -318,33 +334,33 @@ Deno.serve(async (req) => {
           const existingTrades = await base44.asServiceRole.entities.TradeRecord.filter({ account_id: acc.account_id });
           const existingIds = new Set(existingTrades.map(t => t.trade_id));
 
+          // Tritech deal identifiers: Ticket (deal ID) or PositionID
           const newDeals = closedTrades.filter(d => {
-            const tradeId = String(d.positionId || d.deal || d.id || '');
+            const tradeId = String(d.Ticket || d.PositionID || d.positionId || d.deal || d.id || '');
             return tradeId && !existingIds.has(tradeId);
           });
 
           if (newDeals.length > 0) {
             await Promise.all(newDeals.map(d => {
-              const tradeId = String(d.positionId || d.deal || d.id || '');
-              const pnl = parseFloat(d.profit ?? 0);
+              const tradeId = String(d.Ticket || d.PositionID || d.positionId || d.deal || d.id || '');
+              const pnl = parseFloat(d.Profit ?? d.profit ?? 0);
+              // MT5 Action: 0=BUY, 1=SELL; Time is Unix timestamp (seconds)
               return base44.asServiceRole.entities.TradeRecord.create({
                 account_id: acc.account_id,
                 user_email: acc.user_email,
                 trade_id: tradeId,
-                symbol: d.symbol || d.instrument || '',
-                type: (d.type === 'SELL' || d.side === 'sell' || d.direction === 'SELL') ? 'SELL' : 'BUY',
+                symbol: d.Symbol || d.symbol || d.instrument || '',
+                type: (d.Action === 1 || d.type === 'SELL' || d.side === 'sell') ? 'SELL' : 'BUY',
                 order_type: 'MARKET',
-                lots: parseFloat(d.volume ?? d.lots ?? 0),
-                entry: parseFloat(d.price ?? d.openPrice ?? d.entry ?? 0),
-                close: parseFloat(d.closePrice ?? d.exitPrice ?? d.price ?? 0),
-                sl: parseFloat(d.sl ?? d.stopLoss ?? 0) || undefined,
-                tp: parseFloat(d.tp ?? d.takeProfit ?? 0) || undefined,
+                lots: parseFloat(d.Volume ?? d.volume ?? d.lots ?? 0),
+                entry: parseFloat(d.Price ?? d.price ?? d.openPrice ?? 0),
+                close: parseFloat(d.PriceClose ?? d.closePrice ?? d.Price ?? d.price ?? 0),
                 pnl,
                 status: 'closed',
-                close_reason: d.comment || d.reason || 'close',
-                open_time: d.openTime || d.time || new Date().toISOString(),
-                close_time: d.closeTime || d.time || new Date().toISOString(),
-              }).catch(() => null); // non-blocking per trade
+                close_reason: d.Comment || d.comment || d.reason || 'close',
+                open_time: d.Time ? new Date(parseInt(d.Time) * 1000).toISOString() : (d.openTime || new Date().toISOString()),
+                close_time: d.TimeMsc ? new Date(parseInt(d.TimeMsc) / 1000).toISOString() : (d.Time ? new Date(parseInt(d.Time) * 1000).toISOString() : new Date().toISOString()),
+              }).catch(() => null);
             }));
             console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);
           }

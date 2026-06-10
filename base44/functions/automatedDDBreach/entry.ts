@@ -139,25 +139,19 @@ Deno.serve(async (req) => {
           if (account.platform === 'mt5' && account.mt_login) {
             (async () => {
               try {
-                const credRes = await sr.functions.invoke('getPlatformCredentials', { platform: 'mt5' });
-                if (credRes.data?.success) {
-                  const { api_key, server_url } = credRes.data;
-                  const headers = {
-                    'Content-Type': 'application/json',
-                    'api-key': api_key,
-                    'Authorization': `Bearer ${api_key}`,
-                  };
-                  const res1 = await fetch(`${server_url}/accounts/${account.mt_login}/disable`, {
-                    method: 'PUT', headers,
-                    body: JSON.stringify({ reason: breachReason }),
+                // Read credentials directly from entity — avoids getPlatformCredentials auth chain
+                const mt5Provs = await sr.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
+                const api_key = mt5Provs[0]?.api_key || Deno.env.get('MT5_API_KEY');
+                const server_url = mt5Provs[0]?.server_url || Deno.env.get('MT5_API_BASE_URL');
+                if (api_key && server_url) {
+                  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${api_key}`, 'ApiKey': api_key };
+                  // Tritech API: POST /api/v1/user/move-disabled
+                  const disableRes = await fetch(`${server_url}/api/v1/user/move-disabled`, {
+                    method: 'POST', headers,
+                    body: JSON.stringify({ Login: parseInt(account.mt_login) }),
                   });
-                  if (!res1.ok) {
-                    await fetch(`${server_url}/accounts/${account.mt_login}`, {
-                      method: 'PUT', headers,
-                      body: JSON.stringify({ enabled: false, readonly: true, reason: breachReason }),
-                    });
-                  }
-                  console.log(`[MT5-DISABLE] Account ${account.mt_login} disabled at broker`);
+                  const disableText = await disableRes.text();
+                  console.log(`[MT5-DISABLE] move-disabled ${account.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);
                 }
               } catch (e) {
                 console.error(`[MT5-DISABLE] Failed for ${account.mt_login}:`, e.message);
