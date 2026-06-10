@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
                   // Tritech API: POST /api/v1/user/move-disabled
                   const disableRes = await fetch(`${server_url}/api/v1/user/move-disabled`, {
                     method: 'POST', headers,
-                    body: JSON.stringify({ Login: parseInt(account.mt_login) }),
+                    body: JSON.stringify({ Login: parseInt(account.mt_login), apikey: api_key }),
                   });
                   const disableText = await disableRes.text();
                   console.log(`[MT5-DISABLE] move-disabled ${account.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);

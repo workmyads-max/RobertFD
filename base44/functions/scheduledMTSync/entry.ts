@@ -143,15 +143,15 @@ Deno.serve(async (req) => {
           const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
           const toDate = new Date().toISOString();
 
-          // Tritech API: all endpoints are POST with JSON body
+          // Tritech API: all endpoints are POST with JSON body (apikey required in body)
           const [infoRes, histRes] = await Promise.all([
             fetch(`${apiBase}/api/v1/user/get-account-details`, {
               method: 'POST', headers,
-              body: JSON.stringify({ Login: loginNum }),
+              body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
             }),
             fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
               method: 'POST', headers,
-              body: JSON.stringify({ Login: loginNum, From: fromDate, To: toDate }),
+              body: JSON.stringify({ Login: loginNum, From: fromDate, To: toDate, apikey: apiKey }),
             }),
           ]);
 
@@ -159,12 +159,13 @@ Deno.serve(async (req) => {
           let deals = [];
           if (infoRes.ok) {
             const r = await infoRes.json();
-            // Tritech response: { AnswerCode: 0, User: { Balance, Equity, ... } }
-            mtData = r?.User || r?.Data || r || {};
+            // Tritech response: { data: { balance, equity, ... }, resultCode: "200" }
+            mtData = r?.data || r?.User || r?.Data || r || {};
           }
           if (histRes.ok) {
             const r = await histRes.json();
-            const dealArr = r?.Deals || r?.Data || r;
+            // Tritech deal history: { data: [...deals], resultCode: "200" }
+            const dealArr = r?.data || r?.Deals || r?.Data || r;
             deals = Array.isArray(dealArr) ? dealArr : [];
           }
 
@@ -241,7 +242,7 @@ Deno.serve(async (req) => {
                   // Tritech API: POST /api/v1/user/move-disabled
                   const disableRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
                     method: 'POST', headers,
-                    body: JSON.stringify({ Login: parseInt(acc.mt_login) }),
+                    body: JSON.stringify({ Login: parseInt(acc.mt_login), apikey: apiKey }),
                   });
                   const disableText = await disableRes.text();
                   console.log(`[MT5-DISABLE] move-disabled ${acc.mt_login}: ${disableRes.status} — ${disableText.slice(0, 100)}`);

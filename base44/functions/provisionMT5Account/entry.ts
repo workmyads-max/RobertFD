@@ -48,20 +48,21 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
   console.log(`[Tritech/useradd] Creating account: email=${userEmail}, group=${groupName}, leverage=${leverageInt}`);
 
   const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
-    method: 'POST',
-    headers: mt5Headers(apiKey),
-    body: JSON.stringify({
-      Login: 0,            // 0 = auto-assign by MT5 server
-      MasterPassword: masterPassword,
-      InvestorPassword: investorPassword,
-      Name: userEmail.split('@')[0],
-      Email: userEmail,
-      Group: groupName,
-      Leverage: leverageInt,
-      Country: 'AE',
-      Comment: comment || 'XFunded Challenge Account',
-      Status: 0,           // 0 = active
-    }),
+  method: 'POST',
+  headers: mt5Headers(apiKey),
+  body: JSON.stringify({
+    Login: 0,            // 0 = auto-assign by MT5 server
+    MasterPassword: masterPassword,
+    InvestorPassword: investorPassword,
+    Name: userEmail.split('@')[0],
+    Email: userEmail,
+    Group: groupName,
+    Leverage: leverageInt,
+    Country: 'AE',
+    Comment: comment || 'XFunded Challenge Account',
+    Status: 0,           // 0 = active
+    apikey: apiKey,      // Tritech requires apikey in body
+  }),
   });
 
   const responseText = await createRes.text();
@@ -72,11 +73,11 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
   }
 
   const result = JSON.parse(responseText);
-  // Tritech response: { AnswerCode: 0, User: { Login: 12345, ... } }
-  const mtLogin = result?.User?.Login || result?.Login || result?.login;
+  // Tritech response: { data: { login: 12345, ... }, resultCode: "200" }
+  const mtLogin = result?.data?.login || result?.User?.Login || result?.Login || result?.login;
 
-  if (!mtLogin || mtLogin === 0) {
-    throw new Error(`useradd returned no Login. Response: ${responseText}`);
+  if (!mtLogin || parseInt(mtLogin) === 0) {
+  throw new Error(`useradd returned no Login. Response: ${responseText}`);
   }
 
   // Set initial account balance via depositwithbal
@@ -88,6 +89,7 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
         Login: parseInt(mtLogin),
         Balance: accountSize,
         Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+        apikey: apiKey,
       }),
     });
     const depText = await depRes.text();

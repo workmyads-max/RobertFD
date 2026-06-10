@@ -85,6 +85,7 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
         Country: 'AE',
         Comment: `XFunded ${groupName}`,
         Status: 0,
+        apikey: apiKey,      // Tritech requires apikey in body
       }),
     });
 
@@ -97,10 +98,10 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
     }
 
     const result = JSON.parse(responseText);
-    // Tritech response: { AnswerCode: 0, User: { Login: 12345, ... } }
-    const mtLogin = result?.User?.Login || result?.Login || result?.login;
+    // Tritech response: { data: { login: 12345, ... }, resultCode: "200" }
+    const mtLogin = result?.data?.login || result?.User?.Login || result?.Login || result?.login;
 
-    if (!mtLogin || mtLogin === 0) {
+    if (!mtLogin || parseInt(mtLogin) === 0) {
       console.error('[Tritech/useradd] No Login in response:', result);
       return null;
     }
@@ -110,7 +111,7 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
       const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
         method: 'POST',
         headers: mt5Headers(apiKey),
-        body: JSON.stringify({ Login: parseInt(mtLogin), Balance: balance, Comment: 'Initial challenge deposit' }),
+        body: JSON.stringify({ Login: parseInt(mtLogin), Balance: balance, Comment: 'Initial challenge deposit', apikey: apiKey }),
       });
       const depText = await depRes.text();
       console.log(`[Tritech/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 100)}`);
@@ -143,7 +144,7 @@ async function disableMT5AccountAtBroker(apiBase, apiKey, mtLogin, reason) {
     const disableRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
       method: 'POST',
       headers: mt5Headers(apiKey),
-      body: JSON.stringify({ Login: parseInt(mtLogin) }),
+      body: JSON.stringify({ Login: parseInt(mtLogin), apikey: apiKey }),
     });
     const disableText = await disableRes.text();
     if (disableRes.ok) {
