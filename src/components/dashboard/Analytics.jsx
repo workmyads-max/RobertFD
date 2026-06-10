@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Plus, TrendingUp, Target, Activity, Award } from 'lucide-react';
+import { BarChart3, Plus, TrendingUp, Target, Activity, Award, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -135,8 +135,9 @@ export default function Analytics({ onStartChallenge }) {
   const mostTraded = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
   const totalPnl = account.pnl || 0;
-  const winRate = closedTrades.length > 0 ? realWinRate : (account.win_rate || 0);
-  const totalTrades = closedTrades.length || account.total_trades || 0;
+  // Always prefer synced account values from MT5 — TradeRecord data may be incomplete
+  const winRate = account.win_rate || (closedTrades.length > 0 ? realWinRate : 0);
+  const totalTrades = account.total_trades || closedTrades.length || 0;
   const dailyDD = account.daily_drawdown_used || 0;
   const maxDD = account.max_drawdown_used || 0;
   // Read limits from rule_snapshot — never hardcoded
@@ -186,9 +187,9 @@ export default function Analytics({ onStartChallenge }) {
         <div className="grid grid-cols-2 lg:grid-cols-4" style={{ borderColor: 'hsl(var(--border))' }}>
           {[
             { label: 'Total P&L', value: `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, sub: `${account.account_size ? ((totalPnl / account.account_size) * 100).toFixed(2) : '0.00'}% of account`, color: totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-            { label: 'Win Rate', value: `${winRate.toFixed(1)}%`, sub: `${totalTrades} total trades`, color: winRate >= 50 ? 'text-foreground' : 'text-yellow-400' },
-            { label: 'Daily DD Used', value: `${dailyDD.toFixed(2)}%`, sub: `of ${dailyDDLimit}% limit`, color: dailyDD > dailyDDLimit * 0.8 ? 'text-red-400' : 'text-foreground' },
-            { label: 'Max DD Used', value: `${maxDD.toFixed(2)}%`, sub: `of ${maxDDLimit}% limit`, color: maxDD > maxDDLimit * 0.7 ? 'text-red-400' : 'text-foreground' },
+            { label: 'Win Rate', value: `${winRate.toFixed(1)}%`, sub: `${totalTrades} closed trades`, color: winRate >= 50 ? 'text-foreground' : 'text-yellow-400' },
+            { label: 'Daily DD Used', value: `${dailyDD.toFixed(2)}%`, sub: `limit: ${dailyDDLimit}%`, color: dailyDD > dailyDDLimit * 0.8 ? 'text-red-400' : 'text-foreground' },
+            { label: 'Max DD Used', value: `${maxDD.toFixed(2)}%`, sub: `limit: ${maxDDLimit}%`, color: maxDD > maxDDLimit * 0.7 ? 'text-red-400' : 'text-foreground' },
           ].map(s => (
             <div key={s.label} className="p-4 sm:p-6 border-b lg:border-b-0 border-r last:border-r-0 even:border-r-0 lg:even:border-r" style={{ borderColor: 'hsl(var(--border))' }}>
               <div className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2 sm:mb-3">{s.label}</div>
@@ -270,15 +271,15 @@ export default function Analytics({ onStartChallenge }) {
             <div className="text-sm font-semibold text-foreground">Trade Performance</div>
           </div>
           <div className="px-6 py-2">
-            <StatRow label="Total Closed" value={closedTrades.length} />
+            <StatRow label="Total Closed" value={account.total_trades || closedTrades.length} />
             <StatRow label="Open Positions" value={openTrades.length} valueColor="text-primary" />
-            <StatRow label="Win Rate" value={`${realWinRate.toFixed(1)}%`} valueColor={realWinRate >= 50 ? 'text-emerald-400' : 'text-yellow-400'} />
+            <StatRow label="Win Rate" value={`${winRate.toFixed(1)}%`} valueColor={winRate >= 50 ? 'text-emerald-400' : 'text-yellow-400'} />
+            <StatRow label="Max Drawdown Used" value={`${maxDD.toFixed(2)}%`} valueColor={maxDD > (snap.max_dd_limit ?? 10) * 0.7 ? 'text-red-400' : 'text-foreground'} />
             <StatRow label="Profit Factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '—'} valueColor={profitFactor >= 1.5 ? 'text-emerald-400' : undefined} />
             <StatRow label="Average Win" value={avgWin > 0 ? `+$${avgWin.toFixed(2)}` : '—'} valueColor="text-emerald-400" />
             <StatRow label="Average Loss" value={avgLoss > 0 ? `-$${avgLoss.toFixed(2)}` : '—'} valueColor="text-red-400" />
             <StatRow label="Best Trade" value={bestTrade > 0 ? `+$${bestTrade.toFixed(2)}` : '—'} valueColor="text-emerald-400" />
             <StatRow label="Worst Trade" value={worstTrade < 0 ? `-$${Math.abs(worstTrade).toFixed(2)}` : '—'} valueColor="text-red-400" />
-            <StatRow label="Avg Risk:Reward" value={avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : '—'} />
             <StatRow label="Most Traded" value={mostTraded} valueColor="text-primary" />
           </div>
         </div>
@@ -289,15 +290,67 @@ export default function Analytics({ onStartChallenge }) {
           </div>
           <div className="px-6 py-2">
             <StatRow label="Balance" value={`$${(account.balance || accountSize).toLocaleString()}`} />
+            <StatRow label="Equity" value={`$${(account.equity || account.balance || accountSize).toLocaleString()}`} />
             <StatRow label="Account Size" value={`$${accountSize.toLocaleString()}`} />
             <StatRow label="Challenge Type" value={account.challenge_type === 'two-step' ? 'Two-Step' : 'Instant'} />
             <StatRow label="Account Type" value={account.account_type || 'Standard'} />
             <StatRow label="Leverage" value={account.leverage || '1:100'} />
-            <StatRow label="Platform" value={account.platform || 'XTrading'} />
             <StatRow label="Phase" value={account.phase?.replace('phase', 'Phase ') || 'Phase 1'} />
-            <StatRow label="Status" value={account.status || 'active'} />
+            <StatRow label="Last Synced" value={account.last_synced_at ? new Date(account.last_synced_at).toLocaleTimeString() : '—'} />
           </div>
         </div>
+      </div>
+
+      {/* Trade History Table */}
+      <div className="rounded-xl border" style={{ borderColor: 'hsl(var(--border))' }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="text-sm font-semibold text-foreground">Trade History</div>
+          <span className="text-xs text-muted-foreground">{closedTrades.length} closed trades</span>
+        </div>
+        {closedTrades.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Clock className="w-8 h-8 text-muted-foreground/30 mb-3" />
+            <p className="text-sm text-muted-foreground">No closed trades recorded yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Trades appear here after the MT5 sync completes</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+                  {['Symbol', 'Type', 'Lots', 'Entry', 'Close', 'P&L', 'Open Time', 'Close Time'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...closedTrades].sort((a, b) => new Date(b.close_time) - new Date(a.close_time)).slice(0, 50).map((t, i) => {
+                  const pnl = t.pnl || 0;
+                  const isWin = pnl > 0;
+                  return (
+                    <tr key={t.id || i} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: 'hsl(var(--border))' }}>
+                      <td className="px-4 py-3 font-medium text-foreground font-mono">{t.symbol || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
+                          {t.type === 'BUY' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                          {t.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono">{(t.lots || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono">{(t.entry || 0).toFixed(5)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono">{(t.close || t.entry || 0).toFixed(5)}</td>
+                      <td className={`px-4 py-3 font-bold font-mono ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {isWin ? '+' : ''}${pnl.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.open_time ? new Date(t.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.close_time ? new Date(t.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
