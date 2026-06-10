@@ -1,10 +1,9 @@
-import React from 'react';
-import { TrendingUp, DollarSign, BarChart3, Award, Plus, Clock, ChevronRight, Activity } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
+import { TrendingUp, DollarSign, BarChart3, Award, Plus, Clock, ChevronRight, Activity, Zap } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
-import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 
 function KpiPanel({ label, value, sub, trend, trendLabel }) {
   const isPos = trend >= 0;
@@ -47,26 +46,45 @@ function ObjectiveRow({ label, current, target, color, passed, danger }) {
 export default function DashboardOverview({ user, onStartChallenge, onNavigate }) {
   const location = useUserLocation();
   const { syncing, lastSync, syncError } = useSyncOnLogin();
+  const queryClient = useQueryClient();
+  const [lastRealtime, setLastRealtime] = useState(null);
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 1000,   // poll every 15s as fallback
+    staleTime: 10 * 1000,
   });
+
+  // Real-time subscription — instantly updates when sync writes new data
+  useEffect(() => {
+    const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
+      if (event.type === 'update' || event.type === 'create') {
+        queryClient.setQueryData(['challenge-accounts'], (old = []) => {
+          if (event.type === 'create') return [event.data, ...old];
+          return old.map(a => a.id === event.id ? event.data : a);
+        });
+        setLastRealtime(new Date());
+      }
+    });
+    return unsub;
+  }, [queryClient]);
 
   const { data: pendingOrders = [] } = useQuery({
     queryKey: ['my-pending-orders'],
     queryFn: () => base44.entities.Order.filter({ email: user?.email }),
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
   const pendingActivation = pendingOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
   const totalBalance = activeAccounts.reduce((s, a) => s + (a.balance || a.account_size || 0), 0);
+  const totalEquity  = activeAccounts.reduce((s, a) => s + (a.equity  || a.balance || a.account_size || 0), 0);
   const totalPnl = activeAccounts.reduce((s, a) => s + (a.pnl || 0), 0);
+  // Open position floating PnL = equity - balance (updated every 15s via sync + realtime)
+  const openPnl = parseFloat((totalEquity - totalBalance).toFixed(2));
   const avgWinRate = activeAccounts.length
     ? activeAccounts.reduce((s, a) => s + (a.win_rate || 0), 0) / activeAccounts.length : 0;
   const worstDD = activeAccounts.length
@@ -107,7 +125,8 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
               </>
             )}
             {syncing && <><span className="opacity-30">·</span><span className="text-primary">Syncing…</span></>}
-            {lastSync && <><span className="opacity-30">·</span><span className="text-emerald-400">Synced {lastSync.timestamp.toLocaleTimeString()}</span></>}
+            {lastRealtime && <><span className="opacity-30">·</span><span className="text-emerald-400 flex items-center gap-1"><Zap className="w-3 h-3" />Live {lastRealtime.toLocaleTimeString()}</span></>}
+            {!lastRealtime && lastSync && <><span className="opacity-30">·</span><span className="text-emerald-400">Synced {lastSync.timestamp.toLocaleTimeString()}</span></>}
             {syncError && <><span className="opacity-30">·</span><span className="text-red-400">Sync error</span></>}
           </div>
         </div>
@@ -163,6 +182,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
               <KpiPanel
                 label="Total P&L"
                 value={`${totalPnl >= 0 ? '+' : ''}$${Math.abs(totalPnl).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                sub={openPnl !== 0 ? `Open: ${openPnl >= 0 ? '+' : ''}$${Math.abs(openPnl).toFixed(2)}` : 'No open positions'}
                 trendLabel={totalPnl >= 0 ? 'Profitable' : 'Loss'}
                 trend={totalPnl}
               />
@@ -267,16 +287,22 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
                   <div className="text-sm font-semibold text-foreground">Primary Account</div>
                 </div>
                 <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
-                  {[
-                    { label: 'Account ID', value: primaryAccount?.account_id || '—' },
-                    { label: 'Balance', value: `$${(primaryAccount?.balance || primaryAccount?.account_size || 0).toLocaleString()}` },
-                    { label: 'Phase', value: primaryAccount?.phase?.replace('phase', 'Phase ') || '—' },
-                    { label: 'Platform', value: primaryAccount?.platform || 'XTrading' },
-                    { label: 'Leverage', value: primaryAccount?.leverage || '1:100' },
-                  ].map(r => (
+                  {(() => {
+                    const bal = primaryAccount?.balance || primaryAccount?.account_size || 0;
+                    const eq  = primaryAccount?.equity  || bal;
+                    const floatingPnl = parseFloat((eq - bal).toFixed(2));
+                    return [
+                      { label: 'Account ID', value: primaryAccount?.account_id || '—' },
+                      { label: 'Balance', value: `$${bal.toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+                      { label: 'Equity', value: `$${eq.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: eq >= bal ? 'text-emerald-400' : 'text-red-400' },
+                      { label: 'Floating P&L', value: `${floatingPnl >= 0 ? '+' : ''}$${Math.abs(floatingPnl).toFixed(2)}`, color: floatingPnl > 0 ? 'text-emerald-400' : floatingPnl < 0 ? 'text-red-400' : 'text-muted-foreground' },
+                      { label: 'Phase', value: primaryAccount?.phase?.replace('phase', 'Phase ') || '—' },
+                      { label: 'Leverage', value: primaryAccount?.leverage || '1:100' },
+                    ];
+                  })().map(r => (
                     <div key={r.label} className="flex items-center justify-between px-5 py-3">
                       <span className="text-xs text-muted-foreground">{r.label}</span>
-                      <span className="text-xs font-medium text-foreground">{r.value}</span>
+                      <span className={`text-xs font-medium ${r.color || 'text-foreground'}`}>{r.value}</span>
                     </div>
                   ))}
                 </div>

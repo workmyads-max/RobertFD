@@ -5,7 +5,8 @@ import {
   CheckCircle2, XCircle, AlertTriangle, Clock, Award, Activity,
   ChevronRight, Plus, Monitor, Zap
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 
 const MIN_TRADING_DAYS = 5;
@@ -100,10 +101,26 @@ function AccountSelector({ accounts, selected, onSelect }) {
 }
 
 export default function AccountOverview({ onStartChallenge, onNavigate }) {
+  const queryClient = useQueryClient();
+
+  // Real-time subscription — instantly reflects sync updates
+  useEffect(() => {
+    const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
+      if (event.type === 'update' || event.type === 'create') {
+        queryClient.setQueryData(['challenge-accounts'], (old = []) => {
+          if (event.type === 'create') return [event.data, ...old];
+          return old.map(a => a.id === event.id ? event.data : a);
+        });
+      }
+    });
+    return unsub;
+  }, [queryClient]);
+
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
     refetchInterval: 15000,
+    staleTime: 10000,
   });
 
   const { data: journalEntries = [] } = useQuery({
@@ -170,9 +187,13 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const isSwing = account.account_type === 'swing';
   const phase = account.phase || 'phase1';
 
-  const dailyDDLimit = isInstant ? 3 : 5;
-  const maxDDLimit = isInstant ? 8 : 10;
-  const profitTarget = isInstant ? 8 : (phase === 'phase2' ? 5 : 10);
+  // Read from rule_snapshot — never hardcoded
+  const snap = account.rule_snapshot || {};
+  const dailyDDLimit = snap.daily_dd_limit ?? (isInstant ? 3 : 5);
+  const maxDDLimit   = snap.max_dd_limit   ?? (isInstant ? 8 : 10);
+  const profitTarget = phase === 'phase2'
+    ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? (isInstant ? 8 : 10));
 
   const dailyDDRemaining = Math.max(0, dailyDDLimit - dailyDDUsed);
   const maxDDRemaining = Math.max(0, maxDDLimit - maxDDUsed);
