@@ -10,9 +10,9 @@ async function generateAIJournalEntry(periodType, accounts) {
   // Fetch real trade data from DB
   const acc = accounts?.[0];
   let realTrades = [];
-  if (acc?.id) {
+  if (acc?.account_id) {
     try {
-      realTrades = await base44.entities.TradeRecord.filter({ account_id: acc.id, status: 'closed' });
+      realTrades = await base44.entities.TradeRecord.filter({ account_id: acc.account_id, status: 'closed' });
     } catch {}
   }
 

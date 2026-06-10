@@ -76,12 +76,12 @@ export default function Analytics({ onStartChallenge }) {
     queryFn: () => base44.entities.TradingJournalEntry.list('-entry_date', 30),
   });
 
-  const activeAccounts = accounts.filter(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed');
+  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
 
   const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-analytics', selectedAccountId || activeAccounts[0]?.id],
+    queryKey: ['trade-records-analytics', selectedAccountId || activeAccounts[0]?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({
-      account_id: (activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0])?.id
+      account_id: (activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0])?.account_id
     }),
     enabled: activeAccounts.length > 0,
   });
@@ -139,7 +139,13 @@ export default function Analytics({ onStartChallenge }) {
   const totalTrades = closedTrades.length || account.total_trades || 0;
   const dailyDD = account.daily_drawdown_used || 0;
   const maxDD = account.max_drawdown_used || 0;
-  const profitTarget = account.challenge_type === 'instant' ? 0 : (account.phase === 'phase2' ? 5 : 10);
+  // Read limits from rule_snapshot — never hardcoded
+  const snap = account.rule_snapshot || {};
+  const dailyDDLimit = snap.daily_dd_limit ?? 5;
+  const maxDDLimit = snap.max_dd_limit ?? 10;
+  const profitTarget = account.phase === 'phase2'
+    ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? (account.challenge_type === 'two-step' ? 10 : 8));
   const progress = account.profit_target_progress || Math.max(0, totalPnl / accountSize * 100);
 
   return (
@@ -181,8 +187,8 @@ export default function Analytics({ onStartChallenge }) {
           {[
             { label: 'Total P&L', value: `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, sub: `${account.account_size ? ((totalPnl / account.account_size) * 100).toFixed(2) : '0.00'}% of account`, color: totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
             { label: 'Win Rate', value: `${winRate.toFixed(1)}%`, sub: `${totalTrades} total trades`, color: winRate >= 50 ? 'text-foreground' : 'text-yellow-400' },
-            { label: 'Daily DD Used', value: `${dailyDD.toFixed(2)}%`, sub: 'of 5% limit', color: dailyDD > 4 ? 'text-red-400' : 'text-foreground' },
-            { label: 'Max DD Used', value: `${maxDD.toFixed(2)}%`, sub: 'of 10% limit', color: maxDD > 7 ? 'text-red-400' : 'text-foreground' },
+            { label: 'Daily DD Used', value: `${dailyDD.toFixed(2)}%`, sub: `of ${dailyDDLimit}% limit`, color: dailyDD > dailyDDLimit * 0.8 ? 'text-red-400' : 'text-foreground' },
+            { label: 'Max DD Used', value: `${maxDD.toFixed(2)}%`, sub: `of ${maxDDLimit}% limit`, color: maxDD > maxDDLimit * 0.7 ? 'text-red-400' : 'text-foreground' },
           ].map(s => (
             <div key={s.label} className="p-4 sm:p-6 border-b lg:border-b-0 border-r last:border-r-0 even:border-r-0 lg:even:border-r" style={{ borderColor: 'hsl(var(--border))' }}>
               <div className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-widest mb-2 sm:mb-3">{s.label}</div>
@@ -200,8 +206,8 @@ export default function Analytics({ onStartChallenge }) {
         </div>
         <div className="px-6 py-2">
           <ObjectiveBar label="Profit Target" current={progress} target={profitTarget || 10} color="#FF5C00" passed={progress >= (profitTarget || 10)} danger={false} />
-          <ObjectiveBar label="Daily Drawdown" current={dailyDD} target={5} color="#10b981" passed={dailyDD < 5} danger={dailyDD > 4} />
-          <ObjectiveBar label="Max Drawdown" current={maxDD} target={10} color="#10b981" passed={maxDD < 10} danger={maxDD > 7} />
+          <ObjectiveBar label="Daily Drawdown" current={dailyDD} target={dailyDDLimit} color="#10b981" passed={dailyDD < dailyDDLimit} danger={dailyDD > dailyDDLimit * 0.8} />
+          <ObjectiveBar label="Max Drawdown" current={maxDD} target={maxDDLimit} color="#10b981" passed={maxDD < maxDDLimit} danger={maxDD > maxDDLimit * 0.7} />
         </div>
       </div>
 
