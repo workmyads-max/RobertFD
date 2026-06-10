@@ -69,14 +69,17 @@ Deno.serve(async (req) => {
 
     console.log(`\n${'='.repeat(60)}\nFULL-SCHEMA DEAL HISTORY PROBE — login: ${loginNum}, group: ${group}\n${'='.repeat(60)}`);
 
-    // Build the correct full schema body as documented
-    const fullSchemaBase = {
+    // Wide date range — from account creation to now
+    const wideFrom = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    const wideTo   = now.toISOString();
+
+    const dealBase = {
       groups: group ? [group] : [],
       logins: [loginNum],
-      from: fromISO,
-      to: toISO,
-      dateFrom: fromISO,
-      dateTo: toISO,
+      from: wideFrom,
+      to: wideTo,
+      dateFrom: wideFrom,
+      dateTo: wideTo,
       actionTypes: [],
       orderTypes: [],
       orderStates: [],
@@ -84,86 +87,105 @@ Deno.serve(async (req) => {
       isFilterPosition: false,
       apikey: apiKey,
       pageOffset: 0,
-      pageSize: 100,
+      pageSize: 500,
     };
 
+    // userget — confirmed working, gives us equity (open position PnL baked in)
+    const usergetRes = await fetch(`${apiBase}/api/v1/user/userget`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
+    });
+    const usergetData = usergetRes.ok ? await usergetRes.json() : null;
+    const liveEquity  = parseFloat(usergetData?.data?.Equity ?? usergetData?.data?.equity ?? 0);
+    const liveBalance = parseFloat(usergetData?.data?.Balance ?? usergetData?.data?.balance ?? 0);
+    console.log(`[userget] balance=${liveBalance}, equity=${liveEquity}, raw=${JSON.stringify(usergetData?.data).slice(0,200)}`);
+
+    // getaccountsdrawdown — fix: Logins must be UInt64[] (array of numbers)
+    const ddBodyFixed   = { Logins: [loginNum], apikey: apiKey };
+    const ddBodyGroups  = { Logins: [loginNum], Groups: group ? [group] : [], apikey: apiKey };
+
     const [
-      // 1. Full schema — all arrays empty, isFilterPosition false
-      r01,
-      // 2. Full schema — isFilterPosition true (closed only)
-      r02,
-      // 3. Full schema — entryStates [1] = OUT (closed deals)
-      r03,
-      // 4. Full schema — actionTypes [0,1] (buy+sell)
-      r04,
-      // 5. Full schema — no groups array (login only)
-      r05,
-      // 6. Full schema — pageSize 0 (unlimited)
-      r06,
-      // 7. Full schema — orderStates [2] (filled/closed)
-      r07,
-      // 8. Full schema on /api/v1/deal/get-deal-details
-      r08,
+      // ── CLOSED DEALS ──────────────────────────────────────────────────────
+      r01,  // base full schema, wide date
+      r02,  // entryStates=[1] OUT
+      r03,  // entryStates=[0] IN (open deal legs)
+      r04,  // entryStates=[0,1,2] all
+
+      // ── DRAWDOWN / ACCOUNT STATE ──────────────────────────────────────────
+      r05,  // getaccountsdrawdown — Logins (capital L, array)
+      r06,  // getaccountsdrawdown — Logins + Groups
+      r07,  // getaccountsdrawdown — login (lowercase)
+      r08,  // getaccountsdrawdown — Login (singular)
+
+      // ── ORDER/POSITION HISTORY ─────────────────────────────────────────────
+      r09,  // /api/v1/order/get-order-history full schema
+      r10,  // /api/v1/deal/get-positions (alternate path)
+      r11,  // /api/v1/position/list
+      r12,  // /api/v1/user/positions
     ] = await Promise.all([
 
-      probe(apiBase, headers, '01_full_schema_base',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase }),
+      probe(apiBase, headers, '01_deal_history_base',
+        '/api/v1/deal/get-deal-history', { ...dealBase }),
 
-      probe(apiBase, headers, '02_isFilterPosition_true',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, isFilterPosition: true }),
+      probe(apiBase, headers, '02_entryStates_OUT',
+        '/api/v1/deal/get-deal-history', { ...dealBase, entryStates: [1] }),
 
-      probe(apiBase, headers, '03_entryStates_OUT',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, entryStates: [1] }),
+      probe(apiBase, headers, '03_entryStates_IN',
+        '/api/v1/deal/get-deal-history', { ...dealBase, entryStates: [0] }),
 
-      probe(apiBase, headers, '04_actionTypes_buy_sell',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, actionTypes: [0, 1] }),
+      probe(apiBase, headers, '04_entryStates_all',
+        '/api/v1/deal/get-deal-history', { ...dealBase, entryStates: [0, 1, 2] }),
 
-      probe(apiBase, headers, '05_no_groups',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, groups: [] }),
+      probe(apiBase, headers, '05_drawdown_Logins_array',
+        '/api/v1/user/getaccountsdrawdown', ddBodyFixed),
 
-      probe(apiBase, headers, '06_pageSize_zero',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, pageSize: 0 }),
+      probe(apiBase, headers, '06_drawdown_Logins_Groups',
+        '/api/v1/user/getaccountsdrawdown', ddBodyGroups),
 
-      probe(apiBase, headers, '07_orderStates_filled',
-        '/api/v1/deal/get-deal-history',
-        { ...fullSchemaBase, orderStates: [2] }),
+      probe(apiBase, headers, '07_drawdown_login_lower',
+        '/api/v1/user/getaccountsdrawdown', { login: loginNum, apikey: apiKey }),
 
-      probe(apiBase, headers, '08_get_deal_details',
-        '/api/v1/deal/get-deal-details',
-        { ...fullSchemaBase }),
+      probe(apiBase, headers, '08_drawdown_Login_singular',
+        '/api/v1/user/getaccountsdrawdown', { Login: loginNum, apikey: apiKey }),
+
+      probe(apiBase, headers, '09_order_history',
+        '/api/v1/order/get-order-history', { ...dealBase }),
+
+      probe(apiBase, headers, '10_deal_get_positions',
+        '/api/v1/deal/get-positions', { Login: loginNum, apikey: apiKey }),
+
+      probe(apiBase, headers, '11_position_list',
+        '/api/v1/position/list', { Login: loginNum, apikey: apiKey }),
+
+      probe(apiBase, headers, '12_user_positions',
+        '/api/v1/user/positions', { Login: loginNum, apikey: apiKey }),
     ]);
 
-    const results = { r01, r02, r03, r04, r05, r06, r07, r08 };
+    const results = { r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12 };
+    // Note: open position PnL is reflected via equity - balance delta from userget
 
     const working = Object.entries(results).filter(([, v]) => v.status === 200 && v.deal_count !== null && v.deal_count > 0);
-    const partial = Object.entries(results).filter(([, v]) => v.status === 200);
+    const ok200   = Object.entries(results).filter(([, v]) => v.status === 200);
     const errors  = Object.entries(results).filter(([, v]) => v.status !== 200);
 
     const diagnosis = working.length > 0
-      ? `✅ WORKING: ${working.map(([k, v]) => `${k} (${v.deal_count} deals)`).join(', ')}`
-      : partial.length > 0
-        ? `⚠️ HTTP 200 but 0 deals in all variants — check responses for structure`
-        : `❌ ALL FAILED — HTTP 500/404 on all variants`;
+      ? `✅ WORKING (has data): ${working.map(([k, v]) => `${k} (${v.deal_count} records)`).join(', ')}`
+      : ok200.length > 0
+        ? `⚠️ HTTP 200 on ${ok200.length} variants but all empty — trades exist on MT5 but bridge returns nothing`
+        : `❌ ALL FAILED`;
 
     console.log(`\nDIAGNOSIS: ${diagnosis}`);
-    console.log(`Group used: ${group}`);
 
     return Response.json({
       success: true,
       diagnosis,
       group_used: group,
       login_used: loginNum,
-      full_schema_used: fullSchemaBase,
-      working_variants: working.map(([k, v]) => ({ key: k, deals: v.deal_count })),
-      all_200s: partial.map(([k, v]) => ({ key: k, status: v.status, deals: v.deal_count, response: v.response })),
-      errors: errors.map(([k, v]) => ({ key: k, status: v.status })),
-      results,
+      userget_live: { balance: liveBalance, equity: liveEquity, open_pnl: parseFloat((liveEquity - liveBalance).toFixed(2)) },
+      working_variants: working.map(([k, v]) => ({ key: k, count: v.deal_count, sample: v.response?.data?.[0] })),
+      all_results: Object.fromEntries(
+        Object.entries(results).map(([k, v]) => [k, { status: v.status, count: v.deal_count, response: v.response }])
+      ),
     });
 
   } catch (error) {
