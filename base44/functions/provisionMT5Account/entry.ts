@@ -81,21 +81,39 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
   }
 
   // Set initial account balance via depositwithbal
+  // Note: Tritech returns errorcode 10009 (async processing) — this is expected and not an error.
+  // The balance will be applied by the MT5 server within seconds to minutes.
+  // We retry up to 3 times with a 2-second delay to maximize success rate.
   if (accountSize > 0) {
-    const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
-      method: 'POST',
-      headers: mt5Headers(apiKey),
-      body: JSON.stringify({
-        Login: parseInt(mtLogin),
-        Balance: accountSize,
-        Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
-        apikey: apiKey,
-      }),
-    });
-    const depText = await depRes.text();
-    console.log(`[Tritech/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 100)}`);
-    if (!depRes.ok) {
-      console.warn(`[Tritech/depositwithbal] Warning: balance set may have failed for login ${mtLogin}`);
+    let depSuccess = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      if (attempt > 1) await new Promise(r => setTimeout(r, 2000));
+      const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+        method: 'POST',
+        headers: mt5Headers(apiKey),
+        body: JSON.stringify({
+          Login: parseInt(mtLogin),
+          Balance: accountSize,
+          Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+          apikey: apiKey,
+        }),
+      });
+      const depText = await depRes.text();
+      const depData = depText ? JSON.parse(depText).data : {};
+      const errCode = depData?.errorcode;
+      console.log(`[Tritech/depositwithbal] Attempt ${attempt} — Login ${mtLogin}: HTTP ${depRes.status}, errorcode=${errCode}`);
+      // errorcode 0 = success, 10009 = async pending (broker processes it server-side), both are acceptable
+      if (depRes.ok && (errCode === 0 || errCode === 10009 || errCode === null || errCode === undefined)) {
+        depSuccess = true;
+        if (errCode === 10009) {
+          console.log(`[Tritech/depositwithbal] Async deposit queued (10009) for login ${mtLogin} — balance will appear within minutes`);
+        }
+        break;
+      }
+      console.warn(`[Tritech/depositwithbal] Attempt ${attempt} failed for login ${mtLogin}: ${depText.slice(0, 200)}`);
+    }
+    if (!depSuccess) {
+      console.error(`[Tritech/depositwithbal] All 3 attempts failed for login ${mtLogin}`);
     }
   }
 
@@ -130,14 +148,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'user_email and account_size are required' }, { status: 400 });
     }
 
-    // Idempotency — skip if already provisioned for this user+size
-    const existing = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email });
-    const alreadyProvisioned = existing.find(a =>
-      a.mt_login && ['pending', 'active', 'funded'].includes(a.status) && a.account_size === account_size
-    );
-    if (alreadyProvisioned) {
-      console.log(`[provisionMT5Account] Already provisioned: ${alreadyProvisioned.account_id}`);
-      return Response.json({ success: true, message: 'Account already provisioned', account_id: alreadyProvisioned.account_id });
+    // Idempotency — skip only if this exact order_id already has a provisioned account
+    if (order_id) {
+      const existing = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email });
+      const alreadyProvisioned = existing.find(a =>
+        a.mt_login && a.account_id === `MT5-${order_id}` && ['pending', 'active', 'funded'].includes(a.status)
+      );
+      if (alreadyProvisioned) {
+        console.log(`[provisionMT5Account] Already provisioned for order ${order_id}: ${alreadyProvisioned.account_id}`);
+        return Response.json({ success: true, message: 'Account already provisioned', account_id: alreadyProvisioned.account_id });
+      }
     }
 
     // Load MT5 credentials from TradingPlatformProvider (read entity directly — no auth chain)

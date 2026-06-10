@@ -194,12 +194,29 @@ Deno.serve(async (req) => {
             console.warn(`[sync] get-deal-history returned non-OK for ${acc.account_id} — skipping trade records this cycle`);
           }
 
-          // Use live API values only if non-zero; fallback to DB values to prevent
-          // false breach detection caused by empty accounts or API returning stale 0
+          // Use live API values ONLY if non-zero.
+          // If API returns 0 for balance AND equity AND account was provisioned within the last 24h,
+          // the deposit is still processing async (Tritech code 10009) — keep DB values to avoid
+          // false 100% DD breach on fresh accounts.
           const rawBalance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0);
-          const rawEquity = parseFloat(mtData?.Equity ?? mtData?.equity ?? 0);
-          const balance = rawBalance > 0 ? rawBalance : (acc.balance || acc.account_size || 0);
-          const equity = rawEquity > 0 ? rawEquity : (rawBalance > 0 ? rawBalance : (acc.equity || acc.balance || acc.account_size || 0));
+          const rawEquity  = parseFloat(mtData?.Equity  ?? mtData?.equity  ?? 0);
+          const isRecentlyProvisioned = acc.provisioned_at &&
+            (Date.now() - new Date(acc.provisioned_at).getTime()) < 24 * 60 * 60 * 1000;
+          const apiReturnedZero = rawBalance === 0 && rawEquity === 0;
+
+          let balance, equity;
+          if (!apiReturnedZero) {
+            balance = rawBalance;
+            equity  = rawEquity;
+          } else if (isRecentlyProvisioned || (acc.balance || 0) > 0) {
+            // Async deposit pending OR API temporarily returning 0 — keep DB value
+            balance = acc.balance || acc.account_size || 0;
+            equity  = acc.equity  || acc.balance || acc.account_size || 0;
+            console.log(`[sync] ${acc.account_id} API returned 0 — keeping DB values (balance=${balance}, recently_provisioned=${isRecentlyProvisioned})`);
+          } else {
+            balance = 0;
+            equity  = 0;
+          }
           // MT5 deal Entry field: 0=IN (open), 1=OUT (close), 2=INOUT
           const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
           const wins = closedTrades.filter(d => (d.Profit ?? d.profit ?? 0) > 0).length;

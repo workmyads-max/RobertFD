@@ -115,8 +115,22 @@ Deno.serve(async (req) => {
 
         const rawBalance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0);
         const rawEquity  = parseFloat(mtData?.Equity  ?? mtData?.equity  ?? 0);
-        const balance = rawBalance > 0 ? rawBalance : (acc.balance || acc.account_size || 0);
-        const equity  = rawEquity  > 0 ? rawEquity  : (rawBalance > 0 ? rawBalance : (acc.equity || acc.balance || acc.account_size || 0));
+        const isRecentlyProvisioned = acc.provisioned_at &&
+          (Date.now() - new Date(acc.provisioned_at).getTime()) < 24 * 60 * 60 * 1000;
+        const apiReturnedZero = rawBalance === 0 && rawEquity === 0;
+
+        let balance, equity;
+        if (!apiReturnedZero) {
+          balance = rawBalance;
+          equity  = rawEquity;
+        } else if (isRecentlyProvisioned || (acc.balance || 0) > 0) {
+          // Async deposit pending (Tritech code 10009) — keep DB values
+          balance = acc.balance || acc.account_size || 0;
+          equity  = acc.equity  || acc.balance || acc.account_size || 0;
+        } else {
+          balance = 0;
+          equity  = 0;
+        }
 
         // Closed deals: MT5 Entry field 1 = OUT (close)
         const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
