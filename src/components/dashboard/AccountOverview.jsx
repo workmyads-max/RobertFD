@@ -890,20 +890,21 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 5000, staleTime: 3000,
+    refetchInterval: 5000,
+    staleTime: 60000, // Increase stale time to reduce refetches
   });
 
-  // Load account from URL parameter if provided
+  // Load account from sessionStorage immediately when accounts are available
   useEffect(() => {
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
-    if (savedAccountId && accounts.length > 0) {
+    if (savedAccountId && accounts?.length > 0 && !selectedAccount) {
       const targetAccount = accounts.find(a => 
-        (a.account_id === savedAccountId || a.id === savedAccountId)
+        a.account_id === savedAccountId || a.id === savedAccountId
       );
       if (targetAccount) {
         setSelectedAccount(targetAccount);
+        sessionStorage.removeItem('selectedAccountId');
       }
-      sessionStorage.removeItem('selectedAccountId');
     }
   }, [accounts]);
 
