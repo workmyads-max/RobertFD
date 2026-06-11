@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -121,7 +121,7 @@ export default function CurrentResultsChart({ account, trades }) {
                 hide
                 domain={['auto', 'auto']}
               />
-              <RechartsTooltip
+              <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload;
