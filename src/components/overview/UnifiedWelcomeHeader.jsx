@@ -83,7 +83,7 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-white overflow-hidden"
+              className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-bold text-white overflow-hidden"
               style={{
                 background: (user?.avatar_url || user?.profile_photo_url)
                   ? 'transparent'
