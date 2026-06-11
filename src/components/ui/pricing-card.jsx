@@ -1,38 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  className?: string;
-  glassEffect?: boolean;
-}
-
-interface BodyProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface DescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface ListProps extends React.HTMLAttributes<HTMLUListElement> {
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface ListItemProps extends React.HTMLAttributes<HTMLLIElement> {
-  children: React.ReactNode;
-  className?: string;
-}
-
-const Card = ({ children, className, ...props }: CardProps) => {
+const Card = ({ children, className, ...props }) => {
   return (
     <div 
       className={cn(
@@ -46,7 +15,7 @@ const Card = ({ children, className, ...props }: CardProps) => {
   );
 };
 
-const Header = ({ children, className, glassEffect = false, ...props }: HeaderProps) => {
+const Header = ({ children, className, glassEffect = false, ...props }) => {
   return (
     <div 
       className={cn(
@@ -61,7 +30,7 @@ const Header = ({ children, className, glassEffect = false, ...props }: HeaderPr
   );
 };
 
-const Body = ({ children, className, ...props }: BodyProps) => {
+const Body = ({ children, className, ...props }) => {
   return (
     <div className={cn("p-6 pt-2", className)} {...props}>
       {children}
@@ -69,7 +38,7 @@ const Body = ({ children, className, ...props }: BodyProps) => {
   );
 };
 
-const Description = ({ children, className, ...props }: DescriptionProps) => {
+const Description = ({ children, className, ...props }) => {
   return (
     <p 
       className={cn("text-muted-foreground", className)}
@@ -80,7 +49,7 @@ const Description = ({ children, className, ...props }: DescriptionProps) => {
   );
 };
 
-const List = ({ children, className, ...props }: ListProps) => {
+const List = ({ children, className, ...props }) => {
   return (
     <ul 
       className={cn("space-y-3", className)}
@@ -91,7 +60,7 @@ const List = ({ children, className, ...props }: ListProps) => {
   );
 };
 
-const ListItem = ({ children, className, ...props }: ListItemProps) => {
+const ListItem = ({ children, className, ...props }) => {
   return (
     <li 
       className={cn(
