@@ -428,9 +428,9 @@ Deno.serve(async (req) => {
                 if (typeof t === 'string' && t.includes('T')) return t;
                 return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1)).toISOString();
               };
-              // Tritech volume: >1000 means raw (e.g. 60000=0.60 lots → /100000), ≤1000 already in lots
-              const rawVol = parseFloat(d.volume ?? d.Volume ?? d.lot ?? 0);
-              const lots = rawVol > 1000 ? rawVol / 100000 : rawVol;
+              // Tritech volume is always in raw points (e.g. 100=0.001 lots, 60000=0.60 lots) → /100000
+              const rawVol = parseFloat(d.volume ?? d.Volume ?? 0);
+              const lots = rawVol / 100000;
               return base44.asServiceRole.entities.TradeRecord.create({
                account_id: acc.account_id,
                user_email: acc.user_email,

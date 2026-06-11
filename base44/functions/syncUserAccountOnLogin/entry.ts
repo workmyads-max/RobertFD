@@ -222,9 +222,9 @@ Deno.serve(async (req) => {
               const tid = String(d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id ?? '');
               const action = d.action ?? d.Action ?? 0;
               const isSell = action === 1 || action === 'SELL' || d.type === 1 || d.type === 'SELL';
-              // Tritech volume: >1000 means raw (e.g. 60000=0.60 lots → /100000), ≤1000 already in lots
-              const rawVol = parseFloat(d.volume ?? d.Volume ?? d.lot ?? 0);
-              const lots = rawVol > 1000 ? rawVol / 100000 : rawVol;
+              // Tritech volume is always in raw points (e.g. 100=0.001 lots, 60000=0.60 lots) → /100000
+              const rawVol = parseFloat(d.volume ?? d.Volume ?? 0);
+              const lots = rawVol / 100000;
               return base44.entities.TradeRecord.create({
                 account_id: acc.account_id,
                 user_email: acc.user_email,
