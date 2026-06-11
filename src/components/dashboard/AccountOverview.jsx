@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 import CredentialsModal from './CredentialsModal';
 import LiveTradeFeed from '../overview/LiveTradeFeed';
 import PerformanceMetrics from '../overview/PerformanceMetrics';
@@ -618,22 +619,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
-
-  // Fetch current user
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: async () => {
-      try {
-        const u = await base44.auth.me();
-        console.log('[AccountOverview] User:', u?.email);
-        return u;
-      } catch (err) {
-        console.error('[AccountOverview] Auth error:', err);
-        return null;
-      }
-    },
-    staleTime: 30000,
-  });
+  
+  // Use the same auth context as the rest of the app (Supabase-based)
+  const { user, loading: authLoading } = useCustomAuth();
 
   useEffect(() => {
     try {
@@ -699,8 +687,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   });
 
   // Handle loading state
-  if (userLoading || isLoading) {
-    console.log('[AccountOverview] Loading...');
+  if (authLoading || isLoading) {
+    console.log('[AccountOverview] Loading...', { authLoading, isLoading });
     return (
       <div className="flex items-center justify-center py-24">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -708,13 +696,13 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     );
   }
 
-  // Handle auth error
+  // Handle auth error - user should never see this if ProtectedRoute works
   if (!user) {
-    console.log('[AccountOverview] No user authenticated');
+    console.log('[AccountOverview] No user authenticated - this should not happen if ProtectedRoute is working');
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="text-xl font-bold text-foreground mb-4">Please log in</div>
-        <div className="text-sm text-white/40 mb-4">You need to be logged in to view account information</div>
+        <div className="text-xl font-bold text-foreground mb-4">Authentication required</div>
+        <div className="text-sm text-white/40 mb-4">Please log in to continue</div>
       </div>
     );
   }
