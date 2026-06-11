@@ -21,7 +21,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'accounts', label: 'My Accounts', icon: Wallet },
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'markets', label: 'Markets', icon: Globe },
-    { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true },
+    { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true, limeGreen: true },
     { id: 'calendar-news', label: 'Calendar & News', icon: CalendarDays },
     { id: 'journal', label: 'Journal', icon: BookOpen },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
@@ -78,17 +78,23 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-xl transition-all duration-150 group relative font-medium ${
-                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-4 py-3.5 text-sm' : 'gap-2.5 px-3 py-2.5 text-sm'
+                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-2.5 px-3 py-2.5 text-sm'
               } ${
                 isActive
                   ? (item.highlight ? 'text-primary' : 'text-white')
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
+                    : item.limeGreen && !isActive
+                    ? 'text-[#CCFF00] hover:text-[#CCFF00]'
                     : item.highlight && !isActive
                     ? 'text-primary hover:text-primary'
                     : 'text-white/35 hover:text-primary/80 hover:bg-primary/[0.07]'
               }`}
-              style={item.highlight && !isActive ? {
+              style={item.limeGreen && !isActive ? {
+                background: 'rgba(204,255,0,0.12)',
+                border: '1.5px solid rgba(204,255,0,0.4)',
+                boxShadow: '0 0 14px rgba(204,255,0,0.2)',
+              } : item.highlight && !isActive ? {
                 background: 'rgba(255,92,0,0.15)',
                 border: '1.5px solid rgba(255,92,0,0.5)',
                 boxShadow: '0 0 12px rgba(255,92,0,0.15)',
@@ -97,7 +103,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-5 h-5' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-6 h-6' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
               {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
