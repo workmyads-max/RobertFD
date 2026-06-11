@@ -56,17 +56,51 @@ export default function AdminOrders() {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: (order) => confirmAndProvisionAccount(order),
-    onSuccess: () => {
+    mutationFn: async (order) => {
+      try {
+        const result = await base44.functions.invoke('manualCryptoReview', {
+          action: 'approve_payment',
+          order_id: order.order_id,
+          notes: 'Confirmed via Admin Orders panel'
+        });
+        if (!result?.success) {
+          throw new Error(result?.error || 'Approval failed');
+        }
+        // Handle 409 gracefully — account already exists
+        if (result?.provision_error?.includes('409') || result?.provision_error?.includes('already')) {
+          return { success: true, message: 'Order confirmed. MT5 account already exists.' };
+        }
+        return result;
+      } catch (error) {
+        // Handle 409 Conflict — MT5 account already exists
+        if (error.message?.includes('409') || error.message?.includes('already')) {
+          await base44.entities.Order.update(order.id, {
+            payment_status: 'confirmed',
+            manually_approved: true,
+            approved_at: new Date().toISOString(),
+          });
+          return { success: true, message: 'Order confirmed. MT5 account already exists.' };
+        }
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] });
       qc.invalidateQueries({ queryKey: ['admin-accounts'] });
       qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });
       setSelected(null);
-      alert('✅ Account activated successfully!');
+      alert(result?.message || '✅ Account activated successfully!');
     },
     onError: (err) => {
-      alert(`❌ Error: ${err?.message || 'Failed to activate account'}`);
+      // Only show error for real failures, not 409
+      if (err.message?.includes('409') || err.message?.includes('already')) {
+        alert('✅ Order confirmed — MT5 account already active');
+        qc.invalidateQueries({ queryKey: ['admin-orders'] });
+        setSelected(null);
+      } else {
+        alert(`❌ Error: ${err?.message || 'Failed to activate account'}`);
+      }
     },
   });
 

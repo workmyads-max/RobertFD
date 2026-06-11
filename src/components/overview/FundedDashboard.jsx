@@ -10,6 +10,7 @@ import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -115,24 +116,20 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
-  // Use Base44 entities directly (not Supabase)
-  const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['challenge-accounts-dashboard', user?.email],
-    queryFn: async () => {
-      const all = await base44.entities.ChallengeAccount.list('-created_date', 50);
-      // Filter to current user's accounts
-      return all.filter(a => a.user_email === user?.email);
-    },
-    enabled: !!user?.email,
-    refetchInterval: 5000, // Auto-refresh every 5s
-  });
+  // Use userEmail from auth context for reliable mobile access
+  const { userEmail } = useSupabaseAuth();
 
-  // Debug logging
-  useEffect(() => {
-    if (accounts?.length > 0) {
-      console.log('[FundedDashboard] Loaded accounts:', accounts.length, accounts[0]?.account_id);
-    }
-  }, [accounts?.length]);
+  const { data: accounts = [], isLoading, refetch } = useQuery({
+    queryKey: ['challenge-accounts-dashboard', userEmail],
+    queryFn: async () => {
+      if (!userEmail) return [];
+      const all = await base44.entities.ChallengeAccount.list('-created_date', 50);
+      return all.filter(a => a.user_email === userEmail);
+    },
+    enabled: !!userEmail,
+    refetchInterval: 5000,
+    staleTime: 2000,
+  });
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
@@ -151,6 +148,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       setSelectedAccount(activeAccounts[0]);
     }
   }, [activeAccounts.length]);
+
+  // Mobile: ensure account cards are full width
+  const accountCardMinWidth = typeof window !== 'undefined' && window.innerWidth < 768 ? '85vw' : '220px';
 
   // Keep selected in sync with refetches
   useEffect(() => {
@@ -217,11 +217,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       {/* Content */}
       <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
-        {/* DEBUG BANNER - REMOVE AFTER FIX */}
-        <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold mb-4" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
-          BASE44 QUERY | Accounts: {accounts?.length} | Active: {activeAccounts?.length} | Loading: {String(isLoading)} | User: {user?.email?.slice(0, 8)}...
-        </div>
-
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
         
@@ -240,7 +235,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                 <RefreshCw className="w-3 h-3" /> Sync
               </button>
             </div>
-            <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+            <div className="w-full">
+              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+            </div>
           </div>
         )}
 

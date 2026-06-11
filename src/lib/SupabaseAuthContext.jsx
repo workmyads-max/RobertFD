@@ -18,14 +18,10 @@ export const SupabaseAuthProvider = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
-    let initTimeout;
-    let loadTimeout;
 
     const initAuth = async () => {
       try {
-        // Get session - Supabase SDK handles persistence automatically
         const { data: { session } } = await supabase.auth.getSession();
-        
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
@@ -37,19 +33,14 @@ export const SupabaseAuthProvider = ({ children }) => {
           setUser(null);
         }
       } finally {
-        // Always stop loading even if session fetch fails
         if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // Listen to auth state changes — CRITICAL: Only react to SIGNED_IN/SIGNED_OUT
-    // Ignore TOKEN_REFRESHED to prevent infinite re-render loops on mobile
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-      
-      // Only update state on actual sign in/out, NOT on token refresh
       if (event === 'SIGNED_IN') {
         setSession(session);
         setUser(session?.user ?? null);
@@ -59,14 +50,10 @@ export const SupabaseAuthProvider = ({ children }) => {
         setUser(null);
         setLoading(false);
       }
-      // TOKEN_REFRESHED, INITIAL_SESSION, etc. are silently ignored
-      // to prevent unnecessary re-renders
     });
 
     return () => {
       mounted = false;
-      clearTimeout(initTimeout);
-      clearTimeout(loadTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -78,9 +65,9 @@ export const SupabaseAuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
-  // Helpers for components
+  // Expose userEmail directly from context for reliable mobile access
+  const userEmail = user?.email ?? session?.user?.email ?? null;
   const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
-  const userEmail = user?.email;
   const userId = user?.id;
 
   return (

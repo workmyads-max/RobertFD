@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
@@ -896,14 +897,21 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     return unsub;
   }, [queryClient]);
 
+  const { userEmail } = useSupabaseAuth();
+
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', userEmail],
+    queryFn: async () => {
+      if (!userEmail) return [];
+      const all = await base44.entities.ChallengeAccount.list('-created_date', 50);
+      return all.filter(a => a.user_email === userEmail);
+    },
+    enabled: !!userEmail,
     refetchInterval: 5000,
-    staleTime: 60000, // Increase stale time to reduce refetches
+    staleTime: 2000,
   });
 
-  // Load account from sessionStorage immediately when accounts are available - FIXED dependencies
+  // Load account from sessionStorage immediately when accounts are available
   useEffect(() => {
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
     if (savedAccountId && accounts.length > 0 && !selectedAccount) {
@@ -911,7 +919,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         a.account_id === savedAccountId || a.id === savedAccountId
       );
       if (targetAccount) {
-        console.log('[AccountOverview] Auto-selecting account from session:', targetAccount.id);
         setSelectedAccount(targetAccount);
         sessionStorage.removeItem('selectedAccountId');
       }
@@ -922,8 +929,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
-
-  console.log('[AccountOverview] Rendering - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'account:', account?.id);
 
   const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
@@ -989,7 +994,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Account selector tabs - horizontally scrollable on mobile */}
       {activeAccounts.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {activeAccounts.map(a => {
             const isSelected = account?.id === a.id;
             return (

@@ -83,11 +83,27 @@
     display: block;
   }
   
+  /* Hide scrollbar for horizontal scroll containers */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+  
   /* Ensure all tap targets are at least 44px */
   @media (max-width: 768px) {
     button, a, input, select, textarea, [role="button"] {
       min-height: 44px;
       min-width: 44px;
+    }
+    
+    /* Hide scrollbars for horizontal scroll containers */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      scrollbar-width: none;
     }
     
     /* Prevent text overflow */
@@ -102,7 +118,15 @@
     }
     
     input, textarea, select {
-      font-size: 16px; /* Prevent iOS zoom */
+      font-size: 16px !important; /* Prevent iOS zoom */
+    }
+    
+    /* Hide scrollbar for horizontal scroll containers */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      scrollbar-width: none;
     }
     
     /* Prevent horizontal scroll */
