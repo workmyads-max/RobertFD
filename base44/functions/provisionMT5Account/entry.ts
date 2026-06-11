@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     if (order_id) {
       const existing = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email });
       const alreadyProvisioned = existing.find(a =>
-        a.mt_login && a.account_id === `MT5-${order_id}` && ['pending', 'active', 'funded'].includes(a.status)
+        a.mt_login && (a.account_id === order_id || a.account_id === `MT5-${order_id}`) && ['pending', 'active', 'funded'].includes(a.status)
       );
       if (alreadyProvisioned) {
         console.log(`[provisionMT5Account] Already provisioned for order ${order_id}: ${alreadyProvisioned.account_id}`);

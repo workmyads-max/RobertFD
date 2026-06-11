@@ -281,7 +281,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
                   {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
                 </span>
-                <button onClick={() => refetch()}
+                <button onClick={() => fetchAccountsDirect()}
                   className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
                   <RefreshCw className="w-3 h-3" /> Sync
                 </button>

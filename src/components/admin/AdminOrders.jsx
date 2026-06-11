@@ -7,18 +7,32 @@ import { base44 } from '@/api/base44Client';
 /**
  * Confirm payment and provision MT5 account via manualCryptoReview backend.
  * This is the SAME path used by AdminPaymentReview and all automatic webhooks.
- * No duplicate ChallengeAccount creation — provisionMT5Account handles it.
+ * Handles 409 Conflict gracefully when MT5 account already exists.
  */
 async function confirmAndProvisionAccount(order) {
-  const res = await base44.functions.invoke('manualCryptoReview', {
-    action: 'approve_payment',
-    order_id: order.order_id,
-    notes: 'Confirmed via Admin Orders panel',
-  });
-  if (!res.data?.success) {
-    throw new Error(res.data?.error || 'Approval failed');
+  try {
+    const res = await base44.functions.invoke('manualCryptoReview', {
+      action: 'approve_payment',
+      order_id: order.order_id,
+      notes: 'Confirmed via Admin Orders panel',
+    });
+    if (!res.data?.success) {
+      throw new Error(res.data?.error || 'Approval failed');
+    }
+    return res.data;
+  } catch (error) {
+    // Handle 409 Conflict — MT5 account already exists
+    if (error.message?.includes('409') || error.message?.includes('already')) {
+      // Just update the order status without calling MT5 API again
+      await base44.entities.Order.update(order.id, {
+        payment_status: 'confirmed',
+        manually_approved: true,
+        approved_at: new Date().toISOString(),
+      });
+      return { success: true, message: 'Order confirmed. MT5 account already exists.' };
+    }
+    throw error;
   }
-  return res.data;
 }
 
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
@@ -176,12 +190,19 @@ export default function AdminOrders() {
                 ))}
               </div>
               <div className="px-5 pb-5 flex gap-3">
-                <button onClick={() => confirmMutation.mutate(selected)}
-                  disabled={confirmMutation.isPending || updateMutation.isPending}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
-                  style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
-                  {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
-                </button>
+                {selected.payment_status === 'confirmed' || selected.mt_login ? (
+                  <div className="flex-1 py-2.5 rounded-xl text-xs font-bold text-emerald-400 text-center"
+                    style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                    ✅ Already Active
+                  </div>
+                ) : (
+                  <button onClick={() => confirmMutation.mutate(selected)}
+                    disabled={confirmMutation.isPending || updateMutation.isPending}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
+                    style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
+                    {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
+                  </button>
+                )}
                 <button onClick={() => updateMutation.mutate({ id: selected.id, data: { payment_status: 'failed' } })}
                   disabled={confirmMutation.isPending || updateMutation.isPending}
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"

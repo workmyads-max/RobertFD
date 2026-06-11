@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
       // NOW provision challenge account — only after admin approval
       try {
-        await sr.functions.invoke('provisionMT5Account', {
+        const provisionRes = await sr.functions.invoke('provisionMT5Account', {
           account_id: order.account_id || order.order_id,
           order_id: order.order_id,
           user_email: order.email,
@@ -133,7 +133,19 @@ Deno.serve(async (req) => {
           platform: 'mt5',
           rule_snapshot: order.rule_snapshot || null,
         });
-      } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
+        
+        // Handle 409 Conflict — account already exists (not an error)
+        if (provisionRes.data?.error && provisionRes.data?.error?.includes('already')) {
+          console.log(`[ManualCrypto] Account already exists for order ${order_id}`);
+        }
+      } catch (e) {
+        // 409 or "already provisioned" errors are OK — account exists
+        if (e.message?.includes('already') || e.message?.includes('409')) {
+          console.log(`[ManualCrypto] Account already provisioned for order ${order_id}: ${e.message}`);
+        } else {
+          console.error('[ManualCrypto] Provisioning failed:', e.message);
+        }
+      }
 
       // Affiliate commissions L1/L2/L3 — non-blocking
       sr.functions.invoke('createAffiliateCommissions', {
