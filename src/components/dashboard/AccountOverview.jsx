@@ -81,10 +81,13 @@ function useCopyText() {
 function ActiveAccountCard({ account, onNavigate }) {
   const { copied, copy } = useCopyText();
   if (!account) return null;
-  const balance = account.balance || account.account_size || 0;
-  const equity = account.equity || balance;
+  const balance = account.balance ?? account.account_size ?? 0;
+  // equity is synced from MT5 (balance + open position floating PnL)
+  const equity = account.equity ?? balance;
+  // unrealizedPnl = open positions floating PnL = equity - balance
   const unrealizedPnl = equity - balance;
-  const todayPnl = account.daily_pnl || 0;
+  // daily_pnl is synced from scheduledMTSync (equity vs daily_start_balance)
+  const todayPnl = account.daily_pnl ?? 0;
   const challengeLabel = account.challenge_type === 'two-step' ? '2-Step' : account.challenge_type === 'instant' ? 'Instant' : 'Instant Light';
   const statusLabel = account.status === 'active' ? 'Ongoing' : account.status === 'passed' ? 'Passed' : account.status === 'funded' ? 'Funded' : account.status;
   const statusColor = account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#888';
@@ -118,10 +121,13 @@ function ActiveAccountCard({ account, onNavigate }) {
 
       {/* Action buttons */}
       <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <button onClick={() => copy(account.mt_login || '', 'login')}
+        <button onClick={() => {
+          const creds = `Login: ${account.mt_login || '—'}\nPassword: ${account.mt_password || '—'}\nServer: ${account.mt_server || '—'}`;
+          copy(creds, 'login');
+        }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground border border-white/10 hover:bg-white/5 transition-colors">
           <Key className="w-3.5 h-3.5" />
-          {copied === 'login' ? 'Copied!' : 'Credentials'}
+          {copied === 'login' ? '✓ Copied!' : `Login: ${account.mt_login || '—'}`}
         </button>
         <button onClick={() => onNavigate && onNavigate('accounts')}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground border border-white/10 hover:bg-white/5 transition-colors">
@@ -916,9 +922,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Active Account Card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} />
-
-      {/* History */}
-      <AccountHistorySection accounts={accounts} />
 
       {/* Statistics + Daily Summary */}
       <div className="grid md:grid-cols-2 gap-5">
