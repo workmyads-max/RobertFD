@@ -13,6 +13,7 @@ import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
+import Footer from './Footer';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1018,28 +1019,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       <AccountHistorySection accounts={accounts} />
 
       {/* Footer */}
-      <div className="space-y-3">
-        <div className="rounded-2xl px-5 py-3.5 flex items-center gap-3"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <Info className="w-4 h-4 text-white/20 shrink-0" />
-          <p className="text-[11px] text-white/30 leading-relaxed">
-            Account Metrics values are informative only. Real-time trading data can be verified directly in the MT5 platform.
-          </p>
-        </div>
-
-        <div className="rounded-2xl px-6 py-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="flex justify-end gap-5 text-xs font-semibold pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <Link to="/privacy" className="text-white/40 hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="text-white/40 hover:text-primary transition-colors">Terms & Conditions</Link>
-          </div>
-          <p className="text-[11px] leading-relaxed" style={{ color: '#4b5563' }}>
-            All information provided is intended solely for evaluation purposes related to trading on financial markets and does not serve as a specific investment recommendation. Trading in financial markets is a high-risk activity. XFunded does not provide investment services and is not a broker or fund manager. All challenges and funded accounts operate in a simulated environment powered by institutional liquidity providers.
-          </p>
-          <div className="text-[11px] font-semibold" style={{ color: '#374151' }}>
-            {new Date().getFullYear()} © <a href="https://xfunded.com" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">XFunded.com</a> — Institutional Prop Trading
-          </div>
-        </div>
-      </div>
+      <Footer />
 
       {/* Credentials Modal */}
       {showCredentials && (
