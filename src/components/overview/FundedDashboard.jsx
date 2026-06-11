@@ -13,6 +13,7 @@ import AccountSwitcher      from './AccountSwitcher.jsx';
 import LiveStatusBar        from './LiveStatusBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
+import MT5AccountCard       from './MT5AccountCard.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -35,34 +36,6 @@ function EmptyState({ onStartChallenge }) {
     </motion.div>
   );
 }
-
-// ─── Account info strip ───────────────────────────────────────────────────────
-function AccountInfoStrip({ account }) {
-  if (!account) return null;
-  const items = [
-    { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type',     value: account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
-    { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase',    value: (account.phase || 'phase1').replace('phase', 'Phase ') },
-    { label: 'Leverage', value: account.leverage || '1:100' },
-    { label: 'Platform', value: account.platform || 'xTrading' },
-    { label: 'ID',       value: `#${account.account_id || account.id?.slice(0, 8) || 'N/A'}` },
-  ];
-  return (
-    <motion.div key={account.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      className="flex overflow-x-auto rounded-xl border divide-x glass scrollbar-hide"
-      style={{ borderColor: 'rgba(255,255,255,0.1)', scrollbarWidth: 'none' }}>
-      {items.map(item => (
-        <div key={item.label} className="flex-1 px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[70px] sm:min-w-[80px] flex-shrink-0 border-r border-white/[0.06] last:border-r-0">
-          <div className="text-[7px] sm:text-[8px] font-mono uppercase text-muted-foreground tracking-wider sm:tracking-widest mb-0.5 sm:mb-1">{item.label}</div>
-          <div className="text-[9px] sm:text-[10px] md:text-[11px] font-semibold text-primary whitespace-nowrap truncate max-w-full">{item.value}</div>
-        </div>
-      ))}
-    </motion.div>
-  );
-}
-
-
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
@@ -197,14 +170,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
               {selectedAccount && (
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-4">
-
-                  {/* Info strip */}
-                  <AccountInfoStrip account={selectedAccount} />
-
-                  {/* Three Paths to Funded Trading */}
-                  <ThreePathsToFunded onNavigate={onNavigate} />
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
+                  <MT5AccountCard 
+                    account={selectedAccount} 
+                    livePositions={openTrades}
+                    tradeRecords={trades}
+                    onRefresh={refetch}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
