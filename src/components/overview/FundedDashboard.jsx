@@ -169,15 +169,15 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
         {/* Welcome Header */}
         <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {/* First-Time Promo Banner */}
-        <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
-
         {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
-            {/* Live status + account switcher row */}
+            {/* Live status bar - below header, above promotion */}
             <LiveStatusBar account={selectedAccount} />
+
+            {/* First-Time Promo Banner */}
+            <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
             <div>
               <div className="flex items-center justify-between mb-2.5">
