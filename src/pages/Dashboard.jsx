@@ -145,9 +145,15 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'accounts': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'overview': 
+        console.log('Rendering FundedDashboard');
+        return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'accounts': 
+        console.log('Rendering MyAccounts');
+        return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'account-overview': 
+        console.log('Rendering AccountOverview');
+        return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;
@@ -185,7 +191,7 @@ export default function Dashboard() {
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'marketplace': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
       case 'performance': return <MyPerformance user={user} />;
       case 'admin-coupons': return isAdmin ? <AdminCoupons /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
@@ -232,15 +238,14 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+          <div className="p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
-                initial={{ opacity: 0, y: isTerminal ? 0 : 16 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: isTerminal ? 0 : -16 }}
+                exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.3 }}
-                className={isTerminal ? 'h-full' : ''}
               >
                 {renderPage()}
               </motion.div>
