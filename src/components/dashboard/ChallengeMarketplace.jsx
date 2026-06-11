@@ -156,46 +156,49 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl mb-4"
-          style={{ background: 'rgba(255,112,46,0.1)', border: '1px solid rgba(255,112,46,0.2)' }}>
-          <span className="text-[9px] font-bold text-[#FF702E] uppercase tracking-wider">Challenge Marketplace</span>
+      <div className="mb-8 sm:mb-12">
+        <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full mb-5"
+          style={{ background: 'rgba(255,107,44,0.12)', border: '1px solid rgba(255,107,44,0.25)' }}>
+          <div className="w-2 h-2 rounded-full" style={{ background: '#FF6B2C' }} />
+          <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-wider">Challenge Marketplace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
-          Choose Your <span className="text-[#FF702E]">Capital Tier</span>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
+          Choose Your <span style={{ color: '#FF6B2C' }}>Capital Tier</span>
         </h1>
-        <p className="text-xs sm:text-sm text-[#9CA3AF] max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base text-[#A0A0A0] max-w-2xl leading-relaxed">
           Institutional funding from $5K to $200K. Select your challenge type, account model, and start your professional trading journey.
         </p>
       </div>
 
       {/* Challenge type toggle */}
-      <div className="mb-6 sm:mb-8">
-        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest mb-3">Challenge Type</div>
+      <div className="mb-8 sm:mb-10">
         <div className="flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step', desc: '2 phases' },
-            { id: 'instant', label: 'Instant', desc: '1 phase' },
-            { id: 'instant_light', label: 'Light', desc: 'Simplified' },
+            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: '⚡' },
+            { id: 'instant', label: 'Instant', desc: '1 phase', icon: '🚀' },
+            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: '💡' },
           ].map(t => {
             const isSelected = challengeType === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative flex-1 px-5 sm:px-6 py-3.5 rounded-xl text-left transition-all duration-200 min-w-[120px] sm:min-w-[160px] ${
-                  isSelected ? 'text-white' : 'text-[#9CA3AF] hover:text-white'
+                className={`relative flex-1 px-6 sm:px-7 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
+                  isSelected ? 'text-white' : 'text-[#A0A0A0] hover:text-white'
                 }`}
                 style={isSelected ? {
-                  background: '#FF702E',
-                  boxShadow: '0 2px 12px rgba(255,112,46,0.3)',
+                  background: '#FF6B2C',
+                  boxShadow: '0 4px 16px rgba(255,107,44,0.35)',
                 } : {}}>
-                <div className="text-sm sm:text-base font-bold mb-0.5">{t.label}</div>
-                <div className={`text-[9px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-[#9CA3AF]'}`}>{t.desc}</div>
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <span className="text-lg">{t.icon}</span>
+                  <div className="text-base sm:text-lg font-bold">{t.label}</div>
+                </div>
+                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/75' : 'text-[#A0A0A0]'}`}>{t.desc}</div>
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[8px] font-bold"
-                    style={{ background: '#CCFF00', color: '#000000' }}>
+                  <span className="absolute -top-2 -right-2 px-2.5 py-1 rounded-md text-[9px] font-bold"
+                    style={{ background: '#00E676', color: '#000000' }}>
                     -50%
                   </span>
                 )}
@@ -207,7 +210,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Platform selector */}
       <div className="mb-6 sm:mb-8">
-        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest mb-4">Trading Platform</div>
         <div className="flex flex-wrap gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
@@ -215,42 +218,40 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={p.id}
                 onClick={() => setPlatform(p.id)}
-                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
+                className="group relative flex items-center gap-5 px-6 py-5 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
                 style={{
-                  background: isSelected
-                    ? 'rgba(255,255,255,0.05)'
-                    : 'rgba(255,255,255,0.02)',
-                  border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
-                  boxShadow: isSelected ? '0 2px 12px rgba(255,255,255,0.08)' : 'none',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
+                  boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.2)' : 'none',
                 }}>
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-12 h-12 object-contain transition-transform group-hover:scale-105"
+                    className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <div className={`text-sm font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="text-base font-bold text-white tracking-tight">
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-wider"
-                        style={{ background: '#FF702E', color: '#ffffff' }}>
+                      <span className="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                        style={{ background: '#FF6B2C', color: '#ffffff' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className={`text-[10px] ${isSelected ? 'text-[#9CA3AF]' : 'text-[#9CA3AF]'}`}>
+                  <div className="text-[11px] text-[#A0A0A0]">
                     {p.desc}
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
-                    style={{ background: '#FF702E', boxShadow: '0 2px 8px rgba(255,112,46,0.4)' }}>
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: '#FF6B2C', boxShadow: '0 2px 12px rgba(255,107,44,0.4)' }}>
+                    <Check className="w-5 h-5 text-white" strokeWidth={3} />
                   </div>
                 )}
               </button>
@@ -269,45 +270,43 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               onClick={() => setAccountType(key)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-5 text-left transition-all duration-300"
+              className="rounded-2xl p-6 text-left transition-all duration-300"
               style={{
-                background: isSelected
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(255,255,255,0.02)',
-                border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: isSelected ? '0 2px 12px rgba(255,255,255,0.05)' : 'none',
+                background: 'rgba(255,255,255,0.02)',
+                border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
+                boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.15)' : 'none',
               }}>
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
                       background: isSelected
-                        ? '#FF702E'
-                        : 'rgba(255,255,255,0.06)',
-                      boxShadow: isSelected ? '0 2px 12px rgba(255,112,46,0.3)' : 'none',
+                        ? '#FF6B2C'
+                        : 'rgba(255,255,255,0.04)',
+                      boxShadow: isSelected ? '0 2px 12px rgba(255,107,44,0.35)' : 'none',
                     }}>
                     {key === 'standard'
-                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#9CA3AF]'}`} />
-                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#9CA3AF]'}`} />}
+                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#A0A0A0]'}`} />
+                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#A0A0A0]'}`} />}
                   </div>
                   <div>
-                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-foreground'}`}>{cfg.label}</div>
-                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-[#9CA3AF]'}`}>{cfg.leverage} leverage</div>
+                    <div className={`text-base font-bold ${isSelected ? 'text-white' : 'text-white'}`}>{cfg.label}</div>
+                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-[#A0A0A0]'}`}>{cfg.leverage} leverage</div>
                   </div>
                 </div>
                 {isSelected && (
                   <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#FF702E', boxShadow: '0 2px 8px rgba(255,112,46,0.4)' }}>
+                    style={{ background: '#FF6B2C', boxShadow: '0 2px 12px rgba(255,107,44,0.4)' }}>
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {cfg.features.map(f => (
-                  <div key={f.text} className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}
-                      style={{ boxShadow: f.ok ? '0 0 8px rgba(16,185,129,0.4)' : 'none' }} />
-                    <span className={`text-xs ${f.ok ? 'text-white' : 'text-[#9CA3AF]'}`}>{f.text}</span>
+                  <div key={f.text} className="flex items-center gap-2.5">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#00E676]' : 'bg-[#FF4444]'}`}
+                      style={{ boxShadow: f.ok ? '0 0 8px rgba(0,230,118,0.5)' : 'none' }} />
+                    <span className={`text-xs ${f.ok ? 'text-white' : 'text-[#A0A0A0]'}`}>{f.text}</span>
                   </div>
                 ))}
               </div>
