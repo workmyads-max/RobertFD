@@ -250,12 +250,15 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: allAccounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
     enabled: !!user,
     refetchInterval: 15000,
   });
+
+  // Filter to current user's accounts only
+  const accounts = allAccounts.filter(a => a.user_email === user?.email);
 
   const { data: myOrders = [] } = useQuery({
     queryKey: ['my-orders', user?.email],
@@ -266,7 +269,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
   // Only show active/funded/passed/pending accounts — failed ones go to Trash
-  const displayAccounts = accounts;
+  const displayAccounts = accounts.filter(a => !['failed'].includes(a.status));
 
   return (
     <div>

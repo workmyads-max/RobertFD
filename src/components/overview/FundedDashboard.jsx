@@ -115,66 +115,24 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
-  // DIRECT QUERY STATE - bypassing broken getUserAccounts backend function
-  const [accounts, setAccounts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use Base44 entities directly (not Supabase)
+  const { data: accounts = [], isLoading, refetch } = useQuery({
+    queryKey: ['challenge-accounts-dashboard', user?.email],
+    queryFn: async () => {
+      const all = await base44.entities.ChallengeAccount.list('-created_date', 50);
+      // Filter to current user's accounts
+      return all.filter(a => a.user_email === user?.email);
+    },
+    enabled: !!user?.email,
+    refetchInterval: 5000, // Auto-refresh every 5s
+  });
 
-  // BYPASS: Direct query replacing broken backend function
-  const fetchAccountsDirect = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get fresh session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.log('No session found');
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Session OK, user:', session.user.email);
-
-      // Try query 1: by user_id
-      let { data: accounts, error } = await supabase
-        .from('challenge_account')
-        .select('*')
-        .eq('created_by_id', session.user.id);
-
-      console.log('Query 1 (created_by_id):', accounts?.length, error?.message);
-
-      // If empty, try query 2: by email
-      if (!accounts?.length) {
-        const { data: acc2, error: err2 } = await supabase
-          .from('challenge_account')
-          .select('*')
-          .eq('user_email', session.user.email);
-        console.log('Query 2 (user_email):', acc2?.length, err2?.message);
-        if (acc2?.length) accounts = acc2;
-      }
-
-      // If still empty, fetch ALL accounts to see what fields exist
-      if (!accounts?.length) {
-        const { data: allAcc } = await supabase
-          .from('challenge_account')
-          .select('*')
-          .limit(5);
-        console.log('ALL ACCOUNTS SAMPLE (first 5 rows):', JSON.stringify(allAcc));
-      }
-
-      setAccounts(accounts || []);
-      setIsLoading(false);
-      
-    } catch (err) {
-      console.log('fetchAccountsDirect error:', err.message);
-      setIsLoading(false);
-    }
-  };
-
-  // Call on mount
+  // Debug logging
   useEffect(() => {
-    fetchAccountsDirect();
-  }, []);
+    if (accounts?.length > 0) {
+      console.log('[FundedDashboard] Loaded accounts:', accounts.length, accounts[0]?.account_id);
+    }
+  }, [accounts?.length]);
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
@@ -200,7 +158,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
       if (fresh) setSelectedAccount(fresh);
     }
-  }, [accounts.length, selectedAccount?.id, activeAccounts.length]);
+  }, [accounts?.length, selectedAccount?.id, activeAccounts.length]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
@@ -213,7 +171,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const stats = useAccountStats(selectedAccount, trades);
 
   // Show loading state while accounts are fetching — prevents empty state flash on mobile
-  if (isLoading && accounts.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -261,7 +219,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* DEBUG BANNER - REMOVE AFTER FIX */}
         <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold mb-4" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
-          DIRECT QUERY | Accounts: {accounts?.length} | Loading: {String(isLoading)} | User: {user?.email?.slice(0, 8)}...
+          BASE44 QUERY | Accounts: {accounts?.length} | Active: {activeAccounts?.length} | Loading: {String(isLoading)} | User: {user?.email?.slice(0, 8)}...
         </div>
 
         {/* Unified Welcome Header + Status Bar */}
@@ -279,9 +237,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
             <div className="space-y-3 w-full">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
-                  {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
+                  {activeAccounts?.length || 0} Active Account{(activeAccounts?.length || 0) !== 1 ? 's' : ''}
                 </span>
-                <button onClick={() => fetchAccountsDirect()}
+                <button onClick={() => refetch()}
                   className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
                   <RefreshCw className="w-3 h-3" /> Sync
                 </button>
