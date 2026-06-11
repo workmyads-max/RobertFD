@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Toggle } from '@/components/ui/toggle';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Target, DollarSign } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -70,26 +69,24 @@ export default function CurrentResultsChart({ account, trades }) {
             <span className="text-sm font-bold text-foreground">Current Results</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 text-[10px] text-white/40">
-              <span className="font-semibold">Trading Objective Lines</span>
-              <Toggle
-                pressed={showObjectives}
-                onPressedChange={setShowObjectives}
-                size="sm"
-                className="h-6 data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
-              >
-                {showObjectives ? 'On' : 'Off'}
-              </Toggle>
-            </div>
-            <Select value={pnlMode} onValueChange={setPnlMode}>
-              <SelectTrigger className="w-28 h-7 text-[10px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="absolute">Absolute</SelectItem>
-                <SelectItem value="percentage">Percentage</SelectItem>
-              </SelectContent>
-            </Select>
+            <button
+              onClick={() => setShowObjectives(!showObjectives)}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
+                showObjectives
+                  ? 'bg-primary/20 text-primary'
+                  : 'bg-white/5 text-white/40 hover:text-white/60'
+              }`}
+            >
+              {showObjectives ? 'On' : 'Off'}
+            </button>
+            <select
+              value={pnlMode}
+              onChange={(e) => setPnlMode(e.target.value)}
+              className="h-7 px-2 rounded-lg text-[10px] font-semibold bg-white/5 text-white/40 border border-white/10 focus:outline-none focus:border-primary/30"
+            >
+              <option value="absolute">Absolute</option>
+              <option value="percentage">Percentage</option>
+            </select>
           </div>
         </div>
       </div>
