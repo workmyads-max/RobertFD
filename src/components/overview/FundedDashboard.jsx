@@ -19,15 +19,6 @@ import LiveTickerBar        from './LiveTickerBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 import SocialMediaWidget    from './SocialMediaWidget.jsx';
-// Account Overview components
-import LiveTradeFeed        from './LiveTradeFeed.jsx';
-import CurrentResultsChart  from './CurrentResultsChart.jsx';
-import ChallengeDetailSidebar from './ChallengeDetailSidebar.jsx';
-import PerformanceMetrics   from './PerformanceMetrics.jsx';
-import ProgressTimeline     from './ProgressTimeline.jsx';
-import { StatisticsPanel, DailySummaryPanel } from './StatisticsDailySummary.jsx';
-import TradingStatsObjectives from './TradingStatsObjectives.jsx';
-import AccountHistorySection from './AccountHistorySection.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -161,23 +152,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 5000,
   });
 
-  // Load live positions for equity/PnL
-  const { data: livePositionsData = [] } = useQuery({
-    queryKey: ['live-positions', selectedAccount?.account_id],
-    queryFn: async () => {
-      if (!selectedAccount?.account_id) return [];
-      try {
-        const res = await base44.functions.invoke('getLivePositions', { account_id: selectedAccount.account_id });
-        return res?.data?.positions || [];
-      } catch (err) { return []; }
-    },
-    enabled: !!selectedAccount?.account_id,
-    refetchInterval: 5000,
-  });
-
   const stats = useAccountStats(selectedAccount, trades);
 
-  if (isLoading || !selectedAccount) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -192,9 +169,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const accountSize = selectedAccount?.account_size || 100000;
   const balance = selectedAccount?.balance || accountSize;
   const rules = getAccountRules(selectedAccount);
-  const livePositions = livePositionsData || [];
-  const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
-  const liveEquity = livePositions.length > 0 ? balance + liveUnrealizedPnl : (selectedAccount?.equity || balance);
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
@@ -262,50 +236,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Objectives */}
                   <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
-
-                  {/* Live Trade Feed */}
-                  <LiveTradeFeed account={selectedAccount} trades={trades} onRefresh={() => {}} />
-
-                  {/* Current Results + Challenge Info */}
-                  <div className="grid lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2">
-                      <CurrentResultsChart account={selectedAccount} trades={trades} />
-                    </div>
-                    <ChallengeDetailSidebar account={selectedAccount} />
-                  </div>
-
-                  {/* Performance + Timeline */}
-                  <div className="grid lg:grid-cols-2 gap-4">
-                    <PerformanceMetrics account={selectedAccount} trades={trades} />
-                    <ProgressTimeline account={selectedAccount} />
-                  </div>
-
-                  {/* Statistics + Daily Summary */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <StatisticsPanel account={selectedAccount} tradeRecords={trades} />
-                    <DailySummaryPanel tradeRecords={trades} />
-                  </div>
-
-                  {/* Trading Stats & Objectives */}
-                  <TradingStatsObjectives account={selectedAccount} tradeRecords={trades} />
-
-                  {/* Account History */}
-                  <AccountHistorySection accounts={accounts} onSelectAccount={(acc) => {
-                    setSelectedAccount(acc);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }} />
-
-                  {/* Disclaimer */}
-                  <div className="rounded-2xl px-5 py-3.5 flex items-start gap-3"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.25)' }}>
-                      <span className="text-[9px] font-bold text-primary">!</span>
-                    </div>
-                    <p className="text-[11px] text-white/30 leading-relaxed">
-                      Account Metrics values are informative only. Real-time trading data can be verified directly in the MT5 platform.
-                    </p>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
