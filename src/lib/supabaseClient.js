@@ -10,6 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'xf_supabase_session',
+    storage: typeof window !== 'undefined' ? localStorage : undefined,
   },
   realtime: {
     params: {

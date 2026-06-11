@@ -120,9 +120,32 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       console.log('[FundedDashboard] === FETCHING ACCOUNTS VIA BACKEND FUNCTION ===');
       console.log('[FundedDashboard] User ID:', user?.id);
       console.log('[FundedDashboard] User Email:', user?.email);
+      console.log('[FundedDashboard] User metadata:', user?.user_metadata);
+      
+      // CRITICAL: Ensure Supabase session is loaded before calling backend function
+      const { supabase } = await import('@/lib/supabaseClient');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.error('[FundedDashboard] No Supabase session - attempting refresh');
+        await supabase.auth.refreshSession();
+      }
+      
+      console.log('[FundedDashboard] Session check:', { 
+        hasSession: !!session, 
+        userId: session?.user?.id,
+        email: session?.user?.email 
+      });
       
       // Use backend function to bypass RLS and fetch by email
       const response = await base44.functions.invoke('getUserAccounts', {});
+      console.log('[FundedDashboard] Backend function response:', {
+        status: response?.status,
+        data: response?.data,
+        hasAccounts: Array.isArray(response?.data?.accounts),
+        accountCount: response?.data?.count
+      });
+      
       const result = response?.data?.accounts || response?.accounts || [];
       
       console.log('[FundedDashboard] Accounts fetched:', result.length);
@@ -136,7 +159,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       }
       return result;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!user?.email, // Wait for both ID and email to be populated
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
     retry: 3,
     retryDelay: 1000,
@@ -236,7 +259,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* TEMPORARY DEBUG: Remove after confirming mobile works */}
         <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
-          FIXED: Using backend function | Accounts={accounts.length} | Active={activeAccounts.length} | UserID={user?.id?.slice(0, 8)} | Email={user?.email || user?.user_metadata?.email || 'NULL'}
+          DEBUG: Accounts={accounts.length} | Active={activeAccounts.length} | UserID={user?.id?.slice(0, 8)} | Email={user?.email || 'NULL'} | MetadataEmail={user?.user_metadata?.email || 'NULL'} | Loading={isAnyLoading}
         </div>
 
         {/* Unified Welcome Header + Status Bar */}
