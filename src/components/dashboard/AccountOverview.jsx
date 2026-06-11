@@ -981,6 +981,34 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Discipline Score + Objectives */}
       <DisciplinePanel account={account} tradeRecords={tradeRecords} />
+
+      {/* Disclaimer + Footer */}
+      <div className="space-y-4">
+        {/* Warning banner */}
+        <div className="rounded-xl px-5 py-4 text-center text-xs font-semibold tracking-wide uppercase"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', letterSpacing: '0.05em' }}>
+          THE VALUES IN THIS ACCOUNT METRIX ARE INFORMATIVE ONLY. REAL-TIME TRADING VALUES CAN BE SEEN IN THE TRADING PLATFORM.
+        </div>
+
+        {/* Legal footer */}
+        <div className="rounded-xl px-6 py-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {/* Links */}
+          <div className="flex justify-end gap-6 text-xs font-semibold text-foreground border-b pb-3" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Terms & Conditions</a>
+          </div>
+
+          {/* Disclaimer text */}
+          <p className="text-xs leading-relaxed" style={{ color: '#6b7280' }}>
+            All information provided on this site is intended solely for study purposes related to trading on financial markets and does not serve in any way as a specific investment recommendation, business recommendation, investment opportunity analysis or similar general recommendation regarding the trading of investment instruments. Trading in financial markets is a high-risk activity and it is advised not to risk more than one can afford to lose. XFunded does not provide any of the investment services listed in the Capital Market Undertakings Act. The information on this site is not directed at residents in any country or jurisdiction where such distribution or use would be contrary to local laws or regulations. XFunded is not a broker and does not accept deposits. The offered technical solution for the XFunded platforms and data feed is powered by the institutional liquidity providers.
+          </p>
+
+          {/* Copyright */}
+          <div className="text-xs font-semibold" style={{ color: '#6b7280' }}>
+            {new Date().getFullYear()} © Copyright — <a href="https://xfunded.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">XFunded.com</a> Made with ❤️ for trading.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
