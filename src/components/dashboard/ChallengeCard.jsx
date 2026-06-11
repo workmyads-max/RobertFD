@@ -104,14 +104,24 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
       {/* CTA Button - LIME GREEN */}
       <button
         onClick={() => onSelect(plan)}
-        className="w-full py-5 rounded-xl font-bold text-black transition-all hover:scale-[1.02] active:scale-[0.98] relative z-10 mb-4"
         style={{ 
+          width: '100%',
+          padding: '20px 24px',
+          borderRadius: '12px',
           background: '#CCFF00', 
           color: '#000000', 
           boxShadow: '0 4px 16px rgba(204,255,0,0.3)',
-          fontSize: '15px',
-          fontWeight: '800'
+          fontSize: '16px',
+          fontWeight: '900',
+          border: 'none',
+          cursor: 'pointer',
+          marginTop: '16px',
+          marginBottom: '16px',
+          zIndex: 10,
+          position: 'relative'
         }}
+        onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
+        onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
       >
         Buy Challenge →
       </button>
