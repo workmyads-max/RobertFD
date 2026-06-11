@@ -117,22 +117,14 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const { data: accounts = [], isLoading: accountsLoading, refetch, isFetching } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.id],
     queryFn: async () => {
-      console.log('[FundedDashboard] === FETCHING ACCOUNTS ===');
+      console.log('[FundedDashboard] === FETCHING ACCOUNTS VIA BACKEND FUNCTION ===');
       console.log('[FundedDashboard] User ID:', user?.id);
       console.log('[FundedDashboard] User Email:', user?.email);
-      console.log('[FundedDashboard] User metadata:', user?.user_metadata);
       
-      // CRITICAL: Try multiple query approaches
-      const emailToUse = user?.email || user?.user_metadata?.email;
-      console.log('[FundedDashboard] Email to use:', emailToUse);
+      // Use backend function to bypass RLS and fetch by email
+      const response = await base44.functions.invoke('getUserAccounts', {});
+      const result = response?.data?.accounts || response?.accounts || [];
       
-      if (!emailToUse) {
-        console.error('[FundedDashboard] NO EMAIL AVAILABLE - Cannot query accounts');
-        return [];
-      }
-      
-      console.log('[FundedDashboard] Query filter:', { user_email: emailToUse });
-      const result = await base44.entities.ChallengeAccount.filter({ user_email: emailToUse });
       console.log('[FundedDashboard] Accounts fetched:', result.length);
       if (result.length > 0) {
         console.log('[FundedDashboard] First account:', { 
@@ -144,7 +136,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       }
       return result;
     },
-    enabled: !!user?.id, // Only need user ID - email can come from metadata
+    enabled: !!user?.id,
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
     retry: 3,
     retryDelay: 1000,
@@ -244,7 +236,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* TEMPORARY DEBUG: Remove after confirming mobile works */}
         <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
-          DEBUG: Accounts={accounts.length} | Active={activeAccounts.length} | Loading={isAnyLoading ? 'YES' : 'NO'} | UserID={user?.id || 'NULL'} | Email={user?.email || user?.user_metadata?.email || 'NULL'}
+          FIXED: Using backend function | Accounts={accounts.length} | Active={activeAccounts.length} | UserID={user?.id?.slice(0, 8)} | Email={user?.email || user?.user_metadata?.email || 'NULL'}
         </div>
 
         {/* Unified Welcome Header + Status Bar */}
