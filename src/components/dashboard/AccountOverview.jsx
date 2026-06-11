@@ -615,7 +615,6 @@ function AccountHistorySection({ accounts }) {
 }
 
 export default function AccountOverview({ onStartChallenge, onNavigate }) {
-  console.log('[AccountOverview] Rendering...');
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
@@ -624,27 +623,20 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { user, loading: authLoading } = useCustomAuth();
 
   useEffect(() => {
-    try {
-      const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
-        if (event.type === 'update' || event.type === 'create') {
-          queryClient.setQueryData(['challenge-accounts'], (old = []) =>
-            event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
-          );
-        }
-      });
-      console.log('[AccountOverview] Subscription set up');
-      return unsub;
-    } catch (err) {
-      console.error('[AccountOverview] Subscription error:', err);
-    }
+    const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
+      if (event.type === 'update' || event.type === 'create') {
+        queryClient.setQueryData(['challenge-accounts'], (old = []) =>
+          event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
+        );
+      }
+    });
+    return unsub;
   }, [queryClient]);
 
   const { data: accounts = [], isLoading, error: accountsError } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: async () => {
-      console.log('[AccountOverview] Fetching accounts...');
       const result = await base44.entities.ChallengeAccount.list('-created_date', 50);
-      console.log('[AccountOverview] Accounts fetched:', result.length);
       return result;
     },
     refetchInterval: 5000, staleTime: 3000,
@@ -656,29 +648,24 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     ? (accounts?.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  console.log('[AccountOverview] Active accounts:', activeAccounts.length, 'Selected account:', account?.account_id);
-
-  const { data: tradeRecords = [], error: tradeError } = useQuery({
+  const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: async () => {
       if (!account?.account_id) return [];
-      console.log('[AccountOverview] Fetching trade records for', account.account_id);
       return await base44.entities.TradeRecord.filter({ account_id: account.account_id });
     },
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
   });
 
-  const { data: livePositionsData, error: positionsError } = useQuery({
+  const { data: livePositionsData = [] } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
     queryFn: async () => {
       if (!account?.account_id) return [];
       try {
-        console.log('[AccountOverview] Fetching live positions for', account.account_id);
         const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
         return res?.data?.positions || [];
       } catch (err) {
-        console.error('[AccountOverview] Live positions error:', err);
         return [];
       }
     },
@@ -688,7 +675,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
   // Handle loading state
   if (authLoading || isLoading) {
-    console.log('[AccountOverview] Loading...', { authLoading, isLoading });
     return (
       <div className="flex items-center justify-center py-24">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -696,24 +682,16 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     );
   }
 
-  // Handle auth error - user should never see this if ProtectedRoute works
+  // Handle auth error
   if (!user) {
-    console.log('[AccountOverview] No user authenticated - this should not happen if ProtectedRoute is working');
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="text-xl font-bold text-foreground mb-4">Authentication required</div>
-        <div className="text-sm text-white/40 mb-4">Please log in to continue</div>
-      </div>
-    );
+    return null;
   }
 
   // Handle accounts error
   if (accountsError) {
-    console.error('[AccountOverview] Accounts error:', accountsError);
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="text-xl font-bold text-red-400 mb-4">Failed to load accounts</div>
-        <div className="text-sm text-white/40 mb-4">{accountsError.message}</div>
         <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary rounded-lg text-sm font-bold">Reload</button>
       </div>
     );
