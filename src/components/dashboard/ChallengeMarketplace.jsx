@@ -215,7 +215,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                     background: 'transparent',
                   }}>
                   <img
-                    src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
+                    src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
                     className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
                   />
