@@ -104,7 +104,7 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
         </div>
       </div>
 
-      {/* CTA Button */}
+      {/* CTA Button - Updated Style */}
       <button
         onClick={() => onSelect(plan)}
         className="w-full py-4 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] relative z-10 mb-4"
