@@ -91,17 +91,17 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
     : 'Instant Light';
 
   return (
-    <div className="grid lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* LEFT: Current Results */}
       <div className="lg:col-span-2 rounded-xl overflow-hidden"
         style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
 
-        <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+        <div className="px-4 sm:px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
           <span className="text-sm font-bold text-foreground">Current Results</span>
         </div>
 
-        {/* Metric row */}
-        <div className="grid grid-cols-3 divide-x border-b"
+        {/* Metric row - MOBILE: stack vertically */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x border-b"
           style={{ divideColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.06)' }}>
           {[
             {
@@ -123,35 +123,38 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
               color: unrealizedPnl > 0 ? '#10b981' : unrealizedPnl < 0 ? '#ef4444' : '#94a3b8',
             },
           ].map((m, i) => (
-            <div key={m.label} className="px-5 py-4"
-              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+            <div key={m.label} className="px-4 sm:px-5 py-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                 {m.label} <InfoTip text={m.tip} />
               </div>
-              <div className="text-xl font-black font-mono" style={{ color: m.color }}>{m.value}</div>
+              <div className="text-lg sm:text-xl font-black font-mono" style={{ color: m.color }}>{m.value}</div>
             </div>
           ))}
         </div>
 
-        {/* Chart controls */}
-        <div className="flex items-center gap-4 px-5 py-3 border-b text-xs"
+        {/* Chart controls - MOBILE: stack */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 sm:px-5 py-3 border-b text-xs"
           style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <span className="text-muted-foreground">Trading Objective Lines</span>
-          <div className="flex rounded-lg overflow-hidden border border-white/10 text-xs">
-            <span className="px-3 py-1 text-muted-foreground hover:bg-white/5 cursor-pointer">On</span>
-            <span className="px-3 py-1 text-white font-semibold" style={{ background: '#3b82f6' }}>Off</span>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <span className="text-muted-foreground whitespace-nowrap">Trading Objective Lines</span>
+            <div className="flex rounded-lg overflow-hidden border border-white/10 text-xs">
+              <span className="px-3 py-1 text-muted-foreground hover:bg-white/5 cursor-pointer">On</span>
+              <span className="px-3 py-1 text-white font-semibold" style={{ background: '#3b82f6' }}>Off</span>
+            </div>
           </div>
-          <span className="text-muted-foreground ml-4">PnL Values</span>
-          <select className="px-2 py-1 rounded text-xs text-foreground outline-none ml-1"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <option>Absolute</option>
-            <option>Percentage</option>
-          </select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-muted-foreground whitespace-nowrap">PnL Values</span>
+            <select className="flex-1 sm:flex-none px-3 py-1.5 rounded text-xs text-foreground outline-none"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', minHeight: '36px' }}>
+              <option>Absolute</option>
+              <option>Percentage</option>
+            </select>
+          </div>
         </div>
 
-        {/* Equity Chart */}
-        <div className="px-5 pt-4 pb-3">
-          <div className="flex items-center gap-3 mb-3 text-xs">
+        {/* Equity Chart - MOBILE: responsive */}
+        <div className="px-4 sm:px-5 pt-4 pb-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 text-xs">
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold"
               style={{ background: '#3b82f6', color: 'white' }}>
               ${fmt(balance)} Balance
@@ -161,37 +164,39 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
               ${fmt(equity)} Equity
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={equityData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-              <defs>
-                <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <ReferenceLine y={accountSize} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4"
-                label={{ value: `$${fmt(accountSize, 0)} Account size`, position: 'insideBottomLeft', fontSize: 9, fill: 'rgba(255,255,255,0.3)' }} />
-              <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
-                axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
-                axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={48} />
-              <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="equity" stroke="#10b981" strokeWidth={2}
-                fill="url(#equityGrad)" dot={false}
-                activeDot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} name="Equity" />
-              <Area type="monotone" dataKey="balance" stroke="#3b82f6" strokeWidth={1.5}
-                fill="none" dot={false} strokeDasharray="4 2"
-                activeDot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} name="Balance" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className="w-full" style={{ height: '220px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={equityData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+                <defs>
+                  <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <ReferenceLine y={accountSize} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4"
+                  label={{ value: `$${fmt(accountSize, 0)} Account size`, position: 'insideBottomLeft', fontSize: 9, fill: 'rgba(255,255,255,0.3)' }} />
+                <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
+                  axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
+                  axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={48} />
+                <Tooltip content={<ChartTooltip />} />
+                <Area type="monotone" dataKey="equity" stroke="#10b981" strokeWidth={2}
+                  fill="url(#equityGrad)" dot={false}
+                  activeDot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} name="Equity" />
+                <Area type="monotone" dataKey="balance" stroke="#3b82f6" strokeWidth={1.5}
+                  fill="none" dot={false} strokeDasharray="4 2"
+                  activeDot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} name="Balance" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* RIGHT: Free Trial / Account Info */}
+      {/* RIGHT: Account Info - MOBILE: below chart */}
       <div className="rounded-xl overflow-hidden"
         style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
 
-        <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+        <div className="px-4 sm:px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
           <span className="text-sm font-bold text-foreground">{challengeLabel} Challenge</span>
         </div>
 
@@ -238,10 +243,10 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
               ),
             },
           ].map((row, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3.5"
+            <div key={i} className="flex items-center justify-between px-4 sm:px-5 py-3"
               style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <span className="text-xs text-muted-foreground">{row.label}</span>
-              <span className="text-sm">{row.value}</span>
+              <span className="text-sm text-foreground text-right break-words max-w-[150px] sm:max-w-none">{row.value}</span>
             </div>
           ))}
         </div>

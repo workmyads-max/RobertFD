@@ -140,79 +140,87 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
 
   return (
     <Card accent>
-      {/* Top header */}
-      <div className="px-5 pt-5 pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
-                style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}35` }}>
-                ● {statusLabel}
-              </span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
-                style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
-                {phase}
-              </span>
+      {/* Top header - MOBILE STACKED */}
+      <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-4">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Badges side by side */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
+              style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}35` }}>
+              ● {statusLabel}
+            </span>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+              style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
+              {phase}
+            </span>
+          </div>
+          
+          {/* Row 2: Challenge title */}
+          <div className="text-base sm:text-lg font-black text-white tracking-tight">{challengeLabel}</div>
+          
+          {/* Row 3: MT5 Login + leverage */}
+          <div className="text-xs font-mono text-white/40">MT5 Login: {account.mt_login || '—'} · {account.leverage || '1:100'} leverage</div>
+          
+          {/* Row 4: Profit Target Progress bar - full width */}
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-[10px] font-semibold mb-1.5">
+              <span className="text-white/40">Profit Target Progress</span>
+              <span style={{ color: '#FF5C00' }}>{progressPct.toFixed(1)}%</span>
             </div>
-            <div className="text-lg font-black text-white tracking-tight">{challengeLabel}</div>
-            <div className="text-xs font-mono text-white/40 mt-0.5">MT5 Login: {account.mt_login || '—'} · {account.leverage || '1:100'} leverage</div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <motion.div className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-white/30 mb-0.5">Account Size</div>
-            <div className="text-2xl font-black text-white">${(account.account_size || 0).toLocaleString()}</div>
-            <div className="text-[10px] text-white/30 mt-0.5 font-mono">Exp: {endDate}</div>
+          
+          {/* Row 5: Account Size - right aligned or full width */}
+          <div className="flex items-center justify-between mt-1">
+            <div className="text-xs text-white/30">Account Size</div>
+            <div className="text-xl sm:text-2xl font-black text-white">${(account.account_size || 0).toLocaleString()}</div>
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-[10px] font-semibold mb-1.5">
-            <span className="text-white/40">Profit Target Progress</span>
-            <span style={{ color: '#FF5C00' }}>{progressPct.toFixed(1)}%</span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <motion.div className="h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
-          </div>
+          
+          {/* Row 6: Expiry date */}
+          <div className="text-[10px] text-white/30 font-mono">Exp: {endDate}</div>
         </div>
       </div>
 
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <button
-          onClick={() => setShowCredentials?.(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
-          <Key className="w-3.5 h-3.5" />
-          View Credentials
-        </button>
+      {/* Action bar - MOBILE: buttons side by side, full detail below */}
+      <div className="flex flex-col gap-2 px-4 sm:px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCredentials?.(true)}
+            className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[40px]"
+            style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
+            <Key className="w-3.5 h-3.5" />
+            View Credentials
+          </button>
+          <button onClick={() => onNavigate?.('accounts')}
+            className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[40px]"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#94a3b8' }}>
+            <CalendarDays className="w-3.5 h-3.5" />
+            Account Metrics
+          </button>
+        </div>
         <button onClick={() => onNavigate?.('accounts')}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#94a3b8' }}>
-          <CalendarDays className="w-3.5 h-3.5" />
-          Account Metrics
-        </button>
-        <button onClick={() => onNavigate?.('accounts')}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto transition-all hover:opacity-90"
+          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-90 min-h-[40px]"
           style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
           Full Detail <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Metrics row */}
-      <div className="grid grid-cols-3">
+      {/* Metrics - MOBILE: stack vertically */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-white/[0.05] sm:divide-x">
         {metrics.map((m, i) => {
           const Icon = m.icon;
           return (
-            <div key={m.label} className="px-5 py-4 text-center relative"
-              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+            <div key={m.label} className="px-4 sm:px-5 py-4 text-center relative">
               <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-white/35 mb-2">
                 <Icon className="w-3 h-3" /> {m.label}
               </div>
-              <div className="text-xl font-black tracking-tight" style={{ color: m.color }}>{m.value}</div>
+              <div className="text-lg sm:text-xl font-black tracking-tight" style={{ color: m.color }}>{m.value}</div>
             </div>
           );
         })}
@@ -895,24 +903,27 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     staleTime: 60000, // Increase stale time to reduce refetches
   });
 
-  // Load account from sessionStorage immediately when accounts are available
+  // Load account from sessionStorage immediately when accounts are available - FIXED dependencies
   useEffect(() => {
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
-    if (savedAccountId && accounts?.length > 0 && !selectedAccount) {
+    if (savedAccountId && accounts.length > 0 && !selectedAccount) {
       const targetAccount = accounts.find(a => 
         a.account_id === savedAccountId || a.id === savedAccountId
       );
       if (targetAccount) {
+        console.log('[AccountOverview] Auto-selecting account from session:', targetAccount.id);
         setSelectedAccount(targetAccount);
         sessionStorage.removeItem('selectedAccountId');
       }
     }
-  }, [accounts]);
+  }, [accounts, selectedAccount]);
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
+
+  console.log('[AccountOverview] Rendering - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'account:', account?.id);
 
   const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
@@ -976,22 +987,25 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         </div>
       </div>
 
-      {/* Account selector */}
-      {activeAccounts.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
-          {activeAccounts.map(a => (
-            <button key={a.id} onClick={() => setSelectedAccount(a)}
-              className="flex-shrink-0 px-4 py-3 rounded-xl text-xs font-mono transition-all"
-              style={{
-                background: account?.id === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                color: account?.id === a.id ? '#FF5C00' : '#94a3b8',
-                minWidth: '140px',
-              }}>
-              <div className="font-black">{a.account_id || a.id?.slice(0, 8)}</div>
-              <div className="text-[10px] opacity-60 mt-0.5">${(a.account_size || 0).toLocaleString()}</div>
-            </button>
-          ))}
+      {/* Account selector tabs - horizontally scrollable on mobile */}
+      {activeAccounts.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {activeAccounts.map(a => {
+            const isSelected = account?.id === a.id;
+            return (
+              <button key={a.id} onClick={() => setSelectedAccount(a)}
+                className="flex-shrink-0 inline-flex flex-col justify-center px-4 py-3 rounded-xl text-xs font-mono transition-all whitespace-nowrap min-h-[44px]"
+                style={{
+                  background: isSelected ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                  color: isSelected ? '#FF5C00' : '#94a3b8',
+                  minWidth: '120px',
+                }}>
+                <div className="font-black text-[11px]">{a.account_id || a.id?.slice(0, 10)}</div>
+                <div className="text-[9px] opacity-60 mt-0.5">${(a.account_size || 0).toLocaleString()}</div>
+              </button>
+            );
+          })}
         </div>
       )}
 
