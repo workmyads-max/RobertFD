@@ -199,8 +199,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
 
-                  {/* Three Paths to Funded Trading */}
-                  <ThreePathsToFunded onNavigate={onNavigate} />
+                  {/* Three Paths to Funded Trading - HIDDEN FOR NOW */}
+                  {/* <ThreePathsToFunded onNavigate={onNavigate} /> */}
                 </motion.div>
               )}
             </AnimatePresence>
