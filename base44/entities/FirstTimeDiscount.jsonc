@@ -1,0 +1,52 @@
+{
+  "name": "FirstTimeDiscount",
+  "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "device_fingerprint": {
+      "type": "string"
+    },
+    "discount_code": {
+      "type": "string",
+      "default": "NEW25"
+    },
+    "discount_percent": {
+      "type": "number",
+      "default": 25
+    },
+    "is_used": {
+      "type": "boolean",
+      "default": false
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_email",
+    "ip_address"
+  ]
+}

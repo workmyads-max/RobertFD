@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, CalendarDays, Newspaper, BookOpen, Trophy, Award, CreditCard } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, CalendarDays, Newspaper, BookOpen, Trophy, Award, CreditCard, Gift } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -200,6 +200,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-staff', label: 'Staff Management', icon: Users, permission: 'manage_staff' },
               { id: 'admin-roles', label: 'Roles & Permissions', icon: Shield, permission: 'manage_staff' },
               { id: 'admin-promotions', label: 'Promotions', icon: Tag, permission: 'manage_settings' },
+              { id: 'admin-first-time-discount', label: 'First-Time Discount', icon: Gift, permission: 'manage_settings' },
               ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;

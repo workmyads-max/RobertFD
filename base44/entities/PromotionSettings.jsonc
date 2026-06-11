@@ -1,0 +1,51 @@
+{
+  "name": "PromotionSettings",
+  "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "setting_key": {
+      "type": "string"
+    },
+    "is_first_time_discount_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "first_time_discount_percent": {
+      "type": "number",
+      "default": 25
+    },
+    "first_time_discount_code": {
+      "type": "string",
+      "default": "NEW25"
+    },
+    "max_account_size_for_discount": {
+      "type": "number",
+      "default": 50000
+    },
+    "discount_end_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "applicable_plans": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "one_per_ip_mac": {
+      "type": "boolean",
+      "default": true
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "setting_key"
+  ]
+}

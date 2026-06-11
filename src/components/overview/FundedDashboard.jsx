@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
+import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -167,6 +168,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* Welcome Header */}
         <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
+
+        {/* First-Time Promo Banner */}
+        <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
         {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
