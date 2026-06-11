@@ -210,25 +210,15 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                   border: `1.5px solid ${isSelected ? 'rgba(0,122,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
                   boxShadow: isSelected ? '0 0 24px rgba(0,102,204,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                 }}>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white"
                   style={{
-                    background: 'linear-gradient(135deg, #0066CC 0%, #004499 60%, #002266 100%)',
                     boxShadow: isSelected ? '0 4px 16px rgba(0,102,204,0.4)' : '0 2px 8px rgba(0,0,0,0.3)',
                   }}>
-                  <svg viewBox="0 0 40 40" className="w-7 h-7 sm:w-8 sm:h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="40" height="40" rx="8" fill="url(#mt5grad)" />
-                    <defs>
-                      <linearGradient id="mt5grad" x1="0" y1="0" x2="40" y2="40">
-                        <stop offset="0%" stopColor="#1a8cff" />
-                        <stop offset="100%" stopColor="#003399" />
-                      </linearGradient>
-                    </defs>
-                    <rect x="6" y="22" width="5" height="11" rx="1.5" fill="rgba(255,255,255,0.5)" />
-                    <rect x="13" y="16" width="5" height="17" rx="1.5" fill="rgba(255,255,255,0.7)" />
-                    <rect x="20" y="10" width="5" height="23" rx="1.5" fill="white" />
-                    <rect x="27" y="14" width="5" height="19" rx="1.5" fill="rgba(255,255,255,0.7)" />
-                    <text x="5" y="9" fontSize="7" fontWeight="800" fill="white" fontFamily="Arial" letterSpacing="0.5">MT5</text>
-                  </svg>
+                  <img
+                    src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
+                    alt="MetaTrader 5"
+                    className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  />
                 </div>
                 <div className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2">
