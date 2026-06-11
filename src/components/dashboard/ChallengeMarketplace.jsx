@@ -156,89 +156,102 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-       <div className="mb-6 sm:mb-8">
-         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3 sm:mb-4"
-           style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
-           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-           <span className="text-[10px] sm:text-xs font-mono text-primary uppercase tracking-widest">Challenge Marketplace</span>
-         </div>
-         <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
-           Choose Your <span className="text-primary">Capital Tier</span>
-         </h1>
-         <p className="text-xs sm:text-sm text-muted-foreground">
-           Institutional funding from $5K to $200K. Select your challenge type and account model.
-         </p>
-       </div>
+      <div className="mb-8 sm:mb-12">
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl mb-4"
+          style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))', border: '1px solid rgba(255,92,0,0.25)', boxShadow: '0 4px 20px rgba(255,92,0,0.1)' }}>
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[11px] sm:text-xs font-bold text-primary uppercase tracking-wider">Challenge Marketplace</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3 tracking-tight">
+          Choose Your <span className="text-primary">Capital Tier</span>
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
+          Institutional funding from $5K to $200K. Select your challenge type, account model, and start your professional trading journey.
+        </p>
+      </div>
 
       {/* Challenge type toggle */}
-      <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-        <div className="inline-flex rounded-xl p-1 flex-wrap gap-1 sm:flex-nowrap" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="mb-6 sm:mb-8">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Challenge Type</div>
+        <div className="inline-flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}>
           {[
-            { id: 'two-step', label: '⚡ Two-Step' },
-            { id: 'instant', label: '🚀 Instant' },
-            { id: 'instant_light', label: '💡 Light' },
-          ].map(t => (
-            <button key={t.id} onClick={() => { setChallengeType(t.id); setSelected(null); }}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                challengeType === t.id ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-              {t.label}
-            </button>
-          ))}
+            { id: 'two-step', label: '⚡ Two-Step', desc: '2 phases' },
+            { id: 'instant', label: '🚀 Instant', desc: '1 phase' },
+            { id: 'instant_light', label: '💡 Light', desc: 'Simplified' },
+          ].map(t => {
+            const isSelected = challengeType === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => { setChallengeType(t.id); setSelected(null); }}
+                className={`relative px-4 sm:px-5 py-3 rounded-xl text-left transition-all duration-200 min-w-[100px] sm:min-w-[120px] ${
+                  isSelected ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                }`}
+                style={isSelected ? {
+                  background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
+                  boxShadow: '0 4px 16px rgba(255,92,0,0.3)',
+                } : {}}>
+                <div className="text-sm sm:text-base font-bold">{t.label}</div>
+                <div className={`text-[9px] sm:text-[10px] ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
+                {t.id === 'instant_light' && (
+                  <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-md text-[8px] font-black"
+                    style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
+                    -50%
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-        {challengeType === 'instant_light' && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-mono"
-            style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.2)', color: '#CCFF00' }}>
-            50% OFF
-          </div>
-        )}
       </div>
 
       {/* Platform selector */}
-      <div className="mb-4 sm:mb-6">
-        <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
+      <div className="mb-6 sm:mb-8">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-wrap gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
             return (
-              <button key={p.id} onClick={() => setPlatform(p.id)}
-                className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02]"
+              <button
+                key={p.id}
+                onClick={() => setPlatform(p.id)}
+                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] w-full sm:w-auto"
                 style={{
                   background: isSelected
-                    ? 'rgba(255,255,255,0.06)'
+                    ? 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(255,92,0,0.06))'
                     : 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: 'none',
+                  border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.15)' : 'none',
                 }}>
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: 'transparent',
-                  }}>
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+                    className="w-14 h-14 object-contain transition-transform group-hover:scale-110"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className={`text-sm sm:text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className={`text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
-                        style={{ background: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                        style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', color: '#ffffff' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] sm:text-[11px] font-mono mt-0.5" style={{ color: isSelected ? 'rgba(147,197,253,0.8)' : 'rgba(255,255,255,0.35)' }}>
+                  <div className={`text-[11px] ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
                     {p.desc}
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
               </button>
@@ -248,41 +261,60 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Account type */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-full mb-6 sm:mb-8">
-        {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => (
-          <motion.button key={key} onClick={() => setAccountType(key)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            className="rounded-xl p-3 sm:p-4 text-left transition-all"
-            style={{
-              background: accountType === key ? 'rgba(255,92,0,0.08)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${accountType === key ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
-            }}>
-            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: accountType === key ? 'rgba(255,92,0,0.2)' : 'rgba(255,255,255,0.06)' }}>
-                {key === 'standard'
-                  ? <Zap className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${accountType === key ? 'text-primary' : 'text-muted-foreground'}`} />
-                  : <Shield className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${accountType === key ? 'text-primary' : 'text-muted-foreground'}`} />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className={`text-xs sm:text-sm font-bold truncate ${accountType === key ? 'text-primary' : 'text-foreground'}`}>{cfg.label}</div>
-                <div className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate">{cfg.leverage} leverage</div>
-              </div>
-              {accountType === key && (
-                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <Check className="w-3 h-3 text-white" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-8 sm:mb-10">
+        {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
+          const isSelected = accountType === key;
+          return (
+            <motion.button
+              key={key}
+              onClick={() => setAccountType(key)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl p-5 text-left transition-all duration-300"
+              style={{
+                background: isSelected
+                  ? 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))'
+                  : 'rgba(255,255,255,0.03)',
+                border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.1)' : 'none',
+              }}>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isSelected
+                        ? 'linear-gradient(135deg, #FF5C00, #FF7A2F)'
+                        : 'rgba(255,255,255,0.06)',
+                      boxShadow: isSelected ? '0 2px 12px rgba(255,92,0,0.4)' : 'none',
+                    }}>
+                    {key === 'standard'
+                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />
+                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />}
+                  </div>
+                  <div>
+                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-foreground'}`}>{cfg.label}</div>
+                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>{cfg.leverage} leverage</div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="space-y-1">
-              {cfg.features.map(f => (
-                <div key={f.text} className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${f.ok ? 'bg-emerald-400' : 'bg-red-400/60'}`} />
-                  <span className={`text-[10px] sm:text-[11px] ${f.ok ? 'text-foreground' : 'text-muted-foreground'} truncate`}>{f.text}</span>
-                </div>
-              ))}
-            </div>
-          </motion.button>
-        ))}
+                {isSelected && (
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                {cfg.features.map(f => (
+                  <div key={f.text} className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-emerald-400' : 'bg-red-400'}`}
+                      style={{ boxShadow: f.ok ? '0 0 8px rgba(52,211,153,0.5)' : 'none' }} />
+                    <span className={`text-xs ${f.ok ? 'text-foreground' : 'text-muted-foreground'}`}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Plans grid */}
@@ -344,22 +376,31 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       )}
 
       {/* Quick highlights */}
-      <div className="rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 mb-8 sm:mb-10"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="rounded-3xl p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10 sm:mb-12"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(255,92,0,0.03))',
+          border: '1.5px solid rgba(255,92,0,0.2)',
+          boxShadow: '0 4px 30px rgba(255,92,0,0.1)',
+        }}>
         {[
           { icon: TrendingUp, title: 'Profit Split', desc: 'Up to 80% profit split. Scaling plan available on all funded accounts.' },
           { icon: Clock, title: 'Payout Schedule', desc: 'Request payouts every 14 days. Processed within 24-48 hours.' },
           { icon: BarChart2, title: 'Trading Rules', desc: `${accCfg.label}: ${accCfg.leverage} leverage. ${accountType === 'swing' ? 'News & overnight trading allowed.' : 'Standard trading model.'}` },
-        ].map(f => {
+        ].map((f, i) => {
           const Icon = f.icon;
           return (
-            <div key={f.title} className="flex gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+            <div key={f.title} className="flex gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.1))',
+                  border: '1px solid rgba(255,92,0,0.3)',
+                  boxShadow: '0 2px 12px rgba(255,92,0,0.2)',
+                }}>
+                <Icon className="w-5 h-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs sm:text-sm font-bold text-foreground mb-0.5">{f.title}</div>
-                <div className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
+                <div className="text-sm font-bold text-foreground mb-1">{f.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
               </div>
             </div>
           );
@@ -367,54 +408,58 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Challenge Rules */}
-      <div className="rounded-xl overflow-hidden mb-8"
-        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="rounded-3xl overflow-hidden mb-8"
+        style={{
+          background: 'rgba(255,255,255,0.02)',
+          border: '1.5px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+        }}>
+        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <div>
-            <div className="text-sm font-semibold text-foreground">Challenge Rules</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Read carefully — violations result in immediate termination</div>
+            <div className="text-base font-bold text-foreground">Challenge Rules</div>
+            <div className="text-xs text-muted-foreground mt-1">Read carefully — violations result in immediate termination</div>
           </div>
-          <span className="text-xs font-medium px-2.5 py-1 rounded"
-            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.18)' }}>
+          <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1))',
+              color: '#f87171',
+              border: '1px solid rgba(239,68,68,0.3)',
+              boxShadow: '0 2px 12px rgba(239,68,68,0.15)',
+            }}>
             Binding
           </span>
         </div>
-        <div className="hidden md:grid grid-cols-[2rem_10rem_1fr_5rem] gap-4 px-5 py-2 border-b"
-          style={{ borderColor: 'hsl(var(--border))', background: 'rgba(255,255,255,0.02)' }}>
-          <div />
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">Rule</div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">Description</div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 text-right">Category</div>
+        <div className="divide-y" style={{ divideColor: 'rgba(255,255,255,0.05)' }}>
+          {CHALLENGE_RULES.map((rule, i) => {
+            const Icon = rule.icon;
+            const category = i < 3 ? 'Risk' : i < 6 ? 'Conduct' : 'Security';
+            const categoryColor = i < 3 ? '#f59e0b' : i < 6 ? '#60a5fa' : '#10b981';
+            return (
+              <div key={rule.title} className="px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <Icon className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-sm font-bold text-foreground">{rule.title}</div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block"
+                        style={{ color: categoryColor, background: `${categoryColor}12`, border: `1px solid ${categoryColor}25` }}>
+                        {category}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground leading-relaxed">{rule.body}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {CHALLENGE_RULES.map((rule, i) => {
-          const Icon = rule.icon;
-          const category = i < 3 ? 'Risk' : i < 6 ? 'Conduct' : 'Security';
-          const categoryColor = i < 3 ? '#f59e0b' : i < 6 ? '#60a5fa' : '#10b981';
-          return (
-            <div key={rule.title}
-              className="grid grid-cols-1 md:grid-cols-[2rem_10rem_1fr_5rem] gap-x-4 gap-y-1 items-start px-5 py-3.5 border-b hover:bg-white/[0.015] transition-colors"
-              style={{ borderColor: 'hsl(var(--border))' }}>
-              <div className="hidden md:flex items-center justify-center w-6 h-6 rounded flex-shrink-0 mt-0.5"
-                style={{ background: 'rgba(255,255,255,0.05)' }}>
-                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <div className="flex items-center gap-2 md:block">
-                <Icon className="md:hidden w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm font-medium text-foreground">{rule.title}</span>
-              </div>
-              <div className="text-xs text-muted-foreground leading-relaxed pl-5 md:pl-0">{rule.body}</div>
-              <div className="hidden md:flex justify-end">
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded"
-                  style={{ color: categoryColor, background: `${categoryColor}12`, border: `1px solid ${categoryColor}20` }}>
-                  {category}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-        <div className="px-5 py-3 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.01)' }}>
-          <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
-          <span className="text-xs text-muted-foreground/50">
+        <div className="px-6 py-4 flex items-center gap-3"
+          style={{ background: 'rgba(239,68,68,0.05)', borderTop: '1px solid rgba(239,68,68,0.15)' }}>
+          <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <span className="text-xs text-muted-foreground">
             Purchasing a challenge constitutes full acceptance of all rules listed above.
           </span>
         </div>
