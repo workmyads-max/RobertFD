@@ -68,8 +68,8 @@ export default function XFLogo({ size = 'md', animate = false }) {
   const cfg = {
     sm:  { px: 34,  name: 16, sub: 7  },
     md:  { px: 44,  name: 21, sub: 8.5 },
-    lg:  { px: 64,  name: 30, sub: 11 },
-    xl:  { px: 84,  name: 38, sub: 14 },
+    lg:  { px: 72,  name: 34, sub: 12 },
+    xl:  { px: 96,  name: 42, sub: 15 },
   };
   const { px, name, sub } = cfg[size] || cfg.md;
 

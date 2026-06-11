@@ -57,7 +57,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-4' : 'px-4 py-5'}`}
+      <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-5' : 'px-5 py-6'}`}
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <button 
           onClick={() => setCollapsed?.(!collapsed)}

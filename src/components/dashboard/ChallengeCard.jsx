@@ -18,8 +18,8 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
     return plan.type === 'instant_light' ? 'text-accent' : 'text-orange-400';
   };
 
-  const buttonColor = plan.type === 'instant_light' ? 'bg-accent hover:bg-accent/90' : 'bg-orange-500 hover:bg-orange-600';
-  const buttonTextColor = plan.type === 'instant_light' ? 'text-black' : 'text-white';
+  const buttonColor = plan.type === 'instant_light' ? '#CCFF00' : '#CCFF00';
+  const buttonTextColor = 'text-black';
 
   return (
     <motion.div
@@ -107,9 +107,10 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
       {/* CTA Button */}
       <button
         onClick={() => onSelect(plan)}
-        className={`w-full py-3 rounded-xl ${buttonColor} ${buttonTextColor} font-bold transition-all active:scale-95 relative z-10 mb-4`}
+        className="w-full py-4 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98] relative z-10 mb-4"
+        style={{ background: '#CCFF00', color: '#000000', boxShadow: '0 4px 16px rgba(204,255,0,0.3)' }}
       >
-        Start Challenge →
+        Buy Challenge →
       </button>
 
       {/* Show Rules */}
