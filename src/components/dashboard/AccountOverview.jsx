@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAccountStats } from '../overview/useAccountStats';
+import AccountCurrentResults from './AccountCurrentResults';
+import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -876,8 +879,10 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
     enabled: !!account?.account_id,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
+
+  const stats = useAccountStats(account, tradeRecords);
 
   if (isLoading) return <div className="flex items-center justify-center py-24"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
@@ -922,6 +927,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Active Account Card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} />
+
+      {/* FTMO-style Current Results + Account Info */}
+      <AccountCurrentResults account={account} />
+
+      {/* Performance Metrics + Progress Timeline */}
+      <AccountPerformanceMetrics account={account} stats={stats} />
 
       {/* Statistics + Daily Summary */}
       <div className="grid md:grid-cols-2 gap-5">
