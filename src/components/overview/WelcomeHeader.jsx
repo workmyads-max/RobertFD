@@ -84,13 +84,13 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           <div
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold text-white overflow-hidden"
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-white overflow-hidden"
             style={{
               background: (user?.avatar_url || user?.profile_photo_url)
                 ? 'transparent'
                 : 'linear-gradient(145deg, rgba(255,92,0,0.22) 0%, rgba(255,92,0,0.08) 100%)',
-              border: '1px solid rgba(255,92,0,0.22)',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+              border: '2px solid rgba(255,92,0,0.3)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
             }}>
             {user?.avatar_url || user?.profile_photo_url ? (
               <img src={user.avatar_url || user.profile_photo_url} alt={displayName} className="w-full h-full object-cover" />
@@ -99,29 +99,30 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
             )}
           </div>
           {/* KYC dot */}
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center"
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
             style={{
               background: isVerified ? '#059669' : '#d97706',
-              border: '2px solid rgba(14,18,28,1)',
-              boxShadow: isVerified ? '0 0 6px rgba(5,150,105,0.4)' : '0 0 6px rgba(217,119,6,0.4)',
+              border: '3px solid rgba(14,18,28,1)',
+              boxShadow: isVerified ? '0 0 8px rgba(5,150,105,0.5)' : '0 0 8px rgba(217,119,6,0.5)',
             }}>
             {isVerified
-              ? <ShieldCheck className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
-              : <AlertCircle className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />}
+              ? <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+              : <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />}
           </div>
         </div>
 
         {/* Text block */}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium text-white/35 uppercase tracking-[0.18em] mb-1">{greeting}</p>
+          <p className="text-xs sm:text-sm font-semibold text-white/40 uppercase tracking-[0.2em] mb-1.5">{greeting}</p>
 
-          <h1 className="text-2xl sm:text-3xl font-semibold text-white leading-tight tracking-tight mb-3">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-4">
             Welcome back,{' '}
             <span style={{
               background: 'linear-gradient(90deg, #FF6B1A, #FF9A3D)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              fontWeight: '800',
             }}>
               {firstName}
             </span>
