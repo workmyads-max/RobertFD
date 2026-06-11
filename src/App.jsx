@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import LegalPage from './pages/LegalPage';
 
+
 const LoginRoute = () => {
   const { user } = useSupabaseAuth();
   if (user) return <Navigate to="/dashboard" replace />;
@@ -42,6 +43,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<LegalPage />} />
       <Route path="/risk-disclosure" element={<LegalPage />} />
       <Route path="/aml-policy" element={<LegalPage />} />
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
