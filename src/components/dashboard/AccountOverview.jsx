@@ -12,6 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
+import AccountCredentialsModal from './AccountCredentialsModal';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -181,11 +182,11 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl 
       {/* Action bar */}
       <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <button
-          onClick={() => copy(`Login: ${account.mt_login || '—'}\nPassword: ${account.mt_password || '—'}\nServer: ${account.mt_server || '—'}`, 'login')}
+          onClick={() => setShowCredentials(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: copied === 'login' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: copied === 'login' ? '#10b981' : '#94a3b8' }}>
+          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
           <Key className="w-3.5 h-3.5" />
-          {copied === 'login' ? '✓ Copied!' : `Copy Credentials`}
+          View Credentials
         </button>
         <button onClick={() => onNavigate?.('accounts')}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
@@ -872,6 +873,7 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
 export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [showCredentials, setShowCredentials] = useState(false);
 
   useEffect(() => {
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
@@ -1023,6 +1025,14 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Credentials Modal */}
+      {showCredentials && (
+        <AccountCredentialsModal
+          account={account}
+          onClose={() => setShowCredentials(false)}
+        />
+      )}
     </div>
   );
 }
