@@ -34,13 +34,13 @@ export default function Footer() {
           className="text-[11px] leading-relaxed"
           style={{ color: '#606060' }}
         >
-          All information provided is intended solely for evaluation purposes related to trading on financial markets and does not serve as a specific investment recommendation. Trading in financial markets is a high-risk activity. XFunded does not provide investment services and is not a broker or fund manager. All challenges and funded accounts operate in a simulated environment powered by institutional liquidity providers.
+          All information provided is intended solely for evaluation purposes related to trading on financial markets and does not serve as a specific investment recommendation. Trading in financial markets is a high-risk activity. We do not provide investment services and are not a broker or fund manager. All challenges and funded accounts operate in a simulated environment powered by institutional liquidity providers.
         </p>
 
         {/* Bottom Branding */}
         <div className="text-[11px] font-semibold">
           <span style={{ color: '#606060' }}>2026 © </span>
-          <span style={{ color: '#FF6600' }}>XFunded.com</span>
+          <span style={{ color: '#FF6600' }}>YourBrand.com</span>
           <span style={{ color: '#606060' }}> — Institutional Prop Trading</span>
         </div>
       </div>

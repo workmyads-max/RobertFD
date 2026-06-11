@@ -13,10 +13,10 @@ const PRODUCT_LINKS = [
 
 const COMPANY_LINKS = [
   { label: 'About Us', href: '/#about' },
-  { label: 'Careers', href: 'mailto:careers@xfundedtrader.com' },
-  { label: 'Press Kit', href: 'mailto:press@xfundedtrader.com' },
+  { label: 'Careers', href: 'mailto:careers@yourbrand.com' },
+  { label: 'Press Kit', href: 'mailto:press@yourbrand.com' },
   { label: 'Blog', href: '#' },
-  { label: 'Contact', href: 'mailto:support@xfundedtrader.com' },
+  { label: 'Contact', href: 'mailto:support@yourbrand.com' },
 ];
 
 const LEGAL_LINKS = [
@@ -30,7 +30,7 @@ const SUPPORT_LINKS = [
   { label: 'Help Center', href: '#faq' },
   { label: 'FAQ', href: '#faq' },
   { label: 'Live Chat', href: '#', isChat: true },
-  { label: 'Email Support', href: 'mailto:support@xfundedtrader.com', isMail: true },
+  { label: 'Email Support', href: 'mailto:support@yourbrand.com', isMail: true },
 ];
 
 const SOCIALS = [
@@ -83,7 +83,7 @@ export default function Footer() {
       {/* Subtle bg watermark */}
       <div className="absolute bottom-0 left-0 right-0 text-center pointer-events-none select-none overflow-hidden">
         <span className="text-[10vw] font-black text-foreground/[0.018] leading-none tracking-tighter font-mono">
-          XFUNDED TRADER
+          YOUR BRAND
         </span>
       </div>
 
@@ -101,7 +101,7 @@ export default function Footer() {
             </div>
 
             <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-xs">
-              Dubai-based institutional proprietary trading firm. We fund elite traders with up to $200,000 in capital and share up to 80% of profits.
+              Dubai-based institutional proprietary trading firm. We fund elite traders with significant capital and share up to 80% of profits.
             </p>
 
             {/* Company registration */}
@@ -114,8 +114,8 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-3 h-3 flex-shrink-0 text-primary/60" />
-                <a href="mailto:support@xfundedtrader.com" className="hover:text-primary transition-colors">
-                  support@xfundedtrader.com
+                <a href="mailto:support@yourbrand.com" className="hover:text-primary transition-colors">
+                  support@yourbrand.com
                 </a>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -202,7 +202,7 @@ export default function Footer() {
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Trading leveraged financial instruments including foreign exchange, CFDs, and cryptocurrencies carries a 
                 significant level of risk and may not be suitable for all investors. You may lose all invested capital. 
-                XFunded Trader is a proprietary trading firm and does not manage client funds or provide investment advice. 
+                We are a proprietary trading firm and do not manage client funds or provide investment advice. 
                 Our challenges and funded accounts are simulated trading environments designed to evaluate trader performance. 
                 Past performance of any trader or strategy does not guarantee or predict future results. Please ensure you 
                 fully understand the risks involved and seek independent financial advice if necessary.
@@ -216,7 +216,7 @@ export default function Footer() {
       <div className="relative z-10 mt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)' }}>
         <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground/70 text-center sm:text-left">
-            © {new Date().getFullYear()} XFunded Trader. All Rights Reserved. · Dubai International Financial Centre, UAE
+            © {new Date().getFullYear()} Your Brand. All Rights Reserved. · Dubai International Financial Centre, UAE
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             {[
