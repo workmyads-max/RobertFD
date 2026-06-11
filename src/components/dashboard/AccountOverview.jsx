@@ -441,49 +441,96 @@ function OpenTradeRow({ trade, index }) {
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="rounded-xl p-5 mt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                {/* Price */}
+                {/* $ Price — real MT5 fields */}
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1"><span>$</span> Price</div>
-                  <div className="space-y-1 text-xs">
-                    {[['Type', trade.type], ['Open', (trade.entry || 0).toFixed(5)], ['Close', '—'], ['Current Bid', (trade.current_price || trade.entry || 0).toFixed(2)], ['Ask', '—'], ['Spread', '—']].map(([k, v]) => (
-                      <div key={k} className="flex justify-between"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                  <div className="space-y-1.5 text-xs">
+                    {[
+                      ['Type', trade.type],
+                      ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—'],
+                      ['Close', '—'],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className={`font-mono ${k==='Type' ? (trade.type==='BUY' ? 'text-emerald-400' : 'text-red-400') : 'text-foreground'}`}>{v}</span></div>
+                    ))}
+                    <div className="pt-1 text-[10px] font-semibold text-muted-foreground">Current</div>
+                    {[
+                      ['Bid', trade.current_price > 0 ? trade.current_price.toFixed(5) : '—'],
+                      ['Ask', '—'],
+                      ['Spread', '—'],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                     ))}
                   </div>
                 </div>
-                {/* Trade Protection */}
+                {/* Trade Protection — real SL/TP from MT5 */}
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-2">Trade Protection</div>
-                  <div className="space-y-1 text-xs">
-                    {[['SL', trade.sl ? trade.sl.toFixed(5) : '—'], ['SL Pips', '—'], ['TP', trade.tp ? trade.tp.toFixed(5) : '—'], ['TP Pips', '—']].map(([k, v]) => (
-                      <div key={k} className="flex justify-between"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                  <div className="space-y-1.5 text-xs">
+                    {[
+                      ['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'],
+                      ['SL Pips', '—'],
+                      ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—'],
+                      ['TP Pips', '—'],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                     ))}
                   </div>
                 </div>
-                {/* Results */}
+                {/* Results — real profit + swap from MT5 */}
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-2">Results</div>
                   <div className="space-y-2 text-xs">
-                    {[['Gross profit', `$${fmt(pnl)}`], ['Swap', '$0.00'], ['Comm.', '$0.00'], ['Net profit', `$${fmt(pnl)}`]].map(([k, v]) => (
-                      <div key={k}><div className="text-muted-foreground">{k}</div><div className={`font-mono font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{v}</div></div>
+                    {[
+                      ['Gross profit', pnl],
+                      ['Swap', trade.swap || 0],
+                      ['Comm.', 0],
+                      ['Net profit', pnl + (trade.swap || 0)],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <div className="text-muted-foreground">{k}</div>
+                        <div className={`font-mono font-bold ${v >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{v >= 0 ? '+' : ''}${fmt(v)}</div>
+                      </div>
                     ))}
                   </div>
                 </div>
-                {/* Time */}
+                {/* Time — real open time from MT5 */}
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-2">Time</div>
                   <div className="space-y-2 text-xs">
-                    <div><div className="text-muted-foreground">Open</div><div className="font-mono text-foreground">{trade.open_time ? new Date(trade.open_time).toLocaleString() : '—'}</div></div>
-                    <div><div className="text-muted-foreground">Closed</div><div className="font-mono text-foreground">—</div></div>
+                    <div>
+                      <div className="text-muted-foreground">Open</div>
+                      <div className="font-mono text-foreground leading-relaxed">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month:'numeric', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Closed</div>
+                      <div className="font-mono text-foreground">—</div>
+                    </div>
                   </div>
                 </div>
-                {/* Trade Stats */}
+                {/* Trade Stats — MAE/MFE from entry vs current */}
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1">Trade Stats <Info className="w-3 h-3" /></div>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex justify-between"><span>MAE Pip</span><span className="font-mono text-foreground">—</span></div>
-                    <div className="flex justify-between"><span>MAE</span><span className="font-mono text-foreground">{(trade.entry || 0).toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span>MFE Pip</span><span className="font-mono text-foreground">—</span></div>
-                    <div className="flex justify-between"><span>MFE</span><span className="font-mono text-foreground">{(trade.current_price || trade.entry || 0).toFixed(2)}</span></div>
+                  <div className="space-y-1.5 text-xs">
+                    {(() => {
+                      const entry = trade.entry || 0;
+                      const cur = trade.current_price || entry;
+                      const isBuy = trade.type === 'BUY';
+                      // MAE = worst excursion (max adverse), MFE = best excursion (max favorable)
+                      // For open positions we estimate from entry vs current
+                      const mae = isBuy ? Math.min(0, cur - entry) : Math.min(0, entry - cur);
+                      const mfe = isBuy ? Math.max(0, cur - entry) : Math.max(0, entry - cur);
+                      const pipSize = entry > 10 ? 0.0001 : 0.00001;
+                      const maePip = pipSize > 0 ? (mae / pipSize).toFixed(1) : '—';
+                      const mfePip = pipSize > 0 ? (mfe / pipSize).toFixed(1) : '—';
+                      return [
+                        ['MAE Pip', mae !== 0 ? maePip : '—'],
+                        ['MAE', mae !== 0 ? (entry + mae).toFixed(5) : entry > 0 ? entry.toFixed(5) : '—'],
+                        ['MFE Pip', mfe !== 0 ? mfePip : '—'],
+                        ['MFE', mfe !== 0 ? (entry + mfe).toFixed(5) : cur > 0 ? cur.toFixed(5) : '—'],
+                      ].map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                      ));
+                    })()}
                   </div>
                 </div>
               </motion.div>
