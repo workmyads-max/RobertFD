@@ -47,27 +47,36 @@ export default function AffiliateSection({ onNavigate }) {
   ];
 
   return (
-    <div className="mt-12 space-y-8">
+    <div className="mt-12 space-y-10">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-xl font-bold text-white mb-3 tracking-tight">Affiliate Program</h2>
+      <div className="text-center mb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4"
+          style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <TrendingUp className="w-3.5 h-3.5" style={{ color: '#f97316' }} />
+          <span className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">Partner Program</span>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-3 tracking-tight">Affiliate Program</h2>
         <p className="text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed">
           Build a sustainable income stream by referring traders. Earn competitive commissions on challenge purchases and funded trader payouts.
         </p>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((s) => (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
           <div
             key={s.label}
-            className="rounded-xl p-5 border transition-all duration-300 hover:border-white/10"
-            style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
+            className="group rounded-2xl p-5 border transition-all duration-500 hover:border-white/15 hover:shadow-lg hover:shadow-black/20"
+            style={{ 
+              background: 'linear-gradient(145deg, #0f0f11, #0a0a0c)',
+              borderColor: 'rgba(255,255,255,0.08)',
+              animationDelay: `${i * 100}ms`
+            }}
           >
-            <div className="text-2xl font-bold mb-1.5" style={{ color: s.color }}>
+            <div className="text-3xl font-bold mb-2 tracking-tight" style={{ color: s.color }}>
               {s.value}
             </div>
-            <div className="text-xs text-gray-400 font-medium mb-0.5">{s.label}</div>
+            <div className="text-xs text-gray-300 font-medium mb-0.5">{s.label}</div>
             <div className="text-[10px] text-gray-500">{s.sub}</div>
           </div>
         ))}
@@ -75,20 +84,24 @@ export default function AffiliateSection({ onNavigate }) {
 
       {/* Commission Tiers */}
       <div>
-        <div className="text-center mb-6">
-          <h3 className="text-sm font-semibold text-white mb-1.5">Commission Tiers</h3>
+        <div className="text-center mb-7">
+          <h3 className="text-base font-semibold text-white mb-2">Commission Tiers</h3>
           <p className="text-xs text-gray-500">Scale your earnings as your network grows</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {tiers.map((t) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {tiers.map((t, i) => (
             <div
               key={t.traders}
-              className="rounded-xl p-5 text-center border transition-all duration-300 hover:border-white/10 hover:translate-y-[-2px]"
-              style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
+              className="group rounded-2xl p-6 text-center border transition-all duration-500 hover:border-white/15 hover:shadow-lg hover:shadow-black/20 hover:-translate-y-1"
+              style={{ 
+                background: 'linear-gradient(145deg, #0f0f11, #0a0a0c)',
+                borderColor: 'rgba(255,255,255,0.08)',
+                animationDelay: `${i * 100}ms`
+              }}
             >
-              <div className="text-[10px] text-gray-500 font-medium mb-1.5 uppercase tracking-wide">{t.traders} traders</div>
-              <div className="text-3xl font-bold mb-1" style={{ color: t.color }}>{t.rate}</div>
-              <div className="text-sm font-semibold text-white mb-0.5">{t.label}</div>
+              <div className="text-[10px] text-gray-500 font-semibold mb-2 uppercase tracking-wider">{t.traders} traders</div>
+              <div className="text-4xl font-bold mb-2 tracking-tight" style={{ color: t.color }}>{t.rate}</div>
+              <div className="text-sm font-semibold text-white mb-1">{t.label}</div>
               <div className="text-[10px] text-gray-500">{t.desc}</div>
             </div>
           ))}
@@ -97,37 +110,41 @@ export default function AffiliateSection({ onNavigate }) {
 
       {/* How You Earn */}
       <div>
-        <h3 className="text-sm font-semibold text-center text-white mb-6">How You Earn</h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          {examples.map((card) => {
+        <h3 className="text-base font-semibold text-center text-white mb-7">How You Earn</h3>
+        <div className="grid md:grid-cols-3 gap-5">
+          {examples.map((card, i) => {
             const Icon = card.icon;
             return (
               <div
                 key={card.scenario}
-                className="rounded-xl p-5 border transition-all duration-300 hover:border-white/10 hover:translate-y-[-2px]"
-                style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
+                className="group rounded-2xl p-6 border transition-all duration-500 hover:border-white/15 hover:shadow-lg hover:shadow-black/20 hover:-translate-y-1"
+                style={{ 
+                  background: 'linear-gradient(145deg, #0f0f11, #0a0a0c)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  animationDelay: `${i * 100}ms`
+                }}
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${card.color}10`, border: `1px solid ${card.color}20` }}>
-                    <Icon className="w-5 h-5" style={{ color: card.color }} />
+                <div className="flex items-center gap-3.5 mb-5">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: `${card.color}12`, border: `1px solid ${card.color}25` }}>
+                    <Icon className="w-5.5 h-5.5" style={{ color: card.color }} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-white truncate">{card.scenario}</div>
-                    <div className="text-[10px] text-gray-500">{card.rate} commission rate</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">{card.rate} commission rate</div>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 mb-5 leading-relaxed">{card.desc}</div>
-                <div className="flex items-center justify-between p-3.5 rounded-lg"
-                  style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="text-xs text-gray-400 mb-6 leading-relaxed">{card.desc}</div>
+                <div className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 group-hover:bg-white/[0.03]"
+                  style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div>
-                    <div className="text-[9px] font-medium text-gray-500 mb-0.5 uppercase tracking-wide">Amount</div>
+                    <div className="text-[9px] font-medium text-gray-500 mb-1 uppercase tracking-wide">Amount</div>
                     <div className="text-sm font-semibold text-white">{card.amount}</div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-gray-600 flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                   <div className="text-right">
-                    <div className="text-[9px] font-medium text-gray-500 mb-0.5 uppercase tracking-wide">You Earn</div>
-                    <div className="text-base font-bold" style={{ color: card.color }}>{card.commission}</div>
+                    <div className="text-[9px] font-medium text-gray-500 mb-1 uppercase tracking-wide">You Earn</div>
+                    <div className="text-lg font-bold tracking-tight" style={{ color: card.color }}>{card.commission}</div>
                   </div>
                 </div>
               </div>
@@ -137,37 +154,41 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* Multi-Level Commissions */}
-      <div className="rounded-xl p-6 border"
-        style={{ background: '#0f0f11', borderColor: 'rgba(249,115,22,0.15)' }}>
-        <div className="grid lg:grid-cols-2 gap-6">
+      <div className="rounded-2xl p-7 border transition-all duration-500 hover:border-orange-500/20"
+        style={{ 
+          background: 'linear-gradient(145deg, #0f0f11, #0a0a0c)',
+          borderColor: 'rgba(249,115,22,0.18)',
+          boxShadow: '0 0 40px rgba(249,115,22,0.05)'
+        }}>
+        <div className="grid lg:grid-cols-2 gap-7">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
-                <TrendingUp className="w-4 h-4" style={{ color: '#f97316' }} />
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)' }}>
+                <TrendingUp className="w-4.5 h-4.5" style={{ color: '#f97316' }} />
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider mb-0.5">
+                <div className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider mb-0.5">
                   3-Level Structure
                 </div>
-                <h3 className="text-base font-semibold text-white">
+                <h3 className="text-base font-semibold text-white tracking-tight">
                   Multi-Level Commissions
                 </h3>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
               Earn from three levels of referrals. Build depth, earn passively.
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {[
                 { lvl: 'Level 1', rate: '8%', label: 'Direct referrals', color: '#f97316' },
                 { lvl: 'Level 2', rate: '2%', label: 'Sub-referrals', color: '#3b82f6' },
                 { lvl: 'Level 3', rate: '1%', label: 'Third level', color: '#a855f7' },
-              ].map((l) => (
-                <div key={l.lvl} className="flex items-center gap-3 rounded-lg p-3 border transition-all duration-200 hover:border-white/10"
-                  style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.05)' }}>
-                  <div className="w-14 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
-                    style={{ background: `${l.color}10`, border: `1px solid ${l.color}25`, color: l.color }}>{l.rate}</div>
+              ].map((l, i) => (
+                <div key={l.lvl} className="group flex items-center gap-3.5 rounded-xl p-3.5 border transition-all duration-300 hover:border-white/12 hover:bg-white/[0.02]"
+                  style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.06)', animationDelay: `${i * 50}ms` }}>
+                  <div className="w-16 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                    style={{ background: `${l.color}12`, border: `1px solid ${l.color}30`, color: l.color }}>{l.rate}</div>
                   <div>
                     <div className="text-xs font-semibold text-white">{l.lvl}</div>
                     <div className="text-[10px] text-gray-500">{l.label}</div>
@@ -177,23 +198,26 @@ export default function AffiliateSection({ onNavigate }) {
             </div>
           </div>
           <div className="flex items-center">
-            <div className="rounded-xl p-5 w-full border transition-all duration-300 hover:border-white/10"
-              style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  <Shield className="w-5 h-5" style={{ color: '#10b981' }} />
+            <div className="rounded-2xl p-6 w-full border transition-all duration-500 hover:border-white/12 hover:shadow-lg"
+              style={{ 
+                background: 'linear-gradient(145deg, #111113, #0d0d0f)',
+                borderColor: 'rgba(255,255,255,0.08)'
+              }}>
+              <div className="flex items-center gap-3.5 mb-5">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                  <Shield className="w-5.5 h-5.5" style={{ color: '#10b981' }} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">Free to Join</div>
                   <div className="text-xs text-gray-500">No minimum requirements</div>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {['Instant dashboard access', 'Real-time tracking', 'Automated payouts'].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-400">
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
-                    {feature}
+                  <div key={i} className="group flex items-center gap-3 text-xs text-gray-400 transition-all duration-200 hover:text-gray-300">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
+                    <span>{feature}</span>
                   </div>
                 ))}
               </div>
@@ -203,18 +227,18 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* CTA */}
-      <div className="text-center pt-2">
+      <div className="text-center pt-3">
         <button
           onClick={() => onNavigate?.('affiliate')}
-          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg"
+          className="group inline-flex items-center gap-2.5 px-9 py-4 rounded-xl text-sm font-semibold text-white transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/20 hover:-translate-y-1"
           style={{
             background: 'linear-gradient(135deg, #f97316, #fb923c)',
-            boxShadow: '0 4px 14px rgba(249,115,22,0.35)',
+            boxShadow: '0 4px 16px rgba(249,115,22,0.4)',
           }}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
           <span>Access Your Affiliate Dashboard</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
         </button>
       </div>
     </div>
