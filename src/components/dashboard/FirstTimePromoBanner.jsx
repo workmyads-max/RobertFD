@@ -32,6 +32,16 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
     refetchInterval: 30000,
   });
 
+  // Get challenge plans to check eligibility
+  const { data: plans = [] } = useQuery({
+    queryKey: ['challenge-plans-all'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      return res?.data?.plans || res?.plans || [];
+    },
+    staleTime: 60000,
+  });
+
   // Check if banner should be shown
   const shouldShow = settings?.is_first_time_discount_active && 
                      !userDiscount?.is_used && 
@@ -72,14 +82,17 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
 
   if (!shouldShow) return null;
 
+  const discountPercent = settings?.first_time_discount_percent || 25;
+  const maxAccountSize = settings?.max_account_size_for_discount || 50000;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="relative rounded-3xl overflow-hidden mb-8"
+      className="relative rounded-2xl overflow-hidden mb-8"
       style={{
-        background: 'linear-gradient(135deg, #1a1628 0%, #121018 100%)',
+        background: '#15151b',
         border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
@@ -91,27 +104,27 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
         <X className="w-4 h-4 text-white/40" />
       </button>
 
-      <div className="grid md:grid-cols-2 gap-0">
+      <div className="grid lg:grid-cols-2 gap-0">
         {/* Left Content */}
-        <div className="p-8 md:p-10">
+        <div className="p-8 lg:p-10 flex flex-col justify-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1.5 rounded-full mb-4"
+            className="inline-flex items-center justify-center px-4 py-1.5 rounded-full mb-5 w-fit"
             style={{ background: '#FF5C00' }}
           >
-            <span className="text-xs font-bold text-white uppercase tracking-wider">Limited Time Offer</span>
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Limited Time Offer</span>
           </motion.div>
 
           {/* Headline */}
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-3 tracking-tight">
-            Your First Challenge, 25% Off
+          <h2 className="text-3xl lg:text-4xl font-black text-white mb-3 tracking-tight leading-tight">
+            Your First Challenge, {discountPercent}% Off
           </h2>
 
           {/* Subtext */}
-          <p className="text-sm text-white/50 mb-6 leading-relaxed">
-            Applies to all Stellar plans up to $50K account sizes. New users only.
+          <p className="text-sm text-[#A0A0A0] mb-6 leading-relaxed">
+            Applies to all Stellar plans up to ${maxAccountSize.toLocaleString()} account sizes. New users only.
           </p>
 
           {/* Coupon Button */}
@@ -119,10 +132,10 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleCopy}
-            className="flex items-center gap-3 px-5 py-3.5 rounded-xl mb-5"
+            className="flex items-center gap-3 px-5 py-3.5 rounded-xl mb-6 w-fit"
             style={{
-              background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-              boxShadow: '0 4px 20px rgba(99,102,241,0.35)',
+              background: '#6F36FF',
+              boxShadow: '0 4px 20px rgba(111,54,255,0.35)',
             }}
           >
             <span className="text-sm font-bold text-white">Coupon:</span>
@@ -130,15 +143,15 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
               {settings?.first_time_discount_code || 'NEW25'}
             </span>
             {copied ? (
-              <Check className="w-4 h-4 text-white" />
+              <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
             ) : (
-              <Copy className="w-4 h-4 text-white/70" />
+              <Copy className="w-4 h-4 text-white/70" strokeWidth={2} />
             )}
           </motion.button>
 
           {/* Countdown */}
           {settings?.discount_end_date && (
-            <div className="flex items-center gap-2 text-white/70">
+            <div className="flex items-center gap-2.5 text-white/60">
               <Clock className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">Offer ends in</span>
               <span className="text-sm font-mono font-bold text-white">
@@ -149,73 +162,81 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
         </div>
 
         {/* Right Card */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden lg:flex items-center justify-center p-8 lg:p-10">
           <motion.div
             initial={{ opacity: 0, rotate: -5, x: 20 }}
             animate={{ opacity: 1, rotate: 3, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="absolute inset-0 flex items-center justify-center"
+            className="relative w-full max-w-md rounded-2xl overflow-hidden p-6"
+            style={{
+              background: '#7C3AED',
+              boxShadow: '0 20px 60px rgba(124,58,237,0.4)',
+              transform: 'rotate(3deg)',
+            }}
           >
+            {/* New Users Only Ribbon */}
             <div
-              className="relative w-full max-w-sm mx-8 rounded-2xl overflow-hidden p-6"
+              className="absolute -top-3 -right-3 px-4 py-2 rounded-lg transform rotate-12 z-10 shadow-lg"
+              style={{ background: '#CCFF00' }}
+            >
+              <span className="text-[10px] font-black text-black uppercase tracking-wider">NEW USERS ONLY</span>
+            </div>
+
+            {/* Gift Icon */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.2)' }}>
+              <Gift className="w-5 h-5 text-white" />
+            </div>
+
+            {/* Headline */}
+            <h3 className="text-lg font-bold text-white mb-4 leading-snug">Start Your Challenge at {discountPercent}% Off</h3>
+
+            {/* Separator */}
+            <div className="h-px mb-4" style={{ background: 'rgba(255,255,255,0.2)' }} />
+
+            {/* Checklist */}
+            <div className="space-y-2.5 mb-5">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#CCFF00' }}
+                >
+                  <Check className="w-3 h-3 text-black" strokeWidth={3} />
+                </div>
+                <span className="text-sm font-medium text-white">All Stellar challenges</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#CCFF00' }}
+                >
+                  <Check className="w-3 h-3 text-black" strokeWidth={3} />
+                </div>
+                <span className="text-sm font-medium text-white">Accounts $2K through ${maxAccountSize.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#CCFF00' }}
+                >
+                  <Check className="w-3 h-3 text-black" strokeWidth={3} />
+                </div>
+                <span className="text-sm font-medium text-white">Not applicable on resets</span>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onStartChallenge}
+              className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all"
               style={{
-                background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #A855F7 100%)',
-                boxShadow: '0 20px 60px rgba(79,70,229,0.4)',
-                transform: 'rotate(3deg)',
+                background: '#FF5C00',
+                boxShadow: '0 4px 15px rgba(255,92,0,0.4)',
               }}
             >
-              {/* New Users Only Ribbon */}
-              <div
-                className="absolute -top-3 -right-3 px-4 py-2 rounded-lg transform rotate-12 z-10"
-                style={{ background: '#CCFF00' }}
-              >
-                <span className="text-xs font-black text-black uppercase tracking-wider">New Users Only</span>
-              </div>
-
-              {/* Gift Icon */}
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-
-              {/* Headline */}
-              <h3 className="text-lg font-bold text-white mb-4">Start Your Challenge at 25% Off</h3>
-
-              {/* Separator */}
-              <div className="h-px mb-4" style={{ background: 'rgba(255,255,255,0.2)' }} />
-
-              {/* Checklist */}
-              <div className="space-y-3">
-                {[
-                  'All Stellar challenges',
-                  'Accounts $2K through $50K',
-                  'Not applicable on resets',
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: '#CCFF00' }}
-                    >
-                      <Check className="w-3 h-3 text-black" strokeWidth={3} />
-                    </div>
-                    <span className="text-sm font-medium text-white/90">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA */}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onStartChallenge}
-                className="w-full mt-6 py-3 rounded-xl text-sm font-bold text-white"
-                style={{
-                  background: '#FF5C00',
-                  boxShadow: '0 4px 15px rgba(255,92,0,0.4)',
-                }}
-              >
-                Claim Your Discount →
-              </motion.button>
-            </div>
+              Claim Your Discount →
+            </motion.button>
           </motion.div>
         </div>
       </div>
