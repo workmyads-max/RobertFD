@@ -967,6 +967,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       {/* FTMO-style Current Results + Account Info */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
+      {/* Open Trades — Live Feed shown first */}
+      <OpenTradesPanel account={account} initialPositions={livePositions} />
+
       {/* Performance Metrics + Progress Timeline */}
       <AccountPerformanceMetrics account={account} stats={stats} />
 
@@ -978,9 +981,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Discipline Score + Objectives */}
       <DisciplinePanel account={account} tradeRecords={tradeRecords} />
-
-      {/* Open Trades */}
-      <OpenTradesPanel account={account} initialPositions={livePositions} />
     </div>
   );
 }
