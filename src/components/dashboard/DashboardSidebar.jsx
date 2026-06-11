@@ -81,16 +81,16 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-2.5 px-3 py-2.5 text-sm'
               } ${
                 isActive
-                  ? (item.highlight ? 'text-primary' : 'text-white')
+                  ? (item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-white')
                   : item.id === 'trash'
                     ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/5'
-                    : item.limeGreen && !isActive
+                    : item.limeGreen
                     ? 'text-[#CCFF00] hover:text-[#CCFF00]'
-                    : item.highlight && !isActive
+                    : item.highlight
                     ? 'text-primary hover:text-primary'
                     : 'text-white/35 hover:text-primary/80 hover:bg-primary/[0.07]'
               }`}
-              style={item.limeGreen && !isActive ? {
+              style={item.limeGreen ? {
                 background: 'rgba(204,255,0,0.12)',
                 border: '1.5px solid rgba(204,255,0,0.4)',
                 boxShadow: '0 0 14px rgba(204,255,0,0.2)',
