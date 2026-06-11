@@ -2,19 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
-// DEBUG: Check imports
-console.log('[CurrentResultsChart] Imports check:', {
-  AreaChart: typeof AreaChart,
-  Area: typeof Area,
-  XAxis: typeof XAxis,
-  YAxis: typeof YAxis,
-  Tooltip: typeof Tooltip,
-  ResponsiveContainer: typeof ResponsiveContainer,
-  ReferenceLine: typeof ReferenceLine,
-  Target: typeof Target,
-  DollarSign: typeof DollarSign,
-});
-
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
 function buildChartData(trades, accountSize) {
@@ -44,10 +31,6 @@ function buildChartData(trades, accountSize) {
 
 // CurrentResultsChart Component
 export default function CurrentResultsChart({ account, trades }) {
-  console.log('[CurrentResultsChart] Rendering with account:', account?.account_id, 'trades:', trades?.length);
-  console.log('[CurrentResultsChart] Component type:', typeof CurrentResultsChart);
-  console.log('[CurrentResultsChart] useState type:', typeof useState);
-  console.log('[CurrentResultsChart] useMemo type:', typeof useMemo);
   const [showObjectives, setShowObjectives] = useState(true);
 
   const accountSize = account?.account_size || 100000;
@@ -115,7 +98,6 @@ export default function CurrentResultsChart({ account, trades }) {
         </div>
 
         <div className="h-48">
-          {console.log('[CurrentResultsChart] Before render - ResponsiveContainer:', typeof ResponsiveContainer, 'AreaChart:', typeof AreaChart)}
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
               {showObjectives && (
