@@ -114,12 +114,21 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
-  const { data: accounts = [], isLoading, refetch } = useQuery({
+  const { data: accounts = [], isLoading: accountsLoading, refetch, isFetching } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
+    queryFn: async () => {
+      console.log('[FundedDashboard] Fetching accounts for email:', user?.email);
+      const result = await base44.entities.ChallengeAccount.filter({ user_email: user?.email });
+      console.log('[FundedDashboard] Accounts fetched:', result.length);
+      return result;
+    },
+    enabled: !!(user?.email && user?.id),
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
+    retry: 3,
+    retryDelay: 1000,
   });
+
+  console.log('[FundedDashboard] Query state - accounts:', accounts.length, 'isLoading:', accountsLoading, 'isFetching:', isFetching, 'user.email:', user?.email);
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
@@ -160,7 +169,10 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const stats = useAccountStats(selectedAccount, trades);
 
   // Show loading state while accounts are fetching — prevents empty state flash on mobile
-  if (isLoading) {
+  // CRITICAL: Must check isFetching too, not just isLoading, to handle refetches
+  const isAnyLoading = accountsLoading || isFetching || (user && !user.email);
+  
+  if (isAnyLoading && accounts.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -169,8 +181,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     );
   }
 
-  // Debug log for mobile rendering
-  console.log('[FundedDashboard] Render - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'selectedAccount:', selectedAccount?.id);
+  console.log('[FundedDashboard] Render - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'selectedAccount:', selectedAccount?.id, 'isAnyLoading:', isAnyLoading);
 
   // Derive open trades for floating P&L widget
   const openTrades = trades.filter(t => t.status === 'open');
@@ -209,13 +220,19 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       {/* Content */}
       <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
+        {/* TEMPORARY DEBUG: Remove after confirming mobile works */}
+        <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
+          DEBUG: Accounts loaded: {accounts.length} | Active: {activeAccounts.length} | Loading: {isAnyLoading ? 'YES' : 'NO'}
+        </div>
+
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
         {/* Debug: show account count in console */}
-        {console.log('[FundedDashboard] Rendering - activeAccounts:', activeAccounts.length, 'isLoading:', isLoading)}
+        {console.log('[FundedDashboard] Rendering - activeAccounts:', activeAccounts.length, 'isAnyLoading:', isAnyLoading)}
         
-        {activeAccounts.length === 0 && !isLoading ? (
+        {/* CRITICAL FIX: Only show empty state when we're SURE data has arrived */}
+        {activeAccounts.length === 0 && !isAnyLoading ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
