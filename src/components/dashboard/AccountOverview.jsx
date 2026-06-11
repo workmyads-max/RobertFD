@@ -134,9 +134,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const account = selectedAccount || activeAccounts[0] || null;
 
   const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-overview', account?.id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.id }),
-    enabled: !!account?.id,
+    queryKey: ['trade-records-overview', account?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    enabled: !!account?.account_id,
   });
 
   if (isLoading) {

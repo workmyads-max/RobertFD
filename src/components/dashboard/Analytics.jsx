@@ -78,17 +78,16 @@ export default function Analytics({ onStartChallenge }) {
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
 
+  // Resolve the selected account object first, then query trades by its account_id string
+  const account = activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0] || null;
+
   const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-analytics', selectedAccountId || activeAccounts[0]?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({
-      account_id: (activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0])?.account_id
-    }),
-    enabled: activeAccounts.length > 0,
+    queryKey: ['trade-records-analytics', account?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    enabled: !!account?.account_id,
   });
 
   if (activeAccounts.length === 0) return <EmptyState onStartChallenge={onStartChallenge} />;
-
-  const account = activeAccounts.find(a => a.id === selectedAccountId) || activeAccounts[0];
   const accountSize = account.account_size || 100000;
 
   // Build equity curve
