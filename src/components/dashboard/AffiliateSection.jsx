@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Star, Users, ArrowRight, Shield, Zap, Award, DollarSign } from 'lucide-react';
+import { ArrowRight, Shield, Zap, Award, Users } from 'lucide-react';
 
 export default function AffiliateSection({ onNavigate }) {
   const stats = [
@@ -48,76 +47,58 @@ export default function AffiliateSection({ onNavigate }) {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.7 }}
-      className="mt-8"
-    >
+    <div className="mt-8 space-y-6">
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {stats.map((s, i) => (
-          <motion.div
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div
             key={s.label}
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            className="rounded-xl p-5"
-            style={{ background: '#18181b', border: '1px solid #27272a' }}
+            className="rounded-lg p-5 border"
+            style={{ background: '#18181b', borderColor: '#27272a' }}
           >
-            <div className="text-3xl font-bold mb-1.5" style={{ color: s.color }}>
+            <div className="text-3xl font-bold mb-2" style={{ color: s.color }}>
               {s.value}
             </div>
             <div className="text-xs text-gray-400 font-medium">{s.label}</div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Commission Tiers */}
-      <div className="mb-6">
+      <div>
         <div className="text-center mb-5">
-          <h3 className="text-lg font-semibold text-white mb-1">Commission Tiers</h3>
+          <h3 className="text-base font-semibold text-white mb-1">Commission Tiers</h3>
           <p className="text-xs text-gray-500">Your payout reward rate grows with active funded traders</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {tiers.map((t, i) => (
-            <motion.div
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {tiers.map((t) => (
+            <div
               key={t.traders}
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="rounded-xl p-5 text-center"
-              style={{ background: '#18181b', border: '1px solid #27272a' }}
+              className="rounded-lg p-5 text-center border"
+              style={{ background: '#18181b', borderColor: '#27272a' }}
             >
               <div className="text-xs text-gray-500 font-medium mb-2">{t.traders} traders</div>
               <div className="text-4xl font-bold mb-1" style={{ color: t.color }}>{t.rate}</div>
               <div className="text-sm font-medium text-white">{t.label}</div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
 
       {/* How You Earn */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-center text-white mb-5">How You Earn</h3>
-        <div className="grid md:grid-cols-3 gap-3">
-          {examples.map((card, i) => {
+      <div>
+        <h3 className="text-base font-semibold text-center text-white mb-5">How You Earn</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          {examples.map((card) => {
             const Icon = card.icon;
             return (
-              <motion.div
+              <div
                 key={card.scenario}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-xl p-5"
-                style={{ background: '#18181b', border: '1px solid #27272a' }}
+                className="rounded-lg p-5 border"
+                style={{ background: '#18181b', borderColor: '#27272a' }}
               >
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
                     style={{ background: `${card.color}15` }}>
                     <Icon className="w-4 h-4" style={{ color: card.color }} />
                   </div>
@@ -127,7 +108,7 @@ export default function AffiliateSection({ onNavigate }) {
                   </div>
                 </div>
                 <div className="text-xs text-gray-400 mb-4 leading-relaxed">{card.desc}</div>
-                <div className="flex items-center justify-between p-3 rounded-lg"
+                <div className="flex items-center justify-between p-3 rounded-md"
                   style={{ background: '#111113', border: '1px solid #27272a' }}>
                   <div>
                     <div className="text-[9px] font-medium text-gray-500 mb-0.5">Amount</div>
@@ -139,35 +120,35 @@ export default function AffiliateSection({ onNavigate }) {
                     <div className="text-base font-bold" style={{ color: card.color }}>{card.commission}</div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
       </div>
 
       {/* Multi-Level Commissions */}
-      <div className="rounded-xl p-6 mb-6"
-        style={{ background: '#18181b', border: '1px solid #3f2d29' }}>
+      <div className="rounded-lg p-6 border"
+        style={{ background: '#18181b', borderColor: '#3f2d29' }}>
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
             <div className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider mb-2">
               3-Level Structure
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3">
+            <h3 className="text-lg font-semibold text-white mb-3">
               Multi-Level Commissions
             </h3>
             <p className="text-sm text-gray-400 mb-5 leading-relaxed">
               Earn from three levels of referrals. Build depth, earn passively.
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {[
                 { lvl: 'Level 1', rate: '8%', label: 'Direct referrals', color: '#f97316' },
                 { lvl: 'Level 2', rate: '2%', label: 'Sub-referrals', color: '#3b82f6' },
                 { lvl: 'Level 3', rate: '1%', label: 'Third level', color: '#a855f7' },
-              ].map(l => (
-                <div key={l.lvl} className="flex items-center gap-3 rounded-lg p-3"
-                  style={{ background: '#111113', border: '1px solid #27272a' }}>
-                  <div className="w-12 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+              ].map((l) => (
+                <div key={l.lvl} className="flex items-center gap-3 rounded-md p-3 border"
+                  style={{ background: '#111113', borderColor: '#27272a' }}>
+                  <div className="w-12 h-8 rounded-md flex items-center justify-center font-bold text-sm flex-shrink-0"
                     style={{ background: `${l.color}15`, color: l.color }}>{l.rate}</div>
                   <div>
                     <div className="text-xs font-medium text-white">{l.lvl}</div>
@@ -178,10 +159,10 @@ export default function AffiliateSection({ onNavigate }) {
             </div>
           </div>
           <div className="flex items-center">
-            <div className="rounded-xl p-5 w-full"
-              style={{ background: '#111113', border: '1px solid #27272a' }}>
+            <div className="rounded-lg p-5 w-full border"
+              style={{ background: '#111113', borderColor: '#27272a' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
                   <Shield className="w-5 h-5" style={{ color: '#22c55e' }} />
                 </div>
@@ -207,7 +188,7 @@ export default function AffiliateSection({ onNavigate }) {
       <div className="text-center">
         <button
           onClick={() => onNavigate?.('affiliate')}
-          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           style={{
             background: '#f97316',
             boxShadow: '0 4px 14px rgba(249,115,22,0.3)',
@@ -218,6 +199,6 @@ export default function AffiliateSection({ onNavigate }) {
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
