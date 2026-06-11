@@ -12,6 +12,8 @@ import CredentialsModal from './CredentialsModal';
 import LiveTradeFeed from '../overview/LiveTradeFeed';
 import PerformanceMetrics from '../overview/PerformanceMetrics';
 import ProgressTimeline from '../overview/ProgressTimeline';
+import CurrentResultsChart from '../overview/CurrentResultsChart';
+import ChallengeDetailSidebar from '../overview/ChallengeDetailSidebar';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -741,11 +743,21 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       <LiveTradeFeed account={account} trades={tradeRecords} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['trade-records-overview', account?.account_id] })} />
 
+      {/* Current Results + Challenge Detail */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <CurrentResultsChart account={account} trades={tradeRecords} />
+        </div>
+        <ChallengeDetailSidebar account={account} />
+      </div>
+
+      {/* Performance Metrics + Progress Timeline */}
       <div className="grid lg:grid-cols-2 gap-4">
         <PerformanceMetrics account={account} trades={tradeRecords} />
         <ProgressTimeline account={account} />
       </div>
 
+      {/* Statistics + Daily Summary */}
       <div className="grid md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} tradeRecords={tradeRecords} />
         <DailySummaryPanel tradeRecords={tradeRecords} />
