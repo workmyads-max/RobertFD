@@ -1,19 +1,19 @@
 import React from 'react';
-import { ArrowRight, Shield, Zap, Award, Users } from 'lucide-react';
+import { ArrowRight, Shield, Zap, Award, Users, TrendingUp, DollarSign, Network } from 'lucide-react';
 
 export default function AffiliateSection({ onNavigate }) {
   const stats = [
-    { label: 'Total Paid to Partners', value: '$847K+', color: '#22c55e' },
-    { label: 'Active Partners', value: '2,840+', color: '#f97316' },
-    { label: 'Avg Monthly Earnings', value: '$3,200', color: '#eab308' },
-    { label: 'Top Commission Rate', value: '25%', color: '#a855f7' },
+    { label: 'Total Paid to Partners', value: '$847K+', color: '#10b981', sub: 'and growing' },
+    { label: 'Active Partners', value: '2,840+', color: '#f97316', sub: 'worldwide' },
+    { label: 'Avg Monthly Earnings', value: '$3,200', color: '#eab308', sub: 'per partner' },
+    { label: 'Top Commission Rate', value: '25%', color: '#a855f7', sub: 'payout reward' },
   ];
 
   const tiers = [
-    { traders: '0-9', rate: '7%', label: 'Starter', color: '#3b82f6' },
-    { traders: '10+', rate: '11%', label: 'Silver', color: '#a855f7' },
-    { traders: '25+', rate: '17%', label: 'Gold', color: '#f97316' },
-    { traders: '50+', rate: '25%', label: 'Platinum', color: '#f97316' },
+    { traders: '0-9', rate: '7%', label: 'Starter', color: '#3b82f6', desc: 'Perfect start' },
+    { traders: '10-24', rate: '11%', label: 'Silver', color: '#94a3b8', desc: 'Growing strong' },
+    { traders: '25-49', rate: '17%', label: 'Gold', color: '#fbbf24', desc: 'Serious income' },
+    { traders: '50+', rate: '25%', label: 'Platinum', color: '#f97316', desc: 'Maximum rewards' },
   ];
 
   const examples = [
@@ -24,16 +24,16 @@ export default function AffiliateSection({ onNavigate }) {
       rate: '8%',
       color: '#f97316',
       icon: Zap,
-      desc: 'When your referral buys a $100K challenge',
+      desc: 'Earn instantly when your referral purchases any challenge',
     },
     {
       scenario: 'Funded Trader Payout',
-      amount: '$10K',
+      amount: '$10,000',
       commission: '+$2,500',
       rate: '25%',
-      color: '#22c55e',
+      color: '#10b981',
       icon: Award,
-      desc: 'Platinum partners earn on trader profit withdrawals',
+      desc: 'Recurring revenue from funded trader profit splits',
     },
     {
       scenario: 'Level 2 Referral',
@@ -41,53 +41,55 @@ export default function AffiliateSection({ onNavigate }) {
       commission: '+$7.00',
       rate: '2%',
       color: '#3b82f6',
-      icon: Users,
-      desc: 'Passive income from your network\'s referrals',
+      icon: Network,
+      desc: 'Build depth and earn from your network growth',
     },
   ];
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="mt-12 space-y-8">
       {/* Header */}
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-white mb-2">Affiliate Program</h2>
-        <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-          Build your income stream by referring traders to our platform. Earn commissions on challenge sales and funded trader payouts.
+      <div className="text-center mb-8">
+        <h2 className="text-xl font-bold text-white mb-3 tracking-tight">Affiliate Program</h2>
+        <p className="text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          Build a sustainable income stream by referring traders. Earn competitive commissions on challenge purchases and funded trader payouts.
         </p>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s) => (
           <div
             key={s.label}
-            className="rounded-lg p-5 border"
-            style={{ background: '#18181b', borderColor: '#27272a' }}
+            className="rounded-xl p-5 border transition-all duration-300 hover:border-white/10"
+            style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
           >
-            <div className="text-3xl font-bold mb-2" style={{ color: s.color }}>
+            <div className="text-2xl font-bold mb-1.5" style={{ color: s.color }}>
               {s.value}
             </div>
-            <div className="text-xs text-gray-400 font-medium">{s.label}</div>
+            <div className="text-xs text-gray-400 font-medium mb-0.5">{s.label}</div>
+            <div className="text-[10px] text-gray-500">{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Commission Tiers */}
       <div>
-        <div className="text-center mb-5">
-          <h3 className="text-base font-semibold text-white mb-1">Commission Tiers</h3>
-          <p className="text-xs text-gray-500">Your payout reward rate grows with active funded traders</p>
+        <div className="text-center mb-6">
+          <h3 className="text-sm font-semibold text-white mb-1.5">Commission Tiers</h3>
+          <p className="text-xs text-gray-500">Scale your earnings as your network grows</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {tiers.map((t) => (
             <div
               key={t.traders}
-              className="rounded-lg p-5 text-center border"
-              style={{ background: '#18181b', borderColor: '#27272a' }}
+              className="rounded-xl p-5 text-center border transition-all duration-300 hover:border-white/10 hover:translate-y-[-2px]"
+              style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
             >
-              <div className="text-xs text-gray-500 font-medium mb-2">{t.traders} traders</div>
-              <div className="text-4xl font-bold mb-1" style={{ color: t.color }}>{t.rate}</div>
-              <div className="text-sm font-medium text-white">{t.label}</div>
+              <div className="text-[10px] text-gray-500 font-medium mb-1.5 uppercase tracking-wide">{t.traders} traders</div>
+              <div className="text-3xl font-bold mb-1" style={{ color: t.color }}>{t.rate}</div>
+              <div className="text-sm font-semibold text-white mb-0.5">{t.label}</div>
+              <div className="text-[10px] text-gray-500">{t.desc}</div>
             </div>
           ))}
         </div>
@@ -95,36 +97,36 @@ export default function AffiliateSection({ onNavigate }) {
 
       {/* How You Earn */}
       <div>
-        <h3 className="text-base font-semibold text-center text-white mb-5">How You Earn</h3>
+        <h3 className="text-sm font-semibold text-center text-white mb-6">How You Earn</h3>
         <div className="grid md:grid-cols-3 gap-4">
           {examples.map((card) => {
             const Icon = card.icon;
             return (
               <div
                 key={card.scenario}
-                className="rounded-lg p-5 border"
-                style={{ background: '#18181b', borderColor: '#27272a' }}
+                className="rounded-xl p-5 border transition-all duration-300 hover:border-white/10 hover:translate-y-[-2px]"
+                style={{ background: '#0f0f11', borderColor: 'rgba(255,255,255,0.06)' }}
               >
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${card.color}15` }}>
-                    <Icon className="w-4 h-4" style={{ color: card.color }} />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${card.color}10`, border: `1px solid ${card.color}20` }}>
+                    <Icon className="w-5 h-5" style={{ color: card.color }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-medium text-white truncate">{card.scenario}</div>
-                    <div className="text-[10px] text-gray-500">{card.rate} commission</div>
+                    <div className="text-sm font-semibold text-white truncate">{card.scenario}</div>
+                    <div className="text-[10px] text-gray-500">{card.rate} commission rate</div>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 mb-4 leading-relaxed">{card.desc}</div>
-                <div className="flex items-center justify-between p-3 rounded-md"
-                  style={{ background: '#111113', border: '1px solid #27272a' }}>
+                <div className="text-xs text-gray-400 mb-5 leading-relaxed">{card.desc}</div>
+                <div className="flex items-center justify-between p-3.5 rounded-lg"
+                  style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div>
-                    <div className="text-[9px] font-medium text-gray-500 mb-0.5">Amount</div>
+                    <div className="text-[9px] font-medium text-gray-500 mb-0.5 uppercase tracking-wide">Amount</div>
                     <div className="text-sm font-semibold text-white">{card.amount}</div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-600 flex-shrink-0" />
                   <div className="text-right">
-                    <div className="text-[9px] font-medium text-gray-500 mb-0.5">You Earn</div>
+                    <div className="text-[9px] font-medium text-gray-500 mb-0.5 uppercase tracking-wide">You Earn</div>
                     <div className="text-base font-bold" style={{ color: card.color }}>{card.commission}</div>
                   </div>
                 </div>
@@ -135,31 +137,39 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* Multi-Level Commissions */}
-      <div className="rounded-lg p-6 border"
-        style={{ background: '#18181b', borderColor: '#3f2d29' }}>
+      <div className="rounded-xl p-6 border"
+        style={{ background: '#0f0f11', borderColor: 'rgba(249,115,22,0.15)' }}>
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
-            <div className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider mb-2">
-              3-Level Structure
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <TrendingUp className="w-4 h-4" style={{ color: '#f97316' }} />
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider mb-0.5">
+                  3-Level Structure
+                </div>
+                <h3 className="text-base font-semibold text-white">
+                  Multi-Level Commissions
+                </h3>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-3">
-              Multi-Level Commissions
-            </h3>
             <p className="text-sm text-gray-400 mb-5 leading-relaxed">
               Earn from three levels of referrals. Build depth, earn passively.
             </p>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {[
                 { lvl: 'Level 1', rate: '8%', label: 'Direct referrals', color: '#f97316' },
                 { lvl: 'Level 2', rate: '2%', label: 'Sub-referrals', color: '#3b82f6' },
                 { lvl: 'Level 3', rate: '1%', label: 'Third level', color: '#a855f7' },
               ].map((l) => (
-                <div key={l.lvl} className="flex items-center gap-3 rounded-md p-3 border"
-                  style={{ background: '#111113', borderColor: '#27272a' }}>
-                  <div className="w-12 h-8 rounded-md flex items-center justify-center font-bold text-sm flex-shrink-0"
-                    style={{ background: `${l.color}15`, color: l.color }}>{l.rate}</div>
+                <div key={l.lvl} className="flex items-center gap-3 rounded-lg p-3 border transition-all duration-200 hover:border-white/10"
+                  style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <div className="w-14 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    style={{ background: `${l.color}10`, border: `1px solid ${l.color}25`, color: l.color }}>{l.rate}</div>
                   <div>
-                    <div className="text-xs font-medium text-white">{l.lvl}</div>
+                    <div className="text-xs font-semibold text-white">{l.lvl}</div>
                     <div className="text-[10px] text-gray-500">{l.label}</div>
                   </div>
                 </div>
@@ -167,22 +177,22 @@ export default function AffiliateSection({ onNavigate }) {
             </div>
           </div>
           <div className="flex items-center">
-            <div className="rounded-lg p-5 w-full border"
-              style={{ background: '#111113', borderColor: '#27272a' }}>
+            <div className="rounded-xl p-5 w-full border transition-all duration-300 hover:border-white/10"
+              style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                  <Shield className="w-5 h-5" style={{ color: '#22c55e' }} />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <Shield className="w-5 h-5" style={{ color: '#10b981' }} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">Free to Join</div>
                   <div className="text-xs text-gray-500">No minimum requirements</div>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {['Instant dashboard access', 'Real-time tracking', 'Automated payouts'].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-400">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
                     {feature}
                   </div>
                 ))}
@@ -193,13 +203,13 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* CTA */}
-      <div className="text-center">
+      <div className="text-center pt-2">
         <button
           onClick={() => onNavigate?.('affiliate')}
-          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg"
           style={{
-            background: '#f97316',
-            boxShadow: '0 4px 14px rgba(249,115,22,0.3)',
+            background: 'linear-gradient(135deg, #f97316, #fb923c)',
+            boxShadow: '0 4px 14px rgba(249,115,22,0.35)',
           }}
         >
           <Users className="w-4 h-4" />
