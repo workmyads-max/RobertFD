@@ -907,8 +907,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return all.filter(a => a.user_email === userEmail);
     },
     enabled: !!userEmail,
-    refetchInterval: 5000,
-    staleTime: 2000,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
+    staleTime: 10000,
   });
 
   // Load account from sessionStorage immediately when accounts are available
@@ -934,7 +935,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
     enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: false,
+    staleTime: 5000,
   });
 
   const { data: livePositionsData } = useQuery({
@@ -944,7 +947,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return res?.data?.positions || [];
     },
     enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: false,
+    staleTime: 5000,
   });
 
   const livePositions = livePositionsData || [];

@@ -113,7 +113,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       return me || user;
     },
     enabled: !!user?.id,
-    refetchInterval: 10000, // Refetch every 10s to catch profile updates
+    refetchInterval: 60000, // Refetch every 60s to catch profile updates
+    refetchOnWindowFocus: false,
   });
 
   // Use userEmail from auth context for reliable mobile access
@@ -127,8 +128,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       return all.filter(a => a.user_email === userEmail);
     },
     enabled: !!userEmail,
-    refetchInterval: 5000,
-    staleTime: 2000,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
+    staleTime: 10000,
   });
 
   // Load KYC for welcome header
@@ -139,13 +141,18 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   });
   const kyc = kycList[0] || null;
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
+  const activeAccounts = accounts.filter(a =>
+    ['active', 'passed', 'funded', 'phase2'].includes(a.status)
+  );
   const [selectedAccount, setSelectedAccount] = useState(null);
 
   // Auto-select first account when accounts load
   useEffect(() => {
     if (activeAccounts.length > 0 && !selectedAccount) {
-      setSelectedAccount(activeAccounts[0]);
+      const defaultAccount = activeAccounts.find(a =>
+        ['active', 'passed', 'funded'].includes(a.status)
+      ) || activeAccounts[0];
+      setSelectedAccount(defaultAccount);
     }
   }, [activeAccounts.length]);
 
@@ -165,7 +172,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     queryKey: ['trade-records', selectedAccount?.id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
     enabled: !!selectedAccount?.id,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: false,
   });
 
   const stats = useAccountStats(selectedAccount, trades);

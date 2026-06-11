@@ -61,7 +61,19 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
 
       <div className="mb-4">
         <div className="text-lg sm:text-xl font-bold text-white tracking-tight break-words">${size.toLocaleString()}</div>
-        <div className="text-[9px] sm:text-[10px] text-white/25 font-mono capitalize mt-0.5 break-words">{account.status}</div>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+            account.status === 'active' ? 'text-emerald-400 bg-emerald-400/10' :
+            account.status === 'passed' ? 'text-blue-400 bg-blue-400/10' :
+            account.status === 'funded' ? 'text-[#FF5C00] bg-[#FF5C00]/10' :
+            'text-white/40 bg-white/5'
+          }`}>
+            {account.status === 'passed' ? 'Passed ✓' :
+             account.status === 'active' ? 'Active' :
+             account.status === 'funded' ? 'Funded' :
+             account.status}
+          </span>
+        </div>
       </div>
 
       {/* Mini progress bar */}
