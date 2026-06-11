@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LiveTradeFeed from './LiveTradeFeed';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, DollarSign, BarChart3, Target, Shield, Calendar,
@@ -320,6 +321,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Live Trade Feed */}
+      <LiveTradeFeed account={account} />
 
       {/* Quick Navigation */}
       <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>

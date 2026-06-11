@@ -143,11 +143,10 @@ Deno.serve(async (req) => {
           const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
           const toDate = new Date().toISOString();
 
-          // Shared deal history body — login-only, no groups
+          // Confirmed working payload format — empty groups array, logins array only
           const dealHistoryBody = {
-            Login: loginNum,          // singular capital (some Tritech versions)
-            logins: [loginNum],       // array lowercase (other versions)
             groups: [],
+            logins: [loginNum],
             from: fromDate,
             to: toDate,
             dateFrom: fromDate,
@@ -237,9 +236,10 @@ Deno.serve(async (req) => {
             balance = 0;
             equity  = 0;
           }
-          // MT5 deal Entry field: 0=IN (open), 1=OUT (close), 2=INOUT
-          const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
-          const wins = closedTrades.filter(d => (d.Profit ?? d.profit ?? 0) > 0).length;
+          // Tritech get-deal-history returns only CLOSED deals — all records are closed trades
+          // type: 0=BUY, 1=SELL. volume is raw (e.g. 60000 = 0.60 lots), divide by 100000
+          const closedTrades = deals.filter(d => d.deal_id != null || d.Ticket != null);
+          const wins = closedTrades.filter(d => parseFloat(d.profit ?? d.Profit ?? 0) > 0).length;
           const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
@@ -428,21 +428,24 @@ Deno.serve(async (req) => {
                 if (typeof t === 'string' && t.includes('T')) return t;
                 return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1)).toISOString();
               };
+              // Tritech volume: >1000 means raw (e.g. 60000=0.60 lots → /100000), ≤1000 already in lots
+              const rawVol = parseFloat(d.volume ?? d.Volume ?? d.lot ?? 0);
+              const lots = rawVol > 1000 ? rawVol / 100000 : rawVol;
               return base44.asServiceRole.entities.TradeRecord.create({
-                account_id: acc.account_id,
-                user_email: acc.user_email,
-                trade_id: tradeId,
-                symbol: d.symbol ?? d.Symbol ?? '',
-                type: isSell ? 'SELL' : 'BUY',
-                order_type: 'MARKET',
-                lots: parseFloat(d.lot ?? d.volume ?? d.Volume ?? d.lots ?? 0),
-                entry: parseFloat(d.openPrice ?? d.Price ?? d.price ?? 0),
-                close: parseFloat(d.closePrice ?? d.PriceClose ?? d.openPrice ?? 0),
-                pnl,
-                status: 'closed',
-                close_reason: d.comment ?? d.Comment ?? 'close',
-                open_time: parseTime(d.openTime ?? d.Time),
-                close_time: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time),
+               account_id: acc.account_id,
+               user_email: acc.user_email,
+               trade_id: tradeId,
+               symbol: d.symbol ?? d.Symbol ?? '',
+               type: isSell ? 'SELL' : 'BUY',
+               order_type: 'MARKET',
+               lots,
+               entry: parseFloat(d.openPrice ?? d.Price ?? d.price ?? 0),
+               close: parseFloat(d.closePrice ?? d.PriceClose ?? d.openPrice ?? 0),
+               pnl,
+               status: 'closed',
+               close_reason: d.comment ?? d.Comment ?? 'close',
+               open_time: parseTime(d.openTime ?? d.Time),
+               close_time: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time),
               }).catch(() => null);
             }));
             console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);

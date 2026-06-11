@@ -73,10 +73,10 @@ Deno.serve(async (req) => {
         const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
         const toDate   = new Date().toISOString();
 
+        // Confirmed working payload format — empty groups array, logins array only
         const dealHistoryBody = {
-          Login: loginNum,
-          logins: [loginNum],
           groups: [],
+          logins: [loginNum],
           from: fromDate,
           to: toDate,
           dateFrom: fromDate,
@@ -149,12 +149,8 @@ Deno.serve(async (req) => {
           equity  = 0;
         }
 
-        // Tritech API: each record in get-deal-history is a completed deal
-        // Fields: deal_id, symbol, openPrice, closePrice, volume/lot, profit, openTime, closeTime, action
-        const closedTrades = deals.filter(d => {
-          const id = d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id;
-          return id != null && id !== '';
-        });
+        // Tritech get-deal-history returns only CLOSED deals — all records are closed trades
+        const closedTrades = deals.filter(d => d.deal_id != null || d.Ticket != null);
         const wins = closedTrades.filter(d => parseFloat(d.profit ?? d.Profit ?? 0) > 0).length;
         const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : (acc.win_rate || 0);
         const accountSize = acc.account_size || 100000;
@@ -225,7 +221,10 @@ Deno.serve(async (req) => {
             await Promise.all(newDeals.map(d => {
               const tid = String(d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id ?? '');
               const action = d.action ?? d.Action ?? 0;
-              const isSell = action === 1 || action === 'SELL' || d.type === 'SELL';
+              const isSell = action === 1 || action === 'SELL' || d.type === 1 || d.type === 'SELL';
+              // Tritech volume: >1000 means raw (e.g. 60000=0.60 lots → /100000), ≤1000 already in lots
+              const rawVol = parseFloat(d.volume ?? d.Volume ?? d.lot ?? 0);
+              const lots = rawVol > 1000 ? rawVol / 100000 : rawVol;
               return base44.entities.TradeRecord.create({
                 account_id: acc.account_id,
                 user_email: acc.user_email,
@@ -233,7 +232,7 @@ Deno.serve(async (req) => {
                 symbol: d.symbol ?? d.Symbol ?? '',
                 type: isSell ? 'SELL' : 'BUY',
                 order_type: 'MARKET',
-                lots: parseFloat(d.lot ?? d.volume ?? d.Volume ?? 0),
+                lots,
                 entry: parseFloat(d.openPrice ?? d.Price ?? d.price ?? 0),
                 close: parseFloat(d.closePrice ?? d.PriceClose ?? d.openPrice ?? 0),
                 pnl: parseFloat(d.profit ?? d.Profit ?? 0),
