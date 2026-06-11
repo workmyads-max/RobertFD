@@ -42,6 +42,7 @@
   transition: opacity 0.75s ease-in-out;
 }
 
+/* colored mesh-gradient border */
 .border-glow-card::before {
   border: 1px solid transparent;
   background:
@@ -68,6 +69,7 @@
     );
 }
 
+/* colored mesh-gradient background fill near edges */
 .border-glow-card::after {
   border: 1px solid transparent;
   background:
@@ -94,6 +96,7 @@
   mix-blend-mode: soft-light;
 }
 
+/* outer glow layer */
 .border-glow-card > .edge-light {
   inset: calc(var(--glow-padding) * -1);
   pointer-events: none;
