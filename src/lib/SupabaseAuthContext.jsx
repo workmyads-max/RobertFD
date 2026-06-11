@@ -44,13 +44,23 @@ export const SupabaseAuthProvider = ({ children }) => {
 
     initAuth();
 
-    // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
+    // Listen to auth state changes — CRITICAL: Only react to SIGNED_IN/SIGNED_OUT
+    // Ignore TOKEN_REFRESHED to prevent infinite re-render loops on mobile
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      // Only update state on actual sign in/out, NOT on token refresh
+      if (event === 'SIGNED_IN') {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
       }
+      // TOKEN_REFRESHED, INITIAL_SESSION, etc. are silently ignored
+      // to prevent unnecessary re-renders
     });
 
     return () => {

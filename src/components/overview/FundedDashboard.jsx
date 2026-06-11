@@ -117,46 +117,20 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const { data: accounts = [], isLoading: accountsLoading, refetch, isFetching } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.id],
     queryFn: async () => {
-      console.log('[FundedDashboard] === FETCHING ACCOUNTS VIA BACKEND FUNCTION ===');
-      console.log('[FundedDashboard] User ID:', user?.id);
-      console.log('[FundedDashboard] User Email:', user?.email);
-      console.log('[FundedDashboard] User metadata:', user?.user_metadata);
-      
       // CRITICAL: Ensure Supabase session is loaded before calling backend function
       const { supabase } = await import('@/lib/supabaseClient');
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.error('[FundedDashboard] No Supabase session - attempting refresh');
+        console.warn('[FundedDashboard] No Supabase session - attempting refresh');
         await supabase.auth.refreshSession();
       }
       
-      console.log('[FundedDashboard] Session check:', { 
-        hasSession: !!session, 
-        userId: session?.user?.id,
-        email: session?.user?.email 
-      });
-      
       // Use backend function to bypass RLS and fetch by email
       const response = await base44.functions.invoke('getUserAccounts', {});
-      console.log('[FundedDashboard] Backend function response:', {
-        status: response?.status,
-        data: response?.data,
-        hasAccounts: Array.isArray(response?.data?.accounts),
-        accountCount: response?.data?.count
-      });
-      
       const result = response?.data?.accounts || response?.accounts || [];
       
       console.log('[FundedDashboard] Accounts fetched:', result.length);
-      if (result.length > 0) {
-        console.log('[FundedDashboard] First account:', { 
-          id: result[0]?.id, 
-          user_email: result[0]?.user_email,
-          account_size: result[0]?.account_size,
-          status: result[0]?.status 
-        });
-      }
       return result;
     },
     enabled: !!user?.id && !!user?.email, // Wait for both ID and email to be populated
@@ -164,8 +138,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     retry: 3,
     retryDelay: 1000,
   });
-
-  console.log('[FundedDashboard] Query state - accounts:', accounts.length, 'isLoading:', accountsLoading, 'isFetching:', isFetching, 'user.email:', user?.email, 'user.id:', user?.id);
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
@@ -178,14 +150,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account - FIXED: proper dependencies for mobile
+  // Auto-select first account when accounts load
   useEffect(() => {
-    console.log('[FundedDashboard] activeAccounts:', activeAccounts.length, activeAccounts.map(a => ({ id: a.id, status: a.status, size: a.account_size })));
     if (activeAccounts.length > 0 && !selectedAccount) {
-      console.log('[FundedDashboard] Auto-selecting account:', activeAccounts[0].id);
       setSelectedAccount(activeAccounts[0]);
     }
-  }, [activeAccounts, selectedAccount]);
+  }, [activeAccounts.length]); // Only depend on count, not the array reference
 
   // Keep selected in sync with refetches
   useEffect(() => {
@@ -217,8 +187,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       </div>
     );
   }
-
-  console.log('[FundedDashboard] Render - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'selectedAccount:', selectedAccount?.id, 'isAnyLoading:', isAnyLoading);
 
   // Derive open trades for floating P&L widget
   const openTrades = trades.filter(t => t.status === 'open');
@@ -257,16 +225,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       {/* Content */}
       <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
-        {/* TEMPORARY DEBUG: Remove after confirming mobile works */}
-        <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
-          DEBUG: Accounts={accounts.length} | Active={activeAccounts.length} | UserID={user?.id?.slice(0, 8)} | Email={user?.email || 'NULL'} | MetadataEmail={user?.user_metadata?.email || 'NULL'} | Loading={isAnyLoading}
-        </div>
-
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
-
-        {/* Debug: show account count in console */}
-        {console.log('[FundedDashboard] Rendering - activeAccounts:', activeAccounts.length, 'isAnyLoading:', isAnyLoading)}
         
         {/* CRITICAL FIX: Only show empty state when we're SURE data has arrived */}
         {activeAccounts.length === 0 && !isAnyLoading ? (
