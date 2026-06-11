@@ -619,6 +619,22 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
 
+  // Fetch current user
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      try {
+        const u = await base44.auth.me();
+        console.log('[AccountOverview] User:', u?.email);
+        return u;
+      } catch (err) {
+        console.error('[AccountOverview] Auth error:', err);
+        return null;
+      }
+    },
+    staleTime: 30000,
+  });
+
   useEffect(() => {
     try {
       const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
@@ -644,6 +660,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return result;
     },
     refetchInterval: 5000, staleTime: 3000,
+    enabled: !!user,
   });
 
   const activeAccounts = accounts?.filter(a => ['active', 'funded', 'passed'].includes(a.status)) || [];
@@ -681,6 +698,28 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     refetchInterval: 5000, staleTime: 3000,
   });
 
+  // Handle loading state
+  if (userLoading || isLoading) {
+    console.log('[AccountOverview] Loading...');
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Handle auth error
+  if (!user) {
+    console.log('[AccountOverview] No user authenticated');
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="text-xl font-bold text-foreground mb-4">Please log in</div>
+        <div className="text-sm text-white/40 mb-4">You need to be logged in to view account information</div>
+      </div>
+    );
+  }
+
+  // Handle accounts error
   if (accountsError) {
     console.error('[AccountOverview] Accounts error:', accountsError);
     return (
@@ -697,12 +736,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const liveEquity = livePositions?.length > 0
     ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
     : (account?.equity || account?.balance || account?.account_size || 0);
-
-  if (isLoading) return (
-    <div className="flex items-center justify-center py-24">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
 
   if (!account) return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
