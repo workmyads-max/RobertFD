@@ -196,24 +196,24 @@ export default function AffiliateSection({ onNavigate }) {
               ))}
             </div>
           </div>
-          <div className="flex items-start pt-0.5">
-            <div className="rounded-lg p-3.5 w-full border"
+          <div className="flex items-stretch pt-0.5">
+            <div className="rounded-lg p-4 w-full border flex flex-col"
               style={{ background: '#111113', borderColor: '#27272a' }}>
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  <Shield className="w-3.5 h-3.5" style={{ color: '#10b981' }} />
+                  <Shield className="w-4 h-4" style={{ color: '#10b981' }} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white leading-tight">Free to Join</div>
-                  <div className="text-xs text-gray-500 leading-tight">No minimum requirements</div>
+                  <div className="text-sm font-semibold text-white">Free to Join</div>
+                  <div className="text-xs text-gray-500">No minimum requirements</div>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2.5 mt-auto">
                 {['Instant dashboard access', 'Real-time tracking', 'Automated payouts'].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
+                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-400">
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
-                    <span className="leading-tight">{feature}</span>
+                    <span>{feature}</span>
                   </div>
                 ))}
               </div>
