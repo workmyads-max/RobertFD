@@ -2,19 +2,30 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Award, Wallet, ShoppingCart } from 'lucide-react';
 
-const STEPS = [
-  { id: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', icon: ShoppingCart },
-  { id: 'phase1', label: 'Phase 1', desc: '10% profit · 5% daily DD · 4 min days', icon: Clock },
-  { id: 'phase2', label: 'Phase 2', desc: '5% profit · 5% daily DD', icon: Clock },
-  { id: 'funded', label: 'Funded Account', desc: 'Live capital · 80% profit split', icon: Award },
-  { id: 'withdrawal', label: 'Withdrawal Eligible', desc: 'First payout available', icon: Wallet },
-];
-
 export default function ProgressTimeline({ account }) {
+  // Use REAL account status from MT5 synced data
   const phase = account?.phase || 'phase1';
   const status = account?.status || 'active';
   const phaseReviewStatus = account?.phase_review_status || 'none';
   const fundedReviewStatus = account?.funded_review_status || 'none';
+  
+  // Get actual challenge rules from account's rule_snapshot (set at purchase time)
+  const rules = account?.rule_snapshot || {};
+  const phase1Target = rules.phase1_target || 10;
+  const phase2Target = rules.phase2_target || 5;
+  const dailyDD = rules.daily_dd_limit || 5;
+  const maxDD = rules.max_dd_limit || 10;
+  const minDays = rules.min_trading_days || 4;
+  const profitSplit = rules.profit_split || 80;
+
+  // Build steps dynamically from REAL account rules
+  const STEPS = [
+    { id: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', icon: ShoppingCart },
+    { id: 'phase1', label: 'Phase 1', desc: `${phase1Target}% profit · ${dailyDD}% daily DD · ${minDays} min days`, icon: Clock },
+    { id: 'phase2', label: 'Phase 2', desc: `${phase2Target}% profit · ${dailyDD}% daily DD`, icon: Clock },
+    { id: 'funded', label: 'Funded Account', desc: `Live capital · ${profitSplit}% profit split`, icon: Award },
+    { id: 'withdrawal', label: 'Withdrawal Eligible', desc: 'First payout available', icon: Wallet },
+  ];
 
   const getStepStatus = (stepId) => {
     if (stepId === 'purchased') return 'done';

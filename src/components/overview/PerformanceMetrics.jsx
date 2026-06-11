@@ -5,19 +5,23 @@ import { TrendingUp, TrendingDown, Activity, Zap } from 'lucide-react';
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
 export default function PerformanceMetrics({ account, trades }) {
+  // Use REAL MT5 synced trade records
   const closedTrades = trades.filter(t => t.status === 'closed');
   const openTrades = trades.filter(t => t.status === 'open');
   const wins = closedTrades.filter(t => (t.pnl || 0) > 0);
   const losses = closedTrades.filter(t => (t.pnl || 0) < 0);
   
+  // Calculate authentic performance metrics from actual trade history
   const avgWin = wins.length ? wins.reduce((s, t) => s + t.pnl, 0) / wins.length : 0;
   const avgLoss = losses.length ? Math.abs(losses.reduce((s, t) => s + t.pnl, 0) / losses.length) : 0;
   const totalLots = closedTrades.reduce((s, t) => s + (t.lots || 0), 0);
   const profitFactor = avgLoss > 0 && wins.length > 0 ? (avgWin * wins.length) / (avgLoss * losses.length) : 0;
   const rrrAvg = avgLoss > 0 ? avgWin / avgLoss : 0;
   const expectancy = closedTrades.length > 0 ? (wins.length / closedTrades.length * avgWin - losses.length / closedTrades.length * avgLoss) : 0;
+  const winRate = closedTrades.length > 0 ? (wins.length / closedTrades.length) * 100 : 0;
 
   const metrics = [
+    { label: 'Win Rate', value: winRate > 0 ? `${winRate.toFixed(1)}%` : '0%', icon: TrendingUp, color: winRate >= 50 ? '#10b981' : winRate >= 30 ? '#f59e0b' : '#ef4444' },
     { label: 'Profit Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', icon: TrendingUp, color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
     { label: 'Expectancy', value: expectancy !== 0 ? `$${fmt(expectancy)}` : '—', icon: Activity, color: expectancy >= 0 ? '#10b981' : '#ef4444' },
     { label: 'Avg R:R Ratio', value: rrrAvg > 0 ? `1:${rrrAvg.toFixed(2)}` : '—', icon: TrendingUp, color: '#f1f5f9' },

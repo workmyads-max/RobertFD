@@ -13,13 +13,16 @@ function fmtTime(seconds) {
 }
 
 export default function LiveTradeFeed({ account, trades, onRefresh }) {
+  // Filter only REAL open positions from MT5 synced trade records
   const openTrades = trades.filter(t => t.status === 'open').sort((a, b) => {
     const aTime = a.open_time ? new Date(a.open_time).getTime() : 0;
     const bTime = b.open_time ? new Date(b.open_time).getTime() : 0;
     return bTime - aTime;
   });
 
+  // Calculate total unrealized PnL from all open positions
   const totalProfit = openTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const totalLots = openTrades.reduce((s, t) => s + (t.lots || 0), 0);
 
   return (
     <div className="rounded-2xl overflow-hidden"
@@ -105,9 +108,10 @@ export default function LiveTradeFeed({ account, trades, onRefresh }) {
         </div>
       )}
 
-      <div className="px-5 py-3 border-t text-[10px] font-mono text-white/40"
+      <div className="px-5 py-3 border-t flex items-center justify-between text-[10px] font-mono"
         style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        Open positions: {openTrades.length}
+        <span className="text-white/40">Open positions: {openTrades.length}</span>
+        <span className="text-white/40">Total lots: {totalLots.toFixed(2)}</span>
       </div>
     </div>
   );
