@@ -20,11 +20,9 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'overview', label: 'Overview', icon: Shield, prominent: true },
     { id: 'accounts', label: 'My Accounts', icon: Wallet },
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
-    { id: 'analytics', label: 'Analytics', icon: Activity },
     { id: 'markets', label: 'Markets', icon: Globe },
     { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true },
-    { id: 'calendar', label: 'Calendar', icon: CalendarDays },
-    { id: 'news', label: 'News', icon: Newspaper },
+    { id: 'calendar-news', label: 'Calendar & News', icon: CalendarDays },
     { id: 'journal', label: 'Journal', icon: BookOpen },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'affiliate', label: 'Affiliate', icon: Users },
@@ -38,7 +36,6 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
   const filterNavItems = () => {
     const visibilityMap = {
-      'analytics': 'analytics',
       'markets': 'market_news',
       'journal': 'trading_journal',
       'affiliate': 'affiliate',
