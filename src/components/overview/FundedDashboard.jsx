@@ -177,7 +177,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(selectedAccount, trades);
 
-  if (isLoading) {
+  if (isLoading || !selectedAccount) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -251,7 +251,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
             {/* Per-account content */}
             <AnimatePresence mode="wait">
-              {selectedAccount && (
+              {selectedAccount && activeAccounts.length > 0 && (
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
