@@ -234,9 +234,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
 
-                  {/* Metric cards — pass real trades for floating pnl */}
-                  <MetricCards account={selectedAccount} rules={rules} stats={stats} />
-
                   {/* Objectives */}
                   <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
 
