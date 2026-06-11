@@ -15,6 +15,9 @@ import ProgressTimeline from '../overview/ProgressTimeline';
 import CurrentResultsChart from '../overview/CurrentResultsChart';
 import ChallengeDetailSidebar from '../overview/ChallengeDetailSidebar';
 
+// DEBUG: Check CurrentResultsChart import
+console.log('[AccountOverview] CurrentResultsChart type:', typeof CurrentResultsChart);
+
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
 function Card({ children, className = '', accent = false }) {
