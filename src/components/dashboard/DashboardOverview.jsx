@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
+import ThreePathsToFunded from './ThreePathsToFunded';
 
 
 
@@ -108,9 +109,15 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
       )}
 
       {hasAccounts && (
-        <div className="rounded-xl border py-12 text-center" style={{ borderColor: 'hsl(var(--border))' }}>
-          <div className="text-sm text-muted-foreground">Overview content removed</div>
-        </div>
+        <>
+          {/* Active Account area placeholder */}
+          <div className="rounded-xl border py-12 text-center" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="text-sm text-muted-foreground">Active Account Overview</div>
+          </div>
+
+          {/* Three Paths to Funded Trading */}
+          <ThreePathsToFunded onNavigate={onNavigate} />
+        </>
       )}
     </div>
   );
