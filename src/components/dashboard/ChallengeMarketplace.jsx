@@ -271,40 +271,38 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               onClick={() => setAccountType(key)}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              className={`rounded-xl p-4 text-left transition-all duration-200 ${
-                isSelected ? 'bg-[#1A1D23]' : 'bg-[#1A1D23]/50 hover:bg-[#1A1D23]'
-              }`}
+              className="rounded-xl p-4 text-left transition-all"
               style={{
-                border: `1px solid ${isSelected ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                background: isSelected ? '#1A1D23' : '#15181E',
+                border: `1px solid ${isSelected ? '#FF5C00' : 'rgba(255,255,255,0.06)'}`,
               }}>
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'bg-[#FF5C00]/15' : 'bg-white/5'
-                  }`}>
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: isSelected ? '#FF5C00' : 'rgba(255,255,255,0.05)',
+                    }}>
                     {key === 'standard'
-                      ? <Zap className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />
-                      : <Shield className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />}
+                      ? <Zap className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-[#8B8F95]'}`} />
+                      : <Shield className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-[#8B8F95]'}`} />}
                   </div>
                   <div>
-                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/80'}`}>{cfg.label}</div>
-                    <div className={`text-[10px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`}>{cfg.leverage} leverage</div>
+                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white'}`}>{cfg.label}</div>
+                    <div className={`text-[10px] ${isSelected ? 'text-white/60' : 'text-[#8B8F95]'}`}>{cfg.leverage}</div>
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center"
                     style={{ background: '#FF5C00' }}>
-                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    <Check className="w-3.5 h-3.5 text-black" strokeWidth={3} />
                   </div>
                 )}
               </div>
               <div className="space-y-1.5">
                 {cfg.features.map(f => (
                   <div key={f.text} className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      f.ok ? 'bg-[#CCFF00]' : 'bg-red-400'
-                    }`} />
-                    <span className={`text-[11px] ${f.ok ? 'text-white/80' : 'text-[#8B8F95]'}`}>{f.text}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#CCFF00]' : 'bg-red-500'}`} />
+                    <span className={`text-[11px] ${f.ok ? 'text-white' : 'text-[#8B8F95]'}`}>{f.text}</span>
                   </div>
                 ))}
               </div>
