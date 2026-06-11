@@ -9,6 +9,9 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import CredentialsModal from './CredentialsModal';
+import LiveTradeFeed from '../overview/LiveTradeFeed';
+import PerformanceMetrics from '../overview/PerformanceMetrics';
+import ProgressTimeline from '../overview/ProgressTimeline';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -735,6 +738,13 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       )}
 
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
+
+      <LiveTradeFeed account={account} trades={tradeRecords} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['trade-records-overview', account?.account_id] })} />
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <PerformanceMetrics account={account} trades={tradeRecords} />
+        <ProgressTimeline account={account} />
+      </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} tradeRecords={tradeRecords} />
