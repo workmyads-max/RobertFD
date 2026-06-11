@@ -263,31 +263,50 @@ function DailySummaryPanel({ tradeRecords }) {
 
 // ─── Discipline Score (gauge) ─────────────────────────────────────────────────
 function DisciplineGauge({ score }) {
-  const r = 70, cx = 90, cy = 90;
-  const circ = Math.PI * r; // half circle
-  const pct = Math.min(score, 100) / 100;
+  const r = 68, cx = 100, cy = 95;
+  const circ = Math.PI * r;
+  const pct = Math.min(Math.max(score, 0), 100) / 100;
   const dash = pct * circ;
   const color = score < 30 ? '#ef4444' : score < 80 ? '#f59e0b' : '#10b981';
+  const trackColor = score < 30 ? 'rgba(239,68,68,0.15)' : score < 80 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
   const label = score < 30 ? 'Poor' : score < 80 ? 'Average' : 'Excellent';
+
+  // Tick marks at 0,25,50,75,100% along the arc
+  const ticks = [0, 25, 50, 75, 100];
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="180" height="100" viewBox="0 0 180 100">
-        {/* track */}
-        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" strokeLinecap="round" />
-        {/* fill */}
-        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
-          strokeDasharray={`${dash} ${circ}`} style={{ transition: 'stroke-dasharray 1s ease' }} />
-        {/* labels */}
-        {[0,30,50,80,100].map((v, i) => {
-          const angle = Math.PI * (v / 100);
-          const lx = cx - r * Math.cos(angle);
-          const ly = cy - r * Math.sin(angle);
-          return <text key={v} x={lx} y={ly - 6} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.4)">{v}%</text>;
+      <svg width="200" height="110" viewBox="0 0 200 110">
+        {/* Background arc track */}
+        <path
+          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke={trackColor} strokeWidth="12" strokeLinecap="round"
+        />
+        {/* Colored fill arc */}
+        <path
+          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
+          strokeDasharray={`${dash} ${circ}`}
+          style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)', filter: `drop-shadow(0 0 6px ${color}88)` }}
+        />
+        {/* Tick marks */}
+        {ticks.map(v => {
+          const angle = Math.PI * (v / 100); // 0=left, π=right
+          const tx = cx - r * Math.cos(angle);
+          const ty = cy - r * Math.sin(angle);
+          // Label offset outward
+          const lx = cx - (r + 14) * Math.cos(angle);
+          const ly = cy - (r + 14) * Math.sin(angle);
+          return (
+            <g key={v}>
+              <circle cx={tx} cy={ty} r="2" fill="rgba(255,255,255,0.3)" />
+              <text x={lx} y={ly + 3} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.45)" fontFamily="monospace">{v}%</text>
+            </g>
+          );
         })}
-        {/* center */}
-        <text x={cx} y={cy - 10} textAnchor="middle" fontSize="20" fontWeight="bold" fill={color}>{score}%</text>
-        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="11" fill={color}>{label}</text>
+        {/* Center score */}
+        <text x={cx} y={cy - 12} textAnchor="middle" fontSize="26" fontWeight="900" fill={color} fontFamily="monospace">{score}%</text>
+        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="12" fill={color} fontWeight="600">{label}</text>
       </svg>
     </div>
   );
@@ -330,28 +349,32 @@ function DisciplinePanel({ account, tradeRecords }) {
   });
   const todayPnl = todayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
 
-  // ── Drawdown values — use synced DB values (most accurate from scheduledMTSync) ─
+  // ── Drawdown values — from scheduledMTSync (persistent, never decreasing) ──
+  // These are already computed correctly by the sync using equity (floating included)
   const dailyDDUsed = account?.daily_drawdown_used || 0;
   const maxDDUsed   = account?.max_drawdown_used   || 0;
 
-  // ── Total PnL = balance - accountSize ────────────────────────────────────
-  const totalPnl = balance - accountSize;
-  const profitTargetPct = account?.profit_target_progress || Math.max(0, (totalPnl / accountSize) * 100);
+  // ── Loss amounts based on equity (includes floating PnL from open positions) ──
+  // daily_start_balance = balance at last 23:00 UTC reset (set by scheduledMTSync)
+  const dailyStartBalance = account?.daily_start_balance || accountSize;
+  const dailyLossAmt = equity - dailyStartBalance; // negative = loss vs start of day
+  const maxLossAmt   = equity - accountSize;        // negative = loss vs original size
+
+  // ── Profit target — use equity progress above accountSize ────────────────
+  const profitTargetPct = account?.profit_target_progress
+    ?? Math.max(0, ((equity - accountSize) / accountSize) * 100);
 
   // ── Permitted loss calculations ───────────────────────────────────────────
-  // daily_start_balance is set at 23:00 UTC reset by scheduledMTSync
-  const dailyStartBalance = account?.daily_start_balance || balance;
   const dailyAllowance = dailyStartBalance * (dailyDDLimit / 100);
-  // How much loss is still allowed today = allowance - loss already taken today
-  const todayLossAlready = Math.min(0, todayPnl); // negative if losing
-  const todayPermittedLossRemaining = Math.max(0, dailyAllowance + todayLossAlready);
-  // Max permitted loss remaining = equity can still fall by maxDD from accountSize
-  const maxPermittedLossRemaining = Math.max(0, balance - accountSize * (1 - maxDDLimit / 100));
+  // Remaining daily loss room = allowance - how much equity dropped today
+  const dailyLossUsedAmt = Math.max(0, dailyStartBalance - equity); // how much lost today
+  const todayPermittedLossRemaining = Math.max(0, dailyAllowance - dailyLossUsedAmt);
+  // Max remaining = how much more equity can fall before hitting maxDD from accountSize
+  const maxDDAllowance = accountSize * (maxDDLimit / 100);
+  const maxLossUsedAmt = Math.max(0, accountSize - equity);
+  const maxPermittedLossRemaining = Math.max(0, maxDDAllowance - maxLossUsedAmt);
 
   // ── Objectives ────────────────────────────────────────────────────────────
-  const dailyLossResult = todayPnl; // negative = loss today
-  const maxLossResult = totalPnl;   // negative = total loss from start
-
   const objectives = [
     {
       label: `Minimum ${minDays} Trading Days`,
@@ -359,20 +382,23 @@ function DisciplinePanel({ account, tradeRecords }) {
       pass: tradingDays >= minDays,
     },
     {
-      label: `Max Daily Loss: -$${fmt(accountSize * dailyDDLimit / 100, 0)}`,
-      result: `${dailyLossResult >= 0 ? '+' : ''}$${fmt(dailyLossResult)} (${dailyDDUsed.toFixed(1)}%)`,
+      label: `Max Daily Loss: -$${fmt(dailyAllowance, 0)}`,
+      // Only show loss (negative). If positive (profit day), show $0.00 loss
+      result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`,
       pass: dailyDDUsed < dailyDDLimit,
       danger: dailyDDUsed >= dailyDDLimit,
     },
     {
-      label: `Max Loss: -$${fmt(accountSize * maxDDLimit / 100, 0)}`,
-      result: `${maxLossResult >= 0 ? '+' : ''}$${fmt(maxLossResult)} (${maxDDUsed.toFixed(1)}%)`,
+      label: `Max Loss: -$${fmt(maxDDAllowance, 0)}`,
+      // Only show loss vs accountSize. If equity > accountSize, show $0.00 loss
+      result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`,
       pass: maxDDUsed < maxDDLimit,
       danger: maxDDUsed >= maxDDLimit,
     },
     {
       label: `Profit Target: $${fmt(accountSize * profitTarget / 100, 0)}`,
-      result: `$${fmt(Math.max(0, totalPnl))} (${profitTargetPct.toFixed(1)}%)`,
+      // Profit = how much equity grew above accountSize
+      result: `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`,
       pass: profitTargetPct >= profitTarget,
     },
   ];
@@ -465,9 +491,10 @@ function DisciplinePanel({ account, tradeRecords }) {
           },
           {
             label: "Today's profit",
-            value: `${todayPnl >= 0 ? '+' : ''}$${fmt(todayPnl)}`,
-            sub: `${todayTrades.length} trades today`,
-            color: todayPnl > 0 ? 'text-emerald-400' : todayPnl < 0 ? 'text-red-400' : 'text-foreground',
+            // equity vs daily start = true floating P&L for today
+            value: `${dailyLossAmt >= 0 ? '+' : ''}$${fmt(dailyLossAmt)}`,
+            sub: `${todayTrades.length} closed trades`,
+            color: dailyLossAmt > 0 ? 'text-emerald-400' : dailyLossAmt < 0 ? 'text-red-400' : 'text-foreground',
           },
         ].map((s, i) => (
           <div key={s.label} className="px-5 py-5 text-center" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
