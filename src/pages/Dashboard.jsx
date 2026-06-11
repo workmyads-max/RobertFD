@@ -145,8 +145,8 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'accounts': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
@@ -185,7 +185,7 @@ export default function Dashboard() {
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
+      case 'marketplace': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'checkout': return <DashboardCheckout initialOrder={checkoutOrder} onBack={() => setActivePage('marketplace')} onComplete={() => setActivePage('accounts')} />;
       case 'performance': return <MyPerformance user={user} />;
       case 'admin-coupons': return isAdmin ? <AdminCoupons /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
