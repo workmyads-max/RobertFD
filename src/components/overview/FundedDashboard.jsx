@@ -20,6 +20,13 @@ import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 import SocialMediaWidget    from './SocialMediaWidget.jsx';
 
+// New Account Overview Components
+import AccountSwitcherRow   from './AccountSwitcherRow.jsx';
+import AccountInfoCard      from './AccountInfoCard.jsx';
+import CurrentResultsSection from './CurrentResultsSection.jsx';
+import ChallengeInfoPanel   from './ChallengeInfoPanel.jsx';
+import StatsRow             from './StatsRow.jsx';
+
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
   return (
@@ -152,6 +159,20 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 5000,
   });
 
+  // Load live positions for equity/PnL
+  const { data: livePositionsData = [] } = useQuery({
+    queryKey: ['live-positions', selectedAccount?.account_id],
+    queryFn: async () => {
+      if (!selectedAccount?.account_id) return [];
+      try {
+        const res = await base44.functions.invoke('getLivePositions', { account_id: selectedAccount.account_id });
+        return res?.data?.positions || [];
+      } catch (err) { return []; }
+    },
+    enabled: !!selectedAccount?.account_id,
+    refetchInterval: 5000,
+  });
+
   const stats = useAccountStats(selectedAccount, trades);
 
   if (isLoading) {
@@ -169,6 +190,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const accountSize = selectedAccount?.account_size || 100000;
   const balance = selectedAccount?.balance || accountSize;
   const rules = getAccountRules(selectedAccount);
+  const livePositions = livePositionsData || [];
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
@@ -236,6 +258,47 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Objectives */}
                   <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
+
+                  {/* Account Overview Section */}
+                  <div className="space-y-4">
+                    {/* Account Switcher Row */}
+                    <AccountSwitcherRow
+                      accounts={activeAccounts}
+                      selectedAccount={selectedAccount}
+                      onSelect={setSelectedAccount}
+                    />
+
+                    {/* Account Info Card */}
+                    <AccountInfoCard
+                      account={selectedAccount}
+                      rules={rules}
+                      livePositions={livePositions}
+                      onCopyCredentials={() => {}}
+                      onNavigate={onNavigate}
+                    />
+
+                    {/* Stats Row */}
+                    <StatsRow
+                      account={selectedAccount}
+                      livePositions={livePositions}
+                      balance={balance}
+                    />
+
+                    {/* Current Results + Challenge Info */}
+                    <div className="grid lg:grid-cols-3 gap-4">
+                      <div className="lg:col-span-2">
+                        <CurrentResultsSection
+                          account={selectedAccount}
+                          trades={trades}
+                          livePositions={livePositions}
+                        />
+                      </div>
+                      <ChallengeInfoPanel
+                        account={selectedAccount}
+                        rules={rules}
+                      />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
