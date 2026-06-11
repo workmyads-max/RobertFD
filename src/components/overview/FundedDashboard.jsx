@@ -13,7 +13,6 @@ import AccountSwitcher      from './AccountSwitcher.jsx';
 import LiveStatusBar        from './LiveStatusBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
-import MT5AccountCard       from './MT5AccountCard.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -171,12 +170,10 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
-                  <MT5AccountCard 
-                    account={selectedAccount} 
-                    livePositions={openTrades}
-                    tradeRecords={trades}
-                    onRefresh={refetch}
-                  />
+                      {/* MT5AccountCard removed - restore if needed */}
+                  <div className="rounded-2xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <p className="text-sm text-white/40">Account card component removed</p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
