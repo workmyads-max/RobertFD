@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   ChevronDown, ChevronUp, RefreshCw, Copy, ChevronRight,
   Plus, BarChart3, Key, CalendarDays, Info, Check, X
@@ -994,8 +995,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         <div className="rounded-xl px-6 py-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
           {/* Links */}
           <div className="flex justify-end gap-6 text-xs font-semibold text-foreground border-b pb-3" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Terms & Conditions</a>
+            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link>
           </div>
 
           {/* Disclaimer text */}
