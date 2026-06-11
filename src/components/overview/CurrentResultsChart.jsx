@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -112,7 +111,7 @@ export default function CurrentResultsChart({ account, trades }) {
         {/* Chart */}
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
               {showObjectives && (
                 <ReferenceLine
                   y={accountSize + targetAmount}
@@ -150,23 +149,25 @@ export default function CurrentResultsChart({ account, trades }) {
                   );
                 }}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="balance"
                 stroke="#60a5fa"
                 strokeWidth={2}
+                fill="rgba(96,165,250,0.1)"
                 dot={false}
                 activeDot={{ r: 4, fill: '#60a5fa', stroke: 'rgba(96,165,250,0.3)', strokeWidth: 6 }}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="equity"
                 stroke="#10b981"
                 strokeWidth={2}
+                fill="rgba(16,185,129,0.1)"
                 dot={false}
                 activeDot={{ r: 4, fill: '#10b981', stroke: 'rgba(16,185,129,0.3)', strokeWidth: 6 }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
