@@ -149,10 +149,14 @@ Deno.serve(async (req) => {
           equity  = 0;
         }
 
-        // Closed deals: MT5 Entry field 1 = OUT (close)
-        const closedTrades = deals.filter(d => d.Entry === 1 || d.entry === 1 || d.Entry === 'OUT' || d.entry === 'OUT');
-        const wins = closedTrades.filter(d => (d.Profit ?? d.profit ?? 0) > 0).length;
-        const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+        // Tritech API: each record in get-deal-history is a completed deal
+        // Fields: deal_id, symbol, openPrice, closePrice, volume/lot, profit, openTime, closeTime, action
+        const closedTrades = deals.filter(d => {
+          const id = d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id;
+          return id != null && id !== '';
+        });
+        const wins = closedTrades.filter(d => parseFloat(d.profit ?? d.Profit ?? 0) > 0).length;
+        const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : (acc.win_rate || 0);
         const accountSize = acc.account_size || 100000;
         const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
@@ -209,27 +213,34 @@ Deno.serve(async (req) => {
           const existingTrades = await base44.entities.TradeRecord.filter({ account_id: acc.account_id });
           const existingIds = new Set(existingTrades.map(t => t.trade_id));
           const newDeals = closedTrades.filter(d => {
-            const tid = String(d.Ticket || d.PositionID || d.positionId || d.deal || d.id || '');
+            const tid = String(d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id ?? '');
             return tid && !existingIds.has(tid);
           });
           if (newDeals.length > 0) {
+            const parseTime = (t) => {
+              if (!t) return new Date().toISOString();
+              if (typeof t === 'string' && t.includes('T')) return t;
+              return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1)).toISOString();
+            };
             await Promise.all(newDeals.map(d => {
-              const tid = String(d.Ticket || d.PositionID || d.positionId || d.deal || d.id || '');
+              const tid = String(d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id ?? '');
+              const action = d.action ?? d.Action ?? 0;
+              const isSell = action === 1 || action === 'SELL' || d.type === 'SELL';
               return base44.entities.TradeRecord.create({
                 account_id: acc.account_id,
                 user_email: acc.user_email,
                 trade_id: tid,
-                symbol: d.Symbol || d.symbol || '',
-                type: (d.Action === 1 || d.type === 'SELL' || d.side === 'sell') ? 'SELL' : 'BUY',
+                symbol: d.symbol ?? d.Symbol ?? '',
+                type: isSell ? 'SELL' : 'BUY',
                 order_type: 'MARKET',
-                lots: parseFloat(d.Volume ?? d.volume ?? 0),
-                entry: parseFloat(d.Price ?? d.price ?? 0),
-                close: parseFloat(d.PriceClose ?? d.closePrice ?? d.Price ?? 0),
-                pnl: parseFloat(d.Profit ?? d.profit ?? 0),
+                lots: parseFloat(d.lot ?? d.volume ?? d.Volume ?? 0),
+                entry: parseFloat(d.openPrice ?? d.Price ?? d.price ?? 0),
+                close: parseFloat(d.closePrice ?? d.PriceClose ?? d.openPrice ?? 0),
+                pnl: parseFloat(d.profit ?? d.Profit ?? 0),
                 status: 'closed',
-                close_reason: d.Comment || d.comment || 'close',
-                open_time: d.Time ? new Date(parseInt(d.Time) * 1000).toISOString() : new Date().toISOString(),
-                close_time: d.TimeMsc ? new Date(parseInt(d.TimeMsc) / 1000).toISOString() : new Date().toISOString(),
+                close_reason: d.comment ?? d.Comment ?? 'close',
+                open_time: parseTime(d.openTime ?? d.Time),
+                close_time: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time),
               }).catch(() => null);
             }));
           }
