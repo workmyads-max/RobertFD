@@ -1,355 +1,629 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Plus, Calendar, TrendingUp, TrendingDown, Target, Brain, Activity, BarChart3, Star, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Info, Settings, Download, ExternalLink } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import JournalEntryForm from './JournalEntryForm';
-import JournalAnalytics from './JournalAnalytics';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-async function generateAIJournalEntry(periodType, accounts) {
-  // Fetch real trade data from DB
-  const acc = accounts?.[0];
-  let realTrades = [];
-  if (acc?.account_id) {
-    try {
-      realTrades = await base44.entities.TradeRecord.filter({ account_id: acc.account_id, status: 'closed' });
-    } catch {}
-  }
+const TABS = ['Daily PnL', 'Closed trades', 'Charts'];
 
-  // Filter by period
-  const now = new Date();
-  let startDate = new Date();
-  if (periodType === 'daily') startDate.setDate(now.getDate() - 1);
-  else if (periodType === 'weekly') startDate.setDate(now.getDate() - 7);
-  else if (periodType === 'monthly') startDate.setDate(now.getDate() - 30);
-
-  const periodTrades = realTrades.filter(t => {
-    const d = new Date(t.close_time || t.updated_date || t.created_date);
-    return d >= startDate;
-  });
-
-  const trades = periodTrades.length;
-  const wins = periodTrades.filter(t => (t.pnl || 0) > 0).length;
-  const losses = trades - wins;
-  const pnl = parseFloat(periodTrades.reduce((s, t) => s + (t.pnl || 0), 0).toFixed(2));
-  const winRate = trades > 0 ? Math.round((wins / trades) * 100) : 0;
-  const best = trades > 0 ? Math.max(...periodTrades.map(t => t.pnl || 0)) : 0;
-  const worst = trades > 0 ? Math.min(...periodTrades.map(t => t.pnl || 0)) : 0;
-  const symbolCounts = {};
-  periodTrades.forEach(t => { symbolCounts[t.symbol] = (symbolCounts[t.symbol] || 0) + 1; });
-  const symbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'EUR/USD';
-
-  const discipline = trades >= 3 && winRate >= 50 ? Math.round(6 + Math.random() * 3) : Math.round(3 + Math.random() * 4);
-
-  const prompt = `You are an AI trading coach for Robert Funds, a professional prop firm. Analyze this real ${periodType} trading data:
-Account: $${(acc?.account_size || 100000).toLocaleString()} | Phase: ${acc?.phase || 'phase1'}
-Period: ${periodType} | Trades: ${trades} | Wins: ${wins} | Losses: ${losses} | Win Rate: ${winRate}%
-P&L: $${pnl} | Best Trade: $${best.toFixed(2)} | Worst Trade: $${worst.toFixed(2)} | Most Traded: ${symbol}
-Account Drawdown Used: Daily ${acc?.daily_drawdown_used || 0}% / Max ${acc?.max_drawdown_used || 0}%
-
-Write a 4-5 sentence professional ${periodType} trading journal entry. Cover: performance summary, risk management evaluation, emotional/psychological observations, what went well vs what needs improvement, and one specific actionable coaching point for next session. Tone: institutional, direct, coaching-oriented like a head trader reviewing a junior's book.`;
-
-  const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'gpt_5_mini' });
-  
-  const today = new Date().toISOString().split('T')[0];
-  return {
-    entry_date: today,
-    period_type: periodType,
-    total_trades: trades,
-    winning_trades: wins,
-    losing_trades: losses,
-    pnl,
-    best_trade_pnl: best,
-    worst_trade_pnl: worst,
-    win_rate: winRate,
-    avg_rr: wins > 0 && losses > 0 ? parseFloat((Math.abs(best) / Math.max(0.01, Math.abs(worst))).toFixed(2)) : 0,
-    most_traded_symbol: symbol,
-    discipline_score: discipline,
-    consistency_score: Math.round(discipline * 0.9),
-    emotions: pnl > 0 ? ['confident', 'disciplined'] : ['frustrated', 'patient'],
-    notes: typeof result === 'string' ? result : result?.choices?.[0]?.message?.content || result,
-    ai_summary: `AI-generated from ${trades} real trades · Robert Funds Analytics`,
-  };
+function fmt(n, d = 2) {
+  if (n == null) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1000) return `$${n >= 0 ? '' : '-'}${abs.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+  return `$${n >= 0 ? '' : '-'}${abs.toFixed(d)}`;
 }
 
-const tabs = ['Daily', 'Weekly', 'Monthly', 'Analytics'];
+// ─── Daily PnL Calendar ────────────────────────────────────────────────────────
+function DailyPnLTab({ trades }) {
+  const today = new Date();
+  const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
-export default function TradingJournal({ user }) {
-  const [activeTab, setActiveTab] = useState('Daily');
-  const [showForm, setShowForm] = useState(false);
-  const [editEntry, setEditEntry] = useState(null);
-  const [generating, setGenerating] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const queryClient = useQueryClient();
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
 
-  const { data: entries = [] } = useQuery({
-    queryKey: ['journal-entries'],
-    queryFn: () => base44.entities.TradingJournalEntry.list('-entry_date', 50),
-  });
+  // Build map: "YYYY-MM-DD" → { pnl, trades }
+  const dayMap = useMemo(() => {
+    const map = {};
+    trades.filter(t => t.status === 'closed' && t.close_time).forEach(t => {
+      const d = new Date(t.close_time);
+      const key = d.toISOString().split('T')[0];
+      if (!map[key]) map[key] = { pnl: 0, count: 0 };
+      map[key].pnl += t.pnl || 0;
+      map[key].count++;
+    });
+    return map;
+  }, [trades]);
 
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 5),
-    select: (data) => data.filter(a => a.status !== 'failed'),
-  });
+  // Monthly totals
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const monthlyPnl = Object.entries(dayMap)
+    .filter(([k]) => k.startsWith(monthPrefix))
+    .reduce((s, [, v]) => s + v.pnl, 0);
+  const tradingDays = Object.keys(dayMap).filter(k => k.startsWith(monthPrefix)).length;
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.TradingJournalEntry.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['journal-entries'] }),
-  });
+  // Calendar grid (Mon–Sun)
+  const firstDay = new Date(year, month, 1);
+  // Offset: Mon=0 … Sun=6
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
 
-  const selectedAccount = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
+  const cells = [];
+  // Leading days from prev month
+  for (let i = startOffset - 1; i >= 0; i--) {
+    cells.push({ day: prevMonthDays - i, current: false });
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, current: true });
+  }
+  // Trailing days
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++) {
+    cells.push({ day: d, current: false });
+  }
 
-  const handleAIGenerate = async (periodType) => {
-    setGenerating(true);
-    const data = await generateAIJournalEntry(periodType, selectedAccount ? [selectedAccount] : accounts);
-    await base44.entities.TradingJournalEntry.create(data);
-    queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-    setGenerating(false);
-  };
+  const todayKey = today.toISOString().split('T')[0];
+  const DAY_HEADERS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-  const periodType = activeTab.toLowerCase();
-  const filteredEntries = entries.filter(e => activeTab === 'Analytics' ? true : e.period_type === periodType);
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+  const goToday = () => setViewDate(new Date(today.getFullYear(), today.getMonth(), 1));
 
-  const totalPnL = entries.reduce((s, e) => s + (e.pnl || 0), 0);
-  const avgWinRate = entries.length ? entries.reduce((s, e) => s + (e.win_rate || 0), 0) / entries.length : 0;
-  const totalTrades = entries.reduce((s, e) => s + (e.total_trades || 0), 0);
-  const avgDiscipline = entries.length ? entries.reduce((s, e) => s + (e.discipline_score || 0), 0) / entries.length : 0;
+  const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-primary" />
-            Trading Journal
-          </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Track performance, psychology & growth</p>
-        </div>
-        {activeTab !== 'Analytics' && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAIGenerate(activeTab.toLowerCase())}
-              disabled={generating}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105"
-              style={{ background: 'rgba(204,255,0,0.1)', border: '1px solid rgba(204,255,0,0.3)', color: '#CCFF00' }}
-            >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              AI Generate
-            </button>
-            <button
-              onClick={() => { setEditEntry(null); setShowForm(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-              style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }}
-            >
-              <Plus className="w-4 h-4" /> Manual Entry
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Account selector */}
-      {accounts.length > 0 && (
-        <div className="flex items-center gap-3 mb-5 p-3 rounded-xl flex-wrap"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Account:</span>
-          <div className="flex gap-2 flex-wrap">
-            {accounts.map(a => (
-              <button key={a.id} onClick={() => setSelectedAccountId(a.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${(selectedAccountId || accounts[0]?.id) === a.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                style={{
-                  background: (selectedAccountId || accounts[0]?.id) === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${(selectedAccountId || accounts[0]?.id) === a.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                }}>
-                <span className="font-bold">{a.account_id}</span>
-                <span className="ml-1 opacity-60">${(a.account_size || 0).toLocaleString()}</span>
-              </button>
-            ))}
-          </div>
-          {selectedAccount && (
-            <span className="ml-auto text-[10px] font-mono text-muted-foreground">
-              AI Generate will use <span className="text-primary">{selectedAccount.account_id}</span> trades
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total P&L', value: `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString()}`, color: totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400', icon: TrendingUp },
-          { label: 'Avg Win Rate', value: `${avgWinRate.toFixed(1)}%`, color: 'text-primary', icon: Target },
-          { label: 'Total Trades', value: totalTrades, color: 'text-foreground', icon: Activity },
-          { label: 'Discipline Score', value: `${avgDiscipline.toFixed(1)}/10`, color: 'text-accent', icon: Brain },
-        ].map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-              className="rounded-2xl p-4"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.label}</span>
-                <Icon className="w-4 h-4 text-muted-foreground/50" />
-              </div>
-              <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl mb-6 w-fit"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        {tabs.map((t) => (
-          <button key={t} onClick={() => setActiveTab(t)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === t ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
-            }`}>
-            {t}
+      {/* Toolbar */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <button onClick={goToday} className="px-3 py-1.5 rounded text-sm font-medium border"
+            style={{ borderColor: 'rgba(255,255,255,0.15)', color: '#e2e8f0', background: 'rgba(255,255,255,0.05)' }}>
+            Today
           </button>
+          <button onClick={prevMonth} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/5">
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <span className="text-sm font-semibold text-foreground min-w-[110px] text-center">{monthLabel}</span>
+          <button onClick={nextMonth} className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/5">
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-muted-foreground">Monthly stats:</span>
+          <span className="font-semibold" style={{ color: monthlyPnl >= 0 ? '#4ade80' : '#f87171' }}>{fmt(monthlyPnl)}</span>
+          <span className="text-muted-foreground">Trading days: <strong className="text-foreground">{tradingDays}</strong></span>
+          <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5">
+            <Settings className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {/* Day headers */}
+        <div className="grid grid-cols-7 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          {DAY_HEADERS.map(d => (
+            <div key={d} className="py-2 text-center text-xs font-medium text-muted-foreground">{d}</div>
+          ))}
+        </div>
+
+        {/* Weeks */}
+        {[0, 1, 2, 3, 4, 5].map(week => (
+          <div key={week} className="grid grid-cols-7 border-b last:border-b-0" style={{ borderColor: 'rgba(255,255,255,0.06)', minHeight: '90px' }}>
+            {cells.slice(week * 7, week * 7 + 7).map((cell, idx) => {
+              if (!cell) return <div key={idx} className="border-r last:border-r-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }} />;
+              const dateKey = cell.current
+                ? `${year}-${String(month + 1).padStart(2, '0')}-${String(cell.day).padStart(2, '0')}`
+                : null;
+              const data = dateKey ? dayMap[dateKey] : null;
+              const isToday = dateKey === todayKey;
+              return (
+                <div key={idx}
+                  className="border-r last:border-r-0 p-1.5 relative"
+                  style={{ borderColor: 'rgba(255,255,255,0.05)', background: isToday ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
+                  <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full mb-1
+                    ${!cell.current ? 'text-muted-foreground/30' : isToday ? 'bg-blue-500 text-white' : 'text-muted-foreground'}`}>
+                    {cell.day}
+                  </div>
+                  {data && cell.current && (
+                    <div className="rounded px-1.5 py-1" style={{ background: data.pnl >= 0 ? 'rgba(20,83,45,0.8)' : 'rgba(127,29,29,0.8)' }}>
+                      <div className="text-xs font-bold" style={{ color: data.pnl >= 0 ? '#4ade80' : '#f87171' }}>
+                        {fmt(data.pnl)}
+                      </div>
+                      <div className="text-[10px] text-white/70">Trades: {data.count}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ))}
       </div>
+      <div className="mt-3 text-center text-xs" style={{ color: '#60a5fa' }}>
+        The trades are in the platform time which might differ from CE(S)T
+      </div>
+    </div>
+  );
+}
 
-      {/* Analytics tab */}
-      {activeTab === 'Analytics' && <JournalAnalytics entries={entries} />}
+// ─── Closed Trades Tab ─────────────────────────────────────────────────────────
+function TradeRow({ trade, index }) {
+  const [expanded, setExpanded] = useState(false);
+  const isBuy = trade.type === 'BUY';
+  const pnl = trade.pnl || 0;
 
-      {/* Form */}
-      <AnimatePresence>
-        {showForm && (
-          <JournalEntryForm
-            entry={editEntry}
-            periodType={periodType !== 'analytics' ? periodType : 'daily'}
-            onClose={() => { setShowForm(false); setEditEntry(null); }}
-            onSaved={() => { setShowForm(false); setEditEntry(null); queryClient.invalidateQueries({ queryKey: ['journal-entries'] }); }}
-          />
-        )}
-      </AnimatePresence>
+  const openTime = trade.open_time ? new Date(trade.open_time) : null;
+  const closeTime = trade.close_time ? new Date(trade.close_time) : null;
 
-      {/* Entries list */}
-      {activeTab !== 'Analytics' && (
-        <div className="space-y-4">
-          {filteredEntries.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="text-center py-16 rounded-2xl"
-              style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
-              <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">No {activeTab.toLowerCase()} entries yet.</p>
-              <button onClick={() => setShowForm(true)} className="mt-4 text-primary text-sm hover:underline">+ Add your first entry</button>
-            </motion.div>
-          ) : filteredEntries.map((entry, i) => (
-            <JournalEntryCard
-              key={entry.id}
-              entry={entry}
-              index={i}
-              onEdit={() => { setEditEntry(entry); setShowForm(true); }}
-              onDelete={() => deleteMutation.mutate(entry.id)}
-            />
-          ))}
+  const durationMs = openTime && closeTime ? closeTime - openTime : 0;
+  const durH = Math.floor(durationMs / 3600000);
+  const durM = Math.floor((durationMs % 3600000) / 60000);
+  const durS = Math.floor((durationMs % 60000) / 1000);
+  const duration = durationMs > 0
+    ? `${String(durH).padStart(2,'0')}:${String(durM).padStart(2,'0')}:${String(durS).padStart(2,'0')}`
+    : '—';
+
+  // Pips estimate
+  const pips = trade.entry && trade.close
+    ? Math.abs(trade.close - trade.entry) * (trade.entry > 10 ? 10 : 1000)
+    : 0;
+
+  const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+
+  return (
+    <>
+      <tr className="border-b hover:bg-white/[0.02] cursor-pointer transition-colors"
+        style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+        onClick={() => setExpanded(e => !e)}>
+        <td className="px-3 py-3">
+          <div className="text-xs font-mono text-muted-foreground">{trade.trade_id?.slice(0,10) || String(index + 1)}</div>
+          <div className="text-xs font-medium"
+            style={{ color: isBuy ? '#4ade80' : '#f87171' }}>
+            {isBuy ? '↗ Buy' : '↘ Sell'}
+          </div>
+          <div className="text-[10px] text-muted-foreground">{openTime ? fmtDate(openTime) : '—'}</div>
+        </td>
+        <td className="px-3 py-3 text-sm text-center text-foreground">{trade.lots || '—'}</td>
+        <td className="px-3 py-3 text-sm font-mono font-medium text-center text-foreground">{trade.symbol || '—'}</td>
+        <td className="px-3 py-3 text-center">
+          <span className="text-sm font-bold font-mono" style={{ color: pnl >= 0 ? '#4ade80' : '#f87171' }}>
+            {pnl >= 0 ? '+' : ''}{fmt(pnl)}
+          </span>
+        </td>
+        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground">{pips > 0 ? pips.toFixed(1) : '—'}</td>
+        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground">{duration}</td>
+        <td className="px-3 py-3 text-center">
+          <button className="p-1 rounded hover:bg-white/10">
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </td>
+        <td className="px-3 py-3 text-center text-muted-foreground">
+          {expanded ? <ChevronUp className="w-4 h-4 mx-auto" /> : <ChevronDown className="w-4 h-4 mx-auto" />}
+        </td>
+      </tr>
+
+      {expanded && (
+        <tr>
+          <td colSpan={8} className="px-4 pb-4">
+            <div className="rounded-xl p-4 mt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {/* Price */}
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1">$ Price</div>
+                <div className="space-y-1.5 text-xs">
+                  {[
+                    ['Type', trade.type, isBuy ? '#4ade80' : '#f87171'],
+                    ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—'],
+                    ['Close', trade.close > 0 ? trade.close.toFixed(5) : '—'],
+                  ].map(([k, v, c]) => (
+                    <div key={k} className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">{k}</span>
+                      <span className="font-mono" style={{ color: c || '#f1f5f9' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Trade Protection */}
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <input type="checkbox" className="w-3 h-3 accent-primary" readOnly checked={!!(trade.sl || trade.tp)} />
+                  Trade Protection
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  {[
+                    ['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'],
+                    ['SL Pips', '—'],
+                    ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—'],
+                    ['TP Pips', '—'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">{k}</span>
+                      <span className="font-mono text-foreground">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Results */}
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1">
+                  <span style={{ color: '#4ade80' }}>✓</span> Results
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  {[
+                    ['Gross profit', pnl, pnl >= 0 ? '#4ade80' : '#f87171'],
+                    ['Swap', trade.swap || 0, '#94a3b8'],
+                    ['Comm.', 0, '#94a3b8'],
+                    ['Net profit', pnl + (trade.swap || 0), (pnl + (trade.swap || 0)) >= 0 ? '#4ade80' : '#f87171'],
+                  ].map(([k, v, c]) => (
+                    <div key={k} className="flex justify-between gap-3">
+                      <span className="text-muted-foreground">{k}</span>
+                      <span className="font-mono font-bold" style={{ color: c }}>{typeof v === 'number' ? fmt(v) : v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Time */}
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground mb-2">Time</div>
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <div className="text-muted-foreground mb-0.5">Open</div>
+                    <div className="font-mono text-foreground">{openTime ? fmtDate(openTime) : '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-0.5">Closed</div>
+                    <div className="font-mono text-foreground">{closeTime ? fmtDate(closeTime) : '—'}</div>
+                  </div>
+                </div>
+              </div>
+              {/* Trade Stats */}
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1">
+                  Trade Stats <Info className="w-3 h-3" />
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  {(() => {
+                    const entry = trade.entry || 0;
+                    const close = trade.close || entry;
+                    const pipSize = entry > 10 ? 0.0001 : 0.00001;
+                    const mae = isBuy ? Math.min(0, close - entry) : Math.min(0, entry - close);
+                    const mfe = isBuy ? Math.max(0, close - entry) : Math.max(0, entry - close);
+                    return [
+                      ['MAE Pip', mae !== 0 ? (mae / pipSize).toFixed(1) : '—'],
+                      ['MAE', mae !== 0 ? (entry + mae).toFixed(5) : entry > 0 ? entry.toFixed(5) : '—'],
+                      ['MFE Pip', mfe !== 0 ? (mfe / pipSize).toFixed(1) : '—'],
+                      ['MFE', mfe !== 0 ? (entry + mfe).toFixed(5) : close > 0 ? close.toFixed(5) : '—'],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3">
+                        <span className="text-muted-foreground">{k}</span>
+                        <span className="font-mono text-foreground">{v}</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Notes area */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1.5">Entry strategy</div>
+                <textarea className="w-full rounded-lg px-3 py-2 text-sm resize-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', height: 56 }}
+                  placeholder="Describe your entry strategy..." />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1.5">Exit strategy</div>
+                <textarea className="w-full rounded-lg px-3 py-2 text-sm resize-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', height: 56 }}
+                  placeholder="Describe your exit strategy..." />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1.5">Comments on trade</div>
+                <textarea className="w-full rounded-lg px-3 py-2 text-sm resize-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', height: 56 }}
+                  placeholder="Any comments..." />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1.5">Tags</div>
+                <input className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0' }}
+                  placeholder="Select tags..." />
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function ClosedTradesTab({ trades }) {
+  const [sortBy, setSortBy] = useState('Close Time');
+  const [search, setSearch] = useState('');
+
+  const closed = trades.filter(t => t.status === 'closed');
+  const sorted = [...closed].sort((a, b) => {
+    if (sortBy === 'Close Time') return new Date(b.close_time || 0) - new Date(a.close_time || 0);
+    if (sortBy === 'Open Time') return new Date(b.open_time || 0) - new Date(a.open_time || 0);
+    if (sortBy === 'PnL') return (b.pnl || 0) - (a.pnl || 0);
+    return 0;
+  });
+  const filtered = sorted.filter(t =>
+    !search || (t.trade_id?.includes(search) || t.symbol?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const handleExport = () => {
+    const csv = ['Trade ID,Type,Symbol,Lots,Entry,Close,PnL,Open Time,Close Time']
+      .concat(filtered.map(t =>
+        `${t.trade_id || ''},${t.type || ''},${t.symbol || ''},${t.lots || ''},${t.entry || ''},${t.close || ''},${t.pnl || ''},${t.open_time || ''},${t.close_time || ''}`
+      )).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'trades.csv'; a.click();
+  };
+
+  return (
+    <div>
+      {/* Filters bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div>
+          <div className="text-[10px] text-muted-foreground mb-1">Sort by</div>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+            className="px-3 py-1.5 rounded text-sm text-foreground outline-none"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <option>Close Time</option>
+            <option>Open Time</option>
+            <option>PnL</option>
+          </select>
+        </div>
+        <div className="flex-1">
+          <div className="text-[10px] text-muted-foreground mb-1">Search tickets or tags</div>
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Select..."
+            className="w-full max-w-xs px-3 py-1.5 rounded text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }} />
+        </div>
+        <div className="ml-auto mt-4">
+          <button onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium"
+            style={{ background: '#3b82f6', color: 'white' }}>
+            <Download className="w-4 h-4" /> Export
+          </button>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground text-sm">No closed trades found</div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          <table className="w-full text-xs">
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}>
+                {['Type', 'Volume', 'Symbol', 'PnL', 'Pips', 'Duration', '', ''].map((h, i) => (
+                  <th key={i} className="px-3 py-2.5 text-left text-[10px] font-medium text-muted-foreground">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((t, i) => <TradeRow key={t.id || i} trade={t} index={i} />)}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
 }
 
-function JournalEntryCard({ entry, index, onEdit, onDelete }) {
-  const [expanded, setExpanded] = useState(false);
-  const isPositive = (entry.pnl || 0) >= 0;
-  const emotions = entry.emotions || [];
+// ─── Charts Tab ────────────────────────────────────────────────────────────────
+function ChartsTab({ trades }) {
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [volumeFilter, setVolumeFilter] = useState('all');
+  const [symbolFilter, setSymbolFilter] = useState('all');
 
-  const emotionColors = {
-    confident: '#10b981', disciplined: '#10b981', calm: '#10b981', patient: '#10b981',
-    fearful: '#ef4444', greedy: '#ef4444', frustrated: '#ef4444', overexcited: '#f59e0b',
+  const closed = trades.filter(t => t.status === 'closed');
+  const symbols = [...new Set(closed.map(t => t.symbol).filter(Boolean))];
+
+  const filtered = closed.filter(t => {
+    if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+    if (symbolFilter !== 'all' && t.symbol !== symbolFilter) return false;
+    return true;
+  });
+
+  // Open time hour chart
+  const hourMap = {};
+  filtered.forEach(t => {
+    if (!t.open_time) return;
+    const h = new Date(t.open_time).getHours();
+    const key = `${String(h).padStart(2,'0')}:00`;
+    if (!hourMap[key]) hourMap[key] = 0;
+    hourMap[key] += t.pnl || 0;
+  });
+  const hourData = Object.entries(hourMap).sort().map(([h, pnl]) => ({ label: h, pnl }));
+
+  // Buy vs Sell
+  const buyPnl = filtered.filter(t => t.type === 'BUY').reduce((s, t) => s + (t.pnl || 0), 0);
+  const sellPnl = filtered.filter(t => t.type === 'SELL').reduce((s, t) => s + (t.pnl || 0), 0);
+  const bsData = [
+    { label: 'Sell', pnl: sellPnl, color: '#f87171' },
+    { label: 'Buy', pnl: buyPnl, color: '#4ade80' },
+  ];
+
+  // Volume (lots)
+  const volMap = {};
+  filtered.forEach(t => {
+    const lots = (t.lots || 0).toFixed(1);
+    if (!volMap[lots]) volMap[lots] = 0;
+    volMap[lots] += t.pnl || 0;
+  });
+  const volData = Object.entries(volMap).sort().map(([label, pnl]) => ({ label, pnl }));
+
+  // Symbol chart
+  const symbolMap = {};
+  filtered.forEach(t => {
+    if (!t.symbol) return;
+    if (!symbolMap[t.symbol]) symbolMap[t.symbol] = 0;
+    symbolMap[t.symbol] += t.pnl || 0;
+  });
+  const symbolData = Object.entries(symbolMap).map(([label, pnl]) => ({ label, pnl }));
+
+  const ChartCard = ({ title, data, color = '#4ade80' }) => (
+    <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="text-sm font-semibold text-foreground mb-4">{title}</div>
+      {data.length === 0 ? (
+        <div className="flex items-center justify-center h-48 text-xs text-muted-foreground">No data</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={data} barSize={32}>
+            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+              tickFormatter={v => `$${v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)}`} />
+            <Tooltip
+              contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }}
+              formatter={(v) => [fmt(v), 'PnL']}
+            />
+            <Bar dataKey="pnl" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => (
+                <Cell key={i} fill={d.color || (d.pnl >= 0 ? '#4ade80' : '#f87171')} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+
+  const handleExport = () => {
+    const csv = ['Symbol,Type,Lots,PnL']
+      .concat(filtered.map(t => `${t.symbol||''},${t.type||''},${t.lots||''},${t.pnl||''}`)).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'charts.csv'; a.click();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      className="rounded-2xl overflow-hidden"
-      style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: `1px solid ${isPositive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-      }}
-    >
-      {/* Top bar */}
-      <div className="h-1 w-full" style={{ background: isPositive ? '#10b981' : '#ef4444', opacity: 0.6 }} />
-
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-bold text-foreground">{entry.entry_date}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono capitalize"
-                style={{ background: 'rgba(255,92,0,0.1)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
-                {entry.period_type}
-              </span>
-            </div>
-            {entry.most_traded_symbol && (
-              <div className="text-xs font-mono text-muted-foreground">Most traded: {entry.most_traded_symbol}</div>
-            )}
-          </div>
-          <div className="text-right">
-            <div className={`text-lg font-black ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-              {isPositive ? '+' : ''}${(entry.pnl || 0).toLocaleString()}
-            </div>
-            <div className="text-[10px] font-mono text-muted-foreground">{entry.total_trades || 0} trades</div>
-          </div>
+    <div>
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Select..."
+          className="px-3 py-1.5 rounded text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }} />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-red-400">Filter Trades</span>
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+            className="px-2 py-1 rounded text-xs text-foreground outline-none"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <option value="all">Type ▾</option>
+            <option value="BUY">Buy</option>
+            <option value="SELL">Sell</option>
+          </select>
+          <select value={volumeFilter} onChange={e => setVolumeFilter(e.target.value)}
+            className="px-2 py-1 rounded text-xs text-foreground outline-none"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <option value="all">Volume ▾</option>
+            <option value="0.01">0.01</option>
+            <option value="0.1">0.1</option>
+            <option value="1">1</option>
+          </select>
+          <select value={symbolFilter} onChange={e => setSymbolFilter(e.target.value)}
+            className="px-2 py-1 rounded text-xs text-foreground outline-none"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <option value="all">Symbol ▾</option>
+            {symbols.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
-
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
-          {[
-            { label: 'Win Rate', value: entry.win_rate ? `${entry.win_rate}%` : '—' },
-            { label: 'Avg R:R', value: entry.avg_rr ? `${entry.avg_rr}x` : '—' },
-            { label: 'Discipline', value: entry.discipline_score ? `${entry.discipline_score}/10` : '—' },
-            { label: 'Best Trade', value: entry.best_trade_pnl ? `+$${entry.best_trade_pnl}` : '—' },
-            { label: 'Worst Trade', value: entry.worst_trade_pnl ? `-$${Math.abs(entry.worst_trade_pnl)}` : '—' },
-          ].map((s) => (
-            <div key={s.label} className="rounded-lg p-2.5 text-center"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div className="text-[10px] font-mono text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-xs font-bold text-foreground">{s.value}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Emotions */}
-        {emotions.length > 0 && (
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Brain className="w-3.5 h-3.5 text-muted-foreground" />
-            {emotions.map((e) => (
-              <span key={e} className="px-2.5 py-1 rounded-full text-[10px] font-mono capitalize"
-                style={{ background: `${emotionColors[e] || '#888'}15`, color: emotionColors[e] || '#888', border: `1px solid ${emotionColors[e] || '#888'}30` }}>
-                {e}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Notes preview */}
-        {entry.notes && (
-          <p className={`text-sm text-muted-foreground leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>{entry.notes}</p>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
-          <button onClick={() => setExpanded(!expanded)} className="text-xs font-mono text-primary hover:underline">
-            {expanded ? 'Show less' : 'Read more'}
+        <div className="ml-auto">
+          <button onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium"
+            style={{ background: '#3b82f6', color: 'white' }}>
+            <Download className="w-4 h-4" /> Export
           </button>
-          <div className="flex gap-2">
-            <button onClick={onEdit} className="px-3 py-1.5 rounded-lg text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
-              style={{ background: 'rgba(255,255,255,0.05)' }}>
-              Edit
-            </button>
-            <button onClick={onDelete} className="px-3 py-1.5 rounded-lg text-xs font-mono text-red-400 hover:bg-red-500/10 transition-colors">
-              Delete
-            </button>
-          </div>
         </div>
       </div>
-    </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ChartCard title="Open time hour" data={hourData} />
+        <ChartCard title="Buy & Sell" data={bsData} />
+        <ChartCard title="Volume" data={volData} />
+        <ChartCard title="Symbol" data={symbolData} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+export default function TradingJournal({ user }) {
+  const [tab, setTab] = useState('Daily PnL');
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 10),
+    select: d => d.filter(a => ['active', 'funded', 'passed'].includes(a.status)),
+  });
+
+  const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
+
+  const { data: trades = [], isLoading } = useQuery({
+    queryKey: ['trade-records-journal', account?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    enabled: !!account?.account_id,
+    refetchInterval: 30000,
+  });
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-5">
+        <h1 className="text-xl font-bold text-foreground">Trading journal</h1>
+        <Info className="w-4 h-4 text-muted-foreground" />
+      </div>
+
+      {/* Account selector */}
+      {accounts.length > 1 && (
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {accounts.map(a => (
+            <button key={a.id} onClick={() => setSelectedAccountId(a.id)}
+              className="px-3 py-1.5 rounded-lg text-xs font-mono transition-all"
+              style={{
+                background: account?.id === a.id ? 'rgba(255,92,0,0.12)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                color: account?.id === a.id ? '#FF5C00' : '#94a3b8',
+              }}>
+              {a.mt_login || a.account_id} · ${(a.account_size || 0).toLocaleString()}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex border-b mb-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {TABS.map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors mr-1"
+            style={{
+              borderBottomColor: tab === t ? '#3b82f6' : 'transparent',
+              color: tab === t ? '#3b82f6' : '#94a3b8',
+            }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <>
+          {tab === 'Daily PnL' && <DailyPnLTab trades={trades} />}
+          {tab === 'Closed trades' && <ClosedTradesTab trades={trades} />}
+          {tab === 'Charts' && <ChartsTab trades={trades} />}
+        </>
+      )}
+    </div>
   );
 }
