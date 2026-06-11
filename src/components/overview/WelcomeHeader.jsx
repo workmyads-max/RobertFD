@@ -4,6 +4,7 @@ import { ShieldCheck, AlertCircle, Zap, Globe, MessageCircle, Send, ArrowRight }
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import DiscordCommunityBanner from './DiscordCommunityBanner';
 
 export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
@@ -149,14 +150,16 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Daily quote — right side, lg+ only */}
-        <div className="hidden lg:flex flex-col justify-center flex-shrink-0 max-w-xs pl-7" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="text-[10px] font-medium text-white/20 uppercase tracking-widest mb-2">Daily Quote</span>
-          <p className="text-sm text-white/50 leading-relaxed italic line-clamp-3">
-            "{dailyQuote}"
-          </p>
+        {/* Discord Community Banner — right side, lg+ only */}
+        <div className="hidden lg:flex flex-shrink-0 pl-7" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+        <DiscordCommunityBanner discordUrl={social.discord_enabled ? social.discord_url : null} />
         </div>
 
+      </div>
+
+      {/* Discord Community Banner — mobile only (below header) */}
+      <div className="lg:hidden px-6 pb-5 sm:px-8">
+        <DiscordCommunityBanner discordUrl={social.discord_enabled ? social.discord_url : null} />
       </div>
     </motion.div>
 
