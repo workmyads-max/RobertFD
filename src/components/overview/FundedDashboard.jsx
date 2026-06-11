@@ -225,55 +225,68 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
         
-        {/* CRITICAL FIX: Only show empty state when we're SURE data has arrived */}
-        {activeAccounts.length === 0 && !isLoading ? (
-          <EmptyState onStartChallenge={onStartChallenge} />
-        ) : (
-          <>
-            {/* First-Time Promo Banner - FULL WIDTH on mobile */}
-            <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+        {/* First-Time Promo Banner - FULL WIDTH on mobile */}
+        <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-            {/* Account Switcher - Full width container */}
-            <div className="space-y-3 w-full">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
-                  {activeAccounts?.length || 0} Active Account{(activeAccounts?.length || 0) !== 1 ? 's' : ''}
-                </span>
-                <button onClick={() => refetch()}
-                  className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
-                  <RefreshCw className="w-3 h-3" /> Sync
-                </button>
-              </div>
-              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+        {/* Account Switcher - Full width container */}
+        {activeAccounts.length > 0 && (
+          <div className="space-y-3 w-full">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
+                {activeAccounts?.length || 0} Active Account{(activeAccounts?.length || 0) !== 1 ? 's' : ''}
+              </span>
+              <button onClick={() => refetch()}
+                className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
+                <RefreshCw className="w-3 h-3" /> Sync
+              </button>
             </div>
-
-            {/* Per-account content */}
-            <AnimatePresence mode="wait">
-              {selectedAccount && (
-                <motion.div key={selectedAccount.id}
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-4 sm:space-y-6">
-
-                  {/* Info strip */}
-                  <AccountInfoStrip account={selectedAccount} />
-
-                  {/* Stats Cards */}
-                  <StatsCards stats={stats} />
-
-                  {/* Three Paths to Funded Trading */}
-                  <ThreePathsToFunded onNavigate={onNavigate} />
-                  
-                  {/* Affiliate Section */}
-                  <AffiliateSection onNavigate={onNavigate} />
-                  
-                  {/* Footer */}
-                  <Footer />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
+            <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+          </div>
         )}
+
+        {/* Per-account content OR empty state with full sections */}
+        <AnimatePresence mode="wait">
+          {selectedAccount ? (
+            <motion.div key={selectedAccount.id}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-4 sm:space-y-6">
+
+              {/* Info strip */}
+              <AccountInfoStrip account={selectedAccount} />
+
+              {/* Stats Cards */}
+              <StatsCards stats={stats} />
+
+              {/* Three Paths to Funded Trading */}
+              <ThreePathsToFunded onNavigate={onNavigate} />
+              
+              {/* Affiliate Section */}
+              <AffiliateSection onNavigate={onNavigate} />
+              
+              {/* Footer */}
+              <Footer />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-4 sm:space-y-6">
+              
+              {/* Empty state card */}
+              <EmptyState onStartChallenge={onStartChallenge} />
+              
+              {/* Three Paths to Funded Trading */}
+              <ThreePathsToFunded onNavigate={onNavigate} />
+              
+              {/* Affiliate Section */}
+              <AffiliateSection onNavigate={onNavigate} />
+              
+              {/* Footer */}
+              <Footer />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
