@@ -173,7 +173,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       {/* Challenge type toggle */}
       <div className="mb-6">
         <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-widest mb-3">Challenge Type</div>
-        <div className="inline-flex rounded-xl p-1"
+        <div className="inline-flex rounded-xl p-1 overflow-x-auto max-w-full"
           style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
           {[
             { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
@@ -186,7 +186,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative px-5 py-3 rounded-lg text-left transition-all duration-200 min-w-[110px] ${
+                className={`relative px-3 sm:px-5 py-3 rounded-lg text-left transition-all duration-200 min-w-[100px] whitespace-nowrap ${
                   isSelected ? 'text-white' : 'text-[#8B8F95] hover:text-white/80'
                 }`}>
                 <div className="flex items-center gap-2 mb-1">
@@ -234,18 +234,18 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/80'}`}>
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider"
+                      <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex-shrink-0"
                         style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className={`text-[11px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`}>
+                  <div className={`text-[11px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'} break-words`}>
                     {p.desc}
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               onClick={() => setAccountType(key)}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              className="rounded-xl p-4 text-left transition-all"
+              className="rounded-xl p-3 sm:p-4 text-left transition-all min-h-[120px]"
               style={{
                 background: isSelected ? '#1A1D23' : '#15181E',
                 border: `1px solid ${isSelected ? '#FF5C00' : 'rgba(255,255,255,0.06)'}`,
@@ -349,7 +349,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       )}
 
       {/* Quick highlights */}
-      <div className="rounded-3xl p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10 sm:mb-12"
+      <div className="rounded-3xl p-4 sm:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
         style={{
           background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(255,92,0,0.03))',
           border: '1.5px solid rgba(255,92,0,0.2)',
@@ -362,18 +362,18 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         ].map((f, i) => {
           const Icon = f.icon;
           return (
-            <div key={f.title} className="flex gap-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            <div key={f.title} className="flex gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.1))',
                   border: '1px solid rgba(255,92,0,0.3)',
                   boxShadow: '0 2px 12px rgba(255,92,0,0.2)',
                 }}>
-                <Icon className="w-5 h-5 text-primary" />
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-foreground mb-1">{f.title}</div>
-                <div className="text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold text-foreground mb-1 break-words">{f.title}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed break-words">{f.desc}</div>
               </div>
             </div>
           );
@@ -387,10 +387,10 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           border: '1.5px solid rgba(255,255,255,0.1)',
           boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
         }}>
-        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-          <div>
-            <div className="text-base font-bold text-foreground">Challenge Rules</div>
-            <div className="text-xs text-muted-foreground mt-1">Read carefully — violations result in immediate termination</div>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div className="min-w-0 flex-1">
+            <div className="text-base font-bold text-foreground break-words">Challenge Rules</div>
+            <div className="text-xs text-muted-foreground mt-1 break-words">Read carefully — violations result in immediate termination</div>
           </div>
           <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
             style={{
@@ -408,21 +408,21 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
             const category = i < 3 ? 'Risk' : i < 6 ? 'Conduct' : 'Security';
             const categoryColor = i < 3 ? '#f59e0b' : i < 6 ? '#60a5fa' : '#10b981';
             return (
-              <div key={rule.title} className="px-6 py-4 hover:bg-white/[0.02] transition-colors">
-                <div className="flex items-start gap-4">
+              <div key={rule.title} className="px-4 sm:px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <Icon className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="text-sm font-bold text-foreground">{rule.title}</div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block"
+                    <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                      <div className="text-sm font-bold text-foreground break-words">{rule.title}</div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
                         style={{ color: categoryColor, background: `${categoryColor}12`, border: `1px solid ${categoryColor}25` }}>
                         {category}
                       </span>
                     </div>
-                    <div className="text-sm text-muted-foreground leading-relaxed">{rule.body}</div>
+                    <div className="text-sm text-muted-foreground leading-relaxed break-words">{rule.body}</div>
                   </div>
                 </div>
               </div>

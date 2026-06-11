@@ -42,9 +42,9 @@ export default function Navbar() {
           scrolled ? 'glass py-3' : 'bg-transparent py-5'
         }`}
       >
-        <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 flex items-center justify-between">
           {/* Logo */}
-          <a href="#"><XFLogo size="xl" animate /></a>
+          <a href="#" className="flex-shrink-0"><XFLogo size="xl" animate /></a>
 
           {/* Desktop Links */}
           <div className="hidden lg:flex items-center gap-1">
@@ -90,10 +90,10 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
+          {/* Mobile Toggle - increased touch target */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden text-foreground p-2"
+            className="lg:hidden text-foreground p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -108,29 +108,29 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 glass pt-24 px-6 lg:hidden overflow-y-auto"
+            className="fixed inset-0 z-40 glass pt-20 px-4 lg:hidden overflow-y-auto safe-area-inset-bottom"
           >
-            <div className="space-y-1">
+            <div className="space-y-1 pb-8">
               {navLinks.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => scrollTo(link.href)}
-                  className="block w-full text-left px-4 py-3 text-lg text-foreground hover:text-primary transition-colors border-b border-border/30"
+                  className="block w-full text-left px-4 py-4 text-base sm:text-lg text-foreground hover:text-primary transition-colors border-b border-border/30 min-h-[48px]"
                 >
                   {link.label}
                 </button>
               ))}
             </div>
-            <div className="mt-8 space-y-3">
+            <div className="mt-8 space-y-3 pb-8">
               {user ? (
                 <>
-                  <Link to="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full">Dashboard</Link>
-                  <button onClick={logout} className="block w-full py-3 text-sm text-center text-red-400 border border-red-400/30 rounded-full">Logout</button>
+                  <Link to="/dashboard" className="block w-full py-4 text-base text-center text-foreground border border-border rounded-full min-h-[48px]">Dashboard</Link>
+                  <button onClick={logout} className="block w-full py-4 text-base text-center text-red-400 border border-red-400/30 rounded-full min-h-[48px]">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</Link>
-                  <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
+                  <Link to="/login" className="block w-full py-4 text-base text-center text-foreground border border-border rounded-full hover:border-primary/50 min-h-[48px]">Login</Link>
+                  <button onClick={() => scrollTo('#challenge')} className="w-full py-4 text-base font-semibold text-white bg-primary rounded-full min-h-[48px]">Start Challenge</button>
                 </>
               )}
             </div>

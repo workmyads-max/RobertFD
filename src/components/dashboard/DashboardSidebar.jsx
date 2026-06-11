@@ -77,8 +77,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               key={item.id}
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
-              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative font-medium ${
-                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-2.5 px-3 py-2.5 text-sm'
+              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative font-medium min-h-[48px] ${
+                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-2.5 px-3 py-3 text-sm'
               } ${
                 isActive
                   ? (item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-white')
@@ -260,12 +260,12 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile toggle - increased touch target */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl glass flex items-center justify-center shadow-lg"
+        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 md:hidden w-11 h-11 sm:w-12 sm:h-12 rounded-xl glass flex items-center justify-center shadow-lg min-h-[44px] min-w-[44px]"
       >
-        {isOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
+        {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
       </button>
 
       {/* Desktop sidebar */}

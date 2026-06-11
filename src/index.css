@@ -75,6 +75,34 @@
   html {
     overflow-x: hidden;
   }
+  
+  /* Mobile-first responsive images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Ensure all tap targets are at least 44px */
+  @media (max-width: 768px) {
+    button, a, input, select, textarea {
+      min-height: 44px;
+    }
+    
+    /* Prevent text overflow */
+    body {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    /* Ensure minimum font sizes */
+    p, span, div {
+      font-size: 14px;
+    }
+    
+    input, textarea, select {
+      font-size: 16px; /* Prevent iOS zoom */
+    }
+  }
 }
 
 /* Funded dashboard scrollbar override */
