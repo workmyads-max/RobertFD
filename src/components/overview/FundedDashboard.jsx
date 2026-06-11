@@ -12,8 +12,7 @@ import Footer from '../dashboard/Footer';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
-import LiveStatusBar        from './LiveStatusBar.jsx';
-import WelcomeHeader        from './WelcomeHeader.jsx';
+import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
@@ -168,15 +167,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       {/* Content */}
       <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-3 sm:space-y-4 mt-14 sm:mt-4">
 
-        {/* Welcome Header */}
-        <WelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
+        {/* Unified Welcome Header + Status Bar */}
+        <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
         {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
-            {/* Live status bar - below header, above promotion */}
-            <LiveStatusBar account={selectedAccount} />
 
             {/* First-Time Promo Banner */}
             <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
