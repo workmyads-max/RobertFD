@@ -7,6 +7,7 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
+import EcosystemSection from '../dashboard/EcosystemSection';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -205,6 +206,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Three Paths to Funded Trading */}
                   <ThreePathsToFunded onNavigate={onNavigate} />
+                  
+                  {/* Ecosystem Section */}
+                  <EcosystemSection onNavigate={onNavigate} />
                 </motion.div>
               )}
             </AnimatePresence>
