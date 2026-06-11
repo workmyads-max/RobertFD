@@ -261,7 +261,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Account type */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-8 sm:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mb-6 sm:mb-10">
         {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
           const isSelected = accountType === key;
           return (
@@ -325,7 +325,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           <motion.div
             key={`${challengeType}-${accountType}`}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+            className="grid gap-3 sm:gap-6 mb-6 sm:mb-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
             {plans.map((plan, i) => {
               const isPopular = !!plan.is_popular;

@@ -20,7 +20,7 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -2 }}
       className="relative rounded-2xl border bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-4 sm:p-5 md:p-6 transition-all duration-300 overflow-hidden group border-border hover:border-primary/50"
     >
       {/* Background glow */}
