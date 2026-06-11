@@ -154,39 +154,39 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* Multi-Level Commissions */}
-      <div className="rounded-xl p-6 border"
+      <div className="rounded-xl p-5 border"
         style={{ 
           background: '#0a0a0a',
           borderColor: '#2a2a2a'
         }}>
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-5">
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
-                <TrendingUp className="w-4 h-4" style={{ color: '#f97316' }} />
+                <TrendingUp className="w-3.5 h-3.5" style={{ color: '#f97316' }} />
               </div>
               <div>
-                <div className="text-[9px] font-semibold text-orange-500 uppercase tracking-wider mb-1">
+                <div className="text-[9px] font-semibold text-orange-500 uppercase tracking-wider mb-0.5">
                   3-Level Structure
                 </div>
-                <h3 className="text-base font-semibold text-white">
+                <h3 className="text-sm font-semibold text-white">
                   Multi-Level Commissions
                 </h3>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
               Earn from three levels of referrals. Build depth, earn passively.
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {[
                 { lvl: 'Level 1', rate: '8%', label: 'Direct referrals', color: '#f97316' },
                 { lvl: 'Level 2', rate: '2%', label: 'Sub-referrals', color: '#3b82f6' },
                 { lvl: 'Level 3', rate: '1%', label: 'Third level', color: '#a855f7' },
               ].map((l, i) => (
-                <div key={l.lvl} className="flex items-center gap-3 rounded-lg p-3 border"
+                <div key={l.lvl} className="flex items-center gap-2.5 rounded-lg p-2.5 border"
                   style={{ background: '#111113', borderColor: '#27272a' }}>
-                  <div className="w-14 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  <div className="w-12 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
                     style={{ background: `${l.color}15`, border: `1px solid ${l.color}25`, color: l.color }}>{l.rate}</div>
                   <div>
                     <div className="text-xs font-medium text-white">{l.lvl}</div>
@@ -196,22 +196,22 @@ export default function AffiliateSection({ onNavigate }) {
               ))}
             </div>
           </div>
-          <div className="flex items-center">
-            <div className="rounded-lg p-5 w-full border"
+          <div className="flex items-start">
+            <div className="rounded-lg p-4 w-full border"
               style={{ background: '#111113', borderColor: '#27272a' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              <div className="flex items-center gap-2.5 mb-3.5">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  <Shield className="w-5 h-5" style={{ color: '#10b981' }} />
+                  <Shield className="w-4 h-4" style={{ color: '#10b981' }} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">Free to Join</div>
                   <div className="text-xs text-gray-500">No minimum requirements</div>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {['Instant dashboard access', 'Real-time tracking', 'Automated payouts'].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-400">
+                  <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
                     {feature}
                   </div>
