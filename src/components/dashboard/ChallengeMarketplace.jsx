@@ -205,10 +205,10 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02]"
                 style={{
                   background: isSelected
-                    ? 'linear-gradient(135deg, rgba(0,102,204,0.18) 0%, rgba(0,60,120,0.12) 100%)'
+                    ? 'rgba(255,92,0,0.08)'
                     : 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid ${isSelected ? 'rgba(0,122,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: isSelected ? '0 0 24px rgba(0,102,204,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+                  border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: 'none',
                 }}>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
@@ -227,7 +227,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                     </div>
                     {isSelected && (
                       <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
-                        style={{ background: 'rgba(0,122,255,0.25)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>
+                        style={{ background: 'rgba(255,92,0,0.25)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
                         Selected
                       </span>
                     )}
