@@ -237,24 +237,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   {/* Objectives */}
                   <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
 
-                  {/* Charts + Timeline */}
-                  <div className="grid lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2">
-                      <AnalyticsCharts account={selectedAccount} stats={stats} trades={trades} />
-                    </div>
-                    <AccountTimeline account={selectedAccount} />
-                  </div>
-
-                  {/* Stats + AI Insights */}
-                  <div className="grid lg:grid-cols-5 gap-4">
-                    <div className="lg:col-span-3">
-                      <StatsGrid account={selectedAccount} stats={stats} />
-                    </div>
-                    <div className="lg:col-span-2">
-                      <AIInsightsPanel account={selectedAccount} trades={trades} />
-                    </div>
-                  </div>
-
                   {/* Quick actions */}
                   <QuickActions onNavigate={onNavigate} />
 
