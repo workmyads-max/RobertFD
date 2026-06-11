@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, RefreshCw, Shield, Zap, TrendingUp, Award, BookOpen } from 'lucide-react';
+import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { getAccountRules } from '../terminal/terminalConfig';
@@ -8,17 +8,9 @@ import { useAccountStats } from './useAccountStats';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
-import MetricCards          from './MetricCards.jsx';
-import TradingObjectives    from './TradingObjectives.jsx';
-import AnalyticsCharts      from './AnalyticsCharts.jsx';
-import StatsGrid            from './StatsGrid.jsx';
 import LiveStatusBar        from './LiveStatusBar.jsx';
-import AccountTimeline      from './AccountTimeline.jsx';
-import AIInsightsPanel      from './AIInsightsPanel.jsx';
-import LiveTickerBar        from './LiveTickerBar.jsx';
 import WelcomeHeader        from './WelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
-import SocialMediaWidget    from './SocialMediaWidget.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -68,35 +60,7 @@ function AccountInfoStrip({ account }) {
   );
 }
 
-// ─── Quick actions ────────────────────────────────────────────────────────────
-function QuickActions({ onNavigate }) {
-  const actions = [
-    { label: 'Open Terminal', icon: Zap, color: '#FF5C00', page: 'terminal' },
-    { label: 'Analytics', icon: TrendingUp, color: '#FF5C00', page: 'analytics' },
-    { label: 'Withdrawal', icon: Award, color: '#FF5C00', page: 'withdrawals' },
-    { label: 'Trade Journal', icon: BookOpen, color: '#FF5C00', page: 'journal' },
-  ];
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-      {actions.map((a, i) => {
-        const Icon = a.icon;
-        return (
-          <motion.button key={a.label} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-            onClick={() => onNavigate?.(a.page)}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + i * 0.04 }}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 lg:p-4 rounded-xl text-xs sm:text-sm font-medium glass-light hover:bg-white/[0.06] transition-all border border-white/[0.09] text-foreground/70 hover:text-foreground">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: `${a.color}12`, border: `1px solid ${a.color}20` }}>
-              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: a.color }} />
-            </div>
-            <span className="hidden sm:inline">{a.label}</span><span className="sm:hidden text-[10px]">{a.label === 'Open Terminal' ? 'Terminal' : a.label === 'Trade Journal' ? 'Journal' : a.label}</span>
-          </motion.button>
-        );
-      })}
-    </div>
-  );
-}
+
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
@@ -147,8 +111,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
     queryKey: ['trade-records', selectedAccount?.id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount?.account_id || selectedAccount.id }),
-    enabled: !!selectedAccount?.account_id || !!selectedAccount?.id,
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
+    enabled: !!selectedAccount?.id,
     refetchInterval: 5000,
   });
 
@@ -225,7 +189,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
             {/* Per-account content */}
             <AnimatePresence mode="wait">
-              {selectedAccount && activeAccounts.length > 0 && (
+              {selectedAccount && (
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
@@ -233,9 +197,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
-
-                  {/* Objectives */}
-                  <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
                 </motion.div>
               )}
             </AnimatePresence>

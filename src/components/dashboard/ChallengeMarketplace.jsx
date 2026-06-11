@@ -171,68 +171,34 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Challenge type toggle */}
-      <div className="mb-8 sm:mb-10">
-        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Challenge Type</div>
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-3xl">
+      <div className="mb-6 sm:mb-8">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Challenge Type</div>
+        <div className="flex rounded-2xl p-2 flex-wrap gap-3 sm:flex-nowrap"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
-            { id: 'instant', label: 'Instant', desc: '1 phase', icon: Zap, iconColor: '#ec4899' },
-            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: Zap, highlight: true },
+            { id: 'two-step', label: '⚡ Two-Step', desc: '2 phases' },
+            { id: 'instant', label: '🚀 Instant', desc: '1 phase' },
+            { id: 'instant_light', label: '💡 Light', desc: 'Simplified' },
           ].map(t => {
             const isSelected = challengeType === t.id;
-            const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative rounded-2xl p-4 sm:p-5 text-left transition-all duration-300 group ${
-                  isSelected ? 'scale-[1.02]' : 'hover:scale-[1.01]'
+                className={`relative flex-1 px-6 sm:px-8 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
+                  isSelected ? 'text-white' : 'text-muted-foreground hover:text-foreground'
                 }`}
-                style={{
-                  background: t.highlight && isSelected
-                    ? 'linear-gradient(135deg, #FF5C00, #FF7A2F)'
-                    : isSelected
-                    ? 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))'
-                    : 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid ${
-                    t.highlight && isSelected
-                      ? 'rgba(255,92,0,0.5)'
-                      : isSelected
-                      ? 'rgba(255,92,0,0.35)'
-                      : 'rgba(255,255,255,0.08)'
-                  }`,
-                  boxShadow: isSelected
-                    ? t.highlight
-                      ? '0 8px 24px rgba(255,92,0,0.3)'
-                      : '0 4px 16px rgba(255,92,0,0.15)'
-                    : 'none',
-                }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    t.highlight && isSelected ? 'bg-white/20' : isSelected ? 'bg-primary/20' : 'bg-white/5'
-                  }`}>
-                    <Icon className={`w-5 h-5 ${
-                      t.highlight && isSelected ? 'text-white' : isSelected ? 'text-primary' : 'text-muted-foreground'
-                    }`} style={t.iconColor && !isSelected ? { color: t.iconColor } : {}} />
-                  </div>
-                  {t.highlight && (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black"
-                      style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(0,0,0,0.2)' }}>
-                      -50%
-                    </span>
-                  )}
-                </div>
-                <div className={`text-base sm:text-lg font-bold mb-1 ${
-                  t.highlight && isSelected ? 'text-white' : isSelected ? 'text-white' : 'text-foreground'
-                }`}>{t.label}</div>
-                <div className={`text-xs ${
-                  t.highlight && isSelected ? 'text-white/80' : isSelected ? 'text-white/70' : 'text-muted-foreground'
-                }`}>{t.desc}</div>
-                {isSelected && (
-                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: t.highlight ? 'rgba(255,255,255,0.3)' : 'rgba(255,92,0,0.3)' }}>
-                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                  </div>
+                style={isSelected ? {
+                  background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
+                  boxShadow: '0 4px 16px rgba(255,92,0,0.3)',
+                } : {}}>
+                <div className="text-base sm:text-lg font-bold mb-1">{t.label}</div>
+                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
+                {t.id === 'instant_light' && (
+                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[9px] font-black"
+                    style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
+                    -50%
+                  </span>
                 )}
               </button>
             );

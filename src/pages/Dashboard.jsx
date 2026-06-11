@@ -145,15 +145,9 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': 
-        console.log('Rendering FundedDashboard');
-        return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
-      case 'accounts': 
-        console.log('Rendering MyAccounts');
-        return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
-      case 'account-overview': 
-        console.log('Rendering AccountOverview');
-        return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;
@@ -238,14 +232,15 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className="p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen">
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: isTerminal ? 0 : 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
+                exit={{ opacity: 0, y: isTerminal ? 0 : -16 }}
                 transition={{ duration: 0.3 }}
+                className={isTerminal ? 'h-full' : ''}
               >
                 {renderPage()}
               </motion.div>
