@@ -201,22 +201,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Three Paths to Funded Trading */}
                   <ThreePathsToFunded onNavigate={onNavigate} />
-
-                  {/* Buy Challenge Button */}
-                  <div className="flex justify-center pt-4">
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => onNavigate?.('marketplace')}
-                      className="flex items-center gap-3 px-10 py-4 rounded-xl text-sm font-bold text-white"
-                      style={{
-                        background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
-                        boxShadow: '0 4px 24px rgba(255,92,0,0.35)',
-                      }}>
-                      <Plus className="w-5 h-5" /> Buy Challenge
-                      <span className="text-white/60">→</span>
-                    </motion.button>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

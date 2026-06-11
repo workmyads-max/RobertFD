@@ -45,6 +45,7 @@ const CHALLENGE_PATHS = [
     buttonStyle: 'solid',
     buttonText: 'Get Instant Funding',
     buttonColor: '#FF6600',
+    buttonTextColor: '#FFFFFF',
     featured: true,
   },
   {
@@ -195,8 +196,8 @@ export default function ThreePathsToFunded({ onNavigate }) {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => onNavigate?.('challenges')}
-                  className="w-full py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02]"
+                  onClick={() => onNavigate?.('marketplace')}
+                  className="w-full py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] text-center"
                   style={{
                     background: path.buttonStyle === 'solid' 
                       ? path.buttonColor 
