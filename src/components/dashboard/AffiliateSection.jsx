@@ -154,43 +154,42 @@ export default function AffiliateSection({ onNavigate }) {
       </div>
 
       {/* Multi-Level Commissions */}
-      <div className="rounded-2xl p-7 border transition-all duration-500 hover:border-orange-500/20"
+      <div className="rounded-xl p-6 border"
         style={{ 
-          background: 'linear-gradient(145deg, #0f0f11, #0a0a0c)',
-          borderColor: 'rgba(249,115,22,0.18)',
-          boxShadow: '0 0 40px rgba(249,115,22,0.05)'
+          background: '#0a0a0a',
+          borderColor: '#2a2a2a'
         }}>
-        <div className="grid lg:grid-cols-2 gap-7">
+        <div className="grid lg:grid-cols-2 gap-6">
           <div>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)' }}>
-                <TrendingUp className="w-4.5 h-4.5" style={{ color: '#f97316' }} />
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <TrendingUp className="w-4 h-4" style={{ color: '#f97316' }} />
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider mb-0.5">
+                <div className="text-[9px] font-semibold text-orange-500 uppercase tracking-wider mb-1">
                   3-Level Structure
                 </div>
-                <h3 className="text-base font-semibold text-white tracking-tight">
+                <h3 className="text-base font-semibold text-white">
                   Multi-Level Commissions
                 </h3>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+            <p className="text-sm text-gray-400 mb-5 leading-relaxed">
               Earn from three levels of referrals. Build depth, earn passively.
             </p>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[
                 { lvl: 'Level 1', rate: '8%', label: 'Direct referrals', color: '#f97316' },
                 { lvl: 'Level 2', rate: '2%', label: 'Sub-referrals', color: '#3b82f6' },
                 { lvl: 'Level 3', rate: '1%', label: 'Third level', color: '#a855f7' },
               ].map((l, i) => (
-                <div key={l.lvl} className="group flex items-center gap-3.5 rounded-xl p-3.5 border transition-all duration-300 hover:border-white/12 hover:bg-white/[0.02]"
-                  style={{ background: '#111113', borderColor: 'rgba(255,255,255,0.06)', animationDelay: `${i * 50}ms` }}>
-                  <div className="w-16 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
-                    style={{ background: `${l.color}12`, border: `1px solid ${l.color}30`, color: l.color }}>{l.rate}</div>
+                <div key={l.lvl} className="flex items-center gap-3 rounded-lg p-3 border"
+                  style={{ background: '#111113', borderColor: '#27272a' }}>
+                  <div className="w-14 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    style={{ background: `${l.color}15`, border: `1px solid ${l.color}25`, color: l.color }}>{l.rate}</div>
                   <div>
-                    <div className="text-xs font-semibold text-white">{l.lvl}</div>
+                    <div className="text-xs font-medium text-white">{l.lvl}</div>
                     <div className="text-[10px] text-gray-500">{l.label}</div>
                   </div>
                 </div>
@@ -198,26 +197,23 @@ export default function AffiliateSection({ onNavigate }) {
             </div>
           </div>
           <div className="flex items-center">
-            <div className="rounded-2xl p-6 w-full border transition-all duration-500 hover:border-white/12 hover:shadow-lg"
-              style={{ 
-                background: 'linear-gradient(145deg, #111113, #0d0d0f)',
-                borderColor: 'rgba(255,255,255,0.08)'
-              }}>
-              <div className="flex items-center gap-3.5 mb-5">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                  <Shield className="w-5.5 h-5.5" style={{ color: '#10b981' }} />
+            <div className="rounded-lg p-5 w-full border"
+              style={{ background: '#111113', borderColor: '#27272a' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <Shield className="w-5 h-5" style={{ color: '#10b981' }} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">Free to Join</div>
                   <div className="text-xs text-gray-500">No minimum requirements</div>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {['Instant dashboard access', 'Real-time tracking', 'Automated payouts'].map((feature, i) => (
-                  <div key={i} className="group flex items-center gap-3 text-xs text-gray-400 transition-all duration-200 hover:text-gray-300">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
-                    <span>{feature}</span>
+                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-400">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#f97316' }} />
+                    {feature}
                   </div>
                 ))}
               </div>
