@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowRight, Shield, Zap, Award, Users, TrendingUp, DollarSign, Network } from 'lucide-react';
-import LivePayouts from './LivePayouts';
 
 export default function AffiliateSection({ onNavigate }) {
   const stats = [
@@ -180,9 +179,6 @@ export default function AffiliateSection({ onNavigate }) {
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-
-      {/* Live Payouts Section */}
-      <LivePayouts />
     </div>
   );
 }
