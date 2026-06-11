@@ -29,7 +29,9 @@ function buildChartData(trades, accountSize) {
   return data;
 }
 
+// CurrentResultsChart Component
 export default function CurrentResultsChart({ account, trades }) {
+  console.log('[CurrentResultsChart] Rendering with account:', account?.account_id, 'trades:', trades?.length);
   const [showObjectives, setShowObjectives] = useState(true);
 
   const accountSize = account?.account_size || 100000;
