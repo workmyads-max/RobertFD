@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
@@ -114,30 +115,66 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
-  const { data: accounts = [], isLoading: accountsLoading, refetch, isFetching } = useQuery({
-    queryKey: ['funded-dashboard-accounts', user?.id],
-    queryFn: async () => {
-      // CRITICAL: Ensure Supabase session is loaded before calling backend function
-      const { supabase } = await import('@/lib/supabaseClient');
-      const { data: { session } } = await supabase.auth.getSession();
+  // DIRECT QUERY STATE - bypassing broken getUserAccounts backend function
+  const [accounts, setAccounts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // BYPASS: Direct query replacing broken backend function
+  const fetchAccountsDirect = async () => {
+    try {
+      setIsLoading(true);
       
-      if (!session) {
-        console.warn('[FundedDashboard] No Supabase session - attempting refresh');
-        await supabase.auth.refreshSession();
+      // Get fresh session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.log('No session found');
+        setIsLoading(false);
+        return;
       }
+
+      console.log('Session OK, user:', session.user.email);
+
+      // Try query 1: by user_id
+      let { data: accounts, error } = await supabase
+        .from('challenge_account')
+        .select('*')
+        .eq('created_by_id', session.user.id);
+
+      console.log('Query 1 (created_by_id):', accounts?.length, error?.message);
+
+      // If empty, try query 2: by email
+      if (!accounts?.length) {
+        const { data: acc2, error: err2 } = await supabase
+          .from('challenge_account')
+          .select('*')
+          .eq('user_email', session.user.email);
+        console.log('Query 2 (user_email):', acc2?.length, err2?.message);
+        if (acc2?.length) accounts = acc2;
+      }
+
+      // If still empty, fetch ALL accounts to see what fields exist
+      if (!accounts?.length) {
+        const { data: allAcc } = await supabase
+          .from('challenge_account')
+          .select('*')
+          .limit(5);
+        console.log('ALL ACCOUNTS SAMPLE (first 5 rows):', JSON.stringify(allAcc));
+      }
+
+      setAccounts(accounts || []);
+      setIsLoading(false);
       
-      // Use backend function to bypass RLS and fetch by email
-      const response = await base44.functions.invoke('getUserAccounts', {});
-      const result = response?.data?.accounts || response?.accounts || [];
-      
-      console.log('[FundedDashboard] Accounts fetched:', result.length);
-      return result;
-    },
-    enabled: !!user?.id && !!user?.email, // Wait for both ID and email to be populated
-    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
-    retry: 3,
-    retryDelay: 1000,
-  });
+    } catch (err) {
+      console.log('fetchAccountsDirect error:', err.message);
+      setIsLoading(false);
+    }
+  };
+
+  // Call on mount
+  useEffect(() => {
+    fetchAccountsDirect();
+  }, []);
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
@@ -155,7 +192,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     if (activeAccounts.length > 0 && !selectedAccount) {
       setSelectedAccount(activeAccounts[0]);
     }
-  }, [activeAccounts.length]); // Only depend on count, not the array reference
+  }, [activeAccounts.length]);
 
   // Keep selected in sync with refetches
   useEffect(() => {
@@ -163,7 +200,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
       if (fresh) setSelectedAccount(fresh);
     }
-  }, [accounts?.length, selectedAccount?.id, activeAccounts.length]);
+  }, [accounts.length, selectedAccount?.id, activeAccounts.length]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
@@ -176,10 +213,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const stats = useAccountStats(selectedAccount, trades);
 
   // Show loading state while accounts are fetching — prevents empty state flash on mobile
-  // CRITICAL: Must check isFetching too, not just isLoading, to handle refetches
-  const isAnyLoading = accountsLoading || isFetching;
-  
-  if (isAnyLoading && accounts.length === 0) {
+  if (isLoading && accounts.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -225,11 +259,16 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       {/* Content */}
       <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
+        {/* DEBUG BANNER - REMOVE AFTER FIX */}
+        <div className="px-3 py-2 rounded-lg text-xs font-mono font-bold mb-4" style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
+          DIRECT QUERY | Accounts: {accounts?.length} | Loading: {String(isLoading)} | User: {user?.email?.slice(0, 8)}...
+        </div>
+
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
         
         {/* CRITICAL FIX: Only show empty state when we're SURE data has arrived */}
-        {activeAccounts.length === 0 && !isAnyLoading ? (
+        {activeAccounts.length === 0 && !isLoading ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
