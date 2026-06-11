@@ -210,14 +210,14 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                   border: `1.5px solid ${isSelected ? 'rgba(0,122,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
                   boxShadow: isSelected ? '0 0 24px rgba(0,102,204,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                 }}>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white"
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    boxShadow: isSelected ? '0 4px 16px rgba(0,102,204,0.4)' : '0 2px 8px rgba(0,0,0,0.3)',
+                    background: 'transparent',
                   }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
                     alt="MetaTrader 5"
-                    className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
@@ -238,7 +238,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 </div>
                 {isSelected && (
                   <div className="flex-shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400" style={{ boxShadow: '0 0 8px rgba(96,165,250,0.8)' }} />
+                    <Check className="w-5 h-5 text-blue-400" />
                   </div>
                 )}
               </button>
