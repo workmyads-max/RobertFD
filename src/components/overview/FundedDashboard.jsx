@@ -7,6 +7,7 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
+import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
 
 import ParticleBackground   from './ParticleBackground.jsx';
@@ -206,6 +207,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Three Paths to Funded Trading */}
                   <ThreePathsToFunded onNavigate={onNavigate} />
+                  
+                  {/* Affiliate Section */}
+                  <AffiliateSection onNavigate={onNavigate} />
                   
                   {/* Footer */}
                   <Footer />
