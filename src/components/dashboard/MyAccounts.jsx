@@ -4,6 +4,7 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
+import ProfileCard from '@/components/ui/profile-card';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -269,7 +270,21 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const displayAccounts = accounts;
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Profile Card Section */}
+      <div className="flex justify-center py-4">
+        <ProfileCard
+          name={user?.full_name || 'Trader'}
+          role="Professional Trader"
+          email={user?.email || 'trader@example.com'}
+          statusText="Active Trader"
+          statusColor="bg-lime-500"
+          glowText="Currently High on Trading"
+          avatarSrc={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'Trader')}&background=0D0D0D&color=fff&size=128`}
+        />
+      </div>
+
+      {/* My Accounts Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground flex items-center gap-2 sm:gap-3">

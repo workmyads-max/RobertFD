@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,22 +10,21 @@ export default function ProfileCard({
   role = 'Senior Full-Stack Developer',
   email = 'alex.morgan@example.com',
   avatarSrc = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-  statusText = 'Available for new projects',
-  statusColor = 'bg-emerald-500',
-  glowText = 'Open to work',
+  statusText = 'Active Trader',
+  statusColor = 'bg-lime-500',
+  glowText = 'Currently High on Trading',
   className,
 }) {
   const [copied, setCopied] = useState(false);
-  const [timeText, setTimeText] = useState('');
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeText(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+  // Derive a local clock text once per minute
+  const timeText = useMemo(() => {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes().toString().padStart(2, "0");
+    const hour12 = ((h + 11) % 12) + 1;
+    const ampm = h >= 12 ? "PM" : "AM";
+    return `${hour12}:${m}${ampm}`;
   }, []);
 
   const handleCopy = async () => {
@@ -58,7 +57,7 @@ export default function ProfileCard({
       {/* Card */}
       <Card className="relative z-10 mx-auto w-full overflow-visible rounded-[28px] border-0 bg-[radial-gradient(120%_120%_at_30%_10%,#1a1a1a_0%,#0f0f10_60%,#0b0b0c_100%)] text-white shadow-2xl">
         <CardContent className="p-6 sm:p-8">
-          {/* Status bar */}
+          {/* Header - Status and Time */}
           <div className="mb-6 flex items-center justify-between text-sm text-neutral-300">
             <div className="flex items-center gap-2">
               <span className={cn("inline-block h-2.5 w-2.5 rounded-full animate-pulse", statusColor)} />
@@ -70,7 +69,7 @@ export default function ProfileCard({
             </div>
           </div>
 
-          {/* Profile info */}
+          {/* Profile Section */}
           <div className="flex flex-wrap items-center gap-5">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-white/10">
               <img
@@ -87,13 +86,13 @@ export default function ProfileCard({
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action Buttons */}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Button
               variant="secondary"
               className="h-12 justify-start gap-3 rounded-2xl bg-white/10 text-white hover:bg-white/15"
             >
-              <Plus className="h-4 w-4" /> Hire Me
+              <Plus className="h-4 w-4" /> View Portfolio
             </Button>
 
             <Button
