@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -31,7 +31,7 @@ function buildChartData(trades, accountSize) {
   return data;
 }
 
-export default function CurrentResultsChart({ account, trades }) {
+function CurrentResultsChart({ account, trades }) {
   const [showObjectives, setShowObjectives] = useState(true);
   const [pnlMode, setPnlMode] = useState('absolute'); // 'absolute' | 'percentage'
 
@@ -132,7 +132,7 @@ export default function CurrentResultsChart({ account, trades }) {
                 hide
                 domain={['auto', 'auto']}
               />
-              <Tooltip
+              <RechartsTooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload;
@@ -174,3 +174,6 @@ export default function CurrentResultsChart({ account, trades }) {
     </div>
   );
 }
+
+export default CurrentResultsChart;
+export { CurrentResultsChart };
