@@ -642,8 +642,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const [showCredentials, setShowCredentials] = useState(false);
   const [error, setError] = useState(null);
 
-  console.log('[AccountOverview] Rendering, accounts:', accounts?.length);
-
   // All hooks must be called unconditionally at the top
   useEffect(() => {
     try {
@@ -665,8 +663,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
     refetchInterval: 5000, staleTime: 3000,
   });
-
-  console.log('[AccountOverview] Loaded accounts:', accounts?.length, 'Active:', accounts?.filter(a => ['active', 'funded', 'passed'].includes(a.status))?.length);
 
   const activeAccounts = accounts?.filter(a => ['active', 'funded', 'passed'].includes(a.status)) || [];
   const account = selectedAccount
