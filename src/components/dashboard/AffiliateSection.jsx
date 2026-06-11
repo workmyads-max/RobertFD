@@ -48,6 +48,14 @@ export default function AffiliateSection({ onNavigate }) {
 
   return (
     <div className="mt-8 space-y-6">
+      {/* Header */}
+      <div className="text-center mb-4">
+        <h2 className="text-2xl font-bold text-white mb-2">Affiliate Program</h2>
+        <p className="text-sm text-gray-400 max-w-2xl mx-auto">
+          Build your income stream by referring traders to our platform. Earn commissions on challenge sales and funded trader payouts.
+        </p>
+      </div>
+
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
