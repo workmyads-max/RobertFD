@@ -80,12 +80,14 @@
   img {
     max-width: 100%;
     height: auto;
+    display: block;
   }
   
   /* Ensure all tap targets are at least 44px */
   @media (max-width: 768px) {
-    button, a, input, select, textarea {
+    button, a, input, select, textarea, [role="button"] {
       min-height: 44px;
+      min-width: 44px;
     }
     
     /* Prevent text overflow */
@@ -95,12 +97,22 @@
     }
     
     /* Ensure minimum font sizes */
-    p, span, div {
+    p, span, div, label {
       font-size: 14px;
     }
     
     input, textarea, select {
       font-size: 16px; /* Prevent iOS zoom */
+    }
+    
+    /* Prevent horizontal scroll */
+    body {
+      overflow-x: hidden;
+    }
+    
+    /* Ensure all containers respect viewport */
+    * {
+      max-width: 100%;
     }
   }
 }

@@ -163,7 +163,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
       if (fresh) setSelectedAccount(fresh);
     }
-  }, [accounts, selectedAccount, activeAccounts]);
+  }, [accounts?.length, selectedAccount?.id, activeAccounts.length]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
@@ -177,7 +177,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   // Show loading state while accounts are fetching — prevents empty state flash on mobile
   // CRITICAL: Must check isFetching too, not just isLoading, to handle refetches
-  const isAnyLoading = accountsLoading || isFetching || (!user?.id);
+  const isAnyLoading = accountsLoading || isFetching;
   
   if (isAnyLoading && accounts.length === 0) {
     return (

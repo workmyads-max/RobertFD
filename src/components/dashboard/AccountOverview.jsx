@@ -916,7 +916,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         sessionStorage.removeItem('selectedAccountId');
       }
     }
-  }, [accounts, selectedAccount]);
+  }, [accounts.length, selectedAccount?.id]);
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
