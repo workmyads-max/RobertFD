@@ -61,12 +61,13 @@ Deno.serve(async (req) => {
       }
 
       // Map Tritech get-position fields to standard format
-      // Tritech actionID: 0=BUY, 1=SELL; volume is raw points → /100000
+      // Tritech actionID: 0=BUY, 1=SELL; volume is in centi-lots (÷10000)
+      // Verified: 10000 = 1.00 lot, 1000 = 0.10 lot, 1 = 0.0001 lot
       positions.forEach(p => {
         const actionID = p.actionID ?? p.action ?? 0;
         const isSell = actionID === 1 || actionID === 'SELL';
         const rawVol = parseFloat(p.volume ?? 0);
-        const lots = rawVol / 100000;
+        const lots = rawVol / 10000;
         const profit = parseFloat(p.profit ?? 0);
         const storage = parseFloat(p.storage ?? 0);
 
