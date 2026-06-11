@@ -520,9 +520,14 @@ function OpenTradesPanel({ account }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
       <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-sm font-bold text-foreground">Open trades</span>
+          <span className="text-sm font-bold text-foreground">Live Trade Feed</span>
+          {positions.length > 0 && (
+            <span className={`text-sm font-black font-mono ${positions.reduce((s, p) => s + (p.pnl || 0), 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              Total PnL: {positions.reduce((s, p) => s + (p.pnl || 0), 0) >= 0 ? '+' : ''}${fmt(positions.reduce((s, p) => s + (p.pnl || 0), 0))}
+            </span>
+          )}
         </div>
         <button onClick={fetchPositions} disabled={loading} className="p-1.5 rounded hover:bg-white/5 text-muted-foreground transition-colors">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
