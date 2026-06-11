@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import {
   Plus, BarChart3, Key, CalendarDays, Info, Check, X,
   TrendingUp, TrendingDown, Activity, Shield, Target, Clock,
-  Zap, Award, RefreshCw, ChevronRight, ChevronUp, ChevronDown
+  Zap, Award, RefreshCw, ChevronRight
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -12,16 +11,10 @@ import CredentialsModal from './CredentialsModal';
 import LiveTradeFeed from '../overview/LiveTradeFeed';
 import PerformanceMetrics from '../overview/PerformanceMetrics';
 import ProgressTimeline from '../overview/ProgressTimeline';
-import CurrentResultsChart from '../overview/CurrentResultsChart.jsx';
+import CurrentResultsChart from '../overview/CurrentResultsChart';
 import ChallengeDetailSidebar from '../overview/ChallengeDetailSidebar';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
-
-function useCopyText() {
-  const [copied, setCopied] = useState(null);
-  const copy = (val, key) => { navigator.clipboard.writeText(val).catch(() => {}); setCopied(key); setTimeout(() => setCopied(null), 1800); };
-  return { copied, copy };
-}
 
 function Card({ children, className = '', accent = false }) {
   return (
@@ -74,15 +67,6 @@ function InfoTooltip({ children }) {
   );
 }
 
-function fmtTime(t) {
-  if (!t) return '—';
-  const ms = Date.now() - new Date(t).getTime();
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  const h = Math.floor(m / 60);
-  return `${String(h).padStart(2,'0')}:${String(m % 60).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
-}
-
 function useResetCountdown() {
   const [countdown, setCountdown] = useState('');
   useEffect(() => {
@@ -104,9 +88,7 @@ function useResetCountdown() {
   return countdown;
 }
 
-// ─── Active Account Card ─────────────────────────────────────────────────────
 function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl, setShowCredentials }) {
-  const { copied, copy } = useCopyText();
   if (!account) return null;
 
   const balance = account.balance ?? account.account_size ?? 0;
@@ -210,7 +192,6 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   );
 }
 
-// ─── Statistics Panel ─────────────────────────────────────────────────────────
 function StatRow({ label, value, valueColor, bar, barPct }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
@@ -279,7 +260,6 @@ function StatisticsPanel({ account, tradeRecords }) {
   );
 }
 
-// ─── Daily Summary ────────────────────────────────────────────────────────────
 function DailySummaryPanel({ tradeRecords }) {
   const rows = useMemo(() => {
     const byDay = {};
@@ -341,7 +321,6 @@ function DailySummaryPanel({ tradeRecords }) {
   );
 }
 
-// ─── Discipline Gauge ─────────────────────────────────────────────────────────
 function DisciplineGauge({ score }) {
   const r = 68, cx = 100, cy = 95;
   const circ = Math.PI * r;
@@ -568,7 +547,6 @@ function DisciplinePanel({ account, tradeRecords }) {
   );
 }
 
-// ─── Account History ─────────────────────────────────────────────────────────
 const HISTORY_TABS = [
   { id: 'all', label: 'All' },
   { id: 'active', label: 'Active' },
@@ -635,14 +613,11 @@ function AccountHistorySection({ accounts }) {
   );
 }
 
-// ─── Main AccountOverview ─────────────────────────────────────────────────────
 export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
-  const [error, setError] = useState(null);
 
-  // All hooks must be called unconditionally at the top
   useEffect(() => {
     try {
       const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
@@ -669,14 +644,14 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     ? (accounts?.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: tradeRecords = [], error: tradeError } = useQuery({
+  const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account?.account_id }),
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
   });
 
-  const { data: livePositionsData, error: positionsError } = useQuery({
+  const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
     queryFn: async () => {
       try {
@@ -691,7 +666,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     refetchInterval: 5000, staleTime: 3000,
   });
 
-  // Error handling after all hooks
   if (accountsError) {
     console.error('Failed to load accounts:', accountsError);
     return (
@@ -701,8 +675,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       </div>
     );
   }
-
-
 
   const livePositions = livePositionsData || [];
   const liveUnrealizedPnl = (livePositions || []).reduce((s, p) => s + (p.pnl || 0), 0);
@@ -767,7 +739,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       <LiveTradeFeed account={account} trades={tradeRecords} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['trade-records-overview', account?.account_id] })} />
 
-      {/* Current Results + Challenge Detail */}
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <CurrentResultsChart account={account} trades={tradeRecords} />
@@ -775,13 +746,11 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         <ChallengeDetailSidebar account={account} />
       </div>
 
-      {/* Performance Metrics + Progress Timeline */}
       <div className="grid lg:grid-cols-2 gap-4">
         <PerformanceMetrics account={account} trades={tradeRecords} />
         <ProgressTimeline account={account} />
       </div>
 
-      {/* Statistics + Daily Summary */}
       <div className="grid md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} tradeRecords={tradeRecords} />
         <DailySummaryPanel tradeRecords={tradeRecords} />

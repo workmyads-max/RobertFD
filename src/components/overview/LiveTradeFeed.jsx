@@ -13,14 +13,15 @@ function fmtTime(seconds) {
 }
 
 export default function LiveTradeFeed({ account, trades, onRefresh }) {
-  // Filter only REAL open positions from MT5 synced trade records
-  const openTrades = trades.filter(t => t.status === 'open').sort((a, b) => {
+  // Show ALL trades (closed + open) from MT5 synced records - matching design images
+  const allTrades = trades.filter(t => t.open_time).sort((a, b) => {
     const aTime = a.open_time ? new Date(a.open_time).getTime() : 0;
     const bTime = b.open_time ? new Date(b.open_time).getTime() : 0;
     return bTime - aTime;
   });
 
-  // Calculate total unrealized PnL from all open positions
+  // Calculate total PnL from open positions only
+  const openTrades = allTrades.filter(t => t.status === 'open');
   const totalProfit = openTrades.reduce((s, t) => s + (t.pnl || 0), 0);
   const totalLots = openTrades.reduce((s, t) => s + (t.lots || 0), 0);
 
@@ -50,8 +51,8 @@ export default function LiveTradeFeed({ account, trades, onRefresh }) {
         </div>
       </div>
 
-      {openTrades.length === 0 ? (
-        <div className="py-12 text-center text-sm text-white/30">No open positions</div>
+      {allTrades.length === 0 ? (
+        <div className="py-12 text-center text-sm text-white/30">No trades yet</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -65,11 +66,14 @@ export default function LiveTradeFeed({ account, trades, onRefresh }) {
               </tr>
             </thead>
             <tbody>
-              {openTrades.map((t, i) => {
+              {allTrades.map((t, i) => {
                 const isBuy = t.type === 'BUY';
                 const openTime = t.open_time ? new Date(t.open_time) : null;
+                const closeTime = t.close_time ? new Date(t.close_time) : null;
+                const refTime = t.status === 'open' && openTime ? openTime : (closeTime || openTime);
                 const now = new Date();
-                const durationSec = openTime ? Math.floor((now - openTime.getTime()) / 1000) : 0;
+                const durationSec = refTime ? Math.floor((now - refTime.getTime()) / 1000) : 0;
+                const displayTime = openTime || closeTime;
                 return (
                   <tr key={t.trade_id || i}
                     className="border-b hover:bg-white/[0.02] transition-colors"
@@ -78,14 +82,14 @@ export default function LiveTradeFeed({ account, trades, onRefresh }) {
                       <div className="flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-red-400'}`} />
                         <span className="font-mono font-bold text-white/70">{isBuy ? 'BUY' : 'SELL'}</span>
-                        <span className="font-mono text-[10px] text-white/40">{t.trade_id?.slice(0, 6)}</span>
+                        <span className="font-mono text-[10px] text-white/40">{String(t.trade_id || '').slice(0, 6)}</span>
                       </div>
                     </td>
                     <td className="px-5 py-3 font-mono text-[10px] text-white/50">
-                      {openTime ? openTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ' ' + openTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      {displayTime ? displayTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ', ' + displayTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
                     <td className="px-5 py-3 font-mono text-white/60">{(t.lots || 0).toFixed(3)}</td>
-                    <td className="px-5 py-3 font-bold text-white/80">{t.symbol}</td>
+                    <td className="px-5 py-3 font-bold text-white/80">{t.symbol || '—'}</td>
                     <td className="px-5 py-3">
                       <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono ${
                         (t.pnl || 0) >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'
@@ -110,8 +114,8 @@ export default function LiveTradeFeed({ account, trades, onRefresh }) {
 
       <div className="px-5 py-3 border-t flex items-center justify-between text-[10px] font-mono"
         style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <span className="text-white/40">Total trades: {allTrades.length}</span>
         <span className="text-white/40">Open positions: {openTrades.length}</span>
-        <span className="text-white/40">Total lots: {totalLots.toFixed(2)}</span>
       </div>
     </div>
   );
