@@ -52,7 +52,9 @@ function TradeRow({ trade, isOpen }) {
         {(trade.entry || 0).toFixed(5)}
       </td>
       <td className="px-3 py-3 text-xs font-mono text-muted-foreground">
-        {isOpen ? <span className="text-yellow-400/70 text-[10px]">Running…</span> : (trade.close || 0).toFixed(5)}
+        {isOpen
+          ? <span className="text-yellow-400 text-[11px] font-mono">{(trade.current_price || 0).toFixed(5)}</span>
+          : (trade.close || 0).toFixed(5)}
       </td>
       <td className="px-3 py-3">
         <span className={`text-xs font-bold font-mono ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -80,17 +82,24 @@ function TradeRow({ trade, isOpen }) {
 }
 
 export default function LiveTradeFeed({ account }) {
-  const [trades, setTrades] = useState([]);
+  const [openPositions, setOpenPositions] = useState([]);
+  const [closedTrades, setClosedTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
-  const [tab, setTab] = useState('all'); // all | open | closed
+  const [tab, setTab] = useState('open');
 
-  const fetchTrades = async () => {
+  const fetchAll = async () => {
     if (!account?.account_id) return;
     setLoading(true);
     try {
-      const records = await base44.entities.TradeRecord.filter({ account_id: account.account_id });
-      setTrades(records);
+      const [posRes, records] = await Promise.all([
+        base44.functions.invoke('getLivePositions', { account_id: account.account_id }),
+        base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+      ]);
+      setOpenPositions(posRes?.data?.positions || []);
+      // Filter out deposit/system entries
+      const real = records.filter(t => t.symbol && t.symbol.length > 0 && (t.lots > 0 || t.entry > 0));
+      setClosedTrades(real.filter(t => t.status === 'closed'));
       setLastRefresh(new Date());
     } catch (e) {
       console.error('LiveTradeFeed fetch error', e);
@@ -100,43 +109,21 @@ export default function LiveTradeFeed({ account }) {
   };
 
   useEffect(() => {
-    fetchTrades();
-    const interval = setInterval(fetchTrades, 30000);
+    fetchAll();
+    const interval = setInterval(fetchAll, 15000); // refresh every 15s
     return () => clearInterval(interval);
   }, [account?.account_id]);
 
-  // Derive open positions from equity ≠ balance
-  const balance = account?.balance || 0;
-  const equity = account?.equity || balance;
-  const floatingPnl = equity - balance;
-  const hasOpenPositions = Math.abs(floatingPnl) > 0.01;
+  const floatingPnl = openPositions.reduce((s, p) => s + (p.pnl || 0), 0);
+  const hasOpenPositions = openPositions.length > 0;
 
-  // Filter out deposit/withdrawal system entries (no symbol or zero lots and no price)
-  const realTrades = trades.filter(t => t.symbol && t.symbol.length > 0 && (t.lots > 0 || t.entry > 0));
-  const closedTrades = realTrades.filter(t => t.status === 'closed');
-  const openTrades = realTrades.filter(t => t.status === 'open');
-
-  // If equity ≠ balance but no open trades in DB, show a synthetic open position row
-  const syntheticOpen = hasOpenPositions && openTrades.length === 0 ? [{
-    id: 'synthetic',
-    symbol: 'Open Position',
-    type: floatingPnl >= 0 ? 'BUY' : 'SELL',
-    lots: 0,
-    entry: 0,
-    close: 0,
-    pnl: floatingPnl,
-    status: 'open',
-    open_time: account?.last_synced_at,
-  }] : openTrades;
-
-  const allTrades = [...syntheticOpen, ...closedTrades].sort((a, b) => {
-    const aTime = new Date(a.close_time || a.open_time || 0);
-    const bTime = new Date(b.close_time || b.open_time || 0);
-    return bTime - aTime;
-  });
+  const allTrades = [
+    ...openPositions,
+    ...[...closedTrades].sort((a, b) => new Date(b.close_time || 0) - new Date(a.close_time || 0)),
+  ];
 
   const displayTrades = tab === 'open'
-    ? syntheticOpen
+    ? openPositions
     : tab === 'closed'
     ? closedTrades
     : allTrades;
@@ -164,7 +151,7 @@ export default function LiveTradeFeed({ account }) {
           {/* Stats pills */}
           <div className="hidden sm:flex items-center gap-2">
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-400/10 text-yellow-400">
-              {syntheticOpen.length} Open
+              {openPositions.length} Open
             </span>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/5 text-muted-foreground">
               {closedTrades.length} Closed
@@ -175,7 +162,7 @@ export default function LiveTradeFeed({ account }) {
               </span>
             )}
           </div>
-          <button onClick={fetchTrades} disabled={loading}
+          <button onClick={fetchAll} disabled={loading}
             className="p-2 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground hover:text-foreground">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -186,7 +173,7 @@ export default function LiveTradeFeed({ account }) {
       <div className="flex border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         {[
           { id: 'all', label: `All (${allTrades.length})` },
-          { id: 'open', label: `Open (${syntheticOpen.length})` },
+          { id: 'open', label: `Open (${openPositions.length})` },
           { id: 'closed', label: `Closed (${closedTrades.length})` },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -197,7 +184,7 @@ export default function LiveTradeFeed({ account }) {
       </div>
 
       {/* Floating P&L banner if open positions exist */}
-      {hasOpenPositions && (tab === 'all' || tab === 'open') && (
+      {hasOpenPositions && (tab === 'all' || tab === 'open') && floatingPnl !== 0 && (
         <div className="flex items-center justify-between px-5 py-2.5 border-b"
           style={{ background: floatingPnl >= 0 ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', borderColor: 'rgba(255,255,255,0.05)' }}>
           <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
@@ -211,7 +198,7 @@ export default function LiveTradeFeed({ account }) {
       )}
 
       {/* Table */}
-      {loading && trades.length === 0 ? (
+      {loading && openPositions.length === 0 && closedTrades.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
