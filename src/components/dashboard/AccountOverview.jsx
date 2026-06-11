@@ -9,11 +9,11 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import CredentialsModal from './CredentialsModal';
-import LiveTradeFeed from '../overview/LiveTradeFeed';
-import PerformanceMetrics from '../overview/PerformanceMetrics';
-import ProgressTimeline from '../overview/ProgressTimeline';
-import CurrentResultsChart from '../overview/CurrentResultsChart';
-import ChallengeDetailSidebar from '../overview/ChallengeDetailSidebar';
+import LiveTradeFeed from '../overview/LiveTradeFeed.jsx';
+import PerformanceMetrics from '../overview/PerformanceMetrics.jsx';
+import ProgressTimeline from '../overview/ProgressTimeline.jsx';
+import CurrentResultsChart from '../overview/CurrentResultsChart.jsx';
+import ChallengeDetailSidebar from '../overview/ChallengeDetailSidebar.jsx';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
