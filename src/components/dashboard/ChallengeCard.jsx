@@ -20,101 +20,119 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      className="relative rounded-xl border bg-[#1A1D23] p-4 transition-all duration-200"
-      style={{
-        borderColor: 'rgba(255,255,255,0.08)',
-      }}
+      whileHover={{ y: -4 }}
+      className="relative rounded-2xl border bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-4 sm:p-5 md:p-6 transition-all duration-300 overflow-hidden group border-border hover:border-primary/50"
     >
+      {/* Background glow */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-primary transition-opacity" />
+
       {/* Badge */}
       {badge && (
-        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[9px] font-bold ${
-          badgeColor === 'bg-[#CCFF00]' ? 'text-black' : 'text-white'
-        }`}
-          style={{ background: badgeColor || '#FF5C00' }}>
+        <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-white ${badgeColor}`}>
           {badge}
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-3">
-        <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-wider mb-1">
-          {plan.type === 'two-step' ? '2-Step Challenge' : plan.type === 'instant' ? 'Instant Funding' : 'Instant Light'}
-        </div>
-        <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+      {/* Icon */}
+      <div className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg mb-3 sm:mb-4 ${getAccentColor()} opacity-75`}>
+        {getIcon()}
       </div>
 
+      {/* Label & Title */}
+      <div className="mb-3 sm:mb-4">
+        <div className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
+          {plan.type === 'two-step' ? 'Evaluation Phase' : plan.type === 'instant' ? 'No Evaluation' : 'Most Affordable'}
+        </div>
+        <h3 className="text-lg sm:text-xl md:text-2xl font-black text-foreground">{plan.name}</h3>
+      </div>
+
+      {/* Description */}
+      <p className="text-[11px] sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+        {plan.type === 'two-step'
+          ? 'Prove your skills through a structured 2-phase evaluation. Built for disciplined traders.'
+          : plan.type === 'instant'
+          ? 'Skip evaluation entirely. Get funded capital the same day and request payouts daily.'
+          : 'Most affordable path to funding. Trading drawdown protection moves your safety floor up.'}
+      </p>
+
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {plan.type === 'two-step' && (
           <>
-            <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-              <div className="text-[9px] text-[#8B8F95] mb-0.5">Phase 1</div>
-              <div className={`text-sm font-bold ${getAccentColor()}`}>+{plan.phase1_target}%</div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 1 Target</span>
+              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
             </div>
-            <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-              <div className="text-[9px] text-[#8B8F95] mb-0.5">Phase 2</div>
-              <div className={`text-sm font-bold ${getAccentColor()}`}>+{plan.phase2_target}%</div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Phase 2 Target</span>
+              <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase2_target}%</span>
             </div>
           </>
         )}
         {(plan.type === 'instant' || plan.type === 'instant_light') && (
-          <div className="rounded-lg p-2.5 col-span-2" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div className="text-[9px] text-[#8B8F95] mb-0.5">Profit Target</div>
-            <div className={`text-sm font-bold ${getAccentColor()}`}>+{plan.phase1_target}%</div>
+          <div className="flex justify-between items-center">
+            <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Target</span>
+            <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.phase1_target}%</span>
           </div>
         )}
-        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <div className="text-[9px] text-[#8B8F95] mb-0.5">Daily DD</div>
-          <div className={`text-sm font-bold ${getAccentColor()}`}>{plan.daily_dd}%</div>
+        <div className="flex justify-between items-center">
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Daily DD</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.daily_dd}%</span>
         </div>
-        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <div className="text-[9px] text-[#8B8F95] mb-0.5">Max DD</div>
-          <div className={`text-sm font-bold ${getAccentColor()}`}>{plan.max_dd}%</div>
+        <div className="flex justify-between items-center">
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Max DD</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.max_dd}%</span>
         </div>
-        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <div className="text-[9px] text-[#8B8F95] mb-0.5">Leverage</div>
-          <div className={`text-sm font-bold ${getAccentColor()}`}>
+        <div className="flex justify-between items-center">
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Leverage</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
             {plan.account_type === 'swing' ? plan.leverage_swing : plan.leverage_standard}
-          </div>
+          </span>
         </div>
-        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <div className="text-[9px] text-[#8B8F95] mb-0.5">Split</div>
-          <div className={`text-sm font-bold ${getAccentColor()}`}>{plan.profit_split}%</div>
+        <div className="flex justify-between items-center">
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Payouts</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>
+            {plan.type === 'instant' || plan.type === 'instant_light' ? 'Daily' : 'On Pass'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground">Profit Split</span>
+          <span className={`text-xs sm:text-sm font-bold ${getAccentColor()}`}>{plan.profit_split}%</span>
         </div>
       </div>
 
       {/* CTA Button */}
       <button
         onClick={() => onSelect(plan)}
-        className="w-full py-3 rounded-lg text-sm font-bold text-white transition-all"
+        className="w-full py-4 rounded-xl font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] relative z-10 mb-4"
         style={{ 
-          background: '#FF5C00',
+          background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
+          boxShadow: '0 4px 16px rgba(255,92,0,0.3)'
         }}
       >
-        Select Plan
+        Buy Challenge →
       </button>
 
       {/* Show Rules */}
       <button
         onClick={() => setShowRules(!showRules)}
-        className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2 text-[10px] font-semibold text-[#8B8F95] hover:text-white transition-colors"
+        className="w-full flex items-center justify-between py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
       >
-        <span>Trading Rules</span>
-        {showRules ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <span>Show Rules</span>
+        {showRules ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
 
       {/* Rules */}
       {showRules && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3 pt-3 border-t border-white/5 space-y-2 text-[11px] text-[#8B8F95]">
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2 text-xs text-muted-foreground">
           <div className="flex items-start gap-2">
-            <span className="text-[#FF5C00]">•</span>
+            <span className="text-primary">✓</span>
             <span>Max Lots: {plan.max_lots}</span>
           </div>
-          {plan.news_trading && <div className="flex items-start gap-2"><span className="text-[#CCFF00]">✓</span><span>News Trading Allowed</span></div>}
-          {plan.overnight_holding && <div className="flex items-start gap-2"><span className="text-[#CCFF00]">✓</span><span>Overnight Holding Allowed</span></div>}
-          {plan.weekend_holding && <div className="flex items-start gap-2"><span className="text-[#CCFF00]">✓</span><span>Weekend Holding Allowed</span></div>}
-          {plan.hedging && <div className="flex items-start gap-2"><span className="text-[#CCFF00]">✓</span><span>Hedging Allowed</span></div>}
+          {plan.news_trading && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>News Trading Allowed</span></div>}
+          {plan.overnight_holding && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Overnight Holding Allowed</span></div>}
+          {plan.weekend_holding && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Weekend Holding Allowed</span></div>}
+          {plan.hedging && <div className="flex items-start gap-2"><span className="text-accent">✓</span><span>Hedging Allowed</span></div>}
         </motion.div>
       )}
     </motion.div>

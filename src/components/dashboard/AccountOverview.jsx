@@ -962,7 +962,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -978,17 +978,16 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Account selector */}
       {activeAccounts.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {activeAccounts.map(a => (
             <button key={a.id} onClick={() => setSelectedAccount(a)}
-              className="flex-shrink-0 px-4 py-3 rounded-xl text-xs font-mono transition-all"
+              className="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-mono transition-all"
               style={{
                 background: account?.id === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.07)'}`,
                 color: account?.id === a.id ? '#FF5C00' : '#94a3b8',
-                minWidth: '140px',
               }}>
-              <div className="font-black">{a.account_id || a.id?.slice(0, 8)}</div>
+              <div className="font-black">{a.account_id}</div>
               <div className="text-[10px] opacity-60 mt-0.5">${(a.account_size || 0).toLocaleString()}</div>
             </button>
           ))}
@@ -1008,7 +1007,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       <AccountPerformanceMetrics account={account} stats={stats} />
 
       {/* Stats + Daily Summary side by side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} tradeRecords={tradeRecords} />
         <DailySummaryPanel tradeRecords={tradeRecords} />
       </div>

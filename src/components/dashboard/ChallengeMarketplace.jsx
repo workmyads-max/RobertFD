@@ -156,50 +156,47 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-      <div className="mb-8 sm:mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
-          style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]" />
-          <span className="text-[10px] font-bold text-[#FF5C00] uppercase tracking-wider">Challenge Marketplace</span>
+      <div className="mb-8 sm:mb-12">
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl mb-4"
+          style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))', border: '1px solid rgba(255,92,0,0.25)', boxShadow: '0 4px 20px rgba(255,92,0,0.1)' }}>
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[11px] sm:text-xs font-bold text-primary uppercase tracking-wider">Challenge Marketplace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
-          Choose Your <span style={{ color: '#FF5C00' }}>Capital Tier</span>
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3 tracking-tight">
+          Choose Your <span className="text-primary">Capital Tier</span>
         </h1>
-        <p className="text-sm text-[#8B8F95] max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
           Institutional funding from $5K to $200K. Select your challenge type, account model, and start your professional trading journey.
         </p>
       </div>
 
       {/* Challenge type toggle */}
-      <div className="mb-6">
-        <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-widest mb-3">Challenge Type</div>
-        <div className="inline-flex rounded-xl p-1"
-          style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="mb-6 sm:mb-8">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Challenge Type</div>
+        <div className="flex rounded-2xl p-2 flex-wrap gap-3 sm:flex-nowrap"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
-            { id: 'instant', label: 'Instant', desc: '1 phase', icon: Zap },
-            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: Zap },
-          ].map((t, idx) => {
+            { id: 'two-step', label: '⚡ Two-Step', desc: '2 phases' },
+            { id: 'instant', label: '🚀 Instant', desc: '1 phase' },
+            { id: 'instant_light', label: '💡 Light', desc: 'Simplified' },
+          ].map(t => {
             const isSelected = challengeType === t.id;
-            const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative px-5 py-3 rounded-lg text-left transition-all duration-200 min-w-[110px] ${
-                  isSelected ? 'text-white' : 'text-[#8B8F95] hover:text-white/80'
-                }`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />
-                  <div className="text-sm font-bold">{t.label}</div>
-                </div>
-                <div className={`text-[9px] ${isSelected ? 'text-white/70' : 'text-[#8B8F95]'}`}>{t.desc}</div>
-                {isSelected && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-[#FF5C00]" />
-                )}
+                className={`relative flex-1 px-6 sm:px-8 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
+                  isSelected ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                }`}
+                style={isSelected ? {
+                  background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
+                  boxShadow: '0 4px 16px rgba(255,92,0,0.3)',
+                } : {}}>
+                <div className="text-base sm:text-lg font-bold mb-1">{t.label}</div>
+                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-1.5 -right-1.5 px-2 py-0.5 rounded-full text-[8px] font-bold"
-                    style={{ background: '#CCFF00', color: '#000000' }}>
+                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[9px] font-black"
+                    style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
                     -50%
                   </span>
                 )}
@@ -210,51 +207,53 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Platform selector */}
-      <div className="mb-6">
-        <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-widest mb-3">Trading Platform</div>
-        <div className="flex flex-col gap-3">
+      <div className="mb-6 sm:mb-8">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-wrap gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => setPlatform(p.id)}
-                className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 w-full ${
-                  isSelected ? 'bg-[#1A1D23]' : 'bg-[#1A1D23]/50 hover:bg-[#1A1D23]'
-                }`}
+                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] w-full sm:w-auto"
                 style={{
-                  border: `1px solid ${isSelected ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(255,92,0,0.06))'
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.15)' : 'none',
                 }}>
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-10 h-10 object-contain"
+                    className="w-14 h-14 object-contain transition-transform group-hover:scale-110"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                    <div className={`text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider"
-                        style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                        style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', color: '#ffffff' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className={`text-[11px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`}>
+                  <div className={`text-[11px] ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
                     {p.desc}
                   </div>
                 </div>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                  isSelected ? 'opacity-100' : 'opacity-0'
-                }`}
-                  style={{ background: '#FF5C00' }}>
-                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                </div>
+                {isSelected && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  </div>
+                )}
               </button>
             );
           })}
@@ -262,49 +261,54 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Account type */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-8 sm:mb-10">
         {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
           const isSelected = accountType === key;
           return (
             <motion.button
               key={key}
               onClick={() => setAccountType(key)}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className={`rounded-xl p-4 text-left transition-all duration-200 ${
-                isSelected ? 'bg-[#1A1D23]' : 'bg-[#1A1D23]/50 hover:bg-[#1A1D23]'
-              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl p-5 text-left transition-all duration-300"
               style={{
-                border: `1px solid ${isSelected ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                background: isSelected
+                  ? 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))'
+                  : 'rgba(255,255,255,0.03)',
+                border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.1)' : 'none',
               }}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'bg-[#FF5C00]/15' : 'bg-white/5'
-                  }`}>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isSelected
+                        ? 'linear-gradient(135deg, #FF5C00, #FF7A2F)'
+                        : 'rgba(255,255,255,0.06)',
+                      boxShadow: isSelected ? '0 2px 12px rgba(255,92,0,0.4)' : 'none',
+                    }}>
                     {key === 'standard'
-                      ? <Zap className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />
-                      : <Shield className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />}
+                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />
+                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />}
                   </div>
                   <div>
-                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/80'}`}>{cfg.label}</div>
-                    <div className={`text-[10px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`}>{cfg.leverage} leverage</div>
+                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-foreground'}`}>{cfg.label}</div>
+                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>{cfg.leverage} leverage</div>
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#FF5C00' }}>
-                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {cfg.features.map(f => (
                   <div key={f.text} className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      f.ok ? 'bg-[#CCFF00]' : 'bg-red-400'
-                    }`} />
-                    <span className={`text-[11px] ${f.ok ? 'text-white/80' : 'text-[#8B8F95]'}`}>{f.text}</span>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-emerald-400' : 'bg-red-400'}`}
+                      style={{ boxShadow: f.ok ? '0 0 8px rgba(52,211,153,0.5)' : 'none' }} />
+                    <span className={`text-xs ${f.ok ? 'text-foreground' : 'text-muted-foreground'}`}>{f.text}</span>
                   </div>
                 ))}
               </div>
@@ -315,35 +319,56 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Plans grid */}
       {plansLoading ? (
-        <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16 mb-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : (
         <AnimatePresence mode="wait">
           <motion.div
             key={`${challengeType}-${accountType}`}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="grid gap-3 mb-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
           >
             {plans.map((plan, i) => {
               const isPopular = !!plan.is_popular;
+              let badge = null;
+              let badgeColor = '';
+              if (isPopular) {
+                badge = '🔥 Most Popular';
+                badgeColor = 'bg-orange-500/90';
+              } else if (plan.type === 'instant_light') {
+                badge = '50% Cheaper';
+                badgeColor = 'bg-accent/90';
+              }
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, type: 'spring', stiffness: 200, damping: 22 }}
                 >
                   <ChallengeCard
                     plan={plan}
-                    badge={isPopular ? 'Most Popular' : plan.type === 'instant_light' ? '50% Cheaper' : null}
-                    badgeColor={isPopular ? 'bg-[#FF5C00]' : plan.type === 'instant_light' ? 'bg-[#CCFF00]' : ''}
+                    badge={badge}
+                    badgeColor={badgeColor}
                     onSelect={() => handleSelect(plan)}
                   />
                 </motion.div>
               );
             })}
             {plans.length === 0 && !plansLoading && (
-              <div className="col-span-full text-center py-10 text-[#8B8F95] text-sm">
-                No plans match current filters
+              <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
+                {allPlans.length === 0
+                  ? 'No challenge plans found in database. Please add plans via Admin → Challenges.'
+                  : (
+                    <div>
+                      <div className="mb-2">No plans match current filters.</div>
+                      <div className="text-xs font-mono opacity-60">
+                        Total plans: {allPlans.length} | Filter: type={challengeType}, account_type={accountType}<br/>
+                        Plan types in DB: {[...new Set(allPlans.map(p => p.type))].join(', ')}<br/>
+                        Account types in DB: {[...new Set(allPlans.map(p => p.account_type || 'standard'))].join(', ')}
+                      </div>
+                    </div>
+                  )
+                }
               </div>
             )}
           </motion.div>
