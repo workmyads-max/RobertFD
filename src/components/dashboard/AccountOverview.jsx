@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  ChevronDown, ChevronUp, RefreshCw, Copy, ChevronRight,
-  Plus, BarChart3, Key, CalendarDays, Info, Check, X
+  ChevronDown, ChevronUp, RefreshCw, ChevronRight,
+  Plus, BarChart3, Key, CalendarDays, Info, Check, X,
+  TrendingUp, TrendingDown, Activity, Shield, Target, Clock,
+  Zap, Award
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -11,10 +13,8 @@ import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
-// Next daily reset countdown — resets at 23:00 UTC daily
 function useResetCountdown() {
   const [countdown, setCountdown] = useState('');
   useEffect(() => {
@@ -36,7 +36,6 @@ function useResetCountdown() {
   return countdown;
 }
 
-// Tooltip component matching the reference design
 function InfoTooltip({ children }) {
   const [show, setShow] = useState(false);
   const ref = useRef(null);
@@ -46,20 +45,21 @@ function InfoTooltip({ children }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
   return (
-    <span ref={ref} className="relative inline-flex items-center" style={{ cursor: 'pointer' }}>
-      <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" onClick={() => setShow(v => !v)} />
+    <span ref={ref} className="relative inline-flex items-center cursor-pointer">
+      <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60 transition-colors" onClick={() => setShow(v => !v)} />
       <AnimatePresence>
         {show && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            initial={{ opacity: 0, y: 6, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            exit={{ opacity: 0, y: 6, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 text-center rounded-xl px-4 py-3 text-sm shadow-2xl"
-            style={{ background: '#1a1b2e', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0' }}
+            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 text-center rounded-2xl px-4 py-3 text-sm shadow-2xl"
+            style={{ background: 'rgba(15,16,30,0.98)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', backdropFilter: 'blur(20px)' }}
           >
             {children}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0" style={{ borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #1a1b2e' }} />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0"
+              style={{ borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid rgba(15,16,30,0.98)' }} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -75,94 +75,153 @@ function fmtTime(t) {
   const h = Math.floor(m / 60);
   return `${String(h).padStart(2,'0')}:${String(m % 60).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
 }
+
 function useCopyText() {
   const [copied, setCopied] = useState(null);
-  const copy = (val, key) => { navigator.clipboard.writeText(val).catch(() => {}); setCopied(key); setTimeout(() => setCopied(null), 1500); };
+  const copy = (val, key) => { navigator.clipboard.writeText(val).catch(() => {}); setCopied(key); setTimeout(() => setCopied(null), 1800); };
   return { copied, copy };
+}
+
+// ─── Card wrapper ─────────────────────────────────────────────────────────────
+function Card({ children, className = '', accent = false }) {
+  return (
+    <div className={`rounded-2xl overflow-hidden ${className}`}
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: accent ? '1px solid rgba(255,92,0,0.25)' : '1px solid rgba(255,255,255,0.07)',
+        boxShadow: accent ? '0 0 30px rgba(255,92,0,0.06)' : 'none',
+      }}>
+      {children}
+    </div>
+  );
+}
+
+function CardHeader({ children, className = '' }) {
+  return (
+    <div className={`flex items-center justify-between px-5 py-4 border-b ${className}`}
+      style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return <span className="text-[11px] font-bold uppercase tracking-widest text-white/30">{children}</span>;
 }
 
 // ─── Active Account Card ─────────────────────────────────────────────────────
 function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl }) {
   const { copied, copy } = useCopyText();
   if (!account) return null;
+
   const balance = account.balance ?? account.account_size ?? 0;
-  // ⚡ Use live equity/unrealizedPnl from real-time positions poll (most accurate)
   const equity = liveEquity ?? (account.equity ?? balance);
   const unrealizedPnl = liveUnrealizedPnl ?? (equity - balance);
-  // daily_pnl is synced from scheduledMTSync (equity vs daily_start_balance)
   const todayPnl = account.daily_pnl ?? 0;
-  const challengeLabel = account.challenge_type === 'two-step' ? '2-Step' : account.challenge_type === 'instant' ? 'Instant' : 'Instant Light';
-  const statusLabel = account.status === 'active' ? 'Ongoing' : account.status === 'passed' ? 'Passed' : account.status === 'funded' ? 'Funded' : account.status;
-  const statusColor = account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#888';
+  const challengeLabel = account.challenge_type === 'two-step' ? '2-Step Challenge'
+    : account.challenge_type === 'instant' ? 'Instant Funding' : 'Instant Light';
+  const statusLabel = account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
+    : account.status === 'funded' ? 'Funded' : account.status;
+  const statusColor = account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00'
+    : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
+  const phase = (account.phase || 'phase1').replace('phase', 'Phase ');
+  const progressPct = Math.min((account.profit_target_progress || 0) / (account.rule_snapshot?.phase1_target || 10) * 100, 100);
+  const endDate = account.provisioned_at
+    ? new Date(new Date(account.provisioned_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
+  const metrics = [
+    { label: "Today's P&L", value: `${todayPnl >= 0 ? '+' : ''}$${fmt(todayPnl)}`, color: todayPnl >= 0 ? '#10b981' : '#ef4444', icon: todayPnl >= 0 ? TrendingUp : TrendingDown },
+    { label: 'Live Equity', value: `$${fmt(equity)}`, color: '#60a5fa', icon: Activity },
+    { label: 'Unrealized PnL', value: `${unrealizedPnl >= 0 ? '+' : ''}$${fmt(unrealizedPnl)}`, color: unrealizedPnl >= 0 ? '#10b981' : '#ef4444', icon: Zap },
+  ];
 
   return (
-    <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      {/* Header row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: `${statusColor}20`, color: statusColor, border: `1px solid ${statusColor}40` }}>{statusLabel}</span>
-          <span className="text-sm font-bold text-foreground">{challengeLabel}: {account.mt_login || account.account_id}</span>
+    <Card accent>
+      {/* Top header */}
+      <div className="px-5 pt-5 pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
+                style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}35` }}>
+                ● {statusLabel}
+              </span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
+                {phase}
+              </span>
+            </div>
+            <div className="text-lg font-black text-white tracking-tight">{challengeLabel}</div>
+            <div className="text-xs font-mono text-white/40 mt-0.5">MT5 Login: {account.mt_login || '—'} · {account.leverage || '1:100'} leverage</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-white/30 mb-0.5">Account Size</div>
+            <div className="text-2xl font-black text-white">${(account.account_size || 0).toLocaleString()}</div>
+            <div className="text-[10px] text-white/30 mt-0.5 font-mono">Exp: {endDate}</div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Visible</span>
-          <div className="w-9 h-5 rounded-full bg-primary flex items-center justify-end px-0.5 cursor-pointer"><div className="w-4 h-4 rounded-full bg-white shadow" /></div>
-        </div>
-      </div>
 
-      {/* Balance row */}
-      <div className="flex flex-wrap items-center gap-6 px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <span className="text-xs font-mono text-muted-foreground">Balance: <strong className="text-foreground">${fmt(balance)}</strong></span>
-        {account.provisioned_at && <span className="text-xs font-mono text-muted-foreground">End: <strong className="text-foreground">{new Date(new Date(account.provisioned_at).getTime() + 30*24*60*60*1000).toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' })}</strong></span>}
-        <span className="text-xs font-mono text-muted-foreground">Status: <strong style={{ color: statusColor }}>{statusLabel}</strong></span>
-        {/* progress bar */}
-        <div className="flex-1 min-w-[80px]">
-          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min((account.profit_target_progress || 0) / (account.rule_snapshot?.phase1_target || 10) * 100, 100)}%` }} />
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-[10px] font-semibold mb-1.5">
+            <span className="text-white/40">Profit Target Progress</span>
+            <span style={{ color: '#FF5C00' }}>{progressPct.toFixed(1)}%</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <motion.div className="h-full rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <button onClick={() => {
-          const creds = `Login: ${account.mt_login || '—'}\nPassword: ${account.mt_password || '—'}\nServer: ${account.mt_server || '—'}`;
-          copy(creds, 'login');
-        }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground border border-white/10 hover:bg-white/5 transition-colors">
+      {/* Action bar */}
+      <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <button
+          onClick={() => copy(`Login: ${account.mt_login || '—'}\nPassword: ${account.mt_password || '—'}\nServer: ${account.mt_server || '—'}`, 'login')}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
+          style={{ background: copied === 'login' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: copied === 'login' ? '#10b981' : '#94a3b8' }}>
           <Key className="w-3.5 h-3.5" />
-          {copied === 'login' ? '✓ Copied!' : `Login: ${account.mt_login || '—'}`}
+          {copied === 'login' ? '✓ Copied!' : `Copy Credentials`}
         </button>
-        <button onClick={() => onNavigate && onNavigate('accounts')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground border border-white/10 hover:bg-white/5 transition-colors">
+        <button onClick={() => onNavigate?.('accounts')}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#94a3b8' }}>
           <CalendarDays className="w-3.5 h-3.5" />
           Account MetriX
         </button>
-        <button onClick={() => onNavigate && onNavigate('accounts')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-foreground border border-white/20 hover:bg-white/5 transition-colors ml-auto">
-          Detail <ChevronRight className="w-3.5 h-3.5" />
+        <button onClick={() => onNavigate?.('accounts')}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto transition-all hover:opacity-90"
+          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
+          Full Detail <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Metrics row */}
-      <div className="grid grid-cols-3 divide-x" style={{ divideColor: 'rgba(255,255,255,0.06)' }}>
-        {[
-          { label: "Today's profit", value: `$${fmt(todayPnl)}`, color: todayPnl >= 0 ? '#10b981' : '#ef4444' },
-          { label: 'Equity', value: `$${fmt(equity)}`, color: '#10b981' },
-          { label: 'Unrealized PnL', value: `${unrealizedPnl >= 0 ? '+' : ''}$${fmt(unrealizedPnl)}`, color: unrealizedPnl >= 0 ? '#10b981' : '#ef4444' },
-        ].map(m => (
-          <div key={m.label} className="px-5 py-4 text-center" style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-            <div className="text-[10px] font-mono text-muted-foreground mb-2 flex items-center justify-center gap-1">{m.label} <Info className="w-3 h-3" /></div>
-            <div className="text-xl font-black" style={{ color: m.color }}>{m.value}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-3">
+        {metrics.map((m, i) => {
+          const Icon = m.icon;
+          return (
+            <div key={m.label} className="px-5 py-4 text-center relative"
+              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+              <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-white/35 mb-2">
+                <Icon className="w-3 h-3" /> {m.label}
+              </div>
+              <div className="text-xl font-black tracking-tight" style={{ color: m.color }}>{m.value}</div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </Card>
   );
 }
 
-// ─── History section ─────────────────────────────────────────────────────────
+// ─── Account History ─────────────────────────────────────────────────────────
 const HISTORY_TABS = [
-  { id: 'all', label: 'All Accounts' },
+  { id: 'all', label: 'All' },
   { id: 'active', label: 'Active' },
   { id: 'passed', label: 'Passed' },
   { id: 'failed', label: 'Failed' },
@@ -173,62 +232,76 @@ function AccountHistorySection({ accounts }) {
   const filtered = tab === 'all' ? accounts : accounts.filter(a => a.status === tab);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-2">
-          <CalendarDays className="w-4 h-4 text-primary" />
-          <span className="text-sm font-bold text-foreground">History</span>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.12)' }}>
+            <CalendarDays className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <span className="text-sm font-bold text-foreground">Account History</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+            style={{ background: 'rgba(255,255,255,0.07)', color: '#94a3b8' }}>{accounts.length}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span>Show only visible</span>
-          <div className="w-4 h-4 border border-white/20 rounded" />
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-0 border-b overflow-x-auto" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+      </CardHeader>
+      <div className="flex gap-0 border-b overflow-x-auto" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         {HISTORY_TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${tab === t.id ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground'}`}>
+            className={`px-5 py-3 text-xs font-semibold whitespace-nowrap transition-all relative ${tab === t.id ? 'text-primary' : 'text-white/35 hover:text-white/60'}`}>
             {t.label}
+            {tab === t.id && <motion.div layoutId="tab-line" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full bg-primary" />}
           </button>
         ))}
       </div>
-
-      {/* Rows */}
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+      <div>
         {filtered.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-muted-foreground">No accounts</div>
-        ) : filtered.map(acc => {
-          const sc = acc.status === 'active' ? { label: 'Ongoing', color: '#10b981' }
+          <div className="py-10 text-center text-sm text-white/30">No accounts found</div>
+        ) : filtered.map((acc, i) => {
+          const sc = acc.status === 'active' ? { label: 'Active', color: '#10b981' }
             : acc.status === 'passed' ? { label: 'Passed', color: '#60a5fa' }
             : acc.status === 'funded' ? { label: 'Funded', color: '#FF5C00' }
-            : { label: 'Not passed', color: '#ef4444' };
-          const cLabel = acc.challenge_type === 'two-step' ? '2-Step' : 'Instant';
+            : { label: 'Not Passed', color: '#ef4444' };
+          const cLabel = acc.challenge_type === 'two-step' ? '2-Step' : acc.challenge_type === 'instant' ? 'Instant' : 'Inst. Light';
           return (
-            <div key={acc.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 hover:bg-white/[0.02]">
+            <div key={acc.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.02] border-b last:border-0"
+              style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
               <div className="flex items-center gap-3">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: `${sc.color}20`, color: sc.color, border: `1px solid ${sc.color}40` }}>{sc.label}</span>
-                <span className="text-sm font-semibold font-mono text-foreground">{cLabel}: {acc.mt_login || acc.account_id}</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${sc.color}12`, border: `1px solid ${sc.color}25` }}>
+                  <span className="text-[8px] font-black" style={{ color: sc.color }}>{sc.label.slice(0, 2).toUpperCase()}</span>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-foreground font-mono">{cLabel} · {acc.mt_login || acc.account_id}</div>
+                  <div className="text-[10px] text-white/35">${(acc.account_size || 0).toLocaleString()} · {(acc.phase || 'phase1').replace('phase', 'Phase ')}</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Visible</span>
-                <div className="w-8 h-4 rounded-full border border-white/20 cursor-pointer" />
-              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                style={{ background: `${sc.color}15`, color: sc.color, border: `1px solid ${sc.color}30` }}>
+                {sc.label}
+              </span>
             </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
 
-// ─── Statistics ──────────────────────────────────────────────────────────────
-function StatBox({ label, value, valueColor }) {
+// ─── Statistics Panel ─────────────────────────────────────────────────────────
+function StatRow({ label, value, valueColor, bar, barPct }) {
   return (
-    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="text-[10px] font-semibold flex items-center gap-1 mb-1.5" style={{ color: '#4fc3f7' }}>{label} <Info className="w-3 h-3" /></div>
-      <div className="text-sm font-bold" style={{ color: valueColor || '#f1f5f9' }}>{value}</div>
+    <div className="flex items-center justify-between py-2.5 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-1 rounded-full bg-white/20" />
+        <span className="text-xs text-white/45">{label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {bar && (
+          <div className="w-16 h-1 rounded-full overflow-hidden hidden sm:block" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-full rounded-full" style={{ width: `${Math.min(barPct, 100)}%`, background: valueColor || '#FF5C00' }} />
+          </div>
+        )}
+        <span className="text-xs font-bold font-mono" style={{ color: valueColor || '#f1f5f9' }}>{value}</span>
+      </div>
     </div>
   );
 }
@@ -237,50 +310,52 @@ function StatisticsPanel({ account, tradeRecords }) {
   const balance = account?.balance || account?.account_size || 0;
   const equity = account?.equity || balance;
   const accountSize = account?.account_size || 100000;
-
-  // Prefer MT5-synced values from the account entity, fallback to computed from TradeRecord
   const closedTrades = tradeRecords.filter(t => t.status === 'closed');
   const wins = closedTrades.filter(t => (t.pnl || 0) > 0);
   const losses = closedTrades.filter(t => (t.pnl || 0) < 0);
-  const winRateCalc = closedTrades.length ? (wins.length / closedTrades.length * 100) : 0;
   const avgWin = wins.length ? wins.reduce((s, t) => s + t.pnl, 0) / wins.length : 0;
   const avgLoss = losses.length ? Math.abs(losses.reduce((s, t) => s + t.pnl, 0) / losses.length) : 0;
   const totalLots = closedTrades.reduce((s, t) => s + (t.lots || 0), 0);
   const profitFactor = avgLoss > 0 && wins.length > 0 ? (avgWin * wins.length) / (avgLoss * losses.length) : 0;
   const rrrAvg = avgLoss > 0 ? avgWin / avgLoss : 0;
   const expectancy = closedTrades.length > 0 ? (wins.length / closedTrades.length * avgWin - losses.length / closedTrades.length * avgLoss) : 0;
-
-  // Prefer synced values from scheduledMTSync over local calculation
-  const winRate = account?.win_rate || winRateCalc;
+  const winRate = account?.win_rate || (closedTrades.length ? wins.length / closedTrades.length * 100 : 0);
   const totalTrades = account?.total_trades || closedTrades.length;
   const totalPnl = balance - accountSize;
 
+  const stats = [
+    { label: 'Equity', value: `$${fmt(equity)}`, color: equity >= accountSize ? '#10b981' : '#ef4444', bar: true, barPct: (equity / accountSize) * 50 },
+    { label: 'Balance', value: `$${fmt(balance)}`, color: '#60a5fa' },
+    { label: 'Win Rate', value: winRate > 0 ? `${winRate.toFixed(1)}%` : '0%', color: winRate >= 50 ? '#10b981' : '#f59e0b', bar: true, barPct: winRate },
+    { label: 'Avg. Profit', value: avgWin > 0 ? `+$${fmt(avgWin)}` : '—', color: '#10b981' },
+    { label: 'Avg. Loss', value: avgLoss > 0 ? `-$${fmt(avgLoss)}` : '—', color: '#ef4444' },
+    { label: 'Total Trades', value: totalTrades || '0', color: '#f1f5f9' },
+    { label: 'Lots Traded', value: totalLots > 0 ? totalLots.toFixed(2) : '0', color: '#f1f5f9' },
+    { label: 'Total P&L', value: totalPnl >= 0 ? `+$${fmt(totalPnl)}` : `-$${fmt(Math.abs(totalPnl))}`, color: totalPnl >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Avg. RRR', value: rrrAvg > 0 ? rrrAvg.toFixed(2) : '—', color: '#f1f5f9' },
+    { label: 'Expectancy', value: expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '—', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Profit Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
+  ];
+
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <span className="text-sm font-bold text-foreground">Statistics</span>
-        <span className="text-[10px] text-muted-foreground ml-1">· synced from MT5</span>
-      </div>
-      <div className="p-4 grid grid-cols-2 gap-2">
-        <StatBox label="Equity" value={`$${fmt(equity)}`} valueColor={equity >= accountSize ? '#10b981' : '#ef4444'} />
-        <StatBox label="Balance" value={`$${fmt(balance)}`} />
-        <StatBox label="Win rate" value={winRate > 0 ? `${winRate.toFixed(1)}%` : '0%'} valueColor={winRate >= 50 ? '#10b981' : '#f59e0b'} />
-        <StatBox label="Average profit" value={avgWin > 0 ? `+$${fmt(avgWin)}` : '—'} valueColor="#10b981" />
-        <StatBox label="Average loss" value={avgLoss > 0 ? `-$${fmt(avgLoss)}` : '—'} valueColor="#ef4444" />
-        <StatBox label="Number of trades" value={totalTrades || '0'} />
-        <StatBox label="Lots traded" value={totalLots > 0 ? totalLots.toFixed(2) : '0'} />
-        <StatBox label="Total P&L" value={totalPnl >= 0 ? `+$${fmt(totalPnl)}` : `-$${fmt(Math.abs(totalPnl))}`} valueColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} />
-        <StatBox label="Average RRR" value={rrrAvg > 0 ? rrrAvg.toFixed(2) : '—'} />
-        <StatBox label="Expectancy" value={expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '—'} valueColor={expectancy >= 0 ? '#10b981' : '#ef4444'} />
-        <div className="col-span-2">
-          <StatBox label="Profit factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '—'} valueColor={profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444'} />
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(96,165,250,0.1)' }}>
+            <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+          </div>
+          <span className="text-sm font-bold text-foreground">Statistics</span>
         </div>
+        <SectionLabel>Synced from MT5</SectionLabel>
+      </CardHeader>
+      <div className="px-5 py-2">
+        {stats.map(s => <StatRow key={s.label} label={s.label} value={s.value} valueColor={s.color} bar={s.bar} barPct={s.barPct} />)}
       </div>
-    </div>
+    </Card>
   );
 }
 
-// ─── Daily Summary ───────────────────────────────────────────────────────────
+// ─── Daily Summary ────────────────────────────────────────────────────────────
 function DailySummaryPanel({ tradeRecords }) {
   const rows = useMemo(() => {
     const byDay = {};
@@ -297,31 +372,40 @@ function DailySummaryPanel({ tradeRecords }) {
   }, [tradeRecords]);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <span className="text-sm font-bold text-foreground">Daily Summary</span>
-        <span className="text-[10px] text-muted-foreground ml-1">· from MT5 trade records</span>
-      </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.1)' }}>
+            <CalendarDays className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+          <span className="text-sm font-bold text-foreground">Daily Summary</span>
+        </div>
+        <SectionLabel>From MT5 records</SectionLabel>
+      </CardHeader>
       {rows.length === 0 ? (
-        <div className="px-5 py-12 text-center text-sm text-muted-foreground">No closed trades yet</div>
+        <div className="py-12 text-center text-sm text-white/30">No closed trades yet</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 {['Date', 'Trades', 'Lots', 'Result'].map(h => (
-                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-medium text-muted-foreground">{h}</th>
+                  <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wide text-white/30">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map(r => (
-                <tr key={r.day} className="border-b hover:bg-white/[0.02]" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                  <td className="px-4 py-2.5 font-mono text-muted-foreground">{new Date(r.day).toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' })}</td>
-                  <td className="px-4 py-2.5 text-foreground">{r.trades}</td>
-                  <td className="px-4 py-2.5 font-mono text-muted-foreground">{r.lots}</td>
-                  <td className={`px-4 py-2.5 font-bold font-mono ${r.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {r.pnl >= 0 ? '+' : ''}${fmt(r.pnl)}
+                <tr key={r.day} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+                  <td className="px-5 py-3 font-mono text-white/50 text-[11px]">
+                    {new Date(r.day).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="px-5 py-3 text-foreground font-semibold">{r.trades}</td>
+                  <td className="px-5 py-3 font-mono text-white/50">{r.lots}</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono ${r.pnl >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
+                      {r.pnl >= 0 ? '+' : ''}${fmt(r.pnl)}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -329,56 +413,49 @@ function DailySummaryPanel({ tradeRecords }) {
           </table>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
-// ─── Discipline Score (gauge) ─────────────────────────────────────────────────
+// ─── Discipline Gauge ─────────────────────────────────────────────────────────
 function DisciplineGauge({ score }) {
   const r = 68, cx = 100, cy = 95;
   const circ = Math.PI * r;
-  const pct = Math.min(Math.max(score, 0), 100) / 100;
-  const dash = pct * circ;
+  const dash = (Math.min(Math.max(score, 0), 100) / 100) * circ;
   const color = score < 30 ? '#ef4444' : score < 80 ? '#f59e0b' : '#10b981';
-  const trackColor = score < 30 ? 'rgba(239,68,68,0.15)' : score < 80 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
   const label = score < 30 ? 'Poor' : score < 80 ? 'Average' : 'Excellent';
-
-  // Tick marks at 0,25,50,75,100% along the arc
-  const ticks = [0, 25, 50, 75, 100];
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="200" height="110" viewBox="0 0 200 110">
-        {/* Background arc track */}
-        <path
-          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-          fill="none" stroke={trackColor} strokeWidth="12" strokeLinecap="round"
-        />
-        {/* Colored fill arc */}
-        <path
-          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-          fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
+      <svg width="200" height="115" viewBox="0 0 200 115">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={color} />
+          </linearGradient>
+        </defs>
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" strokeLinecap="round" />
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round"
           strokeDasharray={`${dash} ${circ}`}
-          style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)', filter: `drop-shadow(0 0 6px ${color}88)` }}
-        />
-        {/* Tick marks */}
-        {ticks.map(v => {
-          const angle = Math.PI * (v / 100); // 0=left, π=right
+          style={{ transition: 'stroke-dasharray 1.4s cubic-bezier(0.22,1,0.36,1)', filter: `drop-shadow(0 0 8px ${color}66)` }} />
+        {[0, 25, 50, 75, 100].map(v => {
+          const angle = Math.PI * (v / 100);
           const tx = cx - r * Math.cos(angle);
           const ty = cy - r * Math.sin(angle);
-          // Label offset outward
-          const lx = cx - (r + 14) * Math.cos(angle);
-          const ly = cy - (r + 14) * Math.sin(angle);
+          const lx = cx - (r + 16) * Math.cos(angle);
+          const ly = cy - (r + 16) * Math.sin(angle);
           return (
             <g key={v}>
-              <circle cx={tx} cy={ty} r="2" fill="rgba(255,255,255,0.3)" />
-              <text x={lx} y={ly + 3} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.45)" fontFamily="monospace">{v}%</text>
+              <circle cx={tx} cy={ty} r="2" fill="rgba(255,255,255,0.2)" />
+              <text x={lx} y={ly + 3} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.3)" fontFamily="monospace">{v}</text>
             </g>
           );
         })}
-        {/* Center score */}
-        <text x={cx} y={cy - 12} textAnchor="middle" fontSize="26" fontWeight="900" fill={color} fontFamily="monospace">{score}%</text>
-        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="12" fill={color} fontWeight="600">{label}</text>
+        <text x={cx} y={cy - 14} textAnchor="middle" fontSize="28" fontWeight="900" fill={color} fontFamily="monospace"
+          style={{ filter: `drop-shadow(0 0 10px ${color}80)` }}>{score}%</text>
+        <text x={cx} y={cy + 7} textAnchor="middle" fontSize="11" fill={color} fontWeight="700" letterSpacing="1">{label.toUpperCase()}</text>
       </svg>
     </div>
   );
@@ -390,28 +467,20 @@ function DisciplinePanel({ account, tradeRecords }) {
   const balance = account?.balance || accountSize;
   const equity = account?.equity || balance;
 
-  // ── Rules from snapshot (always from plan, never hardcoded) ─────────────
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
-  const maxDDLimit   = snap.max_dd_limit   ?? 10;
-  const profitTarget = account?.phase === 'phase2'
-    ? (snap.phase2_target ?? 5)
-    : (snap.phase1_target ?? 10);
-  // min_trading_days from rule_snapshot — varies by plan (e.g. 4 for $50k, 5 for others)
+  const maxDDLimit = snap.max_dd_limit ?? 10;
+  const profitTarget = account?.phase === 'phase2' ? (snap.phase2_target ?? 5) : (snap.phase1_target ?? 10);
   const minDays = snap.min_trading_days ?? 4;
 
-  // ── Compute trading days from actual closed trade records ────────────────
-  // Count unique calendar dates (Bangkok UTC+7) that have at least one closed trade
   const tradingDaySet = new Set();
   tradeRecords.filter(t => t.status === 'closed' && t.close_time).forEach(t => {
     const d = new Date(t.close_time);
-    // Convert to Bangkok time (UTC+7)
     const bangkokOffset = 7 * 60;
     const localDate = new Date(d.getTime() + (bangkokOffset + d.getTimezoneOffset()) * 60000);
     tradingDaySet.add(localDate.toISOString().split('T')[0]);
   });
   const tradingDays = tradingDaySet.size;
 
-  // ── Today's P&L — computed from closed trades today (Bangkok UTC+7) ──────
   const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
   const todayStr = nowBangkok.toISOString().split('T')[0];
   const todayTrades = tradeRecords.filter(t => {
@@ -422,61 +491,26 @@ function DisciplinePanel({ account, tradeRecords }) {
   });
   const todayPnl = todayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
 
-  // ── Drawdown values — from scheduledMTSync (persistent, never decreasing) ──
-  // These are already computed correctly by the sync using equity (floating included)
   const dailyDDUsed = account?.daily_drawdown_used || 0;
-  const maxDDUsed   = account?.max_drawdown_used   || 0;
-
-  // ── Loss amounts based on equity (includes floating PnL from open positions) ──
-  // daily_start_balance = balance at last 23:00 UTC reset (set by scheduledMTSync)
+  const maxDDUsed = account?.max_drawdown_used || 0;
   const dailyStartBalance = account?.daily_start_balance || accountSize;
-  const dailyLossAmt = equity - dailyStartBalance; // negative = loss vs start of day
-  const maxLossAmt   = equity - accountSize;        // negative = loss vs original size
+  const dailyLossAmt = equity - dailyStartBalance;
 
-  // ── Profit target — use equity progress above accountSize ────────────────
-  const profitTargetPct = account?.profit_target_progress
-    ?? Math.max(0, ((equity - accountSize) / accountSize) * 100);
-
-  // ── Permitted loss calculations ───────────────────────────────────────────
+  const profitTargetPct = account?.profit_target_progress ?? Math.max(0, ((equity - accountSize) / accountSize) * 100);
   const dailyAllowance = dailyStartBalance * (dailyDDLimit / 100);
-  // Remaining daily loss room = allowance - how much equity dropped today
-  const dailyLossUsedAmt = Math.max(0, dailyStartBalance - equity); // how much lost today
+  const dailyLossUsedAmt = Math.max(0, dailyStartBalance - equity);
   const todayPermittedLossRemaining = Math.max(0, dailyAllowance - dailyLossUsedAmt);
-  // Max remaining = how much more equity can fall before hitting maxDD from accountSize
   const maxDDAllowance = accountSize * (maxDDLimit / 100);
   const maxLossUsedAmt = Math.max(0, accountSize - equity);
   const maxPermittedLossRemaining = Math.max(0, maxDDAllowance - maxLossUsedAmt);
 
-  // ── Objectives ────────────────────────────────────────────────────────────
   const objectives = [
-    {
-      label: `Minimum ${minDays} Trading Days`,
-      result: `${tradingDays}`,
-      pass: tradingDays >= minDays,
-    },
-    {
-      label: `Max Daily Loss: -$${fmt(dailyAllowance, 0)}`,
-      // Only show loss (negative). If positive (profit day), show $0.00 loss
-      result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`,
-      pass: dailyDDUsed < dailyDDLimit,
-      danger: dailyDDUsed >= dailyDDLimit,
-    },
-    {
-      label: `Max Loss: -$${fmt(maxDDAllowance, 0)}`,
-      // Only show loss vs accountSize. If equity > accountSize, show $0.00 loss
-      result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`,
-      pass: maxDDUsed < maxDDLimit,
-      danger: maxDDUsed >= maxDDLimit,
-    },
-    {
-      label: `Profit Target: $${fmt(accountSize * profitTarget / 100, 0)}`,
-      // Profit = how much equity grew above accountSize
-      result: `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`,
-      pass: profitTargetPct >= profitTarget,
-    },
+    { label: `Min ${minDays} Trading Days`, result: `${tradingDays} / ${minDays}`, pass: tradingDays >= minDays, pct: Math.min((tradingDays / minDays) * 100, 100), icon: CalendarDays },
+    { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: dailyDDUsed < dailyDDLimit, danger: dailyDDUsed >= dailyDDLimit, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
+    { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: maxDDUsed < maxDDLimit, danger: maxDDUsed >= maxDDLimit, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
+    { label: `Profit Target`, result: `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
   ];
 
-  // ── Discipline score — weighted by how well each objective is met ─────────
   const scores = [
     tradingDays >= minDays ? 100 : Math.round((tradingDays / minDays) * 60),
     dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
@@ -485,39 +519,82 @@ function DisciplinePanel({ account, tradeRecords }) {
   ];
   const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
 
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <span className="text-sm font-bold text-foreground">Your stats</span>
-      </div>
+  const countdown = useResetCountdown();
 
-      <div className="grid md:grid-cols-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        {/* Left: Discipline Score */}
-        <div className="p-5 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-bold text-foreground">Discipline Score</span>
-            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+  const bottomCards = [
+    {
+      label: "Today's Permitted Loss",
+      value: `$${fmt(todayPermittedLossRemaining)}`,
+      sub: `${dailyDDLimit}% daily DD limit`,
+      color: todayPermittedLossRemaining < dailyAllowance * 0.3 ? '#ef4444' : '#FF5C00',
+      icon: Shield,
+      tooltip: (
+        <>
+          <p className="text-sm leading-snug mb-2">Your remaining daily loss buffer relative to today's starting equity.</p>
+          <p className="text-xs font-semibold" style={{ color: '#FF5C00' }}>Resets in {countdown}</p>
+        </>
+      ),
+    },
+    {
+      label: 'Max Permitted Loss',
+      value: `$${fmt(maxPermittedLossRemaining)}`,
+      sub: `${maxDDLimit}% max drawdown`,
+      color: maxPermittedLossRemaining < accountSize * maxDDLimit / 100 * 0.3 ? '#ef4444' : '#FF5C00',
+      icon: Activity,
+      tooltip: <p className="text-sm leading-snug">Your total remaining loss buffer relative to the original account size.</p>,
+    },
+    {
+      label: "Today's P&L",
+      value: `${dailyLossAmt >= 0 ? '+' : ''}$${fmt(dailyLossAmt)}`,
+      sub: `${todayTrades.length} trade${todayTrades.length !== 1 ? 's' : ''} today`,
+      color: dailyLossAmt > 0 ? '#10b981' : dailyLossAmt < 0 ? '#ef4444' : '#94a3b8',
+      icon: TrendingUp,
+      tooltip: <p className="text-sm leading-snug">Closed and floating P&L since today's session started (midnight CE(S)T).</p>,
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.1)' }}>
+            <Award className="w-3.5 h-3.5 text-primary" />
           </div>
-          <div className="flex flex-wrap gap-3 text-[11px] mb-4 text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />0 – 30%</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" />30 – 80%</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />80 – 100%</span>
+          <span className="text-sm font-bold text-foreground">Trading Stats & Objectives</span>
+        </div>
+      </CardHeader>
+
+      <div className="grid md:grid-cols-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {/* Left: Discipline Score */}
+        <div className="p-5 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-bold text-foreground">Discipline Score</span>
+            <div className="flex items-center gap-3 text-[10px] text-white/35">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Poor</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />Avg</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />Great</span>
+            </div>
           </div>
           <DisciplineGauge score={disciplineScore} />
-          {/* Sub-score breakdown */}
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2.5">
             {[
               { label: 'Trading Days', score: scores[0] },
               { label: 'Daily DD', score: scores[1] },
               { label: 'Max DD', score: scores[2] },
               { label: 'Profit Target', score: scores[3] },
             ].map(s => (
-              <div key={s.label} className="flex items-center gap-2 text-xs">
-                <span className="text-muted-foreground w-24">{s.label}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${s.score}%`, background: s.score >= 80 ? '#10b981' : s.score >= 30 ? '#f59e0b' : '#ef4444' }} />
+              <div key={s.label} className="flex items-center gap-3 text-xs">
+                <span className="text-white/40 w-24 shrink-0">{s.label}</span>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <motion.div className="h-full rounded-full"
+                    initial={{ width: 0 }} animate={{ width: `${s.score}%` }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ background: s.score >= 80 ? '#10b981' : s.score >= 30 ? '#f59e0b' : '#ef4444' }} />
                 </div>
-                <span className="font-mono text-foreground w-8 text-right">{s.score}%</span>
+                <span className="font-mono font-bold w-8 text-right text-[11px]"
+                  style={{ color: s.score >= 80 ? '#10b981' : s.score >= 30 ? '#f59e0b' : '#ef4444' }}>
+                  {s.score}%
+                </span>
               </div>
             ))}
           </div>
@@ -525,95 +602,62 @@ function DisciplinePanel({ account, tradeRecords }) {
 
         {/* Right: Objectives */}
         <div className="p-5">
-          <div className="text-sm font-bold text-foreground mb-4">Objectives</div>
-          <div className="grid grid-cols-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span>Trading Objectives</span>
-            <span className="text-center">Result</span>
-            <span className="text-right">Summary</span>
-          </div>
-          <div className="space-y-0">
-            {objectives.map(obj => (
-              <div key={obj.label} className="grid grid-cols-3 items-center gap-3 py-3 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                <span className="text-xs font-semibold" style={{ color: '#4fc3f7' }}>{obj.label}</span>
-                <span className={`text-xs font-mono text-center ${obj.danger ? 'text-red-400' : 'text-foreground'}`}>{obj.result}</span>
-                <div className="flex justify-end">
-                  <div className={`w-7 h-7 rounded-md flex items-center justify-center ${obj.pass ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                    {obj.pass ? <Check className="w-4 h-4 text-white" strokeWidth={3} /> : <X className="w-4 h-4 text-white" strokeWidth={3} />}
+          <div className="text-sm font-bold text-foreground mb-4">Trading Objectives</div>
+          <div className="space-y-3">
+            {objectives.map(obj => {
+              const Icon = obj.icon;
+              const barColor = obj.danger ? '#ef4444' : obj.pass ? '#10b981' : '#f59e0b';
+              return (
+                <div key={obj.label} className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${obj.pass ? 'rgba(16,185,129,0.15)' : obj.danger ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5" style={{ color: barColor }} />
+                      <span className="text-xs font-semibold text-white/70">{obj.label}</span>
+                    </div>
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${obj.pass ? 'bg-emerald-500' : obj.danger ? 'bg-red-500' : 'bg-white/10'}`}>
+                      {obj.pass ? <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                        : <X className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <motion.div className="h-full rounded-full"
+                        initial={{ width: 0 }} animate={{ width: `${obj.pct}%` }}
+                        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                        style={{ background: barColor }} />
+                    </div>
+                    <span className="text-[11px] font-mono font-bold shrink-0" style={{ color: obj.danger ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>{obj.result}</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Bottom: 3 stat cards */}
-      <BottomStatCards
-        todayPermittedLossRemaining={todayPermittedLossRemaining}
-        maxPermittedLossRemaining={maxPermittedLossRemaining}
-        dailyLossAmt={dailyLossAmt}
-        dailyAllowance={dailyAllowance}
-        dailyDDLimit={dailyDDLimit}
-        maxDDLimit={maxDDLimit}
-        accountSize={accountSize}
-        todayTrades={todayTrades}
-      />
-    </div>
+      {/* Bottom stat cards */}
+      <div className="grid grid-cols-3">
+        {bottomCards.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className="px-4 py-5 text-center relative transition-colors hover:bg-white/[0.02]"
+              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-white/35 mb-2">
+                <Icon className="w-3 h-3" />
+                {s.label}
+                <InfoTooltip>{s.tooltip}</InfoTooltip>
+              </div>
+              <div className="text-2xl font-black tracking-tight" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-[10px] text-white/25 mt-1 font-mono">{s.sub}</div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
-function BottomStatCards({ todayPermittedLossRemaining, maxPermittedLossRemaining, dailyLossAmt, dailyAllowance, dailyDDLimit, maxDDLimit, accountSize, todayTrades }) {
-  const countdown = useResetCountdown();
-
-  const cards = [
-    {
-      label: "Today's permitted loss",
-      value: `$${fmt(todayPermittedLossRemaining)}`,
-      sub: `${dailyDDLimit}% daily limit`,
-      valueColor: todayPermittedLossRemaining < dailyAllowance * 0.3 ? '#ef4444' : '#FF5C00',
-      tooltip: (
-        <>
-          <p className="text-sm leading-snug mb-2">This value indicates the amount of permitted loss buffer you have on any given day, relative to the current equity of your account.</p>
-          <p className="text-xs text-primary font-semibold">Today's permitted loss will reset in<br />{countdown}</p>
-        </>
-      ),
-    },
-    {
-      label: 'Max permitted loss',
-      value: `$${fmt(maxPermittedLossRemaining)}`,
-      sub: `${maxDDLimit}% max DD`,
-      valueColor: maxPermittedLossRemaining < accountSize * maxDDLimit / 100 * 0.3 ? '#ef4444' : '#FF5C00',
-      tooltip: (
-        <p className="text-sm leading-snug">This value indicates the amount of permitted loss buffer you have in total, relative to the current equity of your account.</p>
-      ),
-    },
-    {
-      label: "Today's profit",
-      value: `${dailyLossAmt >= 0 ? '+' : ''}$${fmt(dailyLossAmt)}`,
-      sub: `${todayTrades.length} closed trades`,
-      valueColor: dailyLossAmt > 0 ? '#10b981' : dailyLossAmt < 0 ? '#ef4444' : '#94a3b8',
-      tooltip: (
-        <p className="text-sm leading-snug">This value shows your closed and floating P/L, as measured from the midnight CE(S)T.</p>
-      ),
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-3">
-      {cards.map((s, i) => (
-        <div key={s.label} className="px-5 py-5 text-center relative" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-          <div className="text-xs font-semibold flex items-center justify-center gap-1.5 mb-3" style={{ color: '#4fc3f7' }}>
-            {s.label} <InfoTooltip>{s.tooltip}</InfoTooltip>
-          </div>
-          <div className="text-2xl font-black" style={{ color: s.valueColor }}>{s.value}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">{s.sub}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Open Trades expandable ──────────────────────────────────────────────────
+// ─── Open Trades ──────────────────────────────────────────────────────────────
 function OpenTradeRow({ trade, index }) {
   const [expanded, setExpanded] = useState(false);
   const [elapsed, setElapsed] = useState(fmtTime(trade.open_time));
@@ -629,130 +673,97 @@ function OpenTradeRow({ trade, index }) {
   return (
     <>
       <tr className="border-b hover:bg-white/[0.02] transition-colors cursor-pointer"
-        style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+        style={{ borderColor: 'rgba(255,255,255,0.04)' }}
         onClick={() => setExpanded(e => !e)}>
-        <td className="px-4 py-3">
-          <div className="text-xs font-mono text-muted-foreground">{(trade.ticket || trade.trade_id || String(index + 1)).slice(0, 9)}{(trade.ticket || trade.trade_id || '').length > 9 ? '…' : ''}</div>
-          <div className={`text-xs font-bold flex items-center gap-1 ${isBuy ? 'text-emerald-400' : 'text-red-400'}`}>
-            <span>{isBuy ? '↗' : '↘'}</span> {trade.type}
+        <td className="px-4 py-3.5">
+          <div className="flex items-center gap-2">
+            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black ${isBuy ? 'bg-emerald-400/15 text-emerald-400' : 'bg-red-400/15 text-red-400'}`}>
+              {isBuy ? '↗' : '↘'}
+            </div>
+            <div>
+              <div className={`text-xs font-bold ${isBuy ? 'text-emerald-400' : 'text-red-400'}`}>{trade.type}</div>
+              <div className="text-[10px] font-mono text-white/30">{(trade.ticket || trade.trade_id || String(index + 1)).slice(0, 9)}</div>
+            </div>
           </div>
         </td>
-        <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
-          {trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—'}
+        <td className="px-4 py-3.5 text-[11px] text-white/40 font-mono hidden sm:table-cell">
+          {trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
         </td>
-        <td className="px-4 py-3 text-xs font-mono text-foreground">{trade.lots || 0}</td>
-        <td className="px-4 py-3 text-xs font-mono font-bold text-foreground">{trade.symbol || '—'}</td>
-        <td className="px-4 py-3">
-          <div className={`px-3 py-1.5 rounded text-sm font-black font-mono text-center ${pnl >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
+        <td className="px-4 py-3.5 text-xs font-mono font-bold text-white/60">{trade.lots || 0}</td>
+        <td className="px-4 py-3.5 text-xs font-black text-white">{trade.symbol || '—'}</td>
+        <td className="px-4 py-3.5">
+          <span className={`px-2.5 py-1.5 rounded-lg text-sm font-black font-mono ${pnl >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
             {pnl >= 0 ? '+' : ''}${fmt(pnl)}
-          </div>
+          </span>
         </td>
-        <td className="px-4 py-3">
-          <div className="px-3 py-1.5 rounded text-xs font-mono text-center text-foreground bg-white/[0.06]">{pips}</div>
+        <td className="px-4 py-3.5 hidden md:table-cell">
+          <span className="px-2 py-1 rounded text-[11px] font-mono text-white/50" style={{ background: 'rgba(255,255,255,0.05)' }}>{pips}</span>
         </td>
-        <td className="px-4 py-3">
-          <div className="px-3 py-1.5 rounded text-xs font-mono text-center text-foreground bg-white/[0.06]">{elapsed}</div>
+        <td className="px-4 py-3.5 hidden lg:table-cell">
+          <span className="px-2 py-1 rounded text-[11px] font-mono text-white/50" style={{ background: 'rgba(255,255,255,0.05)' }}>{elapsed}</span>
         </td>
-        <td className="px-4 py-3 text-muted-foreground">
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <td className="px-4 py-3.5 text-white/30">
+          {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </td>
       </tr>
-
       <AnimatePresence>
         {expanded && (
           <tr key="details">
             <td colSpan={8} className="px-4 pb-4">
-              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="rounded-xl p-5 mt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                {/* $ Price — real MT5 fields */}
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1"><span>$</span> Price</div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Price</div>
                   <div className="space-y-1.5 text-xs">
-                    {[
-                      ['Type', trade.type],
-                      ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—'],
-                      ['Close', '—'],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className={`font-mono ${k==='Type' ? (trade.type==='BUY' ? 'text-emerald-400' : 'text-red-400') : 'text-foreground'}`}>{v}</span></div>
-                    ))}
-                    <div className="pt-1 text-[10px] font-semibold text-muted-foreground">Current</div>
-                    {[
-                      ['Bid', trade.current_price > 0 ? trade.current_price.toFixed(5) : '—'],
-                      ['Ask', '—'],
-                      ['Spread', '—'],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
-                    ))}
-                  </div>
-                </div>
-                {/* Trade Protection — real SL/TP from MT5 */}
-                <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2">Trade Protection</div>
-                  <div className="space-y-1.5 text-xs">
-                    {[
-                      ['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'],
-                      ['SL Pips', '—'],
-                      ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—'],
-                      ['TP Pips', '—'],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
-                    ))}
-                  </div>
-                </div>
-                {/* Results — real profit + swap from MT5 */}
-                <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2">Results</div>
-                  <div className="space-y-2 text-xs">
-                    {[
-                      ['Gross profit', pnl],
-                      ['Swap', trade.swap || 0],
-                      ['Comm.', 0],
-                      ['Net profit', pnl + (trade.swap || 0)],
-                    ].map(([k, v]) => (
-                      <div key={k}>
-                        <div className="text-muted-foreground">{k}</div>
-                        <div className={`font-mono font-bold ${v >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{v >= 0 ? '+' : ''}${fmt(v)}</div>
+                    {[['Type', trade.type, trade.type === 'BUY' ? '#10b981' : '#ef4444'], ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—', '#f1f5f9'], ['Bid', trade.current_price > 0 ? trade.current_price.toFixed(5) : '—', '#f1f5f9']].map(([k, v, c]) => (
+                      <div key={k} className="flex justify-between gap-3">
+                        <span className="text-white/30">{k}</span>
+                        <span className="font-mono font-semibold" style={{ color: c }}>{v}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                {/* Time — real open time from MT5 */}
                 <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2">Time</div>
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <div className="text-muted-foreground">Open</div>
-                      <div className="font-mono text-foreground leading-relaxed">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month:'numeric', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—'}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Closed</div>
-                      <div className="font-mono text-foreground">—</div>
-                    </div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Protection</div>
+                  <div className="space-y-1.5 text-xs">
+                    {[['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'], ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—']].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                    ))}
                   </div>
                 </div>
-                {/* Trade Stats — MAE/MFE from entry vs current */}
                 <div>
-                  <div className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1">Trade Stats <Info className="w-3 h-3" /></div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Results</div>
+                  <div className="space-y-1.5 text-xs">
+                    {[['Gross P&L', pnl], ['Swap', trade.swap || 0], ['Net P&L', pnl + (trade.swap || 0)]].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3">
+                        <span className="text-white/30">{k}</span>
+                        <span className={`font-mono font-bold ${v >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{v >= 0 ? '+' : ''}${fmt(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Time</div>
+                  <div className="space-y-1.5 text-xs">
+                    <div><span className="text-white/30 block">Opened</span>
+                      <span className="font-mono text-foreground text-[10px]">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                    </div>
+                    <div><span className="text-white/30 block">Duration</span><span className="font-mono text-foreground">{elapsed}</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Trade Stats</div>
                   <div className="space-y-1.5 text-xs">
                     {(() => {
                       const entry = trade.entry || 0;
                       const cur = trade.current_price || entry;
-                      const isBuy = trade.type === 'BUY';
-                      // MAE = worst excursion (max adverse), MFE = best excursion (max favorable)
-                      // For open positions we estimate from entry vs current
-                      const mae = isBuy ? Math.min(0, cur - entry) : Math.min(0, entry - cur);
-                      const mfe = isBuy ? Math.max(0, cur - entry) : Math.max(0, entry - cur);
-                      const pipSize = entry > 10 ? 0.0001 : 0.00001;
-                      const maePip = pipSize > 0 ? (mae / pipSize).toFixed(1) : '—';
-                      const mfePip = pipSize > 0 ? (mfe / pipSize).toFixed(1) : '—';
-                      return [
-                        ['MAE Pip', mae !== 0 ? maePip : '—'],
-                        ['MAE', mae !== 0 ? (entry + mae).toFixed(5) : entry > 0 ? entry.toFixed(5) : '—'],
-                        ['MFE Pip', mfe !== 0 ? mfePip : '—'],
-                        ['MFE', mfe !== 0 ? (entry + mfe).toFixed(5) : cur > 0 ? cur.toFixed(5) : '—'],
-                      ].map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-3"><span className="text-muted-foreground">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                      const ib = trade.type === 'BUY';
+                      const mae = ib ? Math.min(0, cur - entry) : Math.min(0, entry - cur);
+                      const mfe = ib ? Math.max(0, cur - entry) : Math.max(0, entry - cur);
+                      const pip = entry > 10 ? 0.0001 : 0.00001;
+                      return [['MAE', mae !== 0 ? `${(mae / pip).toFixed(1)} pips` : '—'], ['MFE', mfe !== 0 ? `${(mfe / pip).toFixed(1)} pips` : '—'], ['Lots', trade.lots || 0]].map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                       ));
                     })()}
                   </div>
@@ -772,12 +783,8 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
   const [loading, setLoading] = useState(initialPositions.length === 0);
   const [page, setPage] = useState(1);
 
-  // Seed immediately when parent provides fresh positions
   useEffect(() => {
-    if (initialPositions.length > 0) {
-      setPositions(initialPositions);
-      setLoading(false);
-    }
+    if (initialPositions.length > 0) { setPositions(initialPositions); setLoading(false); }
   }, [initialPositions]);
 
   const fetchPositions = async () => {
@@ -786,46 +793,51 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
       const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
       setPositions(res?.data?.positions || []);
       setLoading(false);
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
-    }
+    } catch (e) { setLoading(false); }
   };
 
   useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 5000); return () => clearInterval(iv); }, [account?.account_id]);
 
   const totalPages = Math.ceil(positions.length / PAGE_SIZE);
   const paginated = positions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPnl = positions.reduce((s, p) => s + (p.pnl || 0), 0);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+    <Card>
+      <CardHeader>
         <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="relative">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.1)' }}>
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2"
+              style={{ borderColor: '#0d0e14', animation: 'pulse 2s infinite' }} />
+          </div>
           <span className="text-sm font-bold text-foreground">Live Trade Feed</span>
           {positions.length > 0 && (
-            <span className={`text-sm font-black font-mono ${positions.reduce((s, p) => s + (p.pnl || 0), 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              Total PnL: {positions.reduce((s, p) => s + (p.pnl || 0), 0) >= 0 ? '+' : ''}${fmt(positions.reduce((s, p) => s + (p.pnl || 0), 0))}
+            <span className={`text-sm font-black font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {totalPnl >= 0 ? '+' : ''}${fmt(totalPnl)}
             </span>
           )}
         </div>
-        <button onClick={fetchPositions} disabled={loading} className="p-1.5 rounded hover:bg-white/5 text-muted-foreground transition-colors">
+        <button onClick={fetchPositions} disabled={loading}
+          className="p-2 rounded-lg hover:bg-white/5 text-white/35 hover:text-white/60 transition-colors">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
-      </div>
+      </CardHeader>
 
       {loading && positions.length === 0 ? (
-        <div className="flex items-center justify-center py-10"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+        <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : positions.length === 0 ? (
-        <div className="px-5 py-10 text-center text-sm text-muted-foreground">No open positions — refreshes every 15s from MT5</div>
+        <div className="py-10 text-center text-sm text-white/30">No open positions — auto-refreshes every 5s</div>
       ) : (
         <>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  {['Type', 'Open Time', 'Volume', 'Symbol', 'PnL', 'Pips', 'Duration', ''].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-medium text-muted-foreground">{h}</th>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  {['Type / ID', 'Time', 'Lots', 'Symbol', 'PnL', 'Pips', 'Duration', ''].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wide text-white/25">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -836,25 +848,23 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span className="text-xs text-muted-foreground">Total open trades: <strong className="text-foreground">{positions.length}</strong></span>
+          <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <span className="text-xs text-white/35">Open positions: <strong className="text-white/60">{positions.length}</strong></span>
             {totalPages > 1 && (
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-xs">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-7 h-7 rounded flex items-center justify-center border border-white/10 text-muted-foreground hover:text-foreground disabled:opacity-30">‹</button>
-                <span className="text-muted-foreground">Page</span>
-                <span className="px-2 py-0.5 rounded border border-white/20 text-foreground">{page}</span>
-                <span className="text-muted-foreground">of {totalPages}</span>
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/35 hover:text-white/60 disabled:opacity-20 transition-colors"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)' }}>‹</button>
+                <span className="px-3 py-1 rounded-lg text-white/60 font-mono" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>{page} / {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-7 h-7 rounded flex items-center justify-center border border-white/10 text-muted-foreground hover:text-foreground disabled:opacity-30">›</button>
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/35 hover:text-white/60 disabled:opacity-20 transition-colors"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)' }}>›</button>
               </div>
             )}
           </div>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -863,17 +873,13 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Real-time entity subscription — instant push on any account update
   useEffect(() => {
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
         queryClient.setQueryData(['challenge-accounts'], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
-        // Also update selected account immediately
-        if (event.type === 'update') {
-          queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
-        }
+        if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
       }
     });
     return unsub;
@@ -882,8 +888,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 5000,   // ⚡ 5s — fast account balance/equity sync
-    staleTime: 3000,
+    refetchInterval: 5000, staleTime: 3000,
   });
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
@@ -895,11 +900,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
     enabled: !!account?.account_id,
-    refetchInterval: 5000,   // ⚡ 5s — fast trade record sync
-    staleTime: 3000,
+    refetchInterval: 5000, staleTime: 3000,
   });
 
-  // ⚡ Live positions — polled every 5s for real-time Unrealized PnL
   const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
     queryFn: async () => {
@@ -907,106 +910,116 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return res?.data?.positions || [];
     },
     enabled: !!account?.account_id,
-    refetchInterval: 5000,   // ⚡ 5s refresh
-    staleTime: 3000,
+    refetchInterval: 5000, staleTime: 3000,
   });
 
   const livePositions = livePositionsData || [];
-  // Compute live unrealized PnL directly from positions (most accurate)
   const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
-  // Derive live equity = balance + live floating PnL (more accurate than DB equity)
   const liveEquity = livePositions.length > 0
     ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
     : (account?.equity || account?.balance || account?.account_size || 0);
 
   const stats = useAccountStats(account, tradeRecords);
 
-  if (isLoading) return <div className="flex items-center justify-center py-24"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-24">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!account) return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5"><BarChart3 className="w-8 h-8 text-primary/50" /></div>
-      <div className="text-xl font-black text-foreground mb-2">No Active Accounts</div>
-      <div className="text-sm text-muted-foreground mb-6 max-w-md">Purchase a challenge to unlock the full institutional overview.</div>
-      <button onClick={onStartChallenge} className="inline-flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all" style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+        style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
+        <BarChart3 className="w-9 h-9 text-primary/40" />
+      </div>
+      <div className="text-2xl font-black text-foreground mb-2">No Active Accounts</div>
+      <div className="text-sm text-white/40 mb-8 max-w-sm leading-relaxed">Purchase a challenge to unlock the full institutional account overview.</div>
+      <button onClick={onStartChallenge}
+        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
+        style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 6px 24px rgba(255,92,0,0.3)' }}>
         <Plus className="w-4 h-4" /> Start New Challenge
       </button>
     </div>
   );
 
   return (
-    <div className="space-y-5">
-      {/* Active accounts header */}
+    <div className="space-y-4">
+      {/* Header row */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-sm font-bold text-foreground">Active accounts</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Show only visible</span>
-          <div className="w-4 h-4 border border-white/20 rounded" />
+          <span className="text-sm font-bold text-foreground">Active Accounts</span>
+          {activeAccounts.length > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(255,92,0,0.1)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
+              {activeAccounts.length}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Account selector (multi) */}
+      {/* Account selector */}
       {activeAccounts.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {activeAccounts.map(a => (
             <button key={a.id} onClick={() => setSelectedAccount(a)}
-              className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-mono transition-all ${account?.id === a.id ? 'text-primary' : 'text-muted-foreground'}`}
-              style={{ background: account?.id === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}` }}>
-              <div className="font-bold">{a.account_id}</div>
-              <div className="text-[10px] opacity-60">${(a.account_size || 0).toLocaleString()}</div>
+              className="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-mono transition-all"
+              style={{
+                background: account?.id === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                color: account?.id === a.id ? '#FF5C00' : '#94a3b8',
+              }}>
+              <div className="font-black">{a.account_id}</div>
+              <div className="text-[10px] opacity-60 mt-0.5">${(a.account_size || 0).toLocaleString()}</div>
             </button>
           ))}
         </div>
       )}
 
-      {/* Active Account Card */}
+      {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
-      {/* FTMO-style Current Results + Account Info */}
+      {/* Current Results */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
-      {/* Open Trades — Live Feed shown first */}
+      {/* Live Open Trades */}
       <OpenTradesPanel account={account} initialPositions={livePositions} />
 
-      {/* Performance Metrics + Progress Timeline */}
+      {/* Performance Metrics */}
       <AccountPerformanceMetrics account={account} stats={stats} />
 
-      {/* Statistics + Daily Summary */}
-      <div className="grid md:grid-cols-2 gap-5">
+      {/* Stats + Daily Summary side by side */}
+      <div className="grid md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} tradeRecords={tradeRecords} />
         <DailySummaryPanel tradeRecords={tradeRecords} />
       </div>
 
-      {/* Discipline Score + Objectives */}
+      {/* Discipline + Objectives */}
       <DisciplinePanel account={account} tradeRecords={tradeRecords} />
 
-      {/* Disclaimer + Footer */}
-      <div className="space-y-4">
-        {/* Warning banner */}
-        <div className="rounded-xl px-5 py-4 text-center text-xs font-semibold tracking-wide uppercase"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', letterSpacing: '0.05em' }}>
-          THE VALUES IN THIS ACCOUNT METRIX ARE INFORMATIVE ONLY. REAL-TIME TRADING VALUES CAN BE SEEN IN THE TRADING PLATFORM.
+      {/* Account History */}
+      <AccountHistorySection accounts={accounts} />
+
+      {/* Footer */}
+      <div className="space-y-3">
+        <div className="rounded-2xl px-5 py-3.5 flex items-center gap-3"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <Info className="w-4 h-4 text-white/20 shrink-0" />
+          <p className="text-[11px] text-white/30 leading-relaxed">
+            Account MetriX values are informative only. Real-time trading data can be verified directly in the MT5 platform.
+          </p>
         </div>
 
-        {/* Legal footer */}
-        <div className="rounded-xl px-6 py-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          {/* Links */}
-          <div className="flex justify-end gap-6 text-xs font-semibold text-foreground border-b pb-3" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link>
+        <div className="rounded-2xl px-6 py-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex justify-end gap-5 text-xs font-semibold pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <Link to="/privacy" className="text-white/40 hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-white/40 hover:text-primary transition-colors">Terms & Conditions</Link>
           </div>
-
-          {/* Disclaimer text */}
-          <p className="text-xs leading-relaxed" style={{ color: '#6b7280' }}>
-            All information provided on this site is intended solely for study purposes related to trading on financial markets and does not serve in any way as a specific investment recommendation, business recommendation, investment opportunity analysis or similar general recommendation regarding the trading of investment instruments. Trading in financial markets is a high-risk activity and it is advised not to risk more than one can afford to lose. XFunded does not provide any of the investment services listed in the Capital Market Undertakings Act. The information on this site is not directed at residents in any country or jurisdiction where such distribution or use would be contrary to local laws or regulations. XFunded is not a broker and does not accept deposits. The offered technical solution for the XFunded platforms and data feed is powered by the institutional liquidity providers.
+          <p className="text-[11px] leading-relaxed" style={{ color: '#4b5563' }}>
+            All information provided is intended solely for evaluation purposes related to trading on financial markets and does not serve as a specific investment recommendation. Trading in financial markets is a high-risk activity. XFunded does not provide investment services and is not a broker or fund manager. All challenges and funded accounts operate in a simulated environment powered by institutional liquidity providers.
           </p>
-
-          {/* Copyright */}
-          <div className="text-xs font-semibold" style={{ color: '#6b7280' }}>
-            {new Date().getFullYear()} © Copyright — <a href="https://xfunded.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">XFunded.com</a> Made with ❤️ for trading.
+          <div className="text-[11px] font-semibold" style={{ color: '#374151' }}>
+            {new Date().getFullYear()} © <a href="https://xfunded.com" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">XFunded.com</a> — Institutional Prop Trading
           </div>
         </div>
       </div>
