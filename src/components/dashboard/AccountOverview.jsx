@@ -12,7 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
-import AccountCredentialsModal from './AccountCredentialsModal';
+import CredentialsModal from './CredentialsModal';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -111,7 +111,7 @@ function SectionLabel({ children }) {
 }
 
 // ─── Active Account Card ─────────────────────────────────────────────────────
-function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl }) {
+function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl, setShowCredentials }) {
   const { copied, copy } = useCopyText();
   if (!account) return null;
 
@@ -182,7 +182,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl 
       {/* Action bar */}
       <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <button
-          onClick={() => setShowCredentials(true)}
+          onClick={() => setShowCredentials?.(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
           style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
           <Key className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl 
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#94a3b8' }}>
           <CalendarDays className="w-3.5 h-3.5" />
-          Account MetriX
+          Account Metrics
         </button>
         <button onClick={() => onNavigate?.('accounts')}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto transition-all hover:opacity-90"
@@ -979,7 +979,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       )}
 
       {/* Active account card */}
-      <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
+      <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
 
       {/* Current Results */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
@@ -1008,7 +1008,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
           style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
           <Info className="w-4 h-4 text-white/20 shrink-0" />
           <p className="text-[11px] text-white/30 leading-relaxed">
-            Account MetriX values are informative only. Real-time trading data can be verified directly in the MT5 platform.
+            Account Metrics values are informative only. Real-time trading data can be verified directly in the MT5 platform.
           </p>
         </div>
 
@@ -1028,7 +1028,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Credentials Modal */}
       {showCredentials && (
-        <AccountCredentialsModal
+        <CredentialsModal
           account={account}
           onClose={() => setShowCredentials(false)}
         />
