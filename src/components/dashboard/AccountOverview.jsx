@@ -893,6 +893,20 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     refetchInterval: 5000, staleTime: 3000,
   });
 
+  // Load account from URL parameter if provided
+  useEffect(() => {
+    const savedAccountId = sessionStorage.getItem('selectedAccountId');
+    if (savedAccountId && accounts.length > 0) {
+      const targetAccount = accounts.find(a => 
+        (a.account_id === savedAccountId || a.id === savedAccountId)
+      );
+      if (targetAccount) {
+        setSelectedAccount(targetAccount);
+      }
+      sessionStorage.removeItem('selectedAccountId');
+    }
+  }, [accounts]);
+
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)

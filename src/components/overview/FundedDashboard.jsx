@@ -189,7 +189,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   <RefreshCw className="w-3 h-3" /> Sync
                 </button>
               </div>
-              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} />
+              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
             </div>
 
             {/* Per-account content */}

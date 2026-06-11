@@ -79,8 +79,13 @@ export default function Dashboard() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
+    const accountId = params.get('account');
     if (tab === 'account-overview') {
       setActivePage('account-overview');
+      // Store account ID for AccountOverview to use
+      if (accountId) {
+        sessionStorage.setItem('selectedAccountId', accountId);
+      }
       // Clean up URL after navigation
       window.history.replaceState({}, '', window.location.pathname);
     }

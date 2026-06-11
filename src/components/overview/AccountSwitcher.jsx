@@ -2,11 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, TrendingUp, TrendingDown, Zap, ArrowRight } from 'lucide-react';
 
-function AccountCard({ account, isSelected, onSelect, i }) {
+function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
   const pnl = account.pnl || 0;
   const isProfit = pnl >= 0;
   const size = account.account_size || 0;
   const progress = account.profit_target_progress || (pnl / size * 100);
+
+  const handleDetailsClick = (e) => {
+    e.stopPropagation();
+    // Save account ID for navigation
+    sessionStorage.setItem('selectedAccountId', account.account_id || account.id);
+    onNavigate?.('account-overview');
+  };
 
   return (
     <motion.button
@@ -31,6 +38,15 @@ function AccountCard({ account, isSelected, onSelect, i }) {
         <div className="absolute top-0 left-0 right-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.7), transparent)' }} />
       )}
+
+      {/* Details button */}
+      <button
+        onClick={handleDetailsClick}
+        className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
+        style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}
+      >
+        <ArrowRight className="w-3.5 h-3.5 text-[#FF5C00] group-hover:text-[#FF5C00] transition-colors" />
+      </button>
 
       <div className="flex items-start justify-between mb-4">
         <div>
@@ -74,7 +90,8 @@ function AccountCard({ account, isSelected, onSelect, i }) {
         onClick={(e) => {
           e.stopPropagation();
           onSelect(account);
-          window.location.href = '/dashboard?tab=account-overview';
+          const accountId = account.account_id || account.id;
+          window.location.href = `/dashboard?tab=account-overview&account=${accountId}`;
         }}
         className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
         style={{
@@ -89,7 +106,7 @@ function AccountCard({ account, isSelected, onSelect, i }) {
   );
 }
 
-export default function AccountSwitcher({ accounts, selectedId, onSelect }) {
+export default function AccountSwitcher({ accounts, selectedId, onSelect, onNavigate }) {
   if (!accounts?.length) return null;
 
   return (
@@ -101,6 +118,7 @@ export default function AccountSwitcher({ accounts, selectedId, onSelect }) {
           account={account}
           isSelected={account.id === selectedId}
           onSelect={onSelect}
+          onNavigate={onNavigate}
           i={i}
         />
       ))}
