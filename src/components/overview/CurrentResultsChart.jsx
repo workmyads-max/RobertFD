@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+
 import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
@@ -176,4 +176,3 @@ function CurrentResultsChart({ account, trades }) {
 }
 
 export default CurrentResultsChart;
-export { CurrentResultsChart };
