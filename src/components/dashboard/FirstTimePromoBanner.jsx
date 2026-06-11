@@ -127,27 +127,49 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
             Applies to all Stellar plans up to ${maxAccountSize.toLocaleString()} account sizes. New users only.
           </p>
 
-          {/* Coupon Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleCopy}
-            className="flex items-center gap-3 px-5 py-3.5 rounded-xl mb-6 w-fit"
-            style={{
-              background: '#6F36FF',
-              boxShadow: '0 4px 20px rgba(111,54,255,0.35)',
-            }}
+          {/* Coupon Code Box */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-6"
           >
-            <span className="text-sm font-bold text-white">Coupon:</span>
-            <span className="text-base font-black text-white tracking-wide">
-              {settings?.first_time_discount_code || 'NEW25'}
-            </span>
-            {copied ? (
-              <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
-            ) : (
-              <Copy className="w-4 h-4 text-white/70" strokeWidth={2} />
-            )}
-          </motion.button>
+            <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2.5">Use Coupon Code</div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCopy}
+              className="flex items-center gap-4 px-5 py-4 rounded-xl w-full sm:w-auto"
+              style={{
+                background: 'rgba(204,255,0,0.08)',
+                border: '2px dashed rgba(204,255,0,0.4)',
+                boxShadow: '0 4px 20px rgba(204,255,0,0.1)',
+              }}
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0" style={{ background: '#CCFF00' }}>
+                <Gift className="w-5 h-5 text-black" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-xs font-semibold text-white/60 mb-0.5">Coupon Code</div>
+                <div className="text-xl font-black text-white tracking-wider">
+                  {settings?.first_time_discount_code || 'NEW25'}
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                {copied ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: '#CCFF00' }}>
+                    <Check className="w-4 h-4 text-black" strokeWidth={2.5} />
+                    <span className="text-xs font-bold text-black">Copied!</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                    <Copy className="w-4 h-4 text-white/70" strokeWidth={2} />
+                    <span className="text-xs font-bold text-white/70">Copy</span>
+                  </div>
+                )}
+              </div>
+            </motion.button>
+          </motion.div>
 
           {/* Countdown */}
           {settings?.discount_end_date && (
@@ -176,10 +198,14 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
           >
             {/* New Users Only Ribbon */}
             <div
-              className="absolute -top-3 -right-3 px-4 py-2 rounded-lg transform rotate-12 z-10 shadow-lg"
-              style={{ background: '#CCFF00' }}
+              className="absolute top-0 right-0 z-10 shadow-xl"
+              style={{
+                background: '#CCFF00',
+                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 15% 100%)',
+                transform: 'translate(12px, -8px) rotate(12deg)',
+              }}
             >
-              <span className="text-[10px] font-black text-black uppercase tracking-wider">NEW USERS ONLY</span>
+              <span className="block px-5 py-2.5 text-[10px] font-black text-black uppercase tracking-wider">NEW USERS ONLY</span>
             </div>
 
             {/* Gift Icon */}
