@@ -57,7 +57,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-5' : 'px-5 py-6'}`}
+      <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-6' : 'px-6 py-8'}`}
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <button 
           onClick={() => setCollapsed?.(!collapsed)}
@@ -67,10 +67,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         </button>
       </div>
 
-
-
       {/* Nav */}
-      <nav className={`flex-1 py-3 sm:py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <nav className={`flex-1 py-4 sm:py-5 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
