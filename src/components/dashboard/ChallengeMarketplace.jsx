@@ -210,14 +210,14 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                   border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
                   boxShadow: 'none',
                 }}>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
                     background: 'transparent',
                   }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
                     alt="MetaTrader 5"
-                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                    className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
