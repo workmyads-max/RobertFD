@@ -197,6 +197,9 @@
         "phase2_target": {
           "type": "number"
         },
+        "min_trading_days": {
+          "type": "number"
+        },
         "leverage": {
           "type": "string"
         },

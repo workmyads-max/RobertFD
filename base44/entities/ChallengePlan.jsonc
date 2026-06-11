@@ -66,6 +66,11 @@
       "type": "number",
       "default": 10
     },
+    "min_trading_days": {
+      "type": "number",
+      "default": 4,
+      "description": "Minimum trading days required to pass the challenge phase"
+    },
     "profit_split": {
       "type": "number",
       "default": 80

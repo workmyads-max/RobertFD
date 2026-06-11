@@ -92,6 +92,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       trailing_dd: plan.type === 'instant_light',
       phase1_target: plan.phase1_target,
       phase2_target: plan.phase2_target,
+      min_trading_days: plan.min_trading_days ?? 4,
       leverage,
       max_lots: plan.max_lots,
       weekend_holding: plan.weekend_holding,

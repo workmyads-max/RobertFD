@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown, ChevronUp, RefreshCw, Copy, ChevronRight,
@@ -9,6 +9,60 @@ import { base44 } from '@/api/base44Client';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+
+// Next daily reset countdown — resets at 23:00 UTC daily
+function useResetCountdown() {
+  const [countdown, setCountdown] = useState('');
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const next = new Date(now);
+      next.setUTCHours(23, 0, 0, 0);
+      if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+      const diff = next - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, []);
+  return countdown;
+}
+
+// Tooltip component matching the reference design
+function InfoTooltip({ children }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  return (
+    <span ref={ref} className="relative inline-flex items-center" style={{ cursor: 'pointer' }}>
+      <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" onClick={() => setShow(v => !v)} />
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 text-center rounded-xl px-4 py-3 text-sm shadow-2xl"
+            style={{ background: '#1a1b2e', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0' }}
+          >
+            {children}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0" style={{ borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #1a1b2e' }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
+
 function fmtTime(t) {
   if (!t) return '—';
   const ms = Date.now() - new Date(t).getTime();
@@ -161,11 +215,11 @@ function AccountHistorySection({ accounts }) {
 }
 
 // ─── Statistics ──────────────────────────────────────────────────────────────
-function StatBox({ label, value }) {
+function StatBox({ label, value, valueColor }) {
   return (
-    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <div className="text-[10px] font-mono text-muted-foreground flex items-center gap-1 mb-1">{label} <Info className="w-3 h-3" /></div>
-      <div className="text-base font-bold text-foreground">{value}</div>
+    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="text-[10px] font-semibold flex items-center gap-1 mb-1.5" style={{ color: '#4fc3f7' }}>{label} <Info className="w-3 h-3" /></div>
+      <div className="text-sm font-bold" style={{ color: valueColor || '#f1f5f9' }}>{value}</div>
     </div>
   );
 }
@@ -173,35 +227,44 @@ function StatBox({ label, value }) {
 function StatisticsPanel({ account, tradeRecords }) {
   const balance = account?.balance || account?.account_size || 0;
   const equity = account?.equity || balance;
+  const accountSize = account?.account_size || 100000;
+
+  // Prefer MT5-synced values from the account entity, fallback to computed from TradeRecord
   const closedTrades = tradeRecords.filter(t => t.status === 'closed');
   const wins = closedTrades.filter(t => (t.pnl || 0) > 0);
   const losses = closedTrades.filter(t => (t.pnl || 0) < 0);
-  const winRate = closedTrades.length ? (wins.length / closedTrades.length * 100) : 0;
+  const winRateCalc = closedTrades.length ? (wins.length / closedTrades.length * 100) : 0;
   const avgWin = wins.length ? wins.reduce((s, t) => s + t.pnl, 0) / wins.length : 0;
   const avgLoss = losses.length ? Math.abs(losses.reduce((s, t) => s + t.pnl, 0) / losses.length) : 0;
   const totalLots = closedTrades.reduce((s, t) => s + (t.lots || 0), 0);
-  const profitFactor = avgLoss > 0 ? (avgWin * wins.length) / (avgLoss * losses.length) : 0;
+  const profitFactor = avgLoss > 0 && wins.length > 0 ? (avgWin * wins.length) / (avgLoss * losses.length) : 0;
   const rrrAvg = avgLoss > 0 ? avgWin / avgLoss : 0;
   const expectancy = closedTrades.length > 0 ? (wins.length / closedTrades.length * avgWin - losses.length / closedTrades.length * avgLoss) : 0;
 
+  // Prefer synced values from scheduledMTSync over local calculation
+  const winRate = account?.win_rate || winRateCalc;
+  const totalTrades = account?.total_trades || closedTrades.length;
+  const totalPnl = balance - accountSize;
+
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-      <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+      <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <span className="text-sm font-bold text-foreground">Statistics</span>
+        <span className="text-[10px] text-muted-foreground ml-1">· synced from MT5</span>
       </div>
       <div className="p-4 grid grid-cols-2 gap-2">
-        <StatBox label="Equity" value={`$${fmt(equity)}`} />
+        <StatBox label="Equity" value={`$${fmt(equity)}`} valueColor={equity >= accountSize ? '#10b981' : '#ef4444'} />
         <StatBox label="Balance" value={`$${fmt(balance)}`} />
-        <StatBox label="Win rate" value={winRate > 0 ? `${winRate.toFixed(1)}%` : '0'} />
-        <StatBox label="Average profit" value={avgWin > 0 ? `$${fmt(avgWin)}` : '0'} />
-        <StatBox label="Average loss" value={avgLoss > 0 ? `-$${fmt(avgLoss)}` : '0'} />
-        <StatBox label="Number of trades" value={closedTrades.length || '0'} />
-        <StatBox label="Lots" value={totalLots > 0 ? totalLots.toFixed(2) : '0'} />
-        <StatBox label="Sharpe Ratio" value="—" />
-        <StatBox label="Average RRR" value={rrrAvg > 0 ? rrrAvg.toFixed(2) : '0'} />
-        <StatBox label="Expectancy" value={expectancy !== 0 ? `$${fmt(expectancy)}` : '0'} />
+        <StatBox label="Win rate" value={winRate > 0 ? `${winRate.toFixed(1)}%` : '0%'} valueColor={winRate >= 50 ? '#10b981' : '#f59e0b'} />
+        <StatBox label="Average profit" value={avgWin > 0 ? `+$${fmt(avgWin)}` : '—'} valueColor="#10b981" />
+        <StatBox label="Average loss" value={avgLoss > 0 ? `-$${fmt(avgLoss)}` : '—'} valueColor="#ef4444" />
+        <StatBox label="Number of trades" value={totalTrades || '0'} />
+        <StatBox label="Lots traded" value={totalLots > 0 ? totalLots.toFixed(2) : '0'} />
+        <StatBox label="Total P&L" value={totalPnl >= 0 ? `+$${fmt(totalPnl)}` : `-$${fmt(Math.abs(totalPnl))}`} valueColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} />
+        <StatBox label="Average RRR" value={rrrAvg > 0 ? rrrAvg.toFixed(2) : '—'} />
+        <StatBox label="Expectancy" value={expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '—'} valueColor={expectancy >= 0 ? '#10b981' : '#ef4444'} />
         <div className="col-span-2">
-          <StatBox label="Profit factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '—'} />
+          <StatBox label="Profit factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '—'} valueColor={profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444'} />
         </div>
       </div>
     </div>
@@ -228,7 +291,7 @@ function DailySummaryPanel({ tradeRecords }) {
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
       <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <span className="text-sm font-bold text-foreground">Daily Summary</span>
-        <Info className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground ml-1">· from MT5 trade records</span>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-12 text-center text-sm text-muted-foreground">No closed trades yet</div>
@@ -318,13 +381,14 @@ function DisciplinePanel({ account, tradeRecords }) {
   const balance = account?.balance || accountSize;
   const equity = account?.equity || balance;
 
-  // ── Rules from snapshot ──────────────────────────────────────────────────
+  // ── Rules from snapshot (always from plan, never hardcoded) ─────────────
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
   const maxDDLimit   = snap.max_dd_limit   ?? 10;
   const profitTarget = account?.phase === 'phase2'
     ? (snap.phase2_target ?? 5)
     : (snap.phase1_target ?? 10);
-  const minDays = 2; // minimum trading days requirement
+  // min_trading_days from rule_snapshot — varies by plan (e.g. 4 for $50k, 5 for others)
+  const minDays = snap.min_trading_days ?? 4;
 
   // ── Compute trading days from actual closed trade records ────────────────
   // Count unique calendar dates (Bangkok UTC+7) that have at least one closed trade
@@ -475,37 +539,67 @@ function DisciplinePanel({ account, tradeRecords }) {
       </div>
 
       {/* Bottom: 3 stat cards */}
-      <div className="grid grid-cols-3">
-        {[
-          {
-            label: "Today's permitted loss",
-            value: `$${fmt(todayPermittedLossRemaining)}`,
-            sub: `${dailyDDLimit}% daily limit`,
-            color: todayPermittedLossRemaining < dailyAllowance * 0.3 ? 'text-red-400' : 'text-foreground',
-          },
-          {
-            label: 'Max permitted loss',
-            value: `$${fmt(maxPermittedLossRemaining)}`,
-            sub: `${maxDDLimit}% max DD`,
-            color: maxPermittedLossRemaining < accountSize * maxDDLimit / 100 * 0.3 ? 'text-red-400' : 'text-foreground',
-          },
-          {
-            label: "Today's profit",
-            // equity vs daily start = true floating P&L for today
-            value: `${dailyLossAmt >= 0 ? '+' : ''}$${fmt(dailyLossAmt)}`,
-            sub: `${todayTrades.length} closed trades`,
-            color: dailyLossAmt > 0 ? 'text-emerald-400' : dailyLossAmt < 0 ? 'text-red-400' : 'text-foreground',
-          },
-        ].map((s, i) => (
-          <div key={s.label} className="px-5 py-5 text-center" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-            <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 mb-2">
-              {s.label} <Info className="w-3 h-3" />
-            </div>
-            <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{s.sub}</div>
+      <BottomStatCards
+        todayPermittedLossRemaining={todayPermittedLossRemaining}
+        maxPermittedLossRemaining={maxPermittedLossRemaining}
+        dailyLossAmt={dailyLossAmt}
+        dailyAllowance={dailyAllowance}
+        dailyDDLimit={dailyDDLimit}
+        maxDDLimit={maxDDLimit}
+        accountSize={accountSize}
+        todayTrades={todayTrades}
+      />
+    </div>
+  );
+}
+
+function BottomStatCards({ todayPermittedLossRemaining, maxPermittedLossRemaining, dailyLossAmt, dailyAllowance, dailyDDLimit, maxDDLimit, accountSize, todayTrades }) {
+  const countdown = useResetCountdown();
+
+  const cards = [
+    {
+      label: "Today's permitted loss",
+      value: `$${fmt(todayPermittedLossRemaining)}`,
+      sub: `${dailyDDLimit}% daily limit`,
+      valueColor: todayPermittedLossRemaining < dailyAllowance * 0.3 ? '#ef4444' : '#FF5C00',
+      tooltip: (
+        <>
+          <p className="text-sm leading-snug mb-2">This value indicates the amount of permitted loss buffer you have on any given day, relative to the current equity of your account.</p>
+          <p className="text-xs text-primary font-semibold">Today's permitted loss will reset in<br />{countdown}</p>
+        </>
+      ),
+    },
+    {
+      label: 'Max permitted loss',
+      value: `$${fmt(maxPermittedLossRemaining)}`,
+      sub: `${maxDDLimit}% max DD`,
+      valueColor: maxPermittedLossRemaining < accountSize * maxDDLimit / 100 * 0.3 ? '#ef4444' : '#FF5C00',
+      tooltip: (
+        <p className="text-sm leading-snug">This value indicates the amount of permitted loss buffer you have in total, relative to the current equity of your account.</p>
+      ),
+    },
+    {
+      label: "Today's profit",
+      value: `${dailyLossAmt >= 0 ? '+' : ''}$${fmt(dailyLossAmt)}`,
+      sub: `${todayTrades.length} closed trades`,
+      valueColor: dailyLossAmt > 0 ? '#10b981' : dailyLossAmt < 0 ? '#ef4444' : '#94a3b8',
+      tooltip: (
+        <p className="text-sm leading-snug">This value shows your closed and floating P/L, as measured from the midnight CE(S)T.</p>
+      ),
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-3">
+      {cards.map((s, i) => (
+        <div key={s.label} className="px-5 py-5 text-center relative" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+          <div className="text-xs font-semibold flex items-center justify-center gap-1.5 mb-3" style={{ color: '#4fc3f7' }}>
+            {s.label} <InfoTooltip>{s.tooltip}</InfoTooltip>
           </div>
-        ))}
-      </div>
+          <div className="text-2xl font-black" style={{ color: s.valueColor }}>{s.value}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{s.sub}</div>
+        </div>
+      ))}
     </div>
   );
 }
