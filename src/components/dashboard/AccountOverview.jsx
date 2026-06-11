@@ -81,14 +81,13 @@ function useCopyText() {
 }
 
 // ─── Active Account Card ─────────────────────────────────────────────────────
-function ActiveAccountCard({ account, onNavigate }) {
+function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl }) {
   const { copied, copy } = useCopyText();
   if (!account) return null;
   const balance = account.balance ?? account.account_size ?? 0;
-  // equity is synced from MT5 (balance + open position floating PnL)
-  const equity = account.equity ?? balance;
-  // unrealizedPnl = open positions floating PnL = equity - balance
-  const unrealizedPnl = equity - balance;
+  // ⚡ Use live equity/unrealizedPnl from real-time positions poll (most accurate)
+  const equity = liveEquity ?? (account.equity ?? balance);
+  const unrealizedPnl = liveUnrealizedPnl ?? (equity - balance);
   // daily_pnl is synced from scheduledMTSync (equity vs daily_start_balance)
   const todayPnl = account.daily_pnl ?? 0;
   const challengeLabel = account.challenge_type === 'two-step' ? '2-Step' : account.challenge_type === 'instant' ? 'Instant' : 'Instant Light';
@@ -767,23 +766,32 @@ function OpenTradeRow({ trade, index }) {
 }
 
 const PAGE_SIZE = 5;
-function OpenTradesPanel({ account }) {
-  const [positions, setPositions] = useState([]);
-  const [loading, setLoading] = useState(true);
+function OpenTradesPanel({ account, initialPositions = [] }) {
+  const [positions, setPositions] = useState(initialPositions);
+  const [loading, setLoading] = useState(initialPositions.length === 0);
   const [page, setPage] = useState(1);
+
+  // Seed immediately when parent provides fresh positions
+  useEffect(() => {
+    if (initialPositions.length > 0) {
+      setPositions(initialPositions);
+      setLoading(false);
+    }
+  }, [initialPositions]);
 
   const fetchPositions = async () => {
     if (!account?.account_id) return;
-    setLoading(true);
     try {
       const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
       setPositions(res?.data?.positions || []);
+      setLoading(false);
     } catch (e) {
       console.error(e);
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 15000); return () => clearInterval(iv); }, [account?.account_id]);
+  useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 5000); return () => clearInterval(iv); }, [account?.account_id]);
 
   const totalPages = Math.ceil(positions.length / PAGE_SIZE);
   const paginated = positions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -854,12 +862,17 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
 
+  // Real-time entity subscription — instant push on any account update
   useEffect(() => {
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
         queryClient.setQueryData(['challenge-accounts'], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
+        // Also update selected account immediately
+        if (event.type === 'update') {
+          queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
+        }
       }
     });
     return unsub;
@@ -868,19 +881,42 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 15000,
-    staleTime: 10000,
+    refetchInterval: 5000,   // ⚡ 5s — fast account balance/equity sync
+    staleTime: 3000,
   });
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
-  const account = selectedAccount || activeAccounts[0] || null;
+  const account = selectedAccount
+    ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
+    : (activeAccounts[0] || null);
 
   const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
     enabled: !!account?.account_id,
-    refetchInterval: 15000,
+    refetchInterval: 5000,   // ⚡ 5s — fast trade record sync
+    staleTime: 3000,
   });
+
+  // ⚡ Live positions — polled every 5s for real-time Unrealized PnL
+  const { data: livePositionsData } = useQuery({
+    queryKey: ['live-positions-overview', account?.account_id],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
+      return res?.data?.positions || [];
+    },
+    enabled: !!account?.account_id,
+    refetchInterval: 5000,   // ⚡ 5s refresh
+    staleTime: 3000,
+  });
+
+  const livePositions = livePositionsData || [];
+  // Compute live unrealized PnL directly from positions (most accurate)
+  const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
+  // Derive live equity = balance + live floating PnL (more accurate than DB equity)
+  const liveEquity = livePositions.length > 0
+    ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
+    : (account?.equity || account?.balance || account?.account_size || 0);
 
   const stats = useAccountStats(account, tradeRecords);
 
@@ -926,10 +962,10 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       )}
 
       {/* Active Account Card */}
-      <ActiveAccountCard account={account} onNavigate={onNavigate} />
+      <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
       {/* FTMO-style Current Results + Account Info */}
-      <AccountCurrentResults account={account} />
+      <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
       {/* Performance Metrics + Progress Timeline */}
       <AccountPerformanceMetrics account={account} stats={stats} />
@@ -944,7 +980,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       <DisciplinePanel account={account} tradeRecords={tradeRecords} />
 
       {/* Open Trades */}
-      <OpenTradesPanel account={account} />
+      <OpenTradesPanel account={account} initialPositions={livePositions} />
     </div>
   );
 }

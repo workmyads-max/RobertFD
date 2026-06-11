@@ -60,18 +60,20 @@ const ChartTooltip = ({ active, payload, label }) => {
   );
 };
 
-export default function AccountCurrentResults({ account }) {
+export default function AccountCurrentResults({ account, liveEquity, liveUnrealizedPnl }) {
   const accountSize = account?.account_size || 100000;
   const balance = account?.balance ?? accountSize;
-  const equity = account?.equity ?? balance;
-  const unrealizedPnl = equity - balance;
+  // ⚡ Prefer live values passed from parent (updated every 5s from positions poll)
+  const equity = liveEquity ?? (account?.equity ?? balance);
+  const unrealizedPnl = liveUnrealizedPnl ?? (equity - balance);
   const snap = account?.rule_snapshot || {};
 
   const { data: trades = [] } = useQuery({
     queryKey: ['trade-records-results', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
     enabled: !!account?.account_id,
-    refetchInterval: 15000,
+    refetchInterval: 5000,  // ⚡ 5s
+    staleTime: 3000,
   });
 
   const equityData = useMemo(() => buildEquityCurve(trades, accountSize), [trades, accountSize]);
