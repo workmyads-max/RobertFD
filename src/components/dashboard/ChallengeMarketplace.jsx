@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
 import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
-import ChallengeCard from '../ui/challenge-card';
+import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
@@ -156,50 +156,50 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-      <div className="mb-8 sm:mb-12">
-        <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full mb-5"
-          style={{ background: 'rgba(255,107,44,0.12)', border: '1px solid rgba(255,107,44,0.25)' }}>
-          <div className="w-2 h-2 rounded-full" style={{ background: '#FF6B2C' }} />
-          <span className="text-[10px] font-bold text-[#FF6B2C] uppercase tracking-wider">Challenge Marketplace</span>
+      <div className="mb-8 sm:mb-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
+          style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.2)' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]" />
+          <span className="text-[10px] font-bold text-[#FF5C00] uppercase tracking-wider">Challenge Marketplace</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
-          Choose Your <span style={{ color: '#FF6B2C' }}>Capital Tier</span>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
+          Choose Your <span style={{ color: '#FF5C00' }}>Capital Tier</span>
         </h1>
-        <p className="text-sm sm:text-base text-[#A0A0A0] max-w-2xl leading-relaxed">
+        <p className="text-sm text-[#8B8F95] max-w-2xl leading-relaxed">
           Institutional funding from $5K to $200K. Select your challenge type, account model, and start your professional trading journey.
         </p>
       </div>
 
       {/* Challenge type toggle */}
-      <div className="mb-8 sm:mb-10">
-        <div className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest mb-4">Challenge Type</div>
-        <div className="flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="mb-6">
+        <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-widest mb-3">Challenge Type</div>
+        <div className="inline-flex rounded-xl p-1"
+          style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: '⚡' },
-            { id: 'instant', label: 'Instant', desc: '1 phase', icon: '🚀' },
-            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: '💡' },
-          ].map(t => {
+            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
+            { id: 'instant', label: 'Instant', desc: '1 phase', icon: Zap },
+            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: Zap },
+          ].map((t, idx) => {
             const isSelected = challengeType === t.id;
+            const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative flex-1 px-5 sm:px-6 py-3.5 rounded-xl text-left transition-all duration-200 min-w-[130px] sm:min-w-[170px] ${
-                  isSelected ? 'text-white' : 'text-[#A0A0A0] hover:text-white'
-                }`}
-                style={isSelected ? {
-                  background: '#FF6B2C',
-                  boxShadow: '0 4px 16px rgba(255,107,44,0.35)',
-                } : {}}>
+                className={`relative px-5 py-3 rounded-lg text-left transition-all duration-200 min-w-[110px] ${
+                  isSelected ? 'text-white' : 'text-[#8B8F95] hover:text-white/80'
+                }`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">{t.icon}</span>
-                  <div className="text-sm sm:text-base font-bold">{t.label}</div>
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`} />
+                  <div className="text-sm font-bold">{t.label}</div>
                 </div>
-                <div className={`text-[9px] sm:text-xs ${isSelected ? 'text-white/75' : 'text-[#A0A0A0]'}`}>{t.desc}</div>
+                <div className={`text-[9px] ${isSelected ? 'text-white/70' : 'text-[#8B8F95]'}`}>{t.desc}</div>
+                {isSelected && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-[#FF5C00]" />
+                )}
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-md text-[8px] font-bold"
-                    style={{ background: '#00E676', color: '#000000' }}>
+                  <span className="absolute -top-1.5 -right-1.5 px-2 py-0.5 rounded-full text-[8px] font-bold"
+                    style={{ background: '#CCFF00', color: '#000000' }}>
                     -50%
                   </span>
                 )}
@@ -210,51 +210,51 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Platform selector */}
-      <div className="mb-8 sm:mb-10">
-        <div className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest mb-4">Trading Platform</div>
-        <div className="flex flex-wrap gap-3">
+      <div className="mb-6">
+        <div className="text-[10px] font-bold text-[#8B8F95] uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="flex flex-col gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => setPlatform(p.id)}
-                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
+                className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 w-full ${
+                  isSelected ? 'bg-[#1A1D23]' : 'bg-[#1A1D23]/50 hover:bg-[#1A1D23]'
+                }`}
                 style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
-                  boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.2)' : 'none',
+                  border: `1px solid ${isSelected ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
                 }}>
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-12 h-12 object-contain transition-transform group-hover:scale-105"
+                    className="w-10 h-10 object-contain"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <div className="text-sm font-bold text-white tracking-tight">
+                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/80'}`}>
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-wider"
-                        style={{ background: '#FF6B2C', color: '#ffffff' }}>
+                      <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider"
+                        style={{ background: 'rgba(255,92,0,0.15)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-[#A0A0A0]">
+                  <div className={`text-[11px] ${isSelected ? 'text-[#FF5C00]' : 'text-[#8B8F95]'}`}>
                     {p.desc}
                   </div>
                 </div>
-                {isSelected && (
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
-                    style={{ background: '#FF6B2C', boxShadow: '0 2px 8px rgba(255,107,44,0.4)' }}>
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                  </div>
-                )}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                  isSelected ? 'opacity-100' : 'opacity-0'
+                }`}
+                  style={{ background: '#FF5C00' }}>
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                </div>
               </button>
             );
           })}
@@ -262,52 +262,47 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Account type */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-10 sm:mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mb-6">
         {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
           const isSelected = accountType === key;
           return (
             <motion.button
               key={key}
               onClick={() => setAccountType(key)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-5 text-left transition-all duration-300"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="rounded-xl p-4 text-left transition-all"
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.15)' : 'none',
+                background: isSelected ? '#1A1D23' : '#15181E',
+                border: `1px solid ${isSelected ? '#FF5C00' : 'rgba(255,255,255,0.06)'}`,
               }}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{
-                      background: isSelected
-                        ? '#FF6B2C'
-                        : 'rgba(255,255,255,0.04)',
-                      boxShadow: isSelected ? '0 2px 12px rgba(255,107,44,0.35)' : 'none',
+                      background: isSelected ? '#FF5C00' : 'rgba(255,255,255,0.05)',
                     }}>
                     {key === 'standard'
-                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#A0A0A0]'}`} />
-                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#A0A0A0]'}`} />}
+                      ? <Zap className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-[#8B8F95]'}`} />
+                      : <Shield className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-[#8B8F95]'}`} />}
                   </div>
                   <div>
                     <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white'}`}>{cfg.label}</div>
-                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-[#A0A0A0]'}`}>{cfg.leverage} leverage</div>
+                    <div className={`text-[10px] ${isSelected ? 'text-white/60' : 'text-[#8B8F95]'}`}>{cfg.leverage}</div>
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#FF6B2C', boxShadow: '0 2px 8px rgba(255,107,44,0.4)' }}>
-                    <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: '#FF5C00' }}>
+                    <Check className="w-3.5 h-3.5 text-black" strokeWidth={3} />
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {cfg.features.map(f => (
                   <div key={f.text} className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#00E676]' : 'bg-[#FF4444]'}`}
-                      style={{ boxShadow: f.ok ? '0 0 6px rgba(0,230,118,0.5)' : 'none' }} />
-                    <span className={`text-xs ${f.ok ? 'text-white' : 'text-[#A0A0A0]'}`}>{f.text}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#CCFF00]' : 'bg-red-500'}`} />
+                    <span className={`text-[11px] ${f.ok ? 'text-white' : 'text-[#8B8F95]'}`}>{f.text}</span>
                   </div>
                 ))}
               </div>
@@ -318,54 +313,35 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Plans grid */}
       {plansLoading ? (
-        <div className="flex justify-center py-16 mb-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <AnimatePresence mode="wait">
           <motion.div
             key={`${challengeType}-${accountType}`}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="grid gap-3 mb-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
             {plans.map((plan, i) => {
               const isPopular = !!plan.is_popular;
-              let badge = null;
-              let badgeColor = '';
-              if (isPopular) {
-                badge = '🔥 Most Popular';
-                badgeColor = 'bg-orange-500/90';
-              } else if (plan.type === 'instant_light') {
-                badge = '50% Cheaper';
-                badgeColor = 'bg-accent/90';
-              }
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1, type: 'spring', stiffness: 200, damping: 22 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
                 >
                   <ChallengeCard
                     plan={plan}
+                    badge={isPopular ? 'Most Popular' : plan.type === 'instant_light' ? '50% Cheaper' : null}
+                    badgeColor={isPopular ? 'bg-[#FF5C00]' : plan.type === 'instant_light' ? 'bg-[#CCFF00]' : ''}
                     onSelect={() => handleSelect(plan)}
                   />
                 </motion.div>
               );
             })}
             {plans.length === 0 && !plansLoading && (
-              <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
-                {allPlans.length === 0
-                  ? 'No challenge plans found in database. Please add plans via Admin → Challenges.'
-                  : (
-                    <div>
-                      <div className="mb-2">No plans match current filters.</div>
-                      <div className="text-xs font-mono opacity-60">
-                        Total plans: {allPlans.length} | Filter: type={challengeType}, account_type={accountType}<br/>
-                        Plan types in DB: {[...new Set(allPlans.map(p => p.type))].join(', ')}<br/>
-                        Account types in DB: {[...new Set(allPlans.map(p => p.account_type || 'standard'))].join(', ')}
-                      </div>
-                    </div>
-                  )
-                }
+              <div className="col-span-full text-center py-10 text-[#8B8F95] text-sm">
+                No plans match current filters
               </div>
             )}
           </motion.div>

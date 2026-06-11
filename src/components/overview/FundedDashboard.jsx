@@ -46,17 +46,16 @@ function AccountInfoStrip({ account }) {
     { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
     { label: 'Phase',    value: (account.phase || 'phase1').replace('phase', 'Phase ') },
     { label: 'Leverage', value: account.leverage || '1:100' },
-    { label: 'Platform', value: account.platform || 'xTrading' },
-    { label: 'ID',       value: `#${account.account_id || account.id?.slice(0, 8) || 'N/A'}` },
+    { label: 'Platform', value: account.platform || 'MT5' },
   ];
   return (
     <motion.div key={account.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      className="flex overflow-x-auto rounded-xl border divide-x glass scrollbar-hide"
+      className="flex overflow-x-auto rounded-xl border glass scrollbar-hide -mx-2 px-2"
       style={{ borderColor: 'rgba(255,255,255,0.1)', scrollbarWidth: 'none' }}>
-      {items.map(item => (
-        <div key={item.label} className="flex-1 px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[70px] sm:min-w-[80px] flex-shrink-0 border-r border-white/[0.06] last:border-r-0">
-          <div className="text-[7px] sm:text-[8px] font-mono uppercase text-muted-foreground tracking-wider sm:tracking-widest mb-0.5 sm:mb-1">{item.label}</div>
-          <div className="text-[9px] sm:text-[10px] md:text-[11px] font-semibold text-primary whitespace-nowrap truncate max-w-full">{item.value}</div>
+      {items.map((item, idx) => (
+        <div key={item.label} className="px-3 sm:px-4 py-2.5 min-w-[80px] sm:min-w-[90px] flex-shrink-0 border-r border-white/[0.06] last:border-r-0">
+          <div className="text-[8px] sm:text-[9px] font-mono uppercase text-muted-foreground tracking-wider mb-0.5">{item.label}</div>
+          <div className="text-[10px] sm:text-[11px] font-semibold text-primary whitespace-nowrap truncate max-w-[90px] sm:max-w-none">{item.value}</div>
         </div>
       ))}
     </motion.div>
@@ -165,7 +164,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-3 sm:space-y-4 mt-14 sm:mt-4">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
@@ -174,12 +173,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
-
             {/* First-Time Promo Banner */}
             <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-            <div>
-              <div className="flex items-center justify-between mb-2.5">
+            {/* Account Switcher */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
                   {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
                 </span>
@@ -197,7 +196,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-4">
+                  className="space-y-4 sm:space-y-6">
 
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
