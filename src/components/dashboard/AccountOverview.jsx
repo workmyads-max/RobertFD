@@ -705,8 +705,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
 
   const livePositions = livePositionsData || [];
-  const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
-  const liveEquity = livePositions.length > 0
+  const liveUnrealizedPnl = (livePositions || []).reduce((s, p) => s + (p.pnl || 0), 0);
+  const liveEquity = livePositions?.length > 0
     ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
     : (account?.equity || account?.balance || account?.account_size || 0);
 
