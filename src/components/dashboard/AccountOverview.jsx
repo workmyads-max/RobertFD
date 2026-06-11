@@ -295,75 +295,151 @@ function DisciplineGauge({ score }) {
 
 function DisciplinePanel({ account, tradeRecords }) {
   const snap = account?.rule_snapshot || {};
-  const tradingDays = account?.trading_days || 0;
-  const minDays = 2;
-  const dailyDDUsed = account?.daily_drawdown_used || 0;
-  const maxDDUsed = account?.max_drawdown_used || 0;
-  const dailyDDLimit = snap.daily_dd_limit ?? 5;
-  const maxDDLimit = snap.max_dd_limit ?? 10;
-  const profitTargetPct = account?.profit_target_progress || 0;
-  const profitTarget = snap.phase1_target ?? 10;
-  const balance = account?.balance || account?.account_size || 0;
   const accountSize = account?.account_size || 100000;
+  const balance = account?.balance || accountSize;
+  const equity = account?.equity || balance;
 
-  // Score: weighted average of objectives passing
-  const scores = [
-    tradingDays >= minDays ? 100 : (tradingDays / minDays) * 50,
-    dailyDDUsed < dailyDDLimit ? 100 : 0,
-    maxDDUsed < maxDDLimit ? 100 : 0,
-    profitTargetPct >= profitTarget ? 100 : (profitTargetPct / profitTarget) * 50,
-  ];
-  const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
+  // ── Rules from snapshot ──────────────────────────────────────────────────
+  const dailyDDLimit = snap.daily_dd_limit ?? 5;
+  const maxDDLimit   = snap.max_dd_limit   ?? 10;
+  const profitTarget = account?.phase === 'phase2'
+    ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? 10);
+  const minDays = 2; // minimum trading days requirement
 
-  const dailyPnl = account?.daily_pnl || 0;
+  // ── Compute trading days from actual closed trade records ────────────────
+  // Count unique calendar dates (Bangkok UTC+7) that have at least one closed trade
+  const tradingDaySet = new Set();
+  tradeRecords.filter(t => t.status === 'closed' && t.close_time).forEach(t => {
+    const d = new Date(t.close_time);
+    // Convert to Bangkok time (UTC+7)
+    const bangkokOffset = 7 * 60;
+    const localDate = new Date(d.getTime() + (bangkokOffset + d.getTimezoneOffset()) * 60000);
+    tradingDaySet.add(localDate.toISOString().split('T')[0]);
+  });
+  const tradingDays = tradingDaySet.size;
+
+  // ── Today's P&L — computed from closed trades today (Bangkok UTC+7) ──────
+  const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const todayStr = nowBangkok.toISOString().split('T')[0];
+  const todayTrades = tradeRecords.filter(t => {
+    if (t.status !== 'closed' || !t.close_time) return false;
+    const d = new Date(t.close_time);
+    const localDate = new Date(d.getTime() + (7 * 60 + d.getTimezoneOffset()) * 60000);
+    return localDate.toISOString().startsWith(todayStr);
+  });
+  const todayPnl = todayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+
+  // ── Drawdown values — use synced DB values (most accurate from scheduledMTSync) ─
+  const dailyDDUsed = account?.daily_drawdown_used || 0;
+  const maxDDUsed   = account?.max_drawdown_used   || 0;
+
+  // ── Total PnL = balance - accountSize ────────────────────────────────────
   const totalPnl = balance - accountSize;
-  const maxPermittedLoss = accountSize - accountSize * (maxDDLimit / 100);
-  const todayPermittedLoss = (account?.daily_start_balance || accountSize) - (account?.daily_start_balance || accountSize) * (dailyDDLimit / 100);
-  const todayProfit = dailyPnl;
+  const profitTargetPct = account?.profit_target_progress || Math.max(0, (totalPnl / accountSize) * 100);
+
+  // ── Permitted loss calculations ───────────────────────────────────────────
+  // daily_start_balance is set at 23:00 UTC reset by scheduledMTSync
+  const dailyStartBalance = account?.daily_start_balance || balance;
+  const dailyAllowance = dailyStartBalance * (dailyDDLimit / 100);
+  // How much loss is still allowed today = allowance - loss already taken today
+  const todayLossAlready = Math.min(0, todayPnl); // negative if losing
+  const todayPermittedLossRemaining = Math.max(0, dailyAllowance + todayLossAlready);
+  // Max permitted loss remaining = equity can still fall by maxDD from accountSize
+  const maxPermittedLossRemaining = Math.max(0, balance - accountSize * (1 - maxDDLimit / 100));
+
+  // ── Objectives ────────────────────────────────────────────────────────────
+  const dailyLossResult = todayPnl; // negative = loss today
+  const maxLossResult = totalPnl;   // negative = total loss from start
 
   const objectives = [
-    { label: `Minimum ${minDays} Trading Days`, result: tradingDays, pass: tradingDays >= minDays },
-    { label: `Max Daily Loss: -$${fmt(accountSize * dailyDDLimit / 100, 0)}`, result: `${dailyPnl < 0 ? '' : '-'}$${fmt(Math.abs(dailyPnl))} (${Math.abs(dailyDDUsed).toFixed(1)}%)`, pass: dailyDDUsed < dailyDDLimit },
-    { label: `Max Loss: -$${fmt(accountSize * maxDDLimit / 100, 0)}`, result: `${totalPnl < 0 ? '' : '-'}$${fmt(Math.abs(totalPnl < 0 ? totalPnl : 0))} (${Math.abs(maxDDUsed).toFixed(1)}%)`, pass: maxDDUsed < maxDDLimit },
-    { label: `Profit Target: $${fmt(accountSize * profitTarget / 100, 0)}`, result: `$${fmt(Math.max(0, totalPnl))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget },
+    {
+      label: `Minimum ${minDays} Trading Days`,
+      result: `${tradingDays}`,
+      pass: tradingDays >= minDays,
+    },
+    {
+      label: `Max Daily Loss: -$${fmt(accountSize * dailyDDLimit / 100, 0)}`,
+      result: `${dailyLossResult >= 0 ? '+' : ''}$${fmt(dailyLossResult)} (${dailyDDUsed.toFixed(1)}%)`,
+      pass: dailyDDUsed < dailyDDLimit,
+      danger: dailyDDUsed >= dailyDDLimit,
+    },
+    {
+      label: `Max Loss: -$${fmt(accountSize * maxDDLimit / 100, 0)}`,
+      result: `${maxLossResult >= 0 ? '+' : ''}$${fmt(maxLossResult)} (${maxDDUsed.toFixed(1)}%)`,
+      pass: maxDDUsed < maxDDLimit,
+      danger: maxDDUsed >= maxDDLimit,
+    },
+    {
+      label: `Profit Target: $${fmt(accountSize * profitTarget / 100, 0)}`,
+      result: `$${fmt(Math.max(0, totalPnl))} (${profitTargetPct.toFixed(1)}%)`,
+      pass: profitTargetPct >= profitTarget,
+    },
   ];
+
+  // ── Discipline score — weighted by how well each objective is met ─────────
+  const scores = [
+    tradingDays >= minDays ? 100 : Math.round((tradingDays / minDays) * 60),
+    dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
+    maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
+    profitTargetPct >= profitTarget ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
+  ];
+  const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
       <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <span className="text-sm font-bold text-foreground">Your stats</span>
       </div>
-      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+
+      <div className="grid md:grid-cols-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         {/* Left: Discipline Score */}
-        <div className="p-5">
+        <div className="p-5 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-bold text-foreground">Discipline Score</span>
-            <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
           </div>
-          <div className="flex gap-4 text-[10px] mb-4 text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />0 – 30%</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />30 – 80%</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />80 – 100%</span>
+          <div className="flex flex-wrap gap-3 text-[11px] mb-4 text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />0 – 30%</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" />30 – 80%</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />80 – 100%</span>
           </div>
           <DisciplineGauge score={disciplineScore} />
+          {/* Sub-score breakdown */}
+          <div className="mt-4 space-y-2">
+            {[
+              { label: 'Trading Days', score: scores[0] },
+              { label: 'Daily DD', score: scores[1] },
+              { label: 'Max DD', score: scores[2] },
+              { label: 'Profit Target', score: scores[3] },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground w-24">{s.label}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${s.score}%`, background: s.score >= 80 ? '#10b981' : s.score >= 30 ? '#f59e0b' : '#ef4444' }} />
+                </div>
+                <span className="font-mono text-foreground w-8 text-right">{s.score}%</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Right: Objectives */}
         <div className="p-5">
           <div className="text-sm font-bold text-foreground mb-4">Objectives</div>
-          <div className="grid grid-cols-3 text-[10px] font-semibold text-muted-foreground uppercase mb-2">
+          <div className="grid grid-cols-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <span>Trading Objectives</span>
             <span className="text-center">Result</span>
             <span className="text-right">Summary</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-0">
             {objectives.map(obj => (
-              <div key={obj.label} className="grid grid-cols-3 items-center gap-2 py-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <span className="text-xs text-primary font-medium">{obj.label}</span>
-                <span className="text-xs font-mono text-foreground text-center">{obj.result}</span>
+              <div key={obj.label} className="grid grid-cols-3 items-center gap-3 py-3 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <span className="text-xs font-semibold" style={{ color: '#4fc3f7' }}>{obj.label}</span>
+                <span className={`text-xs font-mono text-center ${obj.danger ? 'text-red-400' : 'text-foreground'}`}>{obj.result}</span>
                 <div className="flex justify-end">
-                  <div className={`w-6 h-6 rounded flex items-center justify-center ${obj.pass ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                    {obj.pass ? <Check className="w-3.5 h-3.5 text-white" /> : <X className="w-3.5 h-3.5 text-white" />}
+                  <div className={`w-7 h-7 rounded-md flex items-center justify-center ${obj.pass ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                    {obj.pass ? <Check className="w-4 h-4 text-white" strokeWidth={3} /> : <X className="w-4 h-4 text-white" strokeWidth={3} />}
                   </div>
                 </div>
               </div>
@@ -372,16 +448,34 @@ function DisciplinePanel({ account, tradeRecords }) {
         </div>
       </div>
 
-      {/* Bottom stats */}
-      <div className="grid grid-cols-3 divide-x border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+      {/* Bottom: 3 stat cards */}
+      <div className="grid grid-cols-3">
         {[
-          { label: "Today's permitted loss", value: `$${fmt(Math.max(0, todayPermittedLoss + todayProfit))}` },
-          { label: 'Max permitted loss', value: `$${fmt(Math.max(0, balance - accountSize * (1 - maxDDLimit / 100)))}` },
-          { label: "Today's profit", value: `$${fmt(todayProfit)}` },
-        ].map(s => (
-          <div key={s.label} className="px-5 py-4 text-center" style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-            <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 mb-2">{s.label} <Info className="w-3 h-3" /></div>
-            <div className="text-base font-bold text-foreground">{s.value}</div>
+          {
+            label: "Today's permitted loss",
+            value: `$${fmt(todayPermittedLossRemaining)}`,
+            sub: `${dailyDDLimit}% daily limit`,
+            color: todayPermittedLossRemaining < dailyAllowance * 0.3 ? 'text-red-400' : 'text-foreground',
+          },
+          {
+            label: 'Max permitted loss',
+            value: `$${fmt(maxPermittedLossRemaining)}`,
+            sub: `${maxDDLimit}% max DD`,
+            color: maxPermittedLossRemaining < accountSize * maxDDLimit / 100 * 0.3 ? 'text-red-400' : 'text-foreground',
+          },
+          {
+            label: "Today's profit",
+            value: `${todayPnl >= 0 ? '+' : ''}$${fmt(todayPnl)}`,
+            sub: `${todayTrades.length} trades today`,
+            color: todayPnl > 0 ? 'text-emerald-400' : todayPnl < 0 ? 'text-red-400' : 'text-foreground',
+          },
+        ].map((s, i) => (
+          <div key={s.label} className="px-5 py-5 text-center" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+            <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 mb-2">
+              {s.label} <Info className="w-3 h-3" />
+            </div>
+            <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{s.sub}</div>
           </div>
         ))}
       </div>
