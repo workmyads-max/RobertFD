@@ -15,7 +15,11 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const [avatarError, setAvatarError] = React.useState(false);
   const avatarUrl = user?.avatar_url || user?.profile_photo_url;
-  const showAvatar = avatarUrl && !avatarError;
+  const showAvatar = !!(avatarUrl && !avatarError);
+  
+  // Debug logging for mobile avatar issue
+  console.log('[UnifiedWelcomeHeader] user:', { full_name: user?.full_name, email: user?.email, avatar_url: user?.avatar_url, profile_photo_url: user?.profile_photo_url });
+  console.log('[UnifiedWelcomeHeader] avatar state:', { avatarUrl, showAvatar, initials, displayName });
 
   const { data: socialSettings = [] } = useQuery({
     queryKey: ['social-media-settings'],

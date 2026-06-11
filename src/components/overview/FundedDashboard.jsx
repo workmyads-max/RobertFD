@@ -132,20 +132,22 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account - ensure it runs on all screen sizes
+  // Auto-select first account - FIXED: proper dependencies for mobile
   useEffect(() => {
+    console.log('[FundedDashboard] activeAccounts:', activeAccounts.length, activeAccounts.map(a => ({ id: a.id, status: a.status, size: a.account_size })));
     if (activeAccounts.length > 0 && !selectedAccount) {
+      console.log('[FundedDashboard] Auto-selecting account:', activeAccounts[0].id);
       setSelectedAccount(activeAccounts[0]);
     }
-  }, [activeAccounts.length, selectedAccount]);
+  }, [activeAccounts, selectedAccount]);
 
   // Keep selected in sync with refetches
   useEffect(() => {
-    if (selectedAccount) {
+    if (selectedAccount && activeAccounts.length > 0) {
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
       if (fresh) setSelectedAccount(fresh);
     }
-  }, [accounts]);
+  }, [accounts, selectedAccount, activeAccounts]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
@@ -157,6 +159,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(selectedAccount, trades);
 
+  // Show loading state while accounts are fetching — prevents empty state flash on mobile
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
@@ -165,6 +168,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       </div>
     );
   }
+
+  // Debug log for mobile rendering
+  console.log('[FundedDashboard] Render - accounts:', accounts.length, 'activeAccounts:', activeAccounts.length, 'selectedAccount:', selectedAccount?.id);
 
   // Derive open trades for floating P&L widget
   const openTrades = trades.filter(t => t.status === 'open');
@@ -206,15 +212,18 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {activeAccounts.length === 0 ? (
+        {/* Debug: show account count in console */}
+        {console.log('[FundedDashboard] Rendering - activeAccounts:', activeAccounts.length, 'isLoading:', isLoading)}
+        
+        {activeAccounts.length === 0 && !isLoading ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
-            {/* First-Time Promo Banner */}
+            {/* First-Time Promo Banner - FULL WIDTH on mobile */}
             <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-            {/* Account Switcher */}
-            <div className="space-y-3">
+            {/* Account Switcher - Full width container */}
+            <div className="space-y-3 w-full">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
                   {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
