@@ -22,11 +22,22 @@ function Dot({ color, pulse }) {
 export default function LiveStatusBar({ account }) {
   const [latency, setLatency] = useState(12);
   const [time, setTime] = useState(new Date());
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  const quotes = [
+    "Trade what you see, not what you think",
+    "Cut losses quickly, let winners run",
+    "Patience is not a virtue, it's a necessity",
+    "The best trade is often the one you don't make",
+    "Risk management is more important than profits",
+    "Plan the trade, trade the plan",
+  ];
 
   useEffect(() => {
     const t1 = setInterval(() => setTime(new Date()), 1000);
     const t2 = setInterval(() => setLatency(6 + Math.floor(Math.random() * 18)), 3000);
-    return () => { clearInterval(t1); clearInterval(t2); };
+    const t3 = setInterval(() => setQuoteIndex(i => (i + 1) % quotes.length), 8000);
+    return () => { clearInterval(t1); clearInterval(t2); clearInterval(t3); };
   }, []);
 
   const utcStr = time.toUTCString().slice(17, 25);
@@ -85,12 +96,9 @@ export default function LiveStatusBar({ account }) {
           <span className="text-[10px] font-mono text-white/40">Latency</span>
           <span className="text-[10px] font-mono text-white/60">{latency}ms</span>
         </div>
-        <div className="hidden md:flex items-center gap-2">
-          <Dot color={isActive ? '#10b981' : '#f59e0b'} pulse={isActive} />
-          <span className="text-[10px] font-mono text-white/40">Account</span>
-          <span className="text-[10px] font-mono" style={{ color: isActive ? '#10b981' : '#f59e0b' }}>
-            {(account?.status || 'inactive').toUpperCase()}
-          </span>
+        <div className="hidden md:flex items-center gap-2 flex-1 min-w-0">
+          <Activity className="w-3 h-3 text-orange-400/50 flex-shrink-0" />
+          <span className="text-[10px] font-medium text-white/50 truncate">{quotes[quoteIndex]}</span>
         </div>
         <div className="hidden lg:flex items-center gap-2">
           <Shield className="w-3 h-3 text-blue-400/50" />
