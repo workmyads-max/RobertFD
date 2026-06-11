@@ -205,9 +205,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02]"
                 style={{
                   background: isSelected
-                    ? 'rgba(255,92,0,0.08)'
+                    ? 'rgba(255,255,255,0.06)'
                     : 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.55)' : 'rgba(255,255,255,0.08)'}`,
+                  border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
                   boxShadow: 'none',
                 }}>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -227,7 +227,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                     </div>
                     {isSelected && (
                       <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
-                        style={{ background: 'rgba(255,92,0,0.25)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.3)' }}>
+                        style={{ background: 'rgba(255,255,255,0.1)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                         Selected
                       </span>
                     )}
@@ -238,7 +238,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 </div>
                 {isSelected && (
                   <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-blue-400" />
+                    <Check className="w-5 h-5 text-white" />
                   </div>
                 )}
               </button>
