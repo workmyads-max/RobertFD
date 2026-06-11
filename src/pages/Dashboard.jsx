@@ -75,6 +75,17 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Handle URL parameter for account-overview navigation
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'account-overview') {
+      setActivePage('account-overview');
+      // Clean up URL after navigation
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Reset collapsed state on mobile
   useEffect(() => {
     const checkMobile = () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, TrendingUp, TrendingDown, Zap } from 'lucide-react';
+import { CheckCircle2, TrendingUp, TrendingDown, Zap, ArrowRight } from 'lucide-react';
 
 function AccountCard({ account, isSelected, onSelect, i }) {
   const pnl = account.pnl || 0;
@@ -68,6 +68,23 @@ function AccountCard({ account, isSelected, onSelect, i }) {
         {isProfit ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
         {isProfit ? '+' : ''}${Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
+
+      {/* Details Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(account);
+          window.location.href = '/dashboard?tab=account-overview';
+        }}
+        className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+        style={{
+          background: 'rgba(255,92,0,0.1)',
+          border: '1px solid rgba(255,92,0,0.25)',
+          color: '#FF5C00',
+        }}
+      >
+        Details <ArrowRight className="w-3.5 h-3.5" />
+      </button>
     </motion.button>
   );
 }
