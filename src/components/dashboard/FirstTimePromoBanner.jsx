@@ -191,62 +191,61 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
             transition={{ delay: 0.2 }}
             className="relative w-full max-w-md rounded-2xl overflow-hidden p-6"
             style={{
-              background: '#7C3AED',
-              boxShadow: '0 20px 60px rgba(124,58,237,0.4)',
+              background: '#CCFF00',
+              boxShadow: '0 20px 60px rgba(204,255,0,0.4)',
               transform: 'rotate(3deg)',
             }}
           >
             {/* New Users Only Ribbon */}
             <div
-              className="absolute top-0 right-0 z-10 shadow-xl"
+              className="absolute -top-2 -right-2 z-10 shadow-xl overflow-visible"
               style={{
-                background: '#CCFF00',
-                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 15% 100%)',
-                transform: 'translate(12px, -8px) rotate(12deg)',
+                background: '#FF5C00',
+                transform: 'translateX(8px) translateY(8px) rotate(12deg)',
               }}
             >
-              <span className="block px-5 py-2.5 text-[10px] font-black text-black uppercase tracking-wider">NEW USERS ONLY</span>
+              <span className="block px-6 py-3 text-[10px] font-black text-white uppercase tracking-wider whitespace-nowrap">NEW USERS ONLY</span>
             </div>
 
             {/* Gift Icon */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              <Gift className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(0,0,0,0.1)' }}>
+              <Gift className="w-5 h-5 text-black" />
             </div>
 
             {/* Headline */}
-            <h3 className="text-lg font-bold text-white mb-4 leading-snug">Start Your Challenge at {discountPercent}% Off</h3>
+            <h3 className="text-lg font-bold text-black mb-4 leading-snug">Start Your Challenge at {discountPercent}% Off</h3>
 
             {/* Separator */}
-            <div className="h-px mb-4" style={{ background: 'rgba(255,255,255,0.2)' }} />
+            <div className="h-px mb-4" style={{ background: 'rgba(0,0,0,0.15)' }} />
 
             {/* Checklist */}
             <div className="space-y-2.5 mb-5">
               <div className="flex items-center gap-3">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#CCFF00' }}
+                  style={{ background: 'rgba(0,0,0,0.1)' }}
                 >
                   <Check className="w-3 h-3 text-black" strokeWidth={3} />
                 </div>
-                <span className="text-sm font-medium text-white">All Stellar challenges</span>
+                <span className="text-sm font-medium text-black">All Stellar challenges</span>
               </div>
               <div className="flex items-center gap-3">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#CCFF00' }}
+                  style={{ background: 'rgba(0,0,0,0.1)' }}
                 >
                   <Check className="w-3 h-3 text-black" strokeWidth={3} />
                 </div>
-                <span className="text-sm font-medium text-white">Accounts $2K through ${maxAccountSize.toLocaleString()}</span>
+                <span className="text-sm font-medium text-black">Accounts $2K through ${maxAccountSize.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#CCFF00' }}
+                  style={{ background: 'rgba(0,0,0,0.1)' }}
                 >
                   <Check className="w-3 h-3 text-black" strokeWidth={3} />
                 </div>
-                <span className="text-sm font-medium text-white">Not applicable on resets</span>
+                <span className="text-sm font-medium text-black">Not applicable on resets</span>
               </div>
             </div>
 
