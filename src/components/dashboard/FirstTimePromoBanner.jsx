@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Gift, Check, Copy, X } from 'lucide-react';
+import { Clock, Gift, Check, Copy } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 export default function FirstTimePromoBanner({ onStartChallenge }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [isDismissed, setIsDismissed] = useState(false);
 
   // Check if user has already used discount
   const { data: userDiscount } = useQuery({
@@ -44,8 +43,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
 
   // Check if banner should be shown
   const shouldShow = settings?.is_first_time_discount_active && 
-                     !userDiscount?.is_used && 
-                     !isDismissed;
+                     !userDiscount?.is_used;
 
   // Countdown timer
   useEffect(() => {
@@ -96,14 +94,6 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
         border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
-      {/* Dismiss button */}
-      <button
-        onClick={() => setIsDismissed(true)}
-        className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/5 transition-colors z-20"
-      >
-        <X className="w-4 h-4 text-white/40" />
-      </button>
-
       <div className="grid lg:grid-cols-2 gap-0">
         {/* Left Content */}
         <div className="p-8 lg:p-10 flex flex-col justify-center">
@@ -124,7 +114,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
 
           {/* Subtext */}
           <p className="text-sm text-[#A0A0A0] mb-6 leading-relaxed">
-            Applies to all Stellar plans up to ${maxAccountSize.toLocaleString()} account sizes. New users only.
+            Applies to all Stellar challenges from $10K to ${maxAccountSize.toLocaleString()}. New users only.
           </p>
 
           {/* Coupon Code Box */}
@@ -236,7 +226,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
                 >
                   <Check className="w-3 h-3 text-black" strokeWidth={3} />
                 </div>
-                <span className="text-sm font-medium text-black">Accounts $2K through ${maxAccountSize.toLocaleString()}</span>
+                <span className="text-sm font-medium text-black">Accounts $10K through ${maxAccountSize.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div
