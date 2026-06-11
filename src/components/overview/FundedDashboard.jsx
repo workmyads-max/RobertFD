@@ -236,12 +236,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Objectives */}
                   <TradingObjectives account={selectedAccount} rules={rules} stats={stats} />
-
-                  {/* Quick actions */}
-                  <QuickActions onNavigate={onNavigate} />
-
-                  {/* Social Media Community Widget */}
-                  <SocialMediaWidget />
                 </motion.div>
               )}
             </AnimatePresence>
