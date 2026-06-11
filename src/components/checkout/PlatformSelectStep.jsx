@@ -37,23 +37,17 @@ const PLATFORMS = [
   },
 ];
 
-// MT5 SVG logo
-function MT5Logo({ size = 48 }) {
+// MT5 official logo
+function MT5Logo({ size = 56 }) {
   return (
-    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="48" height="48" rx="12" fill="url(#mt5g)" />
-      <defs>
-        <linearGradient id="mt5g" x1="0" y1="0" x2="48" y2="48">
-          <stop offset="0%" stopColor="#1a8cff" />
-          <stop offset="100%" stopColor="#003399" />
-        </linearGradient>
-      </defs>
-      <rect x="7" y="26" width="6" height="14" rx="2" fill="rgba(255,255,255,0.45)" />
-      <rect x="16" y="19" width="6" height="21" rx="2" fill="rgba(255,255,255,0.65)" />
-      <rect x="25" y="12" width="6" height="28" rx="2" fill="white" />
-      <rect x="34" y="16" width="6" height="24" rx="2" fill="rgba(255,255,255,0.65)" />
-      <text x="6" y="10" fontSize="8" fontWeight="900" fill="white" fontFamily="Arial" letterSpacing="0.8">MT5</text>
-    </svg>
+    <img
+      src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
+      alt="MetaTrader 5"
+      width={size}
+      height={size}
+      className="object-contain"
+      style={{ filter: 'drop-shadow(0 2px 8px rgba(0,122,255,0.3))' }}
+    />
   );
 }
 
