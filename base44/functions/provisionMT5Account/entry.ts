@@ -34,10 +34,15 @@ function mt5Headers(apiKey) {
 }
 
 function getGroupName(challenge_type, account_type, account_size, phase) {
-  // Override via env vars to match your Xylo Markets MT5 server groups
-  if (phase === 'funded') return Deno.env.get('MT5_FUNDED_GROUP') || 'real\\funded';
-  if (phase === 'phase2') return Deno.env.get('MT5_PHASE2_GROUP') || 'real\\challenge';
-  return Deno.env.get('MT5_PHASE1_GROUP') || 'real\\challenge';
+  // MT5 group names from Xylo Markets MT5 Manager (exact values — do not alter)
+  // These are internal broker groups; frontend only displays Phase 1 / Phase 2 / Funded / Standard / Swing
+  // Env var secrets take precedence; defaults match the confirmed Xylo Markets group structure:
+  //   Phase 1 Standard → HAR\MAN15\contest.1
+  //   Phase 2 Standard → HAR\MAN15\contest.2
+  //   Funded           → HAR\MAN15\LiveG.1
+  if (phase === 'funded') return Deno.env.get('MT5_FUNDED_GROUP') || 'HAR\\MAN15\\LiveG.1';
+  if (phase === 'phase2') return Deno.env.get('MT5_PHASE2_GROUP') || 'HAR\\MAN15\\contest.2';
+  return Deno.env.get('MT5_PHASE1_GROUP') || 'HAR\\MAN15\\contest.1';
 }
 
 async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, leverage, accountSize, comment }) {
@@ -85,35 +90,26 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
   // The balance will be applied by the MT5 server within seconds to minutes.
   // We retry up to 3 times with a 2-second delay to maximize success rate.
   if (accountSize > 0) {
-    let depSuccess = false;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      if (attempt > 1) await new Promise(r => setTimeout(r, 2000));
-      const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
-        method: 'POST',
-        headers: mt5Headers(apiKey),
-        body: JSON.stringify({
-          Login: parseInt(mtLogin),
-          Balance: accountSize,
-          Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
-          apikey: apiKey,
-        }),
-      });
-      const depText = await depRes.text();
-      const depData = depText ? JSON.parse(depText).data : {};
-      const errCode = depData?.errorcode;
-      console.log(`[Tritech/depositwithbal] Attempt ${attempt} — Login ${mtLogin}: HTTP ${depRes.status}, errorcode=${errCode}`);
-      // errorcode 0 = success, 10009 = async pending (broker processes it server-side), both are acceptable
-      if (depRes.ok && (errCode === 0 || errCode === 10009 || errCode === null || errCode === undefined)) {
-        depSuccess = true;
-        if (errCode === 10009) {
-          console.log(`[Tritech/depositwithbal] Async deposit queued (10009) for login ${mtLogin} — balance will appear within minutes`);
-        }
-        break;
-      }
-      console.warn(`[Tritech/depositwithbal] Attempt ${attempt} failed for login ${mtLogin}: ${depText.slice(0, 200)}`);
-    }
-    if (!depSuccess) {
-      console.error(`[Tritech/depositwithbal] All 3 attempts failed for login ${mtLogin}`);
+    // CONFIRMED via swagger MTDealData schema: correct field is "profit" (not "Balance")
+    // type=2 = DEAL_TYPE_BALANCE in MT5. depositwithbal returns currenctBalance confirming instant apply.
+    const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+      method: 'POST',
+      headers: mt5Headers(apiKey),
+      body: JSON.stringify({
+        Login: parseInt(mtLogin),
+        profit: accountSize,
+        type: 2,
+        comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+        apikey: apiKey,
+      }),
+    });
+    const depText = await depRes.text();
+    const depData = depText ? JSON.parse(depText) : {};
+    const errCode = depData?.data?.errorcode;
+    const confirmedBalance = depData?.data?.currenctBalance;
+    console.log(`[Tritech/depositwithbal] Login ${mtLogin}: HTTP ${depRes.status}, errorcode=${errCode}, confirmedBalance=${confirmedBalance}`);
+    if (!depRes.ok || (errCode !== 0 && errCode !== 10009)) {
+      console.error(`[Tritech/depositwithbal] Deposit failed for login ${mtLogin}: ${depText.slice(0, 300)}`);
     }
   }
 
