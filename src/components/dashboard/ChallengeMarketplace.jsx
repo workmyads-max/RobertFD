@@ -173,7 +173,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       {/* Challenge type toggle */}
       <div className="mb-6 sm:mb-8">
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Challenge Type</div>
-        <div className="flex rounded-2xl p-2 flex-wrap gap-3 sm:flex-nowrap"
+        <div className="inline-flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}>
           {[
             { id: 'two-step', label: '⚡ Two-Step', desc: '2 phases' },
@@ -185,17 +185,17 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative flex-1 px-6 sm:px-8 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
+                className={`relative px-4 sm:px-5 py-3 rounded-xl text-left transition-all duration-200 min-w-[100px] sm:min-w-[120px] ${
                   isSelected ? 'text-white' : 'text-muted-foreground hover:text-foreground'
                 }`}
                 style={isSelected ? {
                   background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
                   boxShadow: '0 4px 16px rgba(255,92,0,0.3)',
                 } : {}}>
-                <div className="text-base sm:text-lg font-bold mb-1">{t.label}</div>
-                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
+                <div className="text-sm sm:text-base font-bold">{t.label}</div>
+                <div className={`text-[9px] sm:text-[10px] ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[9px] font-black"
+                  <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-md text-[8px] font-black"
                     style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
                     -50%
                   </span>
