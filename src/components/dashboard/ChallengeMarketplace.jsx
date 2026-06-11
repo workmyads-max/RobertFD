@@ -156,47 +156,46 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       <TermsModal open={showTerms} onAccept={handleTermsAccept} onClose={handleTermsDecline} />
 
       {/* Header */}
-      <div className="mb-8 sm:mb-12">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl mb-4"
-          style={{ background: 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))', border: '1px solid rgba(255,92,0,0.25)', boxShadow: '0 4px 20px rgba(255,92,0,0.1)' }}>
-          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-[11px] sm:text-xs font-bold text-primary uppercase tracking-wider">Challenge Marketplace</span>
+      <div className="mb-6 sm:mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl mb-4"
+          style={{ background: 'rgba(255,112,46,0.1)', border: '1px solid rgba(255,112,46,0.2)' }}>
+          <span className="text-[9px] font-bold text-[#FF702E] uppercase tracking-wider">Challenge Marketplace</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3 tracking-tight">
-          Choose Your <span className="text-primary">Capital Tier</span>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
+          Choose Your <span className="text-[#FF702E]">Capital Tier</span>
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#9CA3AF] max-w-2xl leading-relaxed">
           Institutional funding from $5K to $200K. Select your challenge type, account model, and start your professional trading journey.
         </p>
       </div>
 
       {/* Challenge type toggle */}
       <div className="mb-6 sm:mb-8">
-        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Challenge Type</div>
-        <div className="flex rounded-2xl p-2 flex-wrap gap-3 sm:flex-nowrap"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}>
+        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest mb-3">Challenge Type</div>
+        <div className="flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
-            { id: 'two-step', label: '⚡ Two-Step', desc: '2 phases' },
-            { id: 'instant', label: '🚀 Instant', desc: '1 phase' },
-            { id: 'instant_light', label: '💡 Light', desc: 'Simplified' },
+            { id: 'two-step', label: 'Two-Step', desc: '2 phases' },
+            { id: 'instant', label: 'Instant', desc: '1 phase' },
+            { id: 'instant_light', label: 'Light', desc: 'Simplified' },
           ].map(t => {
             const isSelected = challengeType === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative flex-1 px-6 sm:px-8 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
-                  isSelected ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                className={`relative flex-1 px-5 sm:px-6 py-3.5 rounded-xl text-left transition-all duration-200 min-w-[120px] sm:min-w-[160px] ${
+                  isSelected ? 'text-white' : 'text-[#9CA3AF] hover:text-white'
                 }`}
                 style={isSelected ? {
-                  background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)',
-                  boxShadow: '0 4px 16px rgba(255,92,0,0.3)',
+                  background: '#FF702E',
+                  boxShadow: '0 2px 12px rgba(255,112,46,0.3)',
                 } : {}}>
-                <div className="text-base sm:text-lg font-bold mb-1">{t.label}</div>
-                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{t.desc}</div>
+                <div className="text-sm sm:text-base font-bold mb-0.5">{t.label}</div>
+                <div className={`text-[9px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-[#9CA3AF]'}`}>{t.desc}</div>
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[9px] font-black"
-                    style={{ background: '#CCFF00', color: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
+                  <span className="absolute -top-2 -right-2 px-2 py-1 rounded-md text-[8px] font-bold"
+                    style={{ background: '#CCFF00', color: '#000000' }}>
                     -50%
                   </span>
                 )}
@@ -208,7 +207,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Platform selector */}
       <div className="mb-6 sm:mb-8">
-        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Trading Platform</div>
+        <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest mb-3">Trading Platform</div>
         <div className="flex flex-wrap gap-3">
           {PLATFORMS.map(p => {
             const isSelected = platform === p.id;
@@ -216,41 +215,41 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={p.id}
                 onClick={() => setPlatform(p.id)}
-                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] w-full sm:w-auto"
+                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
                 style={{
                   background: isSelected
-                    ? 'linear-gradient(135deg, rgba(255,92,0,0.12), rgba(255,92,0,0.06))'
-                    : 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.15)' : 'none',
+                    ? 'rgba(255,255,255,0.05)'
+                    : 'rgba(255,255,255,0.02)',
+                  border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                  boxShadow: isSelected ? '0 2px 12px rgba(255,255,255,0.08)' : 'none',
                 }}>
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-14 h-14 object-contain transition-transform group-hover:scale-110"
+                    className="w-12 h-12 object-contain transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <div className={`text-base font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                    <div className={`text-sm font-bold tracking-tight ${isSelected ? 'text-white' : 'text-foreground'}`}>
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
-                        style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', color: '#ffffff' }}>
+                      <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-wider"
+                        style={{ background: '#FF702E', color: '#ffffff' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className={`text-[11px] ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <div className={`text-[10px] ${isSelected ? 'text-[#9CA3AF]' : 'text-[#9CA3AF]'}`}>
                     {p.desc}
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                    style={{ background: '#FF702E', boxShadow: '0 2px 8px rgba(255,112,46,0.4)' }}>
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
@@ -273,32 +272,32 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               className="rounded-2xl p-5 text-left transition-all duration-300"
               style={{
                 background: isSelected
-                  ? 'linear-gradient(135deg, rgba(255,92,0,0.15), rgba(255,92,0,0.08))'
-                  : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${isSelected ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                boxShadow: isSelected ? '0 4px 20px rgba(255,92,0,0.1)' : 'none',
+                  ? 'rgba(255,255,255,0.05)'
+                  : 'rgba(255,255,255,0.02)',
+                border: `1.5px solid ${isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                boxShadow: isSelected ? '0 2px 12px rgba(255,255,255,0.05)' : 'none',
               }}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
                       background: isSelected
-                        ? 'linear-gradient(135deg, #FF5C00, #FF7A2F)'
+                        ? '#FF702E'
                         : 'rgba(255,255,255,0.06)',
-                      boxShadow: isSelected ? '0 2px 12px rgba(255,92,0,0.4)' : 'none',
+                      boxShadow: isSelected ? '0 2px 12px rgba(255,112,46,0.3)' : 'none',
                     }}>
                     {key === 'standard'
-                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />
-                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-muted-foreground'}`} />}
+                      ? <Zap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#9CA3AF]'}`} />
+                      : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#9CA3AF]'}`} />}
                   </div>
                   <div>
                     <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-foreground'}`}>{cfg.label}</div>
-                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>{cfg.leverage} leverage</div>
+                    <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-[#9CA3AF]'}`}>{cfg.leverage} leverage</div>
                   </div>
                 </div>
                 {isSelected && (
                   <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #FF5C00, #FF7A2F)', boxShadow: '0 2px 12px rgba(255,92,0,0.4)' }}>
+                    style={{ background: '#FF702E', boxShadow: '0 2px 8px rgba(255,112,46,0.4)' }}>
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
@@ -306,9 +305,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <div className="space-y-2">
                 {cfg.features.map(f => (
                   <div key={f.text} className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-emerald-400' : 'bg-red-400'}`}
-                      style={{ boxShadow: f.ok ? '0 0 8px rgba(52,211,153,0.5)' : 'none' }} />
-                    <span className={`text-xs ${f.ok ? 'text-foreground' : 'text-muted-foreground'}`}>{f.text}</span>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}
+                      style={{ boxShadow: f.ok ? '0 0 8px rgba(16,185,129,0.4)' : 'none' }} />
+                    <span className={`text-xs ${f.ok ? 'text-white' : 'text-[#9CA3AF]'}`}>{f.text}</span>
                   </div>
                 ))}
               </div>
