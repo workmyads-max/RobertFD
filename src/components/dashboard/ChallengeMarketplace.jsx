@@ -172,6 +172,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Challenge type toggle */}
       <div className="mb-8 sm:mb-10">
+        <div className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest mb-4">Challenge Type</div>
         <div className="flex rounded-2xl p-1.5 flex-wrap gap-2 sm:flex-nowrap"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
@@ -184,20 +185,20 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={t.id}
                 onClick={() => { setChallengeType(t.id); setSelected(null); }}
-                className={`relative flex-1 px-6 sm:px-7 py-4 rounded-xl text-left transition-all duration-200 min-w-[140px] sm:min-w-[180px] ${
+                className={`relative flex-1 px-5 sm:px-6 py-3.5 rounded-xl text-left transition-all duration-200 min-w-[130px] sm:min-w-[170px] ${
                   isSelected ? 'text-white' : 'text-[#A0A0A0] hover:text-white'
                 }`}
                 style={isSelected ? {
                   background: '#FF6B2C',
                   boxShadow: '0 4px 16px rgba(255,107,44,0.35)',
                 } : {}}>
-                <div className="flex items-center gap-2.5 mb-1.5">
-                  <span className="text-lg">{t.icon}</span>
-                  <div className="text-base sm:text-lg font-bold">{t.label}</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{t.icon}</span>
+                  <div className="text-sm sm:text-base font-bold">{t.label}</div>
                 </div>
-                <div className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/75' : 'text-[#A0A0A0]'}`}>{t.desc}</div>
+                <div className={`text-[9px] sm:text-xs ${isSelected ? 'text-white/75' : 'text-[#A0A0A0]'}`}>{t.desc}</div>
                 {t.id === 'instant_light' && (
-                  <span className="absolute -top-2 -right-2 px-2.5 py-1 rounded-md text-[9px] font-bold"
+                  <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-md text-[8px] font-bold"
                     style={{ background: '#00E676', color: '#000000' }}>
                     -50%
                   </span>
@@ -209,7 +210,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Platform selector */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-8 sm:mb-10">
         <div className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest mb-4">Trading Platform</div>
         <div className="flex flex-wrap gap-3">
           {PLATFORMS.map(p => {
@@ -218,40 +219,40 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               <button
                 key={p.id}
                 onClick={() => setPlatform(p.id)}
-                className="group relative flex items-center gap-5 px-6 py-5 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
+                className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] w-full sm:w-auto"
                 style={{
                   background: 'rgba(255,255,255,0.02)',
                   border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
                   boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.2)' : 'none',
                 }}>
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
                     src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
                     alt="MetaTrader 5"
-                    className="w-14 h-14 object-contain transition-transform group-hover:scale-105"
+                    className="w-12 h-12 object-contain transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
-                  <div className="flex items-center gap-2.5 mb-1">
-                    <div className="text-base font-bold text-white tracking-tight">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="text-sm font-bold text-white tracking-tight">
                       {p.label}
                     </div>
                     {isSelected && (
-                      <span className="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                      <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-wider"
                         style={{ background: '#FF6B2C', color: '#ffffff' }}>
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-[#A0A0A0]">
+                  <div className="text-[10px] text-[#A0A0A0]">
                     {p.desc}
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: '#FF6B2C', boxShadow: '0 2px 12px rgba(255,107,44,0.4)' }}>
-                    <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                    style={{ background: '#FF6B2C', boxShadow: '0 2px 8px rgba(255,107,44,0.4)' }}>
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </div>
                 )}
               </button>
@@ -261,7 +262,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {/* Account type */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-8 sm:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mb-10 sm:mb-12">
         {Object.entries(ACCOUNT_TYPES).map(([key, cfg]) => {
           const isSelected = accountType === key;
           return (
@@ -270,15 +271,15 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
               onClick={() => setAccountType(key)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-6 text-left transition-all duration-300"
+              className="rounded-2xl p-5 text-left transition-all duration-300"
               style={{
                 background: 'rgba(255,255,255,0.02)',
                 border: `1.5px solid ${isSelected ? '#FF6B2C' : 'rgba(255,255,255,0.06)'}`,
                 boxShadow: isSelected ? '0 4px 20px rgba(255,107,44,0.15)' : 'none',
               }}>
-              <div className="flex items-start justify-between mb-5">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
                       background: isSelected
                         ? '#FF6B2C'
@@ -290,22 +291,22 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                       : <Shield className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#A0A0A0]'}`} />}
                   </div>
                   <div>
-                    <div className={`text-base font-bold ${isSelected ? 'text-white' : 'text-white'}`}>{cfg.label}</div>
+                    <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white'}`}>{cfg.label}</div>
                     <div className={`text-[10px] font-mono ${isSelected ? 'text-white/70' : 'text-[#A0A0A0]'}`}>{cfg.leverage} leverage</div>
                   </div>
                 </div>
                 {isSelected && (
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#FF6B2C', boxShadow: '0 2px 12px rgba(255,107,44,0.4)' }}>
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: '#FF6B2C', boxShadow: '0 2px 8px rgba(255,107,44,0.4)' }}>
+                    <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                   </div>
                 )}
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {cfg.features.map(f => (
-                  <div key={f.text} className="flex items-center gap-2.5">
+                  <div key={f.text} className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.ok ? 'bg-[#00E676]' : 'bg-[#FF4444]'}`}
-                      style={{ boxShadow: f.ok ? '0 0 8px rgba(0,230,118,0.5)' : 'none' }} />
+                      style={{ boxShadow: f.ok ? '0 0 6px rgba(0,230,118,0.5)' : 'none' }} />
                     <span className={`text-xs ${f.ok ? 'text-white' : 'text-[#A0A0A0]'}`}>{f.text}</span>
                   </div>
                 ))}
