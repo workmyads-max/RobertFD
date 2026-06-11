@@ -640,45 +640,69 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
+  const [error, setError] = useState(null);
 
+  // All hooks must be called unconditionally at the top
   useEffect(() => {
-    const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
-      if (event.type === 'update' || event.type === 'create') {
-        queryClient.setQueryData(['challenge-accounts'], (old = []) =>
-          event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
-        );
-      }
-    });
-    return unsub;
+    try {
+      const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
+        if (event.type === 'update' || event.type === 'create') {
+          queryClient.setQueryData(['challenge-accounts'], (old = []) =>
+            event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
+          );
+        }
+      });
+      return unsub;
+    } catch (err) {
+      console.error('Subscription error:', err);
+    }
   }, [queryClient]);
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading, error: accountsError } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
     refetchInterval: 5000, staleTime: 3000,
   });
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
+  const activeAccounts = accounts?.filter(a => ['active', 'funded', 'passed'].includes(a.status)) || [];
   const account = selectedAccount
-    ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
+    ? (accounts?.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: tradeRecords = [] } = useQuery({
+  const { data: tradeRecords = [], error: tradeError } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account?.account_id }),
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
   });
 
-  const { data: livePositionsData } = useQuery({
+  const { data: livePositionsData, error: positionsError } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
-      return res?.data?.positions || [];
+      try {
+        const res = await base44.functions.invoke('getLivePositions', { account_id: account?.account_id });
+        return res?.data?.positions || [];
+      } catch (err) {
+        console.error('Failed to fetch live positions:', err);
+        return [];
+      }
     },
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
   });
+
+  // Error handling after all hooks
+  if (accountsError) {
+    console.error('Failed to load accounts:', accountsError);
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="text-xl font-bold text-red-400 mb-4">Failed to load accounts</div>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary rounded-lg text-sm font-bold">Reload</button>
+      </div>
+    );
+  }
+
+
 
   const livePositions = livePositionsData || [];
   const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);

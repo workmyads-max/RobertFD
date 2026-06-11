@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 
-import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Target, DollarSign } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -31,9 +31,8 @@ function buildChartData(trades, accountSize) {
   return data;
 }
 
-function CurrentResultsChart({ account, trades }) {
+export default function CurrentResultsChart({ account, trades }) {
   const [showObjectives, setShowObjectives] = useState(true);
-  const [pnlMode, setPnlMode] = useState('absolute'); // 'absolute' | 'percentage'
 
   const accountSize = account?.account_size || 100000;
   const balance = account?.balance || accountSize;
@@ -78,14 +77,7 @@ function CurrentResultsChart({ account, trades }) {
             >
               {showObjectives ? 'On' : 'Off'}
             </button>
-            <select
-              value={pnlMode}
-              onChange={(e) => setPnlMode(e.target.value)}
-              className="h-7 px-2 rounded-lg text-[10px] font-semibold bg-white/5 text-white/40 border border-white/10 focus:outline-none focus:border-primary/30"
-            >
-              <option value="absolute">Absolute</option>
-              <option value="percentage">Percentage</option>
-            </select>
+
           </div>
         </div>
       </div>
@@ -174,5 +166,3 @@ function CurrentResultsChart({ account, trades }) {
     </div>
   );
 }
-
-export default CurrentResultsChart;
