@@ -13,6 +13,9 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
   const firstName = displayName.split(' ')[0];
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const [avatarError, setAvatarError] = React.useState(false);
+  const avatarUrl = user?.avatar_url || user?.profile_photo_url;
+  const showAvatar = avatarUrl && !avatarError;
 
   const { data: socialSettings = [] } = useQuery({
     queryKey: ['social-media-settings'],
@@ -84,14 +87,19 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
               <div
                 className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center text-lg sm:text-2xl font-bold text-white overflow-hidden"
                 style={{
-                  background: (user?.avatar_url || user?.profile_photo_url)
+                  background: showAvatar
                     ? 'transparent'
                     : 'linear-gradient(145deg, rgba(255,92,0,0.22) 0%, rgba(255,92,0,0.08) 100%)',
                   border: '2px solid rgba(255,92,0,0.3)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                 }}>
-                {user?.avatar_url || user?.profile_photo_url ? (
-                  <img src={user.avatar_url || user.profile_photo_url} alt={displayName} className="w-full h-full object-cover" />
+                {showAvatar ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={displayName} 
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
                 ) : (
                   <span className="font-semibold tracking-wide" style={{ color: 'rgba(255,140,60,0.9)' }}>{initials}</span>
                 )}
@@ -113,7 +121,7 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
             <div className="flex-1 min-w-0 pt-0.5">
               <p className="text-[8px] sm:text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-1">{greeting}</p>
 
-              <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white leading-tight tracking-tight mb-2 break-words">
+              <h1 className="text-sm sm:text-xl md:text-2xl font-bold text-white leading-tight tracking-tight mb-2 break-words">
                 Welcome back,{' '}
                 <span style={{
                   background: 'linear-gradient(90deg, #FF6B1A, #FF9A3D)',

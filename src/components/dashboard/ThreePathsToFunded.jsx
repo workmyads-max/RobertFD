@@ -76,9 +76,9 @@ export default function ThreePathsToFunded({ onNavigate }) {
   const [expandedCard, setExpandedCard] = useState(null);
 
   return (
-    <div className="rounded-3xl overflow-hidden mt-8" style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="rounded-3xl overflow-hidden mt-6 sm:mt-8" style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-3 sm:px-8 py-6 sm:py-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-3 sm:px-6 py-6 sm:py-10">
         {CHALLENGE_PATHS.map((path) => {
           const Icon = path.icon;
           const isExpanded = expandedCard === path.id;

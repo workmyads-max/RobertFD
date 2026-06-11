@@ -23,9 +23,8 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
       transition={{ delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.98 }}
-      className="flex-shrink-0 p-5 rounded-2xl text-left transition-all relative overflow-hidden"
+      className="flex-shrink-0 p-4 sm:p-5 rounded-2xl text-left transition-all relative overflow-hidden w-[200px] sm:w-[220px]"
       style={{
-        minWidth: '220px',
         background: isSelected
           ? 'linear-gradient(145deg, rgba(25,12,4,0.98), rgba(30,14,4,0.95))'
           : 'linear-gradient(145deg, rgba(8,14,28,0.95), rgba(10,18,38,0.9))',
@@ -61,8 +60,8 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
       </div>
 
       <div className="mb-4">
-        <div className="text-xl font-bold text-white tracking-tight">${size.toLocaleString()}</div>
-        <div className="text-[10px] text-white/25 font-mono capitalize mt-0.5">{account.status}</div>
+        <div className="text-lg sm:text-xl font-bold text-white tracking-tight break-words">${size.toLocaleString()}</div>
+        <div className="text-[9px] sm:text-[10px] text-white/25 font-mono capitalize mt-0.5 break-words">{account.status}</div>
       </div>
 
       {/* Mini progress bar */}
@@ -110,7 +109,7 @@ export default function AccountSwitcher({ accounts, selectedId, onSelect, onNavi
   if (!accounts?.length) return null;
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 -mb-2 scrollbar-hide"
+    <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mb-2 scrollbar-hide px-1"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       {accounts.map((account, i) => (
         <AccountCard

@@ -1,74 +1,90 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { TrendingUp, TrendingDown, Activity, Shield, DollarSign, BarChart3 } from 'lucide-react';
 
-function StatRow({ label, value, accent, i }) {
+function StatCard({ Icon, label, value, subValue, color = '#FF5C00', delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.04 }}
-      className="flex items-center justify-between py-3 border-b border-white/[0.04] last:border-0"
+      transition={{ delay, duration: 0.3 }}
+      className="p-3 sm:p-4 rounded-xl"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.06)',
+      }}
     >
-      <span className="text-[11px] text-white/35 font-mono uppercase tracking-wider">{label}</span>
-      <span className="text-[12px] font-semibold font-mono" style={{ color: accent || 'rgba(255,255,255,0.75)' }}>{value}</span>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
+          <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color }} />
+        </div>
+        <span className="text-[9px] sm:text-[10px] font-mono text-white/40 uppercase tracking-wide truncate">{label}</span>
+      </div>
+      <div className="text-base sm:text-lg font-bold text-white tracking-tight break-words">{value}</div>
+      {subValue && (
+        <div className="text-[9px] sm:text-[10px] text-white/30 font-mono mt-0.5 truncate">{subValue}</div>
+      )}
     </motion.div>
   );
 }
 
-export default function StatsGrid({ account, stats }) {
-  if (!stats) return null;
+export default function StatsGrid({ stats, account }) {
+  if (!stats || !account) return null;
 
-  const { avgProfit, avgLoss, profitFactor, expectancy, rrr, lots, wins, losses, totalTrades, openPositions } = stats;
-
-  const performanceRows = [
-    { label: 'Profit Factor', value: isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞', accent: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
-    { label: 'Expectancy', value: `$${expectancy.toFixed(2)}`, accent: expectancy >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Avg RR Ratio', value: `1:${rrr.toFixed(2)}`, accent: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
-    { label: 'Avg Win', value: `$${avgProfit.toFixed(2)}`, accent: '#10b981' },
-    { label: 'Avg Loss', value: `$${avgLoss.toFixed(2)}`, accent: '#ef4444' },
-    { label: 'Total Lots', value: lots.toFixed(2), accent: 'rgba(255,255,255,0.6)' },
-    { label: 'Winning Trades', value: wins, accent: '#10b981' },
-    { label: 'Losing Trades', value: losses, accent: '#ef4444' },
-    { label: 'Total Trades', value: totalTrades, accent: 'rgba(255,255,255,0.6)' },
-    { label: 'Open Positions', value: openPositions, accent: '#FF5C00' },
-  ];
-
-  const accountRows = [
-    { label: 'Account Size', value: `$${(account?.account_size || 0).toLocaleString()}` },
-    { label: 'Challenge Type', value: account?.challenge_type === 'instant' ? 'Instant Funding' : 'Two-Step' },
-    { label: 'Account Model', value: account?.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase', value: (account?.phase || 'phase1').replace('phase', 'Phase ') },
-    { label: 'Leverage', value: account?.leverage || '1:100' },
-    { label: 'Platform', value: account?.platform || 'xTrading' },
-    { label: 'Server', value: account?.server || 'rf-live.com' },
-    { label: 'Account ID', value: account?.account_id || account?.id?.slice(0, 8) || 'N/A', accent: '#FF5C00' },
-    { label: 'Status', value: (account?.status || 'active').toUpperCase(), accent: account?.status === 'active' ? '#10b981' : '#f59e0b' },
-    { label: 'Login', value: account?.login_credentials || '—' },
-  ];
+  const isProfit = stats.pnl >= 0;
+  const isDailyProfit = stats.dailyPnl >= 0;
 
   return (
-    <div className="grid md:grid-cols-2 gap-3">
-      {/* Performance stats */}
-      <div className="rounded-2xl px-5 py-4"
-        style={{
-          background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
-          border: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(24px)',
-        }}>
-        <h3 className="text-sm font-semibold text-white mb-3 tracking-tight">Performance Metrics</h3>
-        {performanceRows.map((r, i) => <StatRow key={r.label} {...r} i={i} />)}
-      </div>
-
-      {/* Account details */}
-      <div className="rounded-2xl px-5 py-4"
-        style={{
-          background: 'linear-gradient(145deg, rgba(8,14,28,0.98), rgba(10,18,38,0.95))',
-          border: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(24px)',
-        }}>
-        <h3 className="text-sm font-semibold text-white mb-3 tracking-tight">Account Details</h3>
-        {accountRows.map((r, i) => <StatRow key={r.label} {...r} i={i} />)}
-      </div>
+    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <StatCard
+        icon={DollarSign}
+        label="Balance"
+        value={`$${stats.balance.toLocaleString()}`}
+        subValue={`Equity: $${stats.equity.toLocaleString()}`}
+        color="#FF5C00"
+        delay={0.05}
+      />
+      <StatCard
+        icon={isProfit ? TrendingUp : TrendingDown}
+        label="Total P&L"
+        value={`${isProfit ? '+' : ''}$${stats.pnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+        subValue={`${isProfit ? '+' : ''}${((stats.pnl / stats.size) * 100).toFixed(2)}%`}
+        color={isProfit ? '#10b981' : '#ef4444'}
+        delay={0.1}
+      />
+      <StatCard
+        icon={Activity}
+        label="Daily P&L"
+        value={`${isDailyProfit ? '+' : ''}$${stats.dailyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+        subValue={isDailyProfit ? 'Profitable today' : 'Loss today'}
+        color={isDailyProfit ? '#10b981' : '#ef4444'}
+        delay={0.15}
+      />
+      <StatCard
+        icon={BarChart3}
+        label="Win Rate"
+        value={`${stats.winRate.toFixed(1)}%`}
+        subValue={`${stats.wins}W / ${stats.losses}L`}
+        color="#3b82f6"
+        delay={0.2}
+      />
+      <StatCard
+        icon={Shield}
+        label="Daily DD"
+        value={`${stats.dailyDDPct.toFixed(2)}%`}
+        subValue={`Max: ${stats.maxDDPct.toFixed(2)}%`}
+        color="#f59e0b"
+        delay={0.25}
+      />
+      <StatCard
+        icon={TrendingUp}
+        label="Profit Target"
+        value={`${stats.profitTargetPct.toFixed(2)}%`}
+        subValue={stats.profitTargetPct >= 10 ? 'Target reached' : 'In progress'}
+        color="#8b5cf6"
+        delay={0.3}
+      />
     </div>
   );
 }

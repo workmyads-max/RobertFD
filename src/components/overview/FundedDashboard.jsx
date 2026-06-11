@@ -62,6 +62,43 @@ function AccountInfoStrip({ account }) {
   );
 }
 
+// ─── Stats Cards Grid ─────────────────────────────────────────────────────────
+function StatsCards({ stats }) {
+  if (!stats) return null;
+  
+  const statCards = [
+    { label: 'Balance', value: `$${stats.balance.toLocaleString()}`, color: '#FF5C00' },
+    { label: 'Equity', value: `$${stats.equity.toLocaleString()}`, color: '#10b981' },
+    { label: 'P&L', value: `${stats.pnl >= 0 ? '+' : ''}$${stats.pnl.toLocaleString()}`, color: stats.pnl >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Daily P&L', value: `${stats.dailyPnl >= 0 ? '+' : ''}$${stats.dailyPnl.toLocaleString()}`, color: stats.dailyPnl >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, color: '#3b82f6' },
+    { label: 'Trades', value: stats.totalTrades.toString(), color: '#8b5cf6' },
+    { label: 'Daily DD', value: `${stats.dailyDDPct.toFixed(2)}%`, color: stats.dailyDDPct > 4 ? '#ef4444' : '#f59e0b' },
+    { label: 'Max DD', value: `${stats.maxDDPct.toFixed(2)}%`, color: stats.maxDDPct > 8 ? '#ef4444' : '#f59e0b' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      {statCards.map((stat) => (
+        <motion.div
+          key={stat.label}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-3 sm:p-4 rounded-xl border glass"
+          style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+        >
+          <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
+            {stat.label}
+          </div>
+          <div className="text-lg sm:text-xl font-bold" style={{ color: stat.color }}>
+            {stat.value}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -95,12 +132,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account
+  // Auto-select first account - ensure it runs on all screen sizes
   useEffect(() => {
     if (activeAccounts.length > 0 && !selectedAccount) {
       setSelectedAccount(activeAccounts[0]);
     }
-  }, [activeAccounts.length]);
+  }, [activeAccounts.length, selectedAccount]);
 
   // Keep selected in sync with refetches
   useEffect(() => {
@@ -164,7 +201,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
@@ -200,6 +237,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
+
+                  {/* Stats Cards */}
+                  <StatsCards stats={stats} />
 
                   {/* Three Paths to Funded Trading */}
                   <ThreePathsToFunded onNavigate={onNavigate} />
