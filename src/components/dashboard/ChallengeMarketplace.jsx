@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
 import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
-import ChallengeCard from './ChallengeCard';
+import ChallengeCard from '../ui/challenge-card';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
@@ -347,8 +347,6 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 >
                   <ChallengeCard
                     plan={plan}
-                    badge={badge}
-                    badgeColor={badgeColor}
                     onSelect={() => handleSelect(plan)}
                   />
                 </motion.div>
