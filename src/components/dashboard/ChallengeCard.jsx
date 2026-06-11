@@ -18,9 +18,6 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
     return plan.type === 'instant_light' ? 'text-accent' : 'text-orange-400';
   };
 
-  const buttonColor = plan.type === 'instant_light' ? '#CCFF00' : '#CCFF00';
-  const buttonTextColor = 'text-black';
-
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -104,13 +101,13 @@ export default function ChallengeCard({ plan, onSelect, badge, badgeColor }) {
         </div>
       </div>
 
-      {/* CTA Button - Lime Green */}
+      {/* CTA Button - LIME GREEN */}
       <button
         onClick={() => onSelect(plan)}
         className="w-full py-5 rounded-xl font-bold text-black transition-all hover:scale-[1.02] active:scale-[0.98] relative z-10 mb-4"
         style={{ 
-          background: '#CCFF00 !important', 
-          color: '#000000 !important', 
+          background: '#CCFF00', 
+          color: '#000000', 
           boxShadow: '0 4px 16px rgba(204,255,0,0.3)',
           fontSize: '15px',
           fontWeight: '800'
