@@ -14,38 +14,36 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: order_id, orderData, and email' }, { status: 400 });
     }
     
-    // Create order in Base44 using service role (so it works for guest checkout)
+    // Create order in Base44 using service role (works for both guest and logged-in users)
     try {
-      const existingOrder = await base44.asServiceRole.entities.Order.filter({ order_id }).catch(() => []);
-      if (existingOrder.length === 0) {
-        await base44.asServiceRole.entities.Order.create({
-          order_id,
-          challenge_type: orderData.challenge_type || 'two-step',
-          account_type: orderData.account_type || 'standard',
-          account_size: orderData.account_size || 0,
-          platform: orderData.platform || 'xtrading',
-          leverage: orderData.leverage || '1:100',
-          price: orderData.price || 0,
-          payment_method: orderData.payment_method || 'manual',
-          payment_gateway: orderData.payment_gateway || 'manual',
-          payment_address: orderData.payment_address || '',
-          payment_status: ['usdt_trc20', 'bitcoin'].includes(orderData.payment_method) ? 'awaiting_confirmation' : (orderData.payment_status || 'pending'),
-          full_name: orderData.full_name || '',
-          username: orderData.username || '',
-          email: email,
-          phone: orderData.phone || '',
-          country: orderData.country || '',
-          city: orderData.city || '',
-          address: orderData.address || '',
-          postal_code: orderData.postal_code || '',
-          coupon_code: orderData.coupon_code || '',
-          discount_amount: orderData.discount_amount || 0,
-          affiliate_code: orderData.affiliate_code || '',
-        });
-        console.log(`Order ${order_id} created in Base44 for ${email}`);
-      }
+      const base44Order = await base44.asServiceRole.entities.Order.create({
+        order_id: order_id,
+        challenge_type: orderData.challenge_type || 'two-step',
+        account_type: orderData.account_type || 'standard',
+        account_size: orderData.account_size || 0,
+        platform: orderData.platform || 'xtrading',
+        leverage: orderData.leverage || '1:100',
+        price: orderData.price || 0,
+        payment_method: orderData.payment_method || 'manual',
+        payment_gateway: orderData.payment_gateway || 'manual',
+        payment_address: orderData.payment_address || '',
+        payment_status: ['usdt_trc20', 'bitcoin'].includes(orderData.payment_method) ? 'awaiting_confirmation' : 'pending',
+        full_name: orderData.full_name || '',
+        username: orderData.username || '',
+        email: email,
+        phone: orderData.phone || '',
+        country: orderData.country || '',
+        city: orderData.city || '',
+        address: orderData.address || '',
+        postal_code: orderData.postal_code || '',
+        coupon_code: orderData.coupon_code || '',
+        discount_amount: orderData.discount_amount || 0,
+        affiliate_code: orderData.affiliate_code || '',
+      });
+      console.log('Base44 order created:', base44Order.order_id);
     } catch (e) {
-      console.error('Failed to create order in Base44:', e.message);
+      console.error('Failed to create Base44 order:', e.message);
+      // Continue anyway - Supabase is the primary store
     }
     
     // Initialize Supabase client
