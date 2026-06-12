@@ -4,13 +4,49 @@ import { createClient } from 'npm:@supabase/supabase-js@2.106.0';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
     
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    // Allow service role or authenticated users
+    const user = await base44.auth.me().catch(() => null);
     const { order_id, email, orderData } = await req.json();
+    
+    // Require either authenticated user OR valid order data
+    if (!order_id || !orderData || !email) {
+      return Response.json({ error: 'Missing required fields: order_id, orderData, and email' }, { status: 400 });
+    }
+    
+    // Create order in Base44 using service role (so it works for guest checkout)
+    try {
+      const existingOrder = await base44.asServiceRole.entities.Order.filter({ order_id }).catch(() => []);
+      if (existingOrder.length === 0) {
+        await base44.asServiceRole.entities.Order.create({
+          order_id,
+          challenge_type: orderData.challenge_type || 'two-step',
+          account_type: orderData.account_type || 'standard',
+          account_size: orderData.account_size || 0,
+          platform: orderData.platform || 'xtrading',
+          leverage: orderData.leverage || '1:100',
+          price: orderData.price || 0,
+          payment_method: orderData.payment_method || 'manual',
+          payment_gateway: orderData.payment_gateway || 'manual',
+          payment_address: orderData.payment_address || '',
+          payment_status: ['usdt_trc20', 'bitcoin'].includes(orderData.payment_method) ? 'awaiting_confirmation' : (orderData.payment_status || 'pending'),
+          full_name: orderData.full_name || '',
+          username: orderData.username || '',
+          email: email,
+          phone: orderData.phone || '',
+          country: orderData.country || '',
+          city: orderData.city || '',
+          address: orderData.address || '',
+          postal_code: orderData.postal_code || '',
+          coupon_code: orderData.coupon_code || '',
+          discount_amount: orderData.discount_amount || 0,
+          affiliate_code: orderData.affiliate_code || '',
+        });
+        console.log(`Order ${order_id} created in Base44 for ${email}`);
+      }
+    } catch (e) {
+      console.error('Failed to create order in Base44:', e.message);
+    }
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -26,12 +62,12 @@ Deno.serve(async (req) => {
     if (email) {
       const { error: profileError } = await supabase.from('profiles').upsert({
         email,
-        full_name: orderData.full_name,
-        phone: orderData.phone,
-        country: orderData.country,
-        city: orderData.city,
-        address: orderData.address,
-        postal_code: orderData.postal_code,
+        full_name: orderData.full_name || '',
+        phone: orderData.phone || '',
+        country: orderData.country || '',
+        city: orderData.city || '',
+        address: orderData.address || '',
+        postal_code: orderData.postal_code || '',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
       
@@ -44,29 +80,29 @@ Deno.serve(async (req) => {
     const { error: orderError } = await supabase.from('orders').insert({
       order_id,
       user_email: email,
-      challenge_type: orderData.challenge_type,
+      challenge_type: orderData.challenge_type || 'two-step',
       account_type: orderData.account_type || 'standard',
-      account_size: orderData.account_size,
+      account_size: orderData.account_size || 0,
       platform: orderData.platform || 'xtrading',
       leverage: orderData.leverage || '1:100',
-      price: orderData.price,
+      price: orderData.price || 0,
       payment_method: orderData.payment_method || 'manual',
       payment_gateway: orderData.payment_gateway || 'manual',
-      payment_address: orderData.payment_address,
+      payment_address: orderData.payment_address || '',
       payment_status: ['usdt_trc20', 'bitcoin'].includes(orderData.payment_method)
-        ? 'awaiting_confirmation'  // Manual crypto always needs admin review
+        ? 'awaiting_confirmation'
         : (orderData.payment_status || 'pending'),
-      full_name: orderData.full_name,
-      username: orderData.username,
+      full_name: orderData.full_name || '',
+      username: orderData.username || '',
       email: email,
-      phone: orderData.phone,
-      country: orderData.country,
-      city: orderData.city,
-      address: orderData.address,
-      postal_code: orderData.postal_code,
-      coupon_code: orderData.coupon_code,
+      phone: orderData.phone || '',
+      country: orderData.country || '',
+      city: orderData.city || '',
+      address: orderData.address || '',
+      postal_code: orderData.postal_code || '',
+      coupon_code: orderData.coupon_code || '',
       discount_amount: orderData.discount_amount || 0,
-      affiliate_code: orderData.affiliate_code,
+      affiliate_code: orderData.affiliate_code || '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });

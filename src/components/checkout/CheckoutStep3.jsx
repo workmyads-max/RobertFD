@@ -50,32 +50,41 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      // Create order in Base44
-      const orderData = {
-        ...order,
-        order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
-        payment_address: wallet?.address || '',
-        payment_status: 'pending',
-      };
-      const base44Order = await base44.entities.Order.create(orderData);
+      const orderId = `RF-${Date.now().toString(36).toUpperCase()}`;
       
-      // Sync to Supabase
+      // Try to create order in Base44 (will fail for guest users)
+      let base44Order = null;
+      try {
+        base44Order = await base44.entities.Order.create({
+          ...order,
+          order_id: orderId,
+          payment_address: wallet?.address || '',
+          payment_status: 'pending',
+        });
+      } catch (e) {
+        console.log('Base44 order creation failed (likely guest user), using Supabase only:', e.message);
+      }
+      
+      // Sync to Supabase (works for both guest and logged-in users)
       const syncResponse = await base44.functions.invoke('createManualOrderInSupabase', {
-        order_id: base44Order.order_id,
+        order_id: orderId,
         email: order.email,
         orderData: {
           ...order,
           payment_address: wallet?.address || '',
-          payment_status: 'pending',
+          payment_status: ['usdt_trc20', 'bitcoin'].includes(order.payment_method) ? 'awaiting_confirmation' : 'pending',
         },
       });
       
       console.log('Supabase sync result:', syncResponse.data);
       
-      return base44Order;
+      return { order_id: orderId, ...order };
     },
     onSuccess: (data) => {
       updateOrder({ order_id: data.order_id });
+    },
+    onError: (error) => {
+      console.error('Failed to create order:', error);
     },
   });
 
