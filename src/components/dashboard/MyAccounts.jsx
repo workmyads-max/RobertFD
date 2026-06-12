@@ -249,6 +249,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const [isCreating, setIsCreating] = useState(false);
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
@@ -256,6 +257,47 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
     enabled: !!user,
     refetchInterval: 15000,
   });
+
+  const handleCreateMT5Account = async () => {
+    if (!user?.email) return;
+    setIsCreating(true);
+    try {
+      // Create a new MT5 account directly
+      const response = await base44.functions.invoke('provisionMT5Account', {
+        user_email: user.email,
+        account_size: 10000,
+        challenge_type: 'two-step',
+        account_type: 'standard',
+        leverage: '1:100',
+        rule_snapshot: {
+          daily_dd_limit: 5,
+          max_dd_limit: 10,
+          trailing_dd: false,
+          phase1_target: 10,
+          phase2_target: 5,
+          min_trading_days: 4,
+          leverage: '1:100',
+          max_lots: 20,
+          weekend_holding: false,
+          overnight_holding: false,
+          news_trading: false,
+          hedging: false,
+          profit_split: 80,
+        },
+      });
+      
+      if (response.data?.success) {
+        // Refresh accounts list
+        window.location.reload();
+      } else {
+        alert('Failed to create account: ' + (response.data?.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error creating account: ' + error.message);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const { data: myOrders = [] } = useQuery({
     queryKey: ['my-orders', user?.email],
@@ -347,11 +389,19 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
               <div className="text-4xl mb-4">📊</div>
               <div className="text-lg font-black text-foreground mb-2">No Accounts Yet</div>
               <div className="text-sm text-muted-foreground mb-6">Purchase a challenge to get your funded trading account</div>
-              <button onClick={onStartChallenge}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
-                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }}>
-                <Plus className="w-4 h-4" /> Browse Challenges
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onClick={onStartChallenge}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all"
+                  style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 16px rgba(255,92,0,0.3)' }}>
+                  <Plus className="w-4 h-4" /> Browse Challenges
+                </button>
+                <button onClick={handleCreateMT5Account} disabled={isCreating}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 4px 16px rgba(255,255,255,0.1)' }}>
+                  {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                  {isCreating ? 'Creating...' : 'Create Demo MT5 Account'}
+                </button>
+              </div>
             </div>
           )}
         </div>
