@@ -890,9 +890,10 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 30000, // 30 seconds
-    staleTime: 120000, // 2 minutes
+    refetchInterval: false, // NEVER auto-refresh
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Load account from sessionStorage immediately when accounts are available
@@ -921,9 +922,10 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return res.data;
     },
     enabled: !!account?.account_id && account.platform === 'mt5',
-    refetchInterval: 30000, // 30 seconds - background refresh only
-    staleTime: 60000, // 1 minute - don't refetch if data is fresh
-    refetchOnWindowFocus: false, // Don't refetch when switching tabs
+    refetchInterval: false, // NEVER auto-refresh
+    staleTime: Infinity, // Data stays fresh forever
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const tradeRecords = liveData?.trades || [];
