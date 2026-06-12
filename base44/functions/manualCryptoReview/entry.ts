@@ -3,7 +3,7 @@
  * Handles admin actions: approve, reject, request_info, mark_fraud, suspend_user
  * All actions require admin auth + create audit logs + enforce no fake provisioning
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 async function logActivity(sr, data) {
   await sr.entities.StaffActivityLog.create({
