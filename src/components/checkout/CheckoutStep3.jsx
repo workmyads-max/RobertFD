@@ -50,22 +50,18 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      const orderId = `RF-${Date.now().toString(36).toUpperCase()}`;
-      
-      // Try to create order in Base44 (will fail for guest users)
-      let base44Order = null;
-      try {
-        base44Order = await base44.entities.Order.create({
-          ...order,
-          order_id: orderId,
-          payment_address: wallet?.address || '',
-          payment_status: 'pending',
-        });
-      } catch (e) {
-        console.log('Base44 order creation failed (likely guest user), using Supabase only:', e.message);
+      // Check if order already exists (prevent duplicates)
+      if (order.order_id) {
+        const existingOrders = await base44.entities.Order.filter({ order_id: order.order_id });
+        if (existingOrders && existingOrders.length > 0) {
+          console.log('Order already exists:', order.order_id);
+          return { order_id: order.order_id, ...order, exists: true };
+        }
       }
       
-      // Sync to Supabase (works for both guest and logged-in users)
+      const orderId = order.order_id || `RF-${Date.now().toString(36).toUpperCase()}`;
+      
+      // Sync to Supabase only (Base44 order created by backend function)
       const syncResponse = await base44.functions.invoke('createManualOrderInSupabase', {
         order_id: orderId,
         email: order.email,
@@ -78,10 +74,12 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
       
       console.log('Supabase sync result:', syncResponse.data);
       
-      return { order_id: orderId, ...order };
+      return { order_id: orderId, ...order, exists: false };
     },
     onSuccess: (data) => {
-      updateOrder({ order_id: data.order_id });
+      if (!data.exists && !order.order_id) {
+        updateOrder({ order_id: data.order_id });
+      }
     },
     onError: (error) => {
       console.error('Failed to create order:', error);
@@ -122,7 +120,10 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
   });
 
   useEffect(() => {
-    createOrderMutation.mutate();
+    // Only create order if not already created
+    if (!order.order_id) {
+      createOrderMutation.mutate();
+    }
   }, []);
 
   useEffect(() => {

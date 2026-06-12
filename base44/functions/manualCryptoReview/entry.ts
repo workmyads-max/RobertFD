@@ -105,7 +105,9 @@ Deno.serve(async (req) => {
       if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
       if (order.payment_status === 'confirmed') {
-        return Response.json({ error: 'Payment already confirmed' }, { status: 409 });
+        // Already confirmed - return success (idempotent)
+        console.log(`[ManualCrypto] Order ${order_id} already confirmed`);
+        return Response.json({ success: true, message: 'Payment already confirmed', already_confirmed: true });
       }
 
       await sr.entities.Order.update(order.id, {

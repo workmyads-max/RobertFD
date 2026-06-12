@@ -61,21 +61,6 @@ export default function Checkout() {
       </div>
     );
   }
-  const [order, setOrder] = useState({
-    challenge_type: 'two-step',
-    account_type: 'standard',
-    account_size: 100000,
-    platform: 'xtrading',
-    leverage: '1:100',
-    price: 0,
-    discount_amount: 0,
-    final_price: 0,
-    payment_method: '',
-    full_name: '', username: '', email: '', phone: '',
-    country: '', city: '', address: '', postal_code: '',
-    coupon_code: '',
-    rule_snapshot: null,
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
