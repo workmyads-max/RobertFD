@@ -50,6 +50,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
   const createOrderMutation = useMutation({
     mutationFn: async () => {
       try {
+        console.log('[CheckoutStep3] Starting order creation...');
         const orderData = {
           order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
           user_email: order.email,
@@ -73,29 +74,40 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
           discount_amount: order.discount_amount || 0,
           rule_snapshot: order.rule_snapshot || null,
         };
+        console.log('[CheckoutStep3] Order data:', JSON.stringify(orderData, null, 2));
         const created = await base44.entities.Order.create(orderData);
+        console.log('[CheckoutStep3] Order created successfully:', created.order_id);
         
         // Sync to Supabase
-        await base44.functions.invoke('createManualOrderInSupabase', {
-          order_id: created.order_id,
-          email: order.email,
-          orderData: { ...orderData },
-        });
+        try {
+          await base44.functions.invoke('createManualOrderInSupabase', {
+            order_id: created.order_id,
+            email: order.email,
+            orderData: { ...orderData },
+          });
+          console.log('[CheckoutStep3] Supabase sync completed');
+        } catch (syncError) {
+          console.error('[CheckoutStep3] Supabase sync failed:', syncError.message);
+          // Continue even if sync fails - order was created in Base44
+        }
         
         return created;
       } catch (error) {
-        console.error('Order creation failed:', error);
+        console.error('[CheckoutStep3] Order creation FAILED:', error);
+        alert(`ORDER CREATION FAILED: ${error.message}\n\nPlease check:\n1. Are you logged in?\n2. Is your email valid?\n3. Try refreshing the page`);
         throw error;
       }
     },
     onSuccess: (data) => {
+      console.log('[CheckoutStep3] Order creation SUCCESS:', data.order_id);
       setCreatedOrderId(data.order_id);
       setOrderCreated(true);
       updateOrder({ order_id: data.order_id });
     },
     onError: (error) => {
+      console.error('[CheckoutStep3] Order creation ERROR:', error);
       setOrderCreationError(error.message);
-      console.error('Order creation error:', error);
+      alert(`Order creation error: ${error.message}`);
     },
   });
 

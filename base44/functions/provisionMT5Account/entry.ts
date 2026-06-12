@@ -11,6 +11,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const TRITECH_BASE = 'https://mt5-apiapp-c0fvbqekh5hrb5h8.canadacentral-01.azurewebsites.net';
 
+function getAccountSizeLabel(size) {
+  if (size >= 1000000) return `${size/1000000}M`;
+  if (size >= 1000) return `${size/1000}K`;
+  return `${size}`;
+}
+
+function getPhaseLabel(phase) {
+  if (phase === 'phase1') return 'Phase 1';
+  if (phase === 'phase2') return 'Phase 2';
+  if (phase === 'funded') return 'Funded';
+  return 'Phase 1';
+}
+
 function genPassword() {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lower = 'abcdefghijkmnpqrstuvwxyz';
@@ -52,6 +65,11 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
 
   console.log(`[Tritech/useradd] Creating account: email=${userEmail}, group=${groupName}, leverage=${leverageInt}`);
 
+  const phase = comment?.includes('phase2') ? 'phase2' : comment?.includes('funded') ? 'funded' : 'phase1';
+  const sizeLabel = getAccountSizeLabel(accountSize);
+  const phaseLabel = getPhaseLabel(phase);
+  const accountName = `${sizeLabel} ${phaseLabel} XFunded Trader`;
+
   const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
   method: 'POST',
   headers: mt5Headers(apiKey),
@@ -59,7 +77,7 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
     Login: 0,            // 0 = auto-assign by MT5 server
     MasterPassword: masterPassword,
     InvestorPassword: investorPassword,
-    Name: userEmail.split('@')[0],
+    Name: accountName,
     Email: userEmail,
     Group: groupName,
     Leverage: leverageInt,
