@@ -914,32 +914,27 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-overview', account?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
-    enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
-  });
-
-  const { data: livePositionsData } = useQuery({
-    queryKey: ['live-positions-overview', account?.account_id],
+  const { data: liveData, isLoading: liveLoading } = useQuery({
+    queryKey: ['mt5-live-sync', account?.account_id],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
-      return res?.data?.positions || [];
+      const res = await base44.functions.invoke('syncMT5AccountLive', { account_id: account.account_id });
+      return res.data;
     },
-    enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
+    enabled: !!account?.account_id && account.platform === 'mt5',
+    refetchInterval: 3000,
+    staleTime: 2000,
   });
 
-  const livePositions = livePositionsData || [];
+  const tradeRecords = liveData?.trades || [];
+  const livePositions = liveData?.positions || [];
+  const liveEquity = liveData?.account?.equity || account?.equity || account?.balance || account?.account_size || 0;
   const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
-  const liveEquity = livePositions.length > 0
-    ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
-    : (account?.equity || account?.balance || account?.account_size || 0);
+  const calculatedStats = useAccountStats(account, tradeRecords);
+  const stats = liveData?.stats || calculatedStats;
 
-  const stats = useAccountStats(account, tradeRecords);
 
-  if (isLoading) return (
+
+  if (isLoading || (liveLoading && account?.platform === 'mt5')) return (
     <div className="flex items-center justify-center py-24">
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
@@ -974,22 +969,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
             </span>
           )}
         </div>
-        <button
-          onClick={async () => {
-            try {
-              const res = await base44.functions.invoke('scheduledMTSync', {});
-              alert(`✅ Sync complete! Synced ${res.data?.synced || 0} accounts, ${res.data?.total_new_trades || 0} new trades.`);
-              queryClient.invalidateQueries({ queryKey: ['challenge-accounts'] });
-              queryClient.invalidateQueries({ queryKey: ['trade-records-overview'] });
-            } catch (e) {
-              alert(`❌ Sync failed: ${e.message}`);
-            }
-          }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:bg-white/5"
-          style={{ border: '1px solid rgba(255,92,0,0.3)', color: '#FF5C00' }}
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Sync Now
-        </button>
+        {account?.platform === 'mt5' && (
+          <div className="flex items-center gap-2 text-[10px] font-semibold px-3 py-1.5 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Live MT5 Sync
+          </div>
+        )}
       </div>
 
       {/* Account selector */}
