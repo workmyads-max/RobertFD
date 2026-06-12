@@ -45,7 +45,7 @@ function getGroupName(challenge_type, account_type, account_size, phase) {
   return Deno.env.get('MT5_PHASE1_GROUP') || 'HAR\\MAN15\\contest.1';
 }
 
-async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, leverage, accountSize, comment }) {
+async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, leverage, accountSize, comment, managerLogin, managerPassword }) {
   const masterPassword = genPassword();
   const investorPassword = genPassword();
   const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : (leverage || 100);
@@ -85,32 +85,48 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
   throw new Error(`useradd returned no Login. Response: ${responseText}`);
   }
 
-  // Set initial account balance via depositwithbal
-  // Note: Tritech returns errorcode 10009 (async processing) — this is expected and not an error.
-  // The balance will be applied by the MT5 server within seconds to minutes.
-  // We retry up to 3 times with a 2-second delay to maximize success rate.
-  if (accountSize > 0) {
-    // CONFIRMED via swagger MTDealData schema: correct field is "profit" (not "Balance")
-    // type=2 = DEAL_TYPE_BALANCE in MT5. depositwithbal returns currenctBalance confirming instant apply.
-    const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+  // Set initial account balance using MT5 Manager API (synchronous, immediate)
+  if (accountSize > 0 && managerLogin && managerPassword) {
+    console.log(`[MT5 Manager] Adding balance ${accountSize} to login ${mtLogin} using manager access`);
+    
+    // Use manager API to add balance immediately via trade transaction
+    const managerRes = await fetch(`${apiBase}/api/v1/manager/trade`, {
       method: 'POST',
-      headers: mt5Headers(apiKey),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'ApiKey': apiKey,
+      },
       body: JSON.stringify({
+        ManagerLogin: parseInt(managerLogin),
+        ManagerPassword: managerPassword,
         Login: parseInt(mtLogin),
-        profit: accountSize,
-        type: 2,
-        comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+        Type: 1, // MT5_TRADE_DEPOSIT
+        Volume: 0,
+        Price: accountSize,
+        Comment: `Initial deposit — ${comment || 'Challenge Account'}`,
         apikey: apiKey,
       }),
     });
-    const depText = await depRes.text();
-    const depData = depText ? JSON.parse(depText) : {};
-    const errCode = depData?.data?.errorcode;
-    const confirmedBalance = depData?.data?.currenctBalance;
-    console.log(`[Tritech/depositwithbal] Login ${mtLogin}: HTTP ${depRes.status}, errorcode=${errCode}, confirmedBalance=${confirmedBalance}`);
-    if (!depRes.ok || (errCode !== 0 && errCode !== 10009)) {
-      console.error(`[Tritech/depositwithbal] Deposit failed for login ${mtLogin}: ${depText.slice(0, 300)}`);
+    
+    const managerText = await managerRes.text();
+    const managerData = managerText ? JSON.parse(managerText) : {};
+    const errCode = managerData?.data?.errorcode;
+    const retCode = managerData?.data?.retcode;
+    
+    console.log(`[MT5 Manager] Trade deposit result: HTTP ${managerRes.status}, errorcode=${errCode}, retcode=${retCode}`);
+    
+    if (!managerRes.ok || (errCode && errCode !== 0) || (retCode && retCode !== 0)) {
+      console.error(`[MT5 Manager] Trade deposit failed: ${managerText.slice(0, 300)}`);
+      // Fallback to depositwithbal if manager API fails
+      console.log('[MT5 Manager] Falling back to depositwithbal...');
+      await fallbackDeposit(apiBase, apiKey, mtLogin, accountSize, comment);
+    } else {
+      console.log(`[MT5 Manager] ✅ Balance added successfully via manager API`);
     }
+  } else if (accountSize > 0) {
+    // No manager credentials, use fallback
+    await fallbackDeposit(apiBase, apiKey, mtLogin, accountSize, comment);
   }
 
   const serverName = Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server';
@@ -120,6 +136,26 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
     mt_server: serverName,
     mt_group: groupName,
   };
+}
+
+async function fallbackDeposit(apiBase, apiKey, mtLogin, accountSize, comment) {
+  console.log(`[Fallback] Using depositwithbal for login ${mtLogin}`);
+  const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
+    method: 'POST',
+    headers: mt5Headers(apiKey),
+    body: JSON.stringify({
+      Login: parseInt(mtLogin),
+      profit: accountSize,
+      type: 2,
+      comment: `Initial deposit — ${comment || 'Challenge Account'}`,
+      apikey: apiKey,
+    }),
+  });
+  const depText = await depRes.text();
+  const depData = depText ? JSON.parse(depText) : {};
+  const errCode = depData?.data?.errorcode;
+  const confirmedBalance = depData?.data?.currenctBalance;
+  console.log(`[Fallback] depositwithbal result: errorcode=${errCode}, confirmedBalance=${confirmedBalance}`);
 }
 
 Deno.serve(async (req) => {
@@ -161,6 +197,8 @@ Deno.serve(async (req) => {
     const provider = providers[0];
     const apiBase = provider?.server_url || Deno.env.get('MT5_API_BASE_URL') || TRITECH_BASE;
     const apiKey = provider?.api_key || Deno.env.get('MT5_API_KEY');
+    const managerLogin = provider?.manager_login;
+    const managerPassword = provider?.manager_password;
 
     if (!apiKey) {
       return Response.json({ success: false, error: 'MT5 API key not configured. Add credentials in Admin > Platform API.' }, { status: 500 });
@@ -169,13 +207,15 @@ Deno.serve(async (req) => {
     const leverageStr = leverage || '1:100';
     const groupName = getGroupName(challenge_type, account_type || 'standard', account_size, 'phase1');
 
-    // Create real MT5 account via Tritech API
+    // Create real MT5 account via Tritech API with manager credentials for immediate balance
     const mt5Creds = await tritechCreateAccount(apiBase, apiKey, {
       userEmail: user_email,
       groupName,
       leverage: leverageStr,
       accountSize: account_size,
       comment: `${challenge_type || 'challenge'} ${account_size}`,
+      managerLogin,
+      managerPassword,
     });
 
     // Persist to ChallengeAccount
