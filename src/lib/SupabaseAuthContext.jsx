@@ -67,7 +67,28 @@ export const SupabaseAuthProvider = ({ children }) => {
 
   // Expose userEmail directly from context for reliable mobile access
   const userEmail = user?.email ?? session?.user?.email ?? null;
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
+  
+  // Check 1: JWT metadata (works on desktop)
+  const isAdminFromJWT = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
+  
+  // Check 2: Profile table role (works on mobile)
+  const [profileRole, setProfileRole] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!user?.email) return;
+    // Fetch role from profiles table directly
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('email', user.email)
+      .single()
+      .then(({ data }) => {
+        if (data?.role) setProfileRole(data.role);
+      })
+      .catch(() => {});
+  }, [user?.email]);
+
+  const isAdmin = isAdminFromJWT || profileRole === 'admin';
   const userId = user?.id;
 
   return (
@@ -79,6 +100,7 @@ export const SupabaseAuthProvider = ({ children }) => {
       isAdmin,
       userEmail,
       userId,
+      profileRole,
       supabase,
     }}>
       {children}

@@ -4,13 +4,33 @@ import { ShieldCheck, AlertCircle, Clock, Activity, Shield, Wifi, Zap, ArrowUpRi
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { SESSIONS } from '../terminal/terminalConfig';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
   const kycStatus = kyc?.status || 'not_submitted';
   const isVerified = kycStatus === 'approved';
-  const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
+  const { userEmail } = useSupabaseAuth();
+  
+  // Fetch display name from profiles table (works on mobile)
+  const [profileName, setProfileName] = React.useState(null);
+  useEffect(() => {
+    if (!userEmail) return;
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('email', userEmail)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfileName(data.full_name);
+      })
+      .catch(() => {});
+  }, [userEmail]);
+  
+  // Use profile name first, then JWT name, then email username
+  const displayName = profileName || user?.full_name || user?.email?.split('@')[0] || 'Trader';
   const firstName = displayName.split(' ')[0];
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const [avatarError, setAvatarError] = React.useState(false);

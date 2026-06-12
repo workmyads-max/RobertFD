@@ -144,6 +144,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const activeAccounts = accounts.filter(a =>
     ['active', 'passed', 'funded', 'phase2'].includes(a.status)
   );
+
+  console.log('[FundedDashboard] accounts:', accounts.map(a => ({ id: a.id, status: a.status, account_id: a.account_id })));
+  console.log('[FundedDashboard] activeAccounts:', activeAccounts.map(a => ({ id: a.id, status: a.status, account_id: a.account_id })));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
   // Auto-select first account when accounts load

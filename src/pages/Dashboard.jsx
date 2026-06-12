@@ -103,7 +103,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const { user, isAdmin: isUserAdmin } = useCustomAuth();
+  const { user, isAdmin } = useCustomAuth();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -118,8 +118,6 @@ export default function Dashboard() {
 
   // Disabled popup notifications for now
   const popupNotification = null;
-
-  const isAdmin = isUserAdmin || user?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
