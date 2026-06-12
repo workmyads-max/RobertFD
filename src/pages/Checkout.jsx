@@ -12,12 +12,55 @@ import { base44 } from '@/api/base44Client';
 const STEPS = ['Payment Method', 'Payment', 'Confirmation'];
 
 export default function Checkout() {
+  // All hooks at top level - React rules require consistent order
+  const [redirecting, setRedirecting] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [step, setStep] = useState(1);
+  const [order, setOrder] = useState({
+    challenge_type: 'two-step',
+    account_type: 'standard',
+    account_size: 100000,
+    platform: 'xtrading',
+    leverage: '1:100',
+    price: 0,
+    discount_amount: 0,
+    final_price: 0,
+    payment_method: '',
+    full_name: '', username: '', email: '', phone: '',
+    country: '', city: '', address: '', postal_code: '',
+    coupon_code: '',
+    rule_snapshot: null,
+  });
+
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user && user.email) {
+          // Logged in - redirect to dashboard checkout
+          const params = new URLSearchParams(window.location.search);
+          window.location.href = '/dashboard?tab=checkout&' + params.toString();
+          return;
+        }
+      } catch (e) {
+        // Not logged in - continue with guest checkout (will redirect to login)
+      }
+      setRedirecting(false);
+    };
+    checkAuthAndRedirect();
+  }, []);
+  
+  if (redirecting) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
     account_type: 'standard',

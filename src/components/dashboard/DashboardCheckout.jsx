@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
-import CheckoutStep1 from '../checkout/CheckoutStep1';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import CheckoutStep2 from '../checkout/CheckoutStep2';
 import CheckoutStep3 from '../checkout/CheckoutStep3';
 import CheckoutStep4 from '../checkout/CheckoutStep4';
 import PlatformSelectStep from '../checkout/PlatformSelectStep';
 import CouponInput from '../checkout/CouponInput';
 
-const STEPS = ['Platform', 'Personal Info', 'Payment Method', 'Payment', 'Confirmation'];
+// ONLY logged-in users can purchase - guest checkout is disabled
+const STEPS = ['Platform', 'Payment Method', 'Payment', 'Confirmation'];
 
 export default function DashboardCheckout({ initialOrder, onBack, onComplete }) {
   const [step, setStep] = useState(1);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
     account_type: 'standard',
@@ -27,6 +29,45 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
     country: '', city: '', address: '', postal_code: '',
     ...initialOrder,
   });
+
+  useEffect(() => {
+    // Check authentication - redirect to login if not logged in
+    const checkAuth = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user || !user.email) {
+          // Not authenticated - redirect to login
+          window.location.href = '/login?redirect=/dashboard?tab=buy-challenge';
+          return;
+        }
+        // Auto-populate user data
+        setOrder(o => ({
+          ...o,
+          full_name: user.full_name || o.full_name,
+          email: user.email || o.email,
+          username: user.full_name?.toLowerCase().replace(/\s+/g, '_') || o.username,
+          phone: user.phone || o.phone,
+          country: user.country || o.country,
+          city: user.city || o.city,
+          address: user.address || o.address,
+          postal_code: user.postal_code || o.postal_code,
+        }));
+        setLoading(false);
+      } catch (e) {
+        // Not authenticated - redirect to login
+        window.location.href = '/login?redirect=/dashboard?tab=buy-challenge';
+      }
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
 
@@ -94,10 +135,9 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
           {step === 1 && <PlatformSelectStep order={order} updateOrder={updateOrder} onNext={() => setStep(2)} />}
-          {step === 2 && <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={() => setStep(3)} />}
-          {step === 3 && <CheckoutStep2 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
-          {step === 4 && <CheckoutStep3 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
-          {step === 5 && <CheckoutStep4 order={order} onGoToDashboard={onComplete || onBack} />}
+          {step === 2 && <CheckoutStep2 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(3)} onBack={() => setStep(2)} isLoggedIn={true} />}
+          {step === 3 && <CheckoutStep3 order={{...order, final_price: order.final_price || order.price}} updateOrder={updateOrder} onNext={() => setStep(4)} onBack={() => setStep(3)} isLoggedIn={true} />}
+          {step === 4 && <CheckoutStep4 order={order} onGoToDashboard={onComplete || onBack} />}
         </motion.div>
       </AnimatePresence>
     </div>
