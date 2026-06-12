@@ -152,10 +152,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   // Auto-select first account when accounts load
   useEffect(() => {
     if (activeAccounts.length > 0 && !selectedAccount) {
-      const defaultAccount = activeAccounts.find(a =>
-        ['active', 'passed', 'funded'].includes(a.status)
-      ) || activeAccounts[0];
-      setSelectedAccount(defaultAccount);
+      setSelectedAccount(activeAccounts[0])
     }
   }, [activeAccounts.length]);
 
