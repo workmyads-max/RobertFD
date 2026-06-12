@@ -25,12 +25,19 @@ function genPassword() {
   return p.split('').sort(() => Math.random() - 0.5).join('');
 }
 
-function mt5Headers(apiKey) {
-  return {
+function mt5Headers(apiKey, managerLogin, managerPassword) {
+  const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
     'ApiKey': apiKey,
   };
+  // Use manager authentication if provided (required for useradd)
+  if (managerLogin && managerPassword) {
+    headers['ManagerLogin'] = managerLogin;
+    headers['ManagerPassword'] = managerPassword;
+  } else {
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  }
+  return headers;
 }
 
 function getGroupName(challenge_type, account_type, account_size, phase) {
@@ -45,7 +52,7 @@ function getGroupName(challenge_type, account_type, account_size, phase) {
   return Deno.env.get('MT5_PHASE1_GROUP') || 'HAR\\MAN15\\contest.1';
 }
 
-async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, leverage, accountSize, comment }) {
+async function tritechCreateAccount(apiBase, apiKey, managerLogin, managerPassword, { userEmail, groupName, leverage, accountSize, comment }) {
   const masterPassword = genPassword();
   const investorPassword = genPassword();
   const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : (leverage || 100);
@@ -54,7 +61,7 @@ async function tritechCreateAccount(apiBase, apiKey, { userEmail, groupName, lev
 
   const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
   method: 'POST',
-  headers: mt5Headers(apiKey),
+  headers: mt5Headers(apiKey, managerLogin, managerPassword),
   body: JSON.stringify({
     Login: 0,            // 0 = auto-assign by MT5 server
     MasterPassword: masterPassword,
@@ -168,9 +175,13 @@ Deno.serve(async (req) => {
 
     const leverageStr = leverage || '1:100';
     const groupName = getGroupName(challenge_type, account_type || 'standard', account_size, 'phase1');
+    
+    // Get manager credentials from TradingPlatformProvider
+    const managerLogin = provider?.manager_login || '5025';
+    const managerPassword = provider?.manager_password || Deno.env.get('MT5_MANAGER_PASSWORD');
 
     // Create real MT5 account via Tritech API
-    const mt5Creds = await tritechCreateAccount(apiBase, apiKey, {
+    const mt5Creds = await tritechCreateAccount(apiBase, apiKey, managerLogin, managerPassword, {
       userEmail: user_email,
       groupName,
       leverage: leverageStr,
