@@ -56,7 +56,14 @@ Deno.serve(async (req) => {
     const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : 100;
     const groupName = 'HAR\\MAN15\\contest.1';
 
-    console.log(`[provisionMT5Account] Creating account: email=${user_email}, group=${groupName}, leverage=${leverageInt}`);
+    // Build custom account name: "100k Phase1 XFunded Trader 2 Step"
+    const sizeK = account_size >= 1000000 ? `${account_size / 1000000}M` : `${account_size / 1000}K`;
+    const phaseName = 'Phase1';
+    const brandName = 'XFunded Trader';
+    const stepName = challenge_type === 'two-step' ? '2 Step' : challenge_type === 'instant' ? 'Instant' : 'Light';
+    const accountName = `${sizeK} ${phaseName} ${brandName} ${stepName}`;
+
+    console.log(`[provisionMT5Account] Creating account: name="${accountName}", email=${user_email}, group=${groupName}, leverage=${leverageInt}`);
 
     // Create MT5 account with manager authentication
     const headers = {
@@ -73,7 +80,7 @@ Deno.serve(async (req) => {
         Login: 0,
         MasterPassword: masterPassword,
         InvestorPassword: investorPassword,
-        Name: user_email.split('@')[0],
+        Name: accountName,
         Email: user_email,
         Group: groupName,
         Leverage: leverageInt,
