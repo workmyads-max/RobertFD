@@ -781,25 +781,8 @@ function OpenTradeRow({ trade, index }) {
 
 const PAGE_SIZE = 5;
 function OpenTradesPanel({ account, initialPositions = [] }) {
-  const [positions, setPositions] = useState(initialPositions);
-  const [loading, setLoading] = useState(initialPositions.length === 0);
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    if (initialPositions.length > 0) { setPositions(initialPositions); setLoading(false); }
-  }, [initialPositions]);
-
-  const fetchPositions = async () => {
-    if (!account?.account_id) return;
-    try {
-      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
-      setPositions(res?.data?.positions || []);
-      setLoading(false);
-    } catch (e) { setLoading(false); }
-  };
-
-  useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 5000); return () => clearInterval(iv); }, [account?.account_id]);
-
+  const positions = initialPositions || [];
   const totalPages = Math.ceil(positions.length / PAGE_SIZE);
   const paginated = positions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPnl = positions.reduce((s, p) => s + (p.pnl || 0), 0);
@@ -822,16 +805,11 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
             </span>
           )}
         </div>
-        <button onClick={fetchPositions} disabled={loading}
-          className="p-2 rounded-lg hover:bg-white/5 text-white/35 hover:text-white/60 transition-colors">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <span className="text-[10px] text-white/30 font-mono">{positions.length} position{positions.length !== 1 ? 's' : ''}</span>
       </CardHeader>
 
-      {loading && positions.length === 0 ? (
-        <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
-      ) : positions.length === 0 ? (
-        <div className="py-10 text-center text-sm text-white/30">No open positions — auto-refreshes every 5s</div>
+      {positions.length === 0 ? (
+        <div className="py-10 text-center text-sm text-white/30">No open positions</div>
       ) : (
         <>
           <div className="overflow-x-auto">

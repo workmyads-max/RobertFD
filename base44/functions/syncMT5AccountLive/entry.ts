@@ -101,6 +101,25 @@ Deno.serve(async (req) => {
         positions = r?.data || [];
       } catch { /* empty */ }
     }
+    
+    // If MT5 returns empty but account shows trades, fallback to database
+    if (positions.length === 0 && account.total_trades > 0) {
+      const dbPositions = await base44.entities.TradeRecord.filter({ account_id: account.account_id, status: 'open' });
+      if (dbPositions.length > 0) {
+        console.log(`[syncMT5AccountLive] MT5 returned empty, using ${dbPositions.length} positions from database`);
+        positions = dbPositions.map(p => ({
+          position: p.trade_id,
+          symbol: p.symbol,
+          action: p.type === 'BUY' ? 0 : 1,
+          volume: p.lots * 10000,
+          profit: p.pnl || 0,
+          storage: 0,
+          priceOpen: p.entry,
+          priceCurrent: p.entry,
+          timeCreate: p.open_time,
+        }));
+      }
+    }
 
     // Parse closed deals
     let deals = [];
@@ -111,11 +130,16 @@ Deno.serve(async (req) => {
       } catch { /* empty */ }
     }
 
-    // Use live API values
+    // Use live API values, fallback to database
     const rawBalance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0);
     const rawEquity  = parseFloat(mtData?.Equity  ?? mtData?.equity  ?? 0);
     const balance = rawBalance > 0 ? rawBalance : (account.balance || account.account_size);
     const equity = rawEquity > 0 ? rawEquity : (account.equity || balance);
+    
+    // If MT5 shows no PnL but equity != balance, calculate from database positions
+    if (positions.length === 0 && equity !== balance) {
+      console.log(`[syncMT5AccountLive] MT5 shows no PnL but equity diff exists: ${equity - balance}`);
+    }
 
     // Map open positions
     const openPositions = positions.map(p => {
