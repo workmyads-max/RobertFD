@@ -888,6 +888,13 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     }
   }, [accounts]);
 
+  // Refetch live data when account changes
+  useEffect(() => {
+    if (account?.account_id && account.platform === 'mt5') {
+      queryClient.invalidateQueries({ queryKey: ['mt5-live-sync', account.account_id] });
+    }
+  }, [account?.account_id, account?.platform]);
+
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
@@ -900,10 +907,10 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       return res.data;
     },
     enabled: !!account?.account_id && account.platform === 'mt5',
-    refetchInterval: false, // NEVER auto-refresh
-    staleTime: Infinity, // Data stays fresh forever
+    refetchInterval: false,
+    staleTime: 0, // Always refetch when account changes
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true, // Refetch when switching accounts
   });
 
   const tradeRecords = liveData?.trades || [];
@@ -952,8 +959,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         </div>
         {account?.platform === 'mt5' && (
           <div className="flex items-center gap-2 text-[10px] font-semibold px-3 py-1.5 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Live MT5 Sync
+            <div className={`w-2 h-2 rounded-full bg-emerald-400 ${liveLoading ? 'animate-pulse' : 'animate-pulse'}`} />
+            {liveLoading ? 'Syncing MT5...' : 'Live MT5 Sync'}
           </div>
         )}
       </div>
