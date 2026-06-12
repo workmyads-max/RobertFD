@@ -781,8 +781,25 @@ function OpenTradeRow({ trade, index }) {
 
 const PAGE_SIZE = 5;
 function OpenTradesPanel({ account, initialPositions = [] }) {
+  const [positions, setPositions] = useState(initialPositions);
+  const [loading, setLoading] = useState(initialPositions.length === 0);
   const [page, setPage] = useState(1);
-  const positions = initialPositions || [];
+
+  useEffect(() => {
+    if (initialPositions.length > 0) { setPositions(initialPositions); setLoading(false); }
+  }, [initialPositions]);
+
+  const fetchPositions = async () => {
+    if (!account?.account_id) return;
+    try {
+      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
+      setPositions(res?.data?.positions || []);
+      setLoading(false);
+    } catch (e) { setLoading(false); }
+  };
+
+  useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 5000); return () => clearInterval(iv); }, [account?.account_id]);
+
   const totalPages = Math.ceil(positions.length / PAGE_SIZE);
   const paginated = positions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPnl = positions.reduce((s, p) => s + (p.pnl || 0), 0);
@@ -805,11 +822,16 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
             </span>
           )}
         </div>
-        <span className="text-[10px] text-white/30 font-mono">{positions.length} position{positions.length !== 1 ? 's' : ''}</span>
+        <button onClick={fetchPositions} disabled={loading}
+          className="p-2 rounded-lg hover:bg-white/5 text-white/35 hover:text-white/60 transition-colors">
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </CardHeader>
 
-      {positions.length === 0 ? (
-        <div className="py-10 text-center text-sm text-white/30">No open positions</div>
+      {loading && positions.length === 0 ? (
+        <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+      ) : positions.length === 0 ? (
+        <div className="py-10 text-center text-sm text-white/30">No open positions — auto-refreshes every 5s</div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -860,6 +882,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
         queryClient.setQueryData(['challenge-accounts'], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
+        if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
       }
     });
     return unsub;
@@ -868,10 +891,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: false, // NEVER auto-refresh
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchInterval: 5000,
+    staleTime: 60000, // Increase stale time to reduce refetches
   });
 
   // Load account from sessionStorage immediately when accounts are available
@@ -888,41 +909,37 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     }
   }, [accounts]);
 
-  // Refetch live data when account changes
-  useEffect(() => {
-    if (account?.account_id && account.platform === 'mt5') {
-      queryClient.invalidateQueries({ queryKey: ['mt5-live-sync', account.account_id] });
-    }
-  }, [account?.account_id, account?.platform]);
-
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: liveData, isLoading: liveLoading } = useQuery({
-    queryKey: ['mt5-live-sync', account?.account_id],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('syncMT5AccountLive', { account_id: account.account_id });
-      return res.data;
-    },
-    enabled: !!account?.account_id && account.platform === 'mt5',
-    refetchInterval: false,
-    staleTime: 0, // Always refetch when account changes
-    refetchOnWindowFocus: false,
-    refetchOnMount: true, // Refetch when switching accounts
+  const { data: tradeRecords = [] } = useQuery({
+    queryKey: ['trade-records-overview', account?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    enabled: !!account?.account_id,
+    refetchInterval: 5000, staleTime: 3000,
   });
 
-  const tradeRecords = liveData?.trades || [];
-  const livePositions = liveData?.positions || [];
-  const liveEquity = liveData?.account?.equity || account?.equity || account?.balance || account?.account_size || 0;
+  const { data: livePositionsData } = useQuery({
+    queryKey: ['live-positions-overview', account?.account_id],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
+      return res?.data?.positions || [];
+    },
+    enabled: !!account?.account_id,
+    refetchInterval: 5000, staleTime: 3000,
+  });
+
+  const livePositions = livePositionsData || [];
   const liveUnrealizedPnl = livePositions.reduce((s, p) => s + (p.pnl || 0), 0);
-  const calculatedStats = useAccountStats(account, tradeRecords);
-  const stats = liveData?.stats || calculatedStats;
+  const liveEquity = livePositions.length > 0
+    ? (account?.balance || account?.account_size || 0) + liveUnrealizedPnl
+    : (account?.equity || account?.balance || account?.account_size || 0);
 
+  const stats = useAccountStats(account, tradeRecords);
 
-
-  if (isLoading || (liveLoading && account?.platform === 'mt5')) return (
+  if (isLoading) return (
     <div className="flex items-center justify-center py-24">
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
@@ -957,12 +974,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
             </span>
           )}
         </div>
-        {account?.platform === 'mt5' && (
-          <div className="flex items-center gap-2 text-[10px] font-semibold px-3 py-1.5 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
-            <div className={`w-2 h-2 rounded-full bg-emerald-400 ${liveLoading ? 'animate-pulse' : 'animate-pulse'}`} />
-            {liveLoading ? 'Syncing MT5...' : 'Live MT5 Sync'}
-          </div>
-        )}
       </div>
 
       {/* Account selector */}

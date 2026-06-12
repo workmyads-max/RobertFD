@@ -140,16 +140,16 @@ function PerformanceMetrics({ stats }) {
   const { avgProfit, avgLoss, profitFactor, expectancy, rrr, lots, wins, losses, totalTrades, openPositions } = stats;
 
   const rows = [
-    { label: 'Profit Factor', value: isFinite(profitFactor || 0) && (profitFactor || 0) > 0 ? (profitFactor || 0).toFixed(2) : '0.00', color: (profitFactor || 0) >= 1.5 ? '#10b981' : (profitFactor || 0) >= 1 ? '#f59e0b' : '#ef4444' },
-    { label: 'Expectancy', value: `$${(expectancy || 0).toFixed(2)}`, color: (expectancy || 0) >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Avg RR Ratio', value: `1:${(rrr || 0).toFixed(2)}`, color: (rrr || 0) >= 1.5 ? '#10b981' : '#FF5C00' },
-    { label: 'Avg Win', value: `$${(avgProfit || 0).toFixed(2)}`, color: '#10b981' },
-    { label: 'Avg Loss', value: `$${(avgLoss || 0).toFixed(2)}`, color: '#ef4444' },
-    { label: 'Total Lots', value: (lots || 0).toFixed(2), color: 'rgba(255,255,255,0.6)' },
-    { label: 'Winning Trades', value: wins || 0, color: '#10b981' },
-    { label: 'Losing Trades', value: losses || 0, color: '#ef4444' },
-    { label: 'Total Trades', value: totalTrades || 0, color: 'rgba(255,255,255,0.7)' },
-    { label: 'Open Positions', value: openPositions || 0, color: '#FF5C00' },
+    { label: 'Profit Factor', value: isFinite(profitFactor) && profitFactor > 0 ? profitFactor.toFixed(2) : '0.00', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
+    { label: 'Expectancy', value: `$${expectancy.toFixed(2)}`, color: expectancy >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Avg RR Ratio', value: `1:${rrr.toFixed(2)}`, color: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
+    { label: 'Avg Win', value: `$${avgProfit.toFixed(2)}`, color: '#10b981' },
+    { label: 'Avg Loss', value: `$${avgLoss.toFixed(2)}`, color: '#ef4444' },
+    { label: 'Total Lots', value: lots.toFixed(2), color: 'rgba(255,255,255,0.6)' },
+    { label: 'Winning Trades', value: wins, color: '#10b981' },
+    { label: 'Losing Trades', value: losses, color: '#ef4444' },
+    { label: 'Total Trades', value: totalTrades, color: 'rgba(255,255,255,0.7)' },
+    { label: 'Open Positions', value: openPositions, color: '#FF5C00' },
   ];
 
   return (
