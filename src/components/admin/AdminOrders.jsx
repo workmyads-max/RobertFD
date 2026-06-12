@@ -37,7 +37,14 @@ async function confirmAndProvisionAccount(order) {
 
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
 const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#a78bfa', confirmed: '#10b981', failed: '#ef4444' };
-const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting Confirmation', confirmed: 'Confirmed', failed: 'Failed' };
+const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting', confirmed: 'Confirmed', failed: 'Rejected' };
+const FILTER_TABS = [
+  { id: 'all', label: 'All' },
+  { id: 'pending', label: 'Pending' },
+  { id: 'awaiting_confirmation', label: 'Awaiting' },
+  { id: 'confirmed', label: 'Confirmed' },
+  { id: 'failed', label: 'Rejected' },
+];
 
 export default function AdminOrders() {
   const [search, setSearch] = useState('');
@@ -130,15 +137,15 @@ export default function AdminOrders() {
             className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/50" />
         </div>
         <div className="flex gap-2">
-          {['all', ...STATUS_OPTS].map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className="px-3 py-2 rounded-xl text-xs font-mono capitalize transition-all"
+          {FILTER_TABS.map(tab => (
+            <button key={tab.id} onClick={() => setFilter(tab.id)}
+              className="px-3 py-2 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: filter === s ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${filter === s ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                color: filter === s ? '#FF5C00' : 'hsl(var(--muted-foreground))',
+                background: filter === tab.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${filter === tab.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                color: filter === tab.id ? '#FF5C00' : 'hsl(var(--muted-foreground))',
               }}>
-              {s}
+              {tab.label}
             </button>
           ))}
         </div>
