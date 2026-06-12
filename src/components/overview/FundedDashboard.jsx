@@ -249,49 +249,41 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
           </div>
         )}
 
-        {/* Per-account content OR empty state with full sections */}
-        <AnimatePresence mode="wait">
-          {selectedAccount ? (
-            <motion.div key={selectedAccount.id}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-4 sm:space-y-6">
+        {/* Account content - shown when account is selected */}
+        {selectedAccount && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-4 sm:space-y-6">
 
-              {/* Info strip */}
-              <AccountInfoStrip account={selectedAccount} />
+            {/* Info strip */}
+            <AccountInfoStrip account={selectedAccount} />
 
-              {/* Stats Cards */}
-              <StatsCards stats={stats} />
+            {/* Stats Cards */}
+            <StatsCards stats={stats} />
 
-              {/* Three Paths to Funded Trading */}
-              <ThreePathsToFunded onNavigate={onNavigate} />
-              
-              {/* Affiliate Section */}
-              <AffiliateSection onNavigate={onNavigate} />
-              
-              {/* Footer */}
-              <Footer />
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-4 sm:space-y-6">
-              
-              {/* Empty state card */}
-              <EmptyState onStartChallenge={onStartChallenge} />
-              
-              {/* Three Paths to Funded Trading */}
-              <ThreePathsToFunded onNavigate={onNavigate} />
-              
-              {/* Affiliate Section */}
-              <AffiliateSection onNavigate={onNavigate} />
-              
-              {/* Footer */}
-              <Footer />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {/* Three Paths to Funded Trading */}
+            <ThreePathsToFunded onNavigate={onNavigate} />
+            
+            {/* Affiliate Section */}
+            <AffiliateSection onNavigate={onNavigate} />
+            
+            {/* Footer */}
+            <Footer />
+          </motion.div>
+        )}
+
+        {/* Empty state - ONLY when accounts array is truly empty */}
+        {!isLoading && activeAccounts.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="space-y-4 sm:space-y-6">
+            <EmptyState onStartChallenge={onStartChallenge} />
+            <ThreePathsToFunded onNavigate={onNavigate} />
+            <AffiliateSection onNavigate={onNavigate} />
+            <Footer />
+          </motion.div>
+        )}
       </div>
     </div>
   );
