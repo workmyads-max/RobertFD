@@ -4,42 +4,15 @@ import { ShieldCheck, AlertCircle, Clock, Activity, Shield, Wifi, Zap, ArrowUpRi
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { supabase } from '@/lib/supabaseClient';
 import { SESSIONS } from '../terminal/terminalConfig';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
   const kycStatus = kyc?.status || 'not_submitted';
   const isVerified = kycStatus === 'approved';
-  const { userEmail } = useSupabaseAuth();
-  
-  // Fetch display name from profiles table (works on mobile)
-  const [profileName, setProfileName] = React.useState(null);
-  useEffect(() => {
-    if (!userEmail) return;
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('email', userEmail)
-      .single()
-      .then(({ data }) => {
-        if (data?.full_name) setProfileName(data.full_name);
-      })
-      .catch(() => {});
-  }, [userEmail]);
-  
-  // Use profile name first, then JWT name, then email username
-  const displayName = profileName || user?.full_name || user?.email?.split('@')[0] || 'Trader';
+  const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
   const firstName = displayName.split(' ')[0];
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  const [avatarError, setAvatarError] = React.useState(false);
-  const avatarUrl = user?.avatar_url || user?.profile_photo_url;
-  const showAvatar = !!(avatarUrl && !avatarError);
-  
-  // Debug logging for mobile avatar issue
-  console.log('[UnifiedWelcomeHeader] user:', { full_name: user?.full_name, email: user?.email, avatar_url: user?.avatar_url, profile_photo_url: user?.profile_photo_url });
-  console.log('[UnifiedWelcomeHeader] avatar state:', { avatarUrl, showAvatar, initials, displayName });
 
   const { data: socialSettings = [] } = useQuery({
     queryKey: ['social-media-settings'],
@@ -105,47 +78,42 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           
           {/* Left: Avatar + Welcome (2/3 width on desktop) */}
-          <div className="lg:col-span-2 flex items-start gap-3 sm:gap-4">
+          <div className="lg:col-span-2 flex items-start gap-4">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
               <div
-                className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center text-lg sm:text-2xl font-bold text-white overflow-hidden"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold text-white overflow-hidden"
                 style={{
-                  background: showAvatar
+                  background: (user?.avatar_url || user?.profile_photo_url)
                     ? 'transparent'
                     : 'linear-gradient(145deg, rgba(255,92,0,0.22) 0%, rgba(255,92,0,0.08) 100%)',
                   border: '2px solid rgba(255,92,0,0.3)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                 }}>
-                {showAvatar ? (
-                  <img 
-                    src={avatarUrl} 
-                    alt={displayName} 
-                    className="w-full h-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
+                {user?.avatar_url || user?.profile_photo_url ? (
+                  <img src={user.avatar_url || user.profile_photo_url} alt={displayName} className="w-full h-full object-cover" />
                 ) : (
                   <span className="font-semibold tracking-wide" style={{ color: 'rgba(255,140,60,0.9)' }}>{initials}</span>
                 )}
               </div>
               {/* KYC badge */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center"
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center"
                 style={{
                   background: isVerified ? '#059669' : '#d97706',
                   border: '2px solid rgba(14,18,28,1)',
                   boxShadow: isVerified ? '0 0 8px rgba(5,150,105,0.5)' : '0 0 8px rgba(217,119,6,0.5)',
                 }}>
                 {isVerified
-                  ? <ShieldCheck className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                  : <AlertCircle className="w-2 h-2 sm:w-3 sm:h-3 text-white" />}
+                  ? <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                  : <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />}
               </div>
             </div>
 
             {/* Text block */}
             <div className="flex-1 min-w-0 pt-0.5">
-              <p className="text-[8px] sm:text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-1">{greeting}</p>
+              <p className="text-[9px] sm:text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-1">{greeting}</p>
 
-              <h1 className="text-sm sm:text-xl md:text-2xl font-bold text-white leading-tight tracking-tight mb-2 break-words">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight tracking-tight mb-2">
                 Welcome back,{' '}
                 <span style={{
                   background: 'linear-gradient(90deg, #FF6B1A, #FF9A3D)',
@@ -161,19 +129,19 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
               {/* Badges */}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {isVerified ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[8px] sm:text-[10px] font-medium"
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-medium"
                     style={{ background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.2)', color: '#34d399' }}>
-                    <ShieldCheck className="w-2 h-2 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">KYC Verified</span><span className="xs:hidden">Verified</span>
+                    <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">KYC Verified</span><span className="xs:hidden">Verified</span>
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[8px] sm:text-[10px] font-medium"
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-medium"
                     style={{ background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', color: '#fbbf24' }}>
-                    <AlertCircle className="w-2 h-2 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">Verify Identity</span><span className="xs:hidden">Verify</span>
+                    <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">Verify Identity</span><span className="xs:hidden">Verify</span>
                   </div>
                 )}
 
                 {/* Live clock */}
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[8px] sm:text-[10px] font-mono"
+                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-mono"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>
                   {utcStr}
                 </div>
@@ -196,14 +164,14 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
               >
                 {/* Header */}
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#5865F2">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#5865F2">
                       <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.11 18.1.127 18.11a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[10px] sm:text-sm font-bold text-white tracking-tight truncate">Join Our Discord Community</h3>
-                    <p className="text-[8px] sm:text-[10px] text-white/40 leading-relaxed truncate">Connect with traders, share strategies</p>
+                    <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">Join Our Discord Community</h3>
+                    <p className="text-[9px] sm:text-[10px] text-white/40 leading-relaxed truncate">Connect with traders, share strategies</p>
                   </div>
                 </div>
 
@@ -220,26 +188,26 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
                     
                     {/* Left Side: Avatars */}
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="#5865F2">
+                      <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865F2">
                           <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.11 18.1.127 18.11a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                         </svg>
                       </div>
 
-                      <div className="flex -space-x-1 sm:-space-x-1.5">
-                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
-                        <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
+                      <div className="flex -space-x-1.5">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-5 h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-5 h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
+                        <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop&crop=face" alt="Member" className="w-5 h-5 rounded-full border-2 border-[#1E3A8A] object-cover" />
                       </div>
 
                       <div className="flex -space-x-0.5 ml-0.5">
-                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#22C55E] border border-[#1E3A8A]" />
-                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#22C55E] border border-[#1E3A8A]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] border border-[#1E3A8A]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] border border-[#1E3A8A]" />
                       </div>
                     </div>
 
-                    <a href={discordUrl} target="_blank" rel="noopener noreferrer" className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0 min-h-[24px] min-w-[24px]">
-                      <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#2563EB' }} strokeWidth={2.5} />
+                    <a href={discordUrl} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                      <ArrowUpRight className="w-3.5 h-3.5" style={{ color: '#2563EB' }} strokeWidth={2.5} />
                     </a>
                   </div>
                 </motion.div>
@@ -251,16 +219,16 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
 
       {/* Bottom Section - Status Bar */}
       <div className="border-t border-white/[0.06] px-3 py-2.5 sm:px-5 sm:py-3">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Time Section */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 min-h-[20px] min-w-[20px]" 
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0" 
               style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}>
-              <Clock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" style={{ color: '#FF5C00' }} />
+              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#FF5C00' }} />
             </div>
-            <div className="min-w-0">
-              <div className="text-[8px] sm:text-[10px] font-mono text-white/35 truncate">Server Time</div>
-              <div className="text-[10px] sm:text-sm font-bold font-mono truncate" style={{ color: '#FF5C00' }}>{utcStr}</div>
+            <div>
+              <div className="text-[9px] sm:text-[10px] font-mono text-white/35">Server Time</div>
+              <div className="text-xs sm:text-sm font-bold font-mono" style={{ color: '#FF5C00' }}>{utcStr}</div>
             </div>
           </div>
 
@@ -269,11 +237,11 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
 
           {/* Platform Status */}
           <div className="flex items-center gap-1.5">
-            <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0">
+            <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2">
               <div className="absolute inset-0 rounded-full" style={{ background: '#10b981', opacity: 0.3 }} />
               <motion.div className="absolute inset-0 rounded-full" style={{ background: '#10b981' }} animate={{ scale: [1, 1.4, 1], opacity: [1, 0.8, 1] }} transition={{ duration: 2, repeat: Infinity }} />
             </div>
-            <span className="text-[8px] sm:text-[10px] text-emerald-400 font-bold whitespace-nowrap">Platform Online</span>
+            <span className="text-[9px] sm:text-[10px] text-emerald-400 font-bold">Platform Online</span>
           </div>
 
           {/* Divider */}

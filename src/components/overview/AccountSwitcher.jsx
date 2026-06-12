@@ -23,8 +23,9 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
       transition={{ delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.98 }}
-      className="flex-shrink-0 p-4 sm:p-5 rounded-2xl text-left transition-all relative overflow-hidden w-full sm:w-[220px] min-w-[85vw] sm:min-w-0"
+      className="flex-shrink-0 p-5 rounded-2xl text-left transition-all relative overflow-hidden"
       style={{
+        minWidth: '220px',
         background: isSelected
           ? 'linear-gradient(145deg, rgba(25,12,4,0.98), rgba(30,14,4,0.95))'
           : 'linear-gradient(145deg, rgba(8,14,28,0.95), rgba(10,18,38,0.9))',
@@ -60,20 +61,8 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
       </div>
 
       <div className="mb-4">
-        <div className="text-lg sm:text-xl font-bold text-white tracking-tight break-words">${size.toLocaleString()}</div>
-        <div className="flex items-center gap-2 mt-1">
-          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-            account.status === 'active' ? 'text-emerald-400 bg-emerald-400/10' :
-            account.status === 'passed' ? 'text-blue-400 bg-blue-400/10' :
-            account.status === 'funded' ? 'text-[#FF5C00] bg-[#FF5C00]/10' :
-            'text-white/40 bg-white/5'
-          }`}>
-            {account.status === 'passed' ? 'Passed ✓' :
-             account.status === 'active' ? 'Active' :
-             account.status === 'funded' ? 'Funded' :
-             account.status}
-          </span>
-        </div>
+        <div className="text-xl font-bold text-white tracking-tight">${size.toLocaleString()}</div>
+        <div className="text-[10px] text-white/25 font-mono capitalize mt-0.5">{account.status}</div>
       </div>
 
       {/* Mini progress bar */}
@@ -118,29 +107,21 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
 }
 
 export default function AccountSwitcher({ accounts, selectedId, onSelect, onNavigate }) {
-  if (!accounts?.length) {
-    console.log('[AccountSwitcher] No accounts to render');
-    return null;
-  }
-
-  console.log('[AccountSwitcher] Rendering', accounts.length, 'accounts');
+  if (!accounts?.length) return null;
 
   return (
-    <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mb-2 scrollbar-hide px-1"
+    <div className="flex gap-3 overflow-x-auto pb-2 -mb-2 scrollbar-hide"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      {accounts.map((account, i) => {
-        console.log('[AccountSwitcher] Rendering account:', account.id, account.status, account.account_size);
-        return (
-          <AccountCard
-            key={account.id}
-            account={account}
-            isSelected={account.id === selectedId}
-            onSelect={onSelect}
-            onNavigate={onNavigate}
-            i={i}
-          />
-        );
-      })}
+      {accounts.map((account, i) => (
+        <AccountCard
+          key={account.id}
+          account={account}
+          isSelected={account.id === selectedId}
+          onSelect={onSelect}
+          onNavigate={onNavigate}
+          i={i}
+        />
+      ))}
     </div>
   );
 }

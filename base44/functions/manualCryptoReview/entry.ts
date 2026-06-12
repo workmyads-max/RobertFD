@@ -104,32 +104,10 @@ Deno.serve(async (req) => {
       const order = orders[0];
       if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
-      // Step 1: Check if already provisioned (idempotency)
-      const existingAccounts = await sr.entities.ChallengeAccount.filter({
-        user_email: order.email
-      });
-      const alreadyProvisioned = existingAccounts.find(a =>
-        a.account_id === order.order_id ||
-        a.account_id === `MT5-${order.order_id}` ||
-        a.order_id === order.order_id
-      );
-
-      if (alreadyProvisioned) {
-        // Account already exists — just update order status and return success
-        await sr.entities.Order.update(order.id, {
-          payment_status: 'confirmed',
-          manually_approved: true,
-          approved_at: new Date().toISOString(),
-          approved_by: user.email
-        });
-        return Response.json({
-          success: true,
-          message: 'Payment confirmed. MT5 account was already active.',
-          account: alreadyProvisioned
-        });
+      if (order.payment_status === 'confirmed') {
+        return Response.json({ error: 'Payment already confirmed' }, { status: 409 });
       }
 
-      // Step 2: Update order status first
       await sr.entities.Order.update(order.id, {
         payment_status: 'confirmed',
       });
@@ -142,12 +120,9 @@ Deno.serve(async (req) => {
         notes: `Approved by admin ${user.email}. Notes: ${notes || 'none'}`,
       });
 
-      // Step 3: Provision MT5 account (with full error handling)
-      let provisionResult = null;
-      let provisionError = null;
-
+      // NOW provision challenge account — only after admin approval
       try {
-        provisionResult = await sr.functions.invoke('provisionMT5Account', {
+        await sr.functions.invoke('provisionMT5Account', {
           account_id: order.account_id || order.order_id,
           order_id: order.order_id,
           user_email: order.email,
@@ -158,27 +133,23 @@ Deno.serve(async (req) => {
           platform: 'mt5',
           rule_snapshot: order.rule_snapshot || null,
         });
-      } catch (e) {
-        provisionError = e.message;
-        // 409 = already exists = treat as success
-        if (e.status === 409 || e.message?.includes('409') || e.message?.includes('already')) {
-          provisionError = null;
-          provisionResult = { success: true, message: 'Account already existed' };
-        }
-      }
+      } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
 
-      // Step 4: Non-blocking affiliate commissions + email
+      // Affiliate commissions L1/L2/L3 — non-blocking
       sr.functions.invoke('createAffiliateCommissions', {
-        order_id: order.order_id,
         user_email: order.email,
-        amount: order.price,
-        affiliate_code: order.affiliate_code
-      }).catch(() => {});
+        order_id: order.order_id,
+        order_price: order.price,
+        challenge_type: order.challenge_type,
+        account_size: order.account_size,
+      }).catch(e => console.error('[ManualCrypto] Affiliate commission failed:', e.message));
 
-      sr.functions.invoke('sendBrandedEmail', {
-        to: order.email, template_type: 'payment_success',
-        data: { name: order.full_name, amount: order.price, order_id, challenge_type: order.challenge_type, account_size: order.account_size }
-      }).catch(() => {});
+      try {
+        await sr.functions.invoke('sendBrandedEmail', {
+          to: order.email, template_type: 'payment_success',
+          data: { name: order.full_name, amount: order.price, order_id, challenge_type: order.challenge_type, account_size: order.account_size },
+        });
+      } catch (e) { console.error('[ManualCrypto] Email failed:', e.message); }
 
       await sr.entities.Notification.create({
         title: '✅ Payment Approved — Challenge Account Ready',
@@ -188,11 +159,7 @@ Deno.serve(async (req) => {
 
       await logActivity(sr, { staff_email: user.email, action: 'approve_manual_payment', order_id, user_email: order.email, details: { notes }, ip: ipAddress });
 
-      return Response.json({
-        success: true,
-        message: provisionError ? `Order confirmed but MT5 error: ${provisionError}` : 'Order confirmed and MT5 account created',
-        provision_error: provisionError
-      });
+      return Response.json({ success: true, message: 'Payment approved. Challenge account provisioning initiated.' });
     }
 
     // ── REJECT PAYMENT ─────────────────────────────────────────────────────────

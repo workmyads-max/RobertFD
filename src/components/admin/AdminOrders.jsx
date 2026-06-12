@@ -7,44 +7,23 @@ import { base44 } from '@/api/base44Client';
 /**
  * Confirm payment and provision MT5 account via manualCryptoReview backend.
  * This is the SAME path used by AdminPaymentReview and all automatic webhooks.
- * Handles 409 Conflict gracefully when MT5 account already exists.
+ * No duplicate ChallengeAccount creation — provisionMT5Account handles it.
  */
 async function confirmAndProvisionAccount(order) {
-  try {
-    const res = await base44.functions.invoke('manualCryptoReview', {
-      action: 'approve_payment',
-      order_id: order.order_id,
-      notes: 'Confirmed via Admin Orders panel',
-    });
-    if (!res.data?.success) {
-      throw new Error(res.data?.error || 'Approval failed');
-    }
-    return res.data;
-  } catch (error) {
-    // Handle 409 Conflict — MT5 account already exists
-    if (error.message?.includes('409') || error.message?.includes('already')) {
-      // Just update the order status without calling MT5 API again
-      await base44.entities.Order.update(order.id, {
-        payment_status: 'confirmed',
-        manually_approved: true,
-        approved_at: new Date().toISOString(),
-      });
-      return { success: true, message: 'Order confirmed. MT5 account already exists.' };
-    }
-    throw error;
+  const res = await base44.functions.invoke('manualCryptoReview', {
+    action: 'approve_payment',
+    order_id: order.order_id,
+    notes: 'Confirmed via Admin Orders panel',
+  });
+  if (!res.data?.success) {
+    throw new Error(res.data?.error || 'Approval failed');
   }
+  return res.data;
 }
 
 const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
 const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#a78bfa', confirmed: '#10b981', failed: '#ef4444' };
-const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting', confirmed: 'Confirmed', failed: 'Rejected' };
-const FILTER_TABS = [
-  { id: 'all', label: 'All' },
-  { id: 'pending', label: 'Pending' },
-  { id: 'awaiting_confirmation', label: 'Awaiting' },
-  { id: 'confirmed', label: 'Confirmed' },
-  { id: 'failed', label: 'Rejected' },
-];
+const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting Confirmation', confirmed: 'Confirmed', failed: 'Failed' };
 
 export default function AdminOrders() {
   const [search, setSearch] = useState('');
@@ -63,51 +42,17 @@ export default function AdminOrders() {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async (order) => {
-      try {
-        const result = await base44.functions.invoke('manualCryptoReview', {
-          action: 'approve_payment',
-          order_id: order.order_id,
-          notes: 'Confirmed via Admin Orders panel'
-        });
-        if (!result?.success) {
-          throw new Error(result?.error || 'Approval failed');
-        }
-        // Handle 409 gracefully — account already exists
-        if (result?.provision_error?.includes('409') || result?.provision_error?.includes('already')) {
-          return { success: true, message: 'Order confirmed. MT5 account already exists.' };
-        }
-        return result;
-      } catch (error) {
-        // Handle 409 Conflict — MT5 account already exists
-        if (error.message?.includes('409') || error.message?.includes('already')) {
-          await base44.entities.Order.update(order.id, {
-            payment_status: 'confirmed',
-            manually_approved: true,
-            approved_at: new Date().toISOString(),
-          });
-          return { success: true, message: 'Order confirmed. MT5 account already exists.' };
-        }
-        throw error;
-      }
-    },
-    onSuccess: (result) => {
+    mutationFn: (order) => confirmAndProvisionAccount(order),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] });
       qc.invalidateQueries({ queryKey: ['admin-accounts'] });
       qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });
       setSelected(null);
-      alert(result?.message || '✅ Account activated successfully!');
+      alert('✅ Account activated successfully!');
     },
     onError: (err) => {
-      // Only show error for real failures, not 409
-      if (err.message?.includes('409') || err.message?.includes('already')) {
-        alert('✅ Order confirmed — MT5 account already active');
-        qc.invalidateQueries({ queryKey: ['admin-orders'] });
-        setSelected(null);
-      } else {
-        alert(`❌ Error: ${err?.message || 'Failed to activate account'}`);
-      }
+      alert(`❌ Error: ${err?.message || 'Failed to activate account'}`);
     },
   });
 
@@ -137,15 +82,15 @@ export default function AdminOrders() {
             className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/50" />
         </div>
         <div className="flex gap-2">
-          {FILTER_TABS.map(tab => (
-            <button key={tab.id} onClick={() => setFilter(tab.id)}
-              className="px-3 py-2 rounded-xl text-xs font-bold transition-all"
+          {['all', ...STATUS_OPTS].map(s => (
+            <button key={s} onClick={() => setFilter(s)}
+              className="px-3 py-2 rounded-xl text-xs font-mono capitalize transition-all"
               style={{
-                background: filter === tab.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${filter === tab.id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                color: filter === tab.id ? '#FF5C00' : 'hsl(var(--muted-foreground))',
+                background: filter === s ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${filter === s ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                color: filter === s ? '#FF5C00' : 'hsl(var(--muted-foreground))',
               }}>
-              {tab.label}
+              {s}
             </button>
           ))}
         </div>
@@ -231,19 +176,12 @@ export default function AdminOrders() {
                 ))}
               </div>
               <div className="px-5 pb-5 flex gap-3">
-                {selected.payment_status === 'confirmed' || selected.mt_login ? (
-                  <div className="flex-1 py-2.5 rounded-xl text-xs font-bold text-emerald-400 text-center"
-                    style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                    ✅ Already Active
-                  </div>
-                ) : (
-                  <button onClick={() => confirmMutation.mutate(selected)}
-                    disabled={confirmMutation.isPending || updateMutation.isPending}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
-                    style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
-                    {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
-                  </button>
-                )}
+                <button onClick={() => confirmMutation.mutate(selected)}
+                  disabled={confirmMutation.isPending || updateMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"
+                  style={{ background: 'linear-gradient(90deg,#10b981,#059669)' }}>
+                  {confirmMutation.isPending ? '⏳ Activating...' : '✓ Confirm & Activate'}
+                </button>
                 <button onClick={() => updateMutation.mutate({ id: selected.id, data: { payment_status: 'failed' } })}
                   disabled={confirmMutation.isPending || updateMutation.isPending}
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 cursor-pointer"

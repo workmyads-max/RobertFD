@@ -103,7 +103,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const { user, isAdmin } = useCustomAuth();
+  const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -118,6 +118,8 @@ export default function Dashboard() {
 
   // Disabled popup notifications for now
   const popupNotification = null;
+
+  const isAdmin = isUserAdmin || user?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
@@ -220,7 +222,7 @@ export default function Dashboard() {
   const isOverview  = activePage === 'overview';
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
       {/* Clean dark background — no animated overlays */}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
@@ -248,7 +250,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-2 sm:p-3 md:p-4 lg:p-6 w-full max-w-full'}>
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}

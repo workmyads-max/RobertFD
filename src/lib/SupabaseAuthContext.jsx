@@ -18,10 +18,14 @@ export const SupabaseAuthProvider = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initTimeout;
+    let loadTimeout;
 
     const initAuth = async () => {
       try {
+        // Get session - Supabase SDK handles persistence automatically
         const { data: { session } } = await supabase.auth.getSession();
+        
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
@@ -33,27 +37,26 @@ export const SupabaseAuthProvider = ({ children }) => {
           setUser(null);
         }
       } finally {
+        // Always stop loading even if session fetch fails
         if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      if (event === 'SIGNED_IN') {
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setUser(null);
         setLoading(false);
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(initTimeout);
+      clearTimeout(loadTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -65,30 +68,9 @@ export const SupabaseAuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
-  // Expose userEmail directly from context for reliable mobile access
-  const userEmail = user?.email ?? session?.user?.email ?? null;
-  
-  // Check 1: JWT metadata (works on desktop)
-  const isAdminFromJWT = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
-  
-  // Check 2: Profile table role (works on mobile)
-  const [profileRole, setProfileRole] = React.useState(null);
-
-  React.useEffect(() => {
-    if (!user?.email) return;
-    // Fetch role from profiles table directly
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('email', user.email)
-      .single()
-      .then(({ data }) => {
-        if (data?.role) setProfileRole(data.role);
-      })
-      .catch(() => {});
-  }, [user?.email]);
-
-  const isAdmin = isAdminFromJWT || profileRole === 'admin';
+  // Helpers for components
+  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
+  const userEmail = user?.email;
   const userId = user?.id;
 
   return (
@@ -100,7 +82,6 @@ export const SupabaseAuthProvider = ({ children }) => {
       isAdmin,
       userEmail,
       userId,
-      profileRole,
       supabase,
     }}>
       {children}

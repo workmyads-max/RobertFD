@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, AlertTriangle, CreditCard, Wallet, Send } from 'lucide-react';
+import { Copy, CheckCircle, Clock, ArrowLeft, Loader2, AlertTriangle, MailCheck, CreditCard, Wallet, QrCode, Tag } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import CouponInput from './CouponInput';
@@ -10,19 +10,20 @@ const FALLBACK_WALLETS = {
   bitcoin: { address: '1ConfigureInAdminWalletSettings', network: 'Bitcoin', symbol: 'BTC', color: '#F7931A' },
 };
 
+const STATUS_FLOW = [
+  { id: 0, label: 'Awaiting Payment', sub: 'Complete your payment securely' },
+  { id: 1, label: 'Payment Processing', sub: 'Verifying your transaction' },
+  { id: 2, label: 'Payment Confirmed', sub: 'Payment successfully confirmed' },
+  { id: 3, label: 'Account Delivery Pending', sub: 'Preparing your funded account credentials' },
+];
+
 export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLoggedIn }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
+  const [statusIdx, setStatusIdx] = useState(0);
+  const [processing, setProcessing] = useState(false);
   const [checkoutSession, setCheckoutSession] = useState(null);
   const [confirmoInvoice, setConfirmoInvoice] = useState(null);
-  
-  // Manual crypto proof submission state
-  const [createdOrderId, setCreatedOrderId] = useState(null);
-  const [orderCreated, setOrderCreated] = useState(false);
-  const [txid, setTxid] = useState('');
-  const [amountSent, setAmountSent] = useState('');
-  const [submittingProof, setSubmittingProof] = useState(false);
-  const [orderCreationError, setOrderCreationError] = useState(null);
 
   const { data: gateways = [] } = useQuery({
     queryKey: ['payment-gateways'],
@@ -49,93 +50,32 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      try {
-        console.log('[CheckoutStep3] Starting order creation...');
-        const orderData = {
-          order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
-          user_email: order.email,
-          email: order.email,
-          full_name: order.full_name,
-          username: order.username,
-          phone: order.phone || '',
-          country: order.country || '',
-          challenge_type: order.challenge_type,
-          account_type: order.account_type || 'standard',
-          account_size: order.account_size,
-          leverage: order.leverage || '1:100',
-          platform: order.platform || 'mt5',
-          price: order.price,
-          payment_method: order.payment_method,
-          payment_gateway: 'manual',
-          payment_status: 'pending',
+      // Create order in Base44
+      const orderData = {
+        ...order,
+        order_id: `RF-${Date.now().toString(36).toUpperCase()}`,
+        payment_address: wallet?.address || '',
+        payment_status: 'pending',
+      };
+      const base44Order = await base44.entities.Order.create(orderData);
+      
+      // Sync to Supabase
+      const syncResponse = await base44.functions.invoke('createManualOrderInSupabase', {
+        order_id: base44Order.order_id,
+        email: order.email,
+        orderData: {
+          ...order,
           payment_address: wallet?.address || '',
-          affiliate_code: order.affiliate_code || '',
-          coupon_code: order.coupon_code || '',
-          discount_amount: order.discount_amount || 0,
-          rule_snapshot: order.rule_snapshot || null,
-        };
-        console.log('[CheckoutStep3] Order data:', JSON.stringify(orderData, null, 2));
-        const created = await base44.entities.Order.create(orderData);
-        console.log('[CheckoutStep3] Order created successfully:', created.order_id);
-        
-        // Sync to Supabase
-        try {
-          await base44.functions.invoke('createManualOrderInSupabase', {
-            order_id: created.order_id,
-            email: order.email,
-            orderData: { ...orderData },
-          });
-          console.log('[CheckoutStep3] Supabase sync completed');
-        } catch (syncError) {
-          console.error('[CheckoutStep3] Supabase sync failed:', syncError.message);
-          // Continue even if sync fails - order was created in Base44
-        }
-        
-        return created;
-      } catch (error) {
-        console.error('[CheckoutStep3] Order creation FAILED:', error);
-        alert(`ORDER CREATION FAILED: ${error.message}\n\nPlease check:\n1. Are you logged in?\n2. Is your email valid?\n3. Try refreshing the page`);
-        throw error;
-      }
+          payment_status: 'pending',
+        },
+      });
+      
+      console.log('Supabase sync result:', syncResponse.data);
+      
+      return base44Order;
     },
     onSuccess: (data) => {
-      console.log('[CheckoutStep3] Order creation SUCCESS:', data.order_id);
-      setCreatedOrderId(data.order_id);
-      setOrderCreated(true);
       updateOrder({ order_id: data.order_id });
-    },
-    onError: (error) => {
-      console.error('[CheckoutStep3] Order creation ERROR:', error);
-      setOrderCreationError(error.message);
-      alert(`Order creation error: ${error.message}`);
-    },
-  });
-
-  const submitProofMutation = useMutation({
-    mutationFn: async () => {
-      if (!txid.trim()) {
-        throw new Error('Please enter your transaction ID');
-      }
-      const res = await base44.functions.invoke('manualCryptoReview', {
-        action: 'submit_proof',
-        order_id: createdOrderId,
-        txid: txid.trim(),
-        amount: parseFloat(amountSent) || order.final_price || order.price,
-        network: order.payment_method,
-        screenshot_url: '',
-      });
-      if (!res.data?.success) {
-        throw new Error(res.data?.error || 'Submission failed');
-      }
-      return res.data;
-    },
-    onSuccess: () => {
-      setSubmittingProof(false);
-      setTimeout(() => onNext(), 500);
-    },
-    onError: (error) => {
-      alert('Error submitting proof: ' + error.message);
-      setSubmittingProof(false);
     },
   });
 
@@ -168,6 +108,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
     },
     onSuccess: (data) => {
       setConfirmoInvoice(data);
+      setStatusIdx(1);
     },
   });
 
@@ -176,6 +117,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
   }, []);
 
   useEffect(() => {
+    // Auto-start payment for card/crypto gateways
     if (order.payment_gateway === 'checkout_com' && !checkoutSession) {
       createCheckoutPaymentMutation.mutate();
     }
@@ -206,9 +148,18 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
     }
   };
 
-  const handleProofSubmit = () => {
-    setSubmittingProof(true);
-    submitProofMutation.mutate();
+  const handleManualConfirm = () => {
+    if (processing || statusIdx > 0) return;
+    setProcessing(true);
+    const advance = (idx) => {
+      setStatusIdx(idx);
+      if (idx < 3) {
+        setTimeout(() => advance(idx + 1), idx === 0 ? 1800 : 2000);
+      } else {
+        setTimeout(onNext, 1200);
+      }
+    };
+    advance(1);
   };
 
   const urgent = timeLeft < 300 && timeLeft > 0;
@@ -319,139 +270,77 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
     );
   }
 
-  // Manual crypto payment with TXID submission
+  // Manual crypto payment (existing flow)
   return (
     <div className="grid lg:grid-cols-5 gap-8">
       <div className="lg:col-span-3 space-y-5">
         <div>
           <h2 className="text-xl font-black text-foreground mb-1">Complete Your Payment</h2>
-          <p className="text-sm text-muted-foreground">Send the exact amount and submit your TXID</p>
+          <p className="text-sm text-muted-foreground">Send the exact amount to the address below</p>
         </div>
 
-        {orderCreationError && (
-          <div className="p-4 rounded-xl text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            Failed to create order: {orderCreationError}. Please refresh and try again.
+        <motion.div animate={{ borderColor: urgent ? 'rgba(239,68,68,0.4)' : 'rgba(255,92,0,0.25)' }}
+          className="flex items-center gap-3 px-5 py-3.5 rounded-xl"
+          style={{ background: urgent ? 'rgba(239,68,68,0.07)' : 'rgba(255,92,0,0.07)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.35)' : 'rgba(255,92,0,0.25)'}` }}>
+          <Clock className={`w-4 h-4 flex-shrink-0 ${urgent ? 'text-red-400' : 'text-primary'}`} />
+          {isExpired ? (
+            <span className="text-sm text-red-400 font-semibold">Session expired</span>
+          ) : (
+            <>
+              <span className="text-sm font-mono text-foreground">Session expires in: <strong className={urgent ? 'text-red-400' : 'text-primary'}>{mins}:{secs}</strong></span>
+              <span className="ml-auto text-[11px] font-mono text-muted-foreground">Do not close this page</span>
+            </>
+          )}
+        </motion.div>
+
+        <div className="rounded-2xl p-5" style={{ background: `${wallet?.color}0a`, border: `1px solid ${wallet?.color}30` }}>
+          <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Send Exactly</div>
+          <div className="text-5xl font-black mb-1" style={{ color: wallet?.color }}>${order.final_price || order.price}</div>
+          {order.discount_amount > 0 && (
+            <div className="text-xs font-mono text-emerald-400 mb-2">
+              Discount applied: -${order.discount_amount}
+            </div>
+          )}
+          <div className="text-sm font-mono text-muted-foreground">
+            Payable in <strong style={{ color: wallet?.color }}>{wallet?.symbol}</strong> via <strong className="text-foreground">{wallet?.network}</strong> network
           </div>
-        )}
+        </div>
 
-        {!orderCreated && !orderCreationError && (
-          <div className="flex items-center justify-center gap-3 py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-sm font-mono text-muted-foreground">Creating your order...</span>
-          </div>
-        )}
-
-        {orderCreated && (
-          <>
-            <motion.div animate={{ borderColor: urgent ? 'rgba(239,68,68,0.4)' : 'rgba(255,92,0,0.25)' }}
-              className="flex items-center gap-3 px-5 py-3.5 rounded-xl"
-              style={{ background: urgent ? 'rgba(239,68,68,0.07)' : 'rgba(255,92,0,0.07)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.35)' : 'rgba(255,92,0,0.25)'}` }}>
-              <Clock className={`w-4 h-4 flex-shrink-0 ${urgent ? 'text-red-400' : 'text-primary'}`} />
-              {isExpired ? (
-                <span className="text-sm text-red-400 font-semibold">Session expired</span>
-              ) : (
-                <>
-                  <span className="text-sm font-mono text-foreground">Session expires in: <strong className={urgent ? 'text-red-400' : 'text-primary'}>{mins}:{secs}</strong></span>
-                  <span className="ml-auto text-[11px] font-mono text-muted-foreground">Order ID: {createdOrderId}</span>
-                </>
-              )}
-            </motion.div>
-
-            <div className="rounded-2xl p-5" style={{ background: `${wallet?.color}0a`, border: `1px solid ${wallet?.color}30` }}>
-              <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Send Exactly</div>
-              <div className="text-5xl font-black mb-1" style={{ color: wallet?.color }}>${order.final_price || order.price}</div>
-              {order.discount_amount > 0 && (
-                <div className="text-xs font-mono text-emerald-400 mb-2">
-                  Discount applied: -${order.discount_amount}
-                </div>
-              )}
-              <div className="text-sm font-mono text-muted-foreground">
-                Payable in <strong style={{ color: wallet?.color }}>{wallet?.symbol}</strong> via <strong className="text-foreground">{wallet?.network}</strong> network
+        <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
+          <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-4">Wallet Address</div>
+          <div className="flex flex-col sm:flex-row gap-5 items-start">
+            <div className="w-40 h-40 rounded-2xl overflow-hidden bg-white p-4 flex-shrink-0">
+              <div className="w-full h-full grid grid-cols-11 gap-1.5">
+                {Array.from({ length: 121 }).map((_, i) => (
+                  <div key={i} style={{ background: (i % 3) !== 0 ? '#111' : '#fff', borderRadius: 1 }} />
+                ))}
               </div>
             </div>
-
-            <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-              <div className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider mb-4">Wallet Address</div>
-              <div className="flex flex-col sm:flex-row gap-5 items-start">
-                <div className="w-40 h-40 rounded-2xl overflow-hidden bg-white p-4 flex-shrink-0">
-                  <div className="w-full h-full grid grid-cols-11 gap-1.5">
-                    {Array.from({ length: 121 }).map((_, i) => (
-                      <div key={i} style={{ background: (i % 3) !== 0 ? '#111' : '#fff', borderRadius: 1 }} />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 p-3 rounded-xl mb-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <span className="text-xs font-mono text-foreground flex-1 break-all leading-relaxed">{wallet?.address}</span>
-                    <button onClick={copy} className="flex-shrink-0 p-2 rounded-lg transition-all hover:bg-white/10">
-                      {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-                    </button>
-                  </div>
-                  {copied && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-emerald-400 font-mono mb-2">✓ Address copied</motion.div>}
-                  <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-                    <span>Send <strong style={{ color: wallet?.color }}>{wallet?.symbol}</strong> only</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* TXID Submission Form */}
-            <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Send className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">Submit Payment Proof</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1.5 block">Transaction ID (TXID) *</label>
-                  <input
-                    type="text"
-                    value={txid}
-                    onChange={(e) => setTxid(e.target.value)}
-                    placeholder="e.g., a1b2c3d4e5f6..."
-                    className="w-full px-3 py-2.5 rounded-xl text-sm font-mono bg-white/5 border border-white/10 text-foreground outline-none focus:border-primary/50 transition-colors"
-                    style={{ minHeight: '44px' }}
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1.5 block">Amount Sent</label>
-                  <input
-                    type="number"
-                    value={amountSent}
-                    onChange={(e) => setAmountSent(e.target.value)}
-                    placeholder={order.final_price || order.price}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm font-mono bg-white/5 border border-white/10 text-foreground outline-none focus:border-primary/50 transition-colors"
-                    style={{ minHeight: '44px' }}
-                  />
-                </div>
-
-                <button
-                  onClick={handleProofSubmit}
-                  disabled={submittingProof || !txid.trim()}
-                  className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
-                  {submittingProof ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Submitting Proof...</>
-                  ) : (
-                    <><Send className="w-4 h-4" /> Submit Payment Proof</>
-                  )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 p-3 rounded-xl mb-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <span className="text-xs font-mono text-foreground flex-1 break-all leading-relaxed">{wallet?.address}</span>
+                <button onClick={copy} className="flex-shrink-0 p-2 rounded-lg transition-all hover:bg-white/10">
+                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
                 </button>
-
-                <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                  After submission, our team will verify your payment within 1-24 hours. You will receive your account credentials via email.
-                </p>
+              </div>
+              {copied && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-emerald-400 font-mono mb-2">✓ Address copied</motion.div>}
+              <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                <span>Send <strong style={{ color: wallet?.color }}>{wallet?.symbol}</strong> only</span>
               </div>
             </div>
-          </>
-        )}
+          </div>
+        </div>
 
         <div className="flex gap-3">
-          <button onClick={onBack} disabled={submittingProof} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+          <button onClick={onBack} disabled={statusIdx > 0} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
             style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
             <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <button onClick={handleManualConfirm} disabled={isExpired || processing || statusIdx > 0}
+            className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: !isExpired ? '0 4px 20px rgba(255,92,0,0.3)' : 'none' }}>
+            {processing ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : "I've Sent the Payment"}
           </button>
         </div>
 

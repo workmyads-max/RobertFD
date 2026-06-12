@@ -12,13 +12,13 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import LegalPage from './pages/LegalPage';
 
-function LoginRoute() {
+const LoginRoute = () => {
   const { user } = useSupabaseAuth();
   if (user) return <Navigate to="/dashboard" replace />;
   return <Login />;
 };
 
-function ProtectedRoute({ children }) {
+const ProtectedRoute = ({ children }) => {
   const { user, loading } = useSupabaseAuth();
   if (loading) return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -49,14 +49,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
-      <SupabaseAuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
+    <SupabaseAuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
           <AppRoutes />
-          <Toaster />
-        </QueryClientProvider>
-      </SupabaseAuthProvider>
-    </Router>
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </SupabaseAuthProvider>
   );
 }
 

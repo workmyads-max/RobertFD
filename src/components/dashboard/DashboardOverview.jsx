@@ -48,15 +48,15 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
   const hasAccounts = activeAccounts.length > 0;
 
   return (
-    <div className="space-y-6 sm:space-y-8 px-2 sm:px-0">
+    <div className="space-y-8">
 
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground break-words">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
             Welcome back, {user?.full_name?.split(' ')[0] || 'Trader'}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
             {!location.loading && (
               <>
@@ -72,7 +72,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
         </div>
         <button
           onClick={onStartChallenge}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90 min-h-[44px]"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
           style={{ background: '#FF5C00' }}>
           <Plus className="w-4 h-4" /> New Challenge
         </button>
@@ -80,7 +80,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
       {/* Pending notice */}
       {pendingActivation.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 rounded-lg border text-sm"
+        <div className="flex items-center gap-3 px-5 py-4 rounded-lg border text-sm"
           style={{ background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.2)' }}>
           <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
           <span className="text-yellow-400 font-medium">{pendingActivation.length} order{pendingActivation.length > 1 ? 's' : ''} pending approval.</span>
@@ -90,18 +90,18 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
       {/* Empty state */}
       {!hasAccounts && pendingActivation.length === 0 && (
-        <div className="rounded-xl border border-dashed py-16 sm:py-20 flex flex-col items-center justify-center text-center px-4"
+        <div className="rounded-xl border border-dashed py-20 flex flex-col items-center justify-center text-center"
           style={{ borderColor: 'hsl(var(--border))' }}>
           <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
             style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
             <Plus className="w-5 h-5 text-primary" />
           </div>
           <div className="text-base font-semibold text-foreground mb-2">No active accounts</div>
-          <div className="text-sm text-muted-foreground mb-6 max-w-sm px-2">
+          <div className="text-sm text-muted-foreground mb-6 max-w-sm">
             Purchase a challenge to access the trading terminal, analytics, and funded capital.
           </div>
           <button onClick={onStartChallenge}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white hover:opacity-90 transition-opacity min-h-[44px]"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white hover:opacity-90 transition-opacity"
             style={{ background: '#FF5C00' }}>
             <Plus className="w-4 h-4" /> Browse Challenge Plans
           </button>

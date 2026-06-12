@@ -3,14 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { supabase } from '@/lib/supabaseClient';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -64,43 +62,6 @@ function AccountInfoStrip({ account }) {
   );
 }
 
-// ─── Stats Cards Grid ─────────────────────────────────────────────────────────
-function StatsCards({ stats }) {
-  if (!stats) return null;
-  
-  const statCards = [
-    { label: 'Balance', value: `$${stats.balance.toLocaleString()}`, color: '#FF5C00' },
-    { label: 'Equity', value: `$${stats.equity.toLocaleString()}`, color: '#10b981' },
-    { label: 'P&L', value: `${stats.pnl >= 0 ? '+' : ''}$${stats.pnl.toLocaleString()}`, color: stats.pnl >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Daily P&L', value: `${stats.dailyPnl >= 0 ? '+' : ''}$${stats.dailyPnl.toLocaleString()}`, color: stats.dailyPnl >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, color: '#3b82f6' },
-    { label: 'Trades', value: stats.totalTrades.toString(), color: '#8b5cf6' },
-    { label: 'Daily DD', value: `${stats.dailyDDPct.toFixed(2)}%`, color: stats.dailyDDPct > 4 ? '#ef4444' : '#f59e0b' },
-    { label: 'Max DD', value: `${stats.maxDDPct.toFixed(2)}%`, color: stats.maxDDPct > 8 ? '#ef4444' : '#f59e0b' },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-      {statCards.map((stat) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-3 sm:p-4 rounded-xl border glass"
-          style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-        >
-          <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-            {stat.label}
-          </div>
-          <div className="text-lg sm:text-xl font-bold" style={{ color: stat.color }}>
-            {stat.value}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -113,24 +74,14 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       return me || user;
     },
     enabled: !!user?.id,
-    refetchInterval: 60000, // Refetch every 60s to catch profile updates
-    refetchOnWindowFocus: false,
+    refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
-  // Use userEmail from auth context for reliable mobile access
-  const { userEmail } = useSupabaseAuth();
-
   const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['challenge-accounts-dashboard', userEmail],
-    queryFn: async () => {
-      if (!userEmail) return [];
-      const all = await base44.entities.ChallengeAccount.list('-created_date', 50);
-      return all.filter(a => a.user_email === userEmail);
-    },
-    enabled: !!userEmail,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: false,
-    staleTime: 10000,
+    queryKey: ['funded-dashboard-accounts', user?.email],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
 
   // Load KYC for welcome header
@@ -141,44 +92,34 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   });
   const kyc = kycList[0] || null;
 
-  const activeAccounts = accounts.filter(a =>
-    ['active', 'passed', 'funded', 'phase2'].includes(a.status)
-  );
-
-  console.log('[FundedDashboard] accounts:', accounts.map(a => ({ id: a.id, status: a.status, account_id: a.account_id })));
-  console.log('[FundedDashboard] activeAccounts:', activeAccounts.map(a => ({ id: a.id, status: a.status, account_id: a.account_id })));
+  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account when accounts load
+  // Auto-select first account
   useEffect(() => {
     if (activeAccounts.length > 0 && !selectedAccount) {
-      setSelectedAccount(activeAccounts[0])
+      setSelectedAccount(activeAccounts[0]);
     }
   }, [activeAccounts.length]);
 
-  // Mobile: ensure account cards are full width
-  const accountCardMinWidth = typeof window !== 'undefined' && window.innerWidth < 768 ? '85vw' : '220px';
-
   // Keep selected in sync with refetches
   useEffect(() => {
-    if (selectedAccount && activeAccounts.length > 0) {
+    if (selectedAccount) {
       const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
       if (fresh) setSelectedAccount(fresh);
     }
-  }, [accounts?.length, selectedAccount?.id, activeAccounts.length]);
+  }, [accounts]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
     queryKey: ['trade-records', selectedAccount?.id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
     enabled: !!selectedAccount?.id,
-    refetchInterval: 15000,
-    refetchOnWindowFocus: false,
+    refetchInterval: 5000,
   });
 
   const stats = useAccountStats(selectedAccount, trades);
 
-  // Show loading state while accounts are fetching — prevents empty state flash on mobile
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
@@ -223,66 +164,55 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 w-full max-w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
-        
-        {/* First-Time Promo Banner - FULL WIDTH on mobile */}
-        <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-        {/* Account Switcher - Full width container */}
-        {activeAccounts.length > 0 && (
-          <div className="space-y-3 w-full">
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
-                {activeAccounts?.length || 0} Active Account{(activeAccounts?.length || 0) !== 1 ? 's' : ''}
-              </span>
-              <button onClick={() => refetch()}
-                className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
-                <RefreshCw className="w-3 h-3" /> Sync
-              </button>
-            </div>
-            <div className="w-full">
+        {activeAccounts.length === 0 ? (
+          <EmptyState onStartChallenge={onStartChallenge} />
+        ) : (
+          <>
+            {/* First-Time Promo Banner */}
+            <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+
+            {/* Account Switcher */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
+                  {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
+                </span>
+                <button onClick={() => refetch()}
+                  className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
+                  <RefreshCw className="w-3 h-3" /> Sync
+                </button>
+              </div>
               <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
             </div>
-          </div>
-        )}
 
-        {/* Account content - shown when account is selected */}
-        {selectedAccount && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-4 sm:space-y-6">
+            {/* Per-account content */}
+            <AnimatePresence mode="wait">
+              {selectedAccount && (
+                <motion.div key={selectedAccount.id}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-4 sm:space-y-6">
 
-            {/* Info strip */}
-            <AccountInfoStrip account={selectedAccount} />
+                  {/* Info strip */}
+                  <AccountInfoStrip account={selectedAccount} />
 
-            {/* Stats Cards */}
-            <StatsCards stats={stats} />
-
-            {/* Three Paths to Funded Trading */}
-            <ThreePathsToFunded onNavigate={onNavigate} />
-            
-            {/* Affiliate Section */}
-            <AffiliateSection onNavigate={onNavigate} />
-            
-            {/* Footer */}
-            <Footer />
-          </motion.div>
-        )}
-
-        {/* Empty state - ONLY when accounts array is truly empty */}
-        {!isLoading && activeAccounts.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="space-y-4 sm:space-y-6">
-            <EmptyState onStartChallenge={onStartChallenge} />
-            <ThreePathsToFunded onNavigate={onNavigate} />
-            <AffiliateSection onNavigate={onNavigate} />
-            <Footer />
-          </motion.div>
+                  {/* Three Paths to Funded Trading */}
+                  <ThreePathsToFunded onNavigate={onNavigate} />
+                  
+                  {/* Affiliate Section */}
+                  <AffiliateSection onNavigate={onNavigate} />
+                  
+                  {/* Footer */}
+                  <Footer />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
         )}
       </div>
     </div>

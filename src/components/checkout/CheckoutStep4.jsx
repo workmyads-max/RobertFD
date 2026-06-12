@@ -11,14 +11,13 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
   }, []);
 
   const details = [
-    { label: 'Order ID', value: order.order_id || txId, mono: true },
     { label: 'Transaction ID', value: txId, mono: true },
     { label: 'Account Size', value: `$${order.account_size?.toLocaleString()}` },
     { label: 'Challenge Type', value: order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding' },
     { label: 'Account Model', value: order.account_type === 'swing' ? 'Swing Account' : 'Standard Account' },
     { label: 'Leverage', value: order.leverage || '1:100' },
     { label: 'Delivery Email', value: order.email || '—', mono: true },
-    { label: 'Verification Time', value: '1–24 hours' },
+    { label: 'Est. Delivery', value: '1–24 hours after confirmation' },
   ];
 
   return (
@@ -48,12 +47,12 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-        <div className="text-[11px] font-mono text-emerald-400 uppercase tracking-widest mb-3">Payment Submitted</div>
+        <div className="text-[11px] font-mono text-emerald-400 uppercase tracking-widest mb-3">Payment Received</div>
         <h1 className="text-3xl md:text-4xl font-black text-foreground mb-3 tracking-tight">
-          Payment Submitted — Awaiting Verification ✅
+          Order Confirmed! 🎉
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto leading-relaxed mb-8">
-          Your transaction <strong className="text-foreground font-mono">{order.order_id}</strong> is being reviewed by our team. Your ${order.account_size?.toLocaleString()} {order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'} account will be activated within 1-24 hours after blockchain confirmation.
+          Your <strong className="text-foreground">${order.account_size?.toLocaleString()} {order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'}</strong> account is being prepared by the Robert Funds team.
         </p>
       </motion.div>
 
@@ -87,21 +86,21 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
             color: 'text-primary',
             bg: 'rgba(255,92,0,0.07)',
             border: 'rgba(255,92,0,0.18)',
-            text: `Account credentials will be sent to ${order.email || 'your email address'} after verification.`,
+            text: `Funded account credentials will be sent to ${order.email || 'your email address'}.`,
           },
           {
             icon: Clock,
             color: 'text-muted-foreground',
             bg: 'rgba(255,255,255,0.04)',
             border: 'rgba(255,255,255,0.08)',
-            text: 'Our team will verify your payment within 1-24 hours. You will be notified via email.',
+            text: 'Delivery is typically completed within 1–24 hours after blockchain confirmation.',
           },
           {
             icon: Shield,
             color: 'text-emerald-400',
             bg: 'rgba(16,185,129,0.06)',
             border: 'rgba(16,185,129,0.18)',
-            text: 'Your order is protected under Robert Funds\' Trader Agreement. Keep your order ID private.',
+            text: 'Your account is protected under Robert Funds\' Trader Agreement. Keep your credentials private.',
           },
         ].map(({ icon: Icon, color, bg, border, text }) => (
           <div key={text} className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-left"

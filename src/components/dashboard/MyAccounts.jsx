@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X, Loader2, ExternalLink, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import FundingShowcase from './FundingShowcase';
 
 const STATUS_CONFIG = {
@@ -249,31 +248,25 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
-  const { user, userEmail } = useSupabaseAuth();
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
 
-  const { data: allAccounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts-myaccounts', userEmail],
-    queryFn: async () => {
-      if (!userEmail) return [];
-      const all = await base44.entities.ChallengeAccount.list('-created_date', 100);
-      return all.filter(a => a.user_email === userEmail);
-    },
-    enabled: !!userEmail,
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
+    enabled: !!user,
     refetchInterval: 15000,
   });
 
-  const accounts = allAccounts;
-
   const { data: myOrders = [] } = useQuery({
-    queryKey: ['my-orders', userEmail],
-    queryFn: () => base44.entities.Order.filter({ email: userEmail }),
-    enabled: !!userEmail,
+    queryKey: ['my-orders', user?.email],
+    queryFn: () => base44.entities.Order.filter({ email: user?.email }),
+    enabled: !!user?.email,
   });
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
   // Only show active/funded/passed/pending accounts — failed ones go to Trash
-  const displayAccounts = accounts.filter(a => !['failed'].includes(a.status));
+  const displayAccounts = accounts;
 
   return (
     <div>
