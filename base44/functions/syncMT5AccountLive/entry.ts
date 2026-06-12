@@ -18,8 +18,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'account_id required' }, { status: 400 });
     }
 
-    // Get account
-    const account = await base44.entities.ChallengeAccount.get(accountId);
+    // Get account - try by entity ID first, then by account_id field
+    let account;
+    try {
+      account = await base44.entities.ChallengeAccount.get(accountId);
+    } catch {
+      // Try finding by account_id field
+      const accounts = await base44.entities.ChallengeAccount.filter({ account_id: accountId });
+      account = accounts[0];
+    }
+    
     if (!account || account.user_email !== user.email) {
       return Response.json({ error: 'Account not found' }, { status: 404 });
     }
