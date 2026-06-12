@@ -8,9 +8,8 @@ import TermsModal from '../components/checkout/TermsModal';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-// Steps differ based on whether user is already logged in
-const STEPS_GUEST  = ['Personal Info', 'Payment Method', 'Payment', 'Confirmation'];
-const STEPS_MEMBER = ['Payment Method', 'Payment', 'Confirmation'];
+// ONLY logged-in users can purchase - guest checkout is disabled
+const STEPS = ['Payment Method', 'Payment', 'Confirmation'];
 
 export default function Checkout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -57,7 +56,6 @@ export default function Checkout() {
         );
         if (match) {
           basePrice = match.price;
-          // Build rule snapshot from live plan — stored on order/account at purchase time
           ruleSnapshot = {
             daily_dd_limit: match.daily_dd,
             max_dd_limit: match.max_dd,
@@ -79,34 +77,49 @@ export default function Checkout() {
       return { basePrice, ruleSnapshot, leverage };
     };
 
-    // Load plan + auth in parallel
-    Promise.all([loadPlan(), base44.auth.me().catch(() => null)]).then(([{ basePrice, ruleSnapshot, leverage }, user]) => {
-      if (user?.email) {
-        setIsLoggedIn(true);
-        setOrder({
-          challenge_type: type,
-          account_type: acctType,
-          account_size: size,
-          platform: 'xtrading',
-          leverage,
-          price: basePrice,
-          discount_amount: 0,
-          final_price: basePrice,
-          payment_method: '',
-          full_name: user.full_name || '',
-          email: user.email || '',
-          username: user.full_name?.toLowerCase().replace(/\s+/g, '_') || '',
-          phone: user.phone || '',
-          country: user.country || '',
-          city: user.city || '',
-          address: user.address || '',
-          postal_code: user.postal_code || '',
-          coupon_code: '',
-          rule_snapshot: ruleSnapshot,
-        });
-      } else {
-        setOrder(o => ({ ...o, challenge_type: type, account_size: size, account_type: acctType, leverage, price: basePrice, discount_amount: 0, final_price: basePrice, rule_snapshot: ruleSnapshot }));
+    // Check authentication - ONLY logged-in users can purchase
+    const checkAuth = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user || !user.email) {
+          // Guest user - redirect to login
+          window.location.href = '/login?redirect=/checkout?' + params.toString();
+          return;
+        }
+        return user;
+      } catch (e) {
+        // Not authenticated - redirect to login
+        window.location.href = '/login?redirect=/checkout?' + params.toString();
+        return null;
       }
+    };
+
+    // Load plan + auth in parallel
+    Promise.all([loadPlan(), checkAuth()]).then(([{ basePrice, ruleSnapshot, leverage }, user]) => {
+      if (!user) return; // Will redirect
+      
+      setIsLoggedIn(true);
+      setOrder({
+        challenge_type: type,
+        account_type: acctType,
+        account_size: size,
+        platform: 'xtrading',
+        leverage,
+        price: basePrice,
+        discount_amount: 0,
+        final_price: basePrice,
+        payment_method: '',
+        full_name: user.full_name || '',
+        email: user.email || '',
+        username: user.full_name?.toLowerCase().replace(/\s+/g, '_') || '',
+        phone: user.phone || '',
+        country: user.country || '',
+        city: user.city || '',
+        address: user.address || '',
+        postal_code: user.postal_code || '',
+        coupon_code: '',
+        rule_snapshot: ruleSnapshot,
+      });
       setAuthChecked(true);
       setPlanLoaded(true);
     });
@@ -114,11 +127,8 @@ export default function Checkout() {
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
 
-  // For logged-in users: skip personal info step (step 1 maps to payment method)
-  const STEPS = isLoggedIn ? STEPS_MEMBER : STEPS_GUEST;
-
-  // Map visual step to component step (for logged-in users, shift by 1)
-  const componentStep = isLoggedIn ? step + 1 : step;
+  // All users are logged-in (guests are redirected)
+  const componentStep = step;
   const prevStep = () => setStep(s => Math.max(1, s - 1));
   const nextStep = () => setStep(s => s + 1);
 
@@ -162,12 +172,10 @@ export default function Checkout() {
             </div>
           </a>
           <div className="flex items-center gap-2 sm:gap-4">
-            {isLoggedIn && (
-              <span className="hidden sm:inline text-[10px] font-mono px-2 py-1 rounded-full text-emerald-400"
-                style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                ● Signed in · {order.email}
-              </span>
-            )}
+            <span className="hidden sm:inline text-[10px] font-mono px-2 py-1 rounded-full text-emerald-400"
+              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              ● Signed in · {order.email}
+            </span>
             <a href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ChevronLeft className="w-4 h-4" /> Back
             </a>
@@ -212,20 +220,16 @@ export default function Checkout() {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Guest: show personal info on step 1 */}
-            {!isLoggedIn && componentStep === 1 && (
-              <CheckoutStep1 order={order} updateOrder={updateOrder} onNext={nextStep} />
+            {/* Step 1: Payment Method */}
+            {componentStep === 1 && (
+              <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={true} />
             )}
-            {/* Payment method (logged-in users start here) */}
-            {componentStep === (isLoggedIn ? 1 : 2) && (
-              <CheckoutStep2 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={isLoggedIn} />
+            {/* Step 2: Payment */}
+            {componentStep === 2 && (
+              <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={true} />
             )}
-            {/* Payment with coupon code */}
-            {componentStep === (isLoggedIn ? 2 : 3) && (
-              <CheckoutStep3 order={order} updateOrder={updateOrder} onNext={nextStep} onBack={prevStep} isLoggedIn={isLoggedIn} />
-            )}
-            {/* Confirmation */}
-            {componentStep === (isLoggedIn ? 3 : 4) && <CheckoutStep4 order={order} />}
+            {/* Step 3: Confirmation */}
+            {componentStep === 3 && <CheckoutStep4 order={order} />}
           </motion.div>
         </AnimatePresence>
       </div>
