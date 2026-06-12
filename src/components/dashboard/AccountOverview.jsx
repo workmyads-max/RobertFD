@@ -974,6 +974,22 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
             </span>
           )}
         </div>
+        <button
+          onClick={async () => {
+            try {
+              const res = await base44.functions.invoke('scheduledMTSync', {});
+              alert(`✅ Sync complete! Synced ${res.data?.synced || 0} accounts, ${res.data?.total_new_trades || 0} new trades.`);
+              queryClient.invalidateQueries({ queryKey: ['challenge-accounts'] });
+              queryClient.invalidateQueries({ queryKey: ['trade-records-overview'] });
+            } catch (e) {
+              alert(`❌ Sync failed: ${e.message}`);
+            }
+          }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:bg-white/5"
+          style={{ border: '1px solid rgba(255,92,0,0.3)', color: '#FF5C00' }}
+        >
+          <RefreshCw className="w-3.5 h-3.5" /> Sync Now
+        </button>
       </div>
 
       {/* Account selector */}
