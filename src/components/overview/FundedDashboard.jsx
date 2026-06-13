@@ -120,14 +120,14 @@ console.log('================accounts2:', accounts2);
         // Try without email filter to see if ANY data exists
         const { data: allRows, error: rawErr } = await supabase
           .from('challenge_accounts')
-          .select('id, user_email, status', { count: 'exact' })
+          // .select('id, user_email, status', { count: 'exact' })
           .limit(5);
         console.log('[FundedDashboard] Raw table check - rows:', allRows, 'error:', rawErr);
         console.log('[FundedDashboard] Emails in table:', allRows?.map(r => r.user_email));
 
         const result = await getChallengeAccounts(email);
         console.log('[FundedDashboard] Filtered result:', result, 'count:', result?.length);
-        return result;
+        return allRows;
       } catch (err) {
         console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
         return [];
