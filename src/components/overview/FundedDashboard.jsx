@@ -78,6 +78,15 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   });
 
   console.log('================user:', user);
+
+  const { data: accounts2 = [], isLoading, refetch } = useQuery({
+  queryKey: ['funded-dashboard-accounts-all'], // Removed email dependency since we are fetching all
+  queryFn: () => base44.entities.ChallengeAccount.list(), // .list() fetches all records
+  refetchInterval: 5000, 
+});
+
+console.log('================accounts2:', accounts2);
+
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
@@ -85,7 +94,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
 
-// console.log('================data:', data);
 console.log('================accounts:', accounts);
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
