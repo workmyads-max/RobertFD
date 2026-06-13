@@ -77,6 +77,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
   });
 
+  console.log('================user:', user);
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
