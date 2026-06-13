@@ -119,7 +119,7 @@ export default function Dashboard() {
   // Disabled popup notifications for now
   const popupNotification = null;
 
-  const isAdmin = isUserAdmin || user?.role === 'admin';
+  const isAdmin = isUserAdmin || user?.role === 'admin' || user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],

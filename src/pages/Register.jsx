@@ -54,11 +54,14 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          // No emailRedirectTo = Supabase won't send confirmation email if email confirmation is disabled in project settings
+          data: {
+            full_name: formData.email.split('@')[0],
+          }
         }
       });
       if (error) throw error;
@@ -69,7 +72,6 @@ export default function Register() {
           const referrers = await base44.entities.AffiliateProfile.filter({ referral_code: refCode });
           if (referrers.length > 0) {
             const referrer = referrers[0];
-            // Create affiliate profile for the new user with referral relationship
             const newCode = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
             await base44.entities.AffiliateProfile.create({
               user_email: formData.email,
@@ -81,7 +83,6 @@ export default function Register() {
               referral_clicks: 0, total_referrals: 0, conversions: 0,
               active_funded_traders: 0, is_active: true, is_frozen: false,
             });
-            // Increment referrer's total_referrals
             await base44.entities.AffiliateProfile.update(referrer.id, {
               total_referrals: (referrer.total_referrals || 0) + 1,
             });
@@ -91,8 +92,15 @@ export default function Register() {
         }
       }
 
-      toast.success('Account created! Please check your email to verify.');
-      navigate('/dashboard');
+      // If session is immediately available (email confirmation disabled), go to dashboard
+      // Otherwise show "check email" message
+      if (signUpData?.session) {
+        toast.success('Account created! Welcome aboard.');
+        navigate('/dashboard');
+      } else {
+        toast.success('Account created! Check your email to confirm, then log in.');
+        navigate('/login');
+      }
     } catch (err) {
       setError(err.message);
       toast.error(err.message);

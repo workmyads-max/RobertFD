@@ -9,6 +9,7 @@ import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -66,29 +67,25 @@ function AccountInfoStrip({ account }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
-  // Refetch user to get latest avatar_url/profile_photo_url
-  const { data: currentUser = user } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: async () => {
-      const me = await base44.auth.me();
-      return me || user;
-    },
-    enabled: !!user?.id,
-    refetchInterval: 10000, // Refetch every 10s to catch profile updates
-  });
+  // Use Supabase auth directly — reliable on both desktop and mobile
+  const { user: supabaseUser } = useSupabaseAuth();
+  // Merge: prefer Supabase user (has user_metadata.full_name), fallback to prop
+  const currentUser = supabaseUser || user;
+  const userEmail = supabaseUser?.email || user?.email;
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['funded-dashboard-accounts', user?.email],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
+    queryKey: ['funded-dashboard-accounts', userEmail],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }),
+    enabled: !!userEmail,
+    refetchInterval: 30000, // Reduced from 5s to 30s to prevent mobile refresh loops
+    staleTime: 10000,
   });
 
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
-    queryKey: ['kyc-status', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
+    queryKey: ['kyc-status', userEmail],
+    queryFn: () => base44.entities.KYCVerification.filter({ user_email: userEmail }),
+    enabled: !!userEmail,
   });
   const kyc = kycList[0] || null;
 
