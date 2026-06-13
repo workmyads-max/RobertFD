@@ -4,9 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 export default function Register() {
   const navigate = useNavigate();
+  const { refreshUser } = useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState('register'); // 'register' | 'otp'
@@ -98,6 +100,7 @@ export default function Register() {
       }
 
       toast.success('Account created! Welcome!');
+      await refreshUser();
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Invalid verification code');

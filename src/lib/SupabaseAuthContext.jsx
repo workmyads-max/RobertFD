@@ -28,11 +28,14 @@ export const SupabaseAuthProvider = ({ children }) => {
   }, []);
 
   const refreshUser = async () => {
+    setLoading(true);
     try {
       const me = await base44.auth.me();
       setUser(me ?? null);
     } catch {
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
