@@ -267,14 +267,17 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
-      // CRITICAL: Only fetch MT5-synced active accounts for this user's email
+      // CRITICAL: Only fetch MT5-synced accounts for this user's email
+      // Include all statuses (active, pending, passed, funded) - exclude only 'failed'
       // Do NOT fetch by created_by_id - service accounts cause cross-user data exposure
-      const accounts = await base44.entities.ChallengeAccount.filter({ 
+      const allAccounts = await base44.entities.ChallengeAccount.filter({ 
         user_email: user.email,
-        platform: 'mt5',
-        status: 'active' 
+        platform: 'mt5'
       }, '-created_date', 100);
-      return accounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      
+      // Filter out failed accounts (they go to Trash)
+      const activeAccounts = allAccounts.filter(a => a.status !== 'failed');
+      return activeAccounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
     refetchInterval: 15000,
