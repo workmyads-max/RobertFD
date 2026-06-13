@@ -227,14 +227,27 @@ Deno.serve(async (req) => {
           if (!apiReturnedZero) {
             balance = rawBalance;
             equity  = rawEquity;
-          } else if (isRecentlyProvisioned || (acc.balance || 0) > 0) {
-            // Async deposit pending OR API temporarily returning 0 — keep DB value
-            balance = acc.balance || acc.account_size || 0;
-            equity  = acc.equity  || acc.balance || acc.account_size || 0;
-            console.log(`[sync] ${acc.account_id} API returned 0 — keeping DB values (balance=${balance}, recently_provisioned=${isRecentlyProvisioned})`);
           } else {
-            balance = 0;
-            equity  = 0;
+            // API returned 0 — ALWAYS keep DB values to prevent false breach.
+            // MT5 userget can return 0 transiently (async deposit, API glitch, group mismatch).
+            // Only trust a 0 balance from the API if the DB also has 0 AND the account
+            // was NOT recently provisioned. This prevents false 100% DD breach on real accounts.
+            const dbBalance = acc.balance || 0;
+            const dbEquity  = acc.equity  || 0;
+            if (dbBalance > 0) {
+              // DB has real data — API glitch, keep DB values
+              balance = dbBalance;
+              equity  = dbEquity || dbBalance;
+              console.log(`[sync] ${acc.account_id} API returned 0 — keeping DB values (balance=${balance}, recently_provisioned=${isRecentlyProvisioned})`);
+            } else if (isRecentlyProvisioned) {
+              // Fresh account — deposit still processing
+              balance = acc.account_size || 0;
+              equity  = acc.account_size || 0;
+              console.log(`[sync] ${acc.account_id} API returned 0 — keeping account_size (recently_provisioned=true)`);
+            } else {
+              balance = 0;
+              equity  = 0;
+            }
           }
           // Tritech get-deal-history returns only CLOSED deals — all records are closed trades
           // type: 0=BUY, 1=SELL. volume is raw (e.g. 60000 = 0.60 lots), divide by 100000
