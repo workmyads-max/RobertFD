@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
         coupon_code: orderData.coupon_code || '',
         discount_amount: orderData.discount_amount || 0,
         affiliate_code: orderData.affiliate_code || '',
+        rule_snapshot: orderData.rule_snapshot || null,
       });
       console.log('Base44 order created:', base44Order.order_id);
     } catch (e) {
@@ -101,6 +102,7 @@ Deno.serve(async (req) => {
       coupon_code: orderData.coupon_code || '',
       discount_amount: orderData.discount_amount || 0,
       affiliate_code: orderData.affiliate_code || '',
+      rule_snapshot: orderData.rule_snapshot || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });

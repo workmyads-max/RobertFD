@@ -69,6 +69,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
           ...order,
           payment_address: wallet?.address || '',
           payment_status: ['usdt_trc20', 'bitcoin'].includes(order.payment_method) ? 'awaiting_confirmation' : 'pending',
+          rule_snapshot: order.rule_snapshot || null,
         },
       });
       

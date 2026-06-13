@@ -112,6 +112,20 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               <span>•</span>
               <span className="capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
             </div>
+            {/* Rule snapshot display - shows DD limits from challenge rules */}
+            {account.rule_snapshot && (
+              <div className="flex items-center gap-2 mt-2 text-[10px] font-mono">
+                <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}>
+                  Daily DD: {account.rule_snapshot.daily_dd_limit}%
+                </span>
+                <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}>
+                  Max DD: {account.rule_snapshot.max_dd_limit}%
+                </span>
+                <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
+                  Target: {account.phase === 'phase2' ? account.rule_snapshot.phase2_target : account.rule_snapshot.phase1_target}%
+                </span>
+              </div>
+            )}
           </div>
           <div className="text-right">
             <div className="text-2xl font-black text-foreground">${(account.balance || account.account_size)?.toLocaleString()}</div>
@@ -253,9 +267,13 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
-      // CRITICAL: Only fetch by user_email to prevent data leakage between users
+      // CRITICAL: Only fetch MT5-synced active accounts for this user's email
       // Do NOT fetch by created_by_id - service accounts cause cross-user data exposure
-      const accounts = await base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+      const accounts = await base44.entities.ChallengeAccount.filter({ 
+        user_email: user.email,
+        platform: 'mt5',
+        status: 'active' 
+      }, '-created_date', 100);
       return accounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
