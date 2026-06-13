@@ -283,7 +283,12 @@ Deno.serve(async (req) => {
           let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
           let breachValue = dbWasCorrupted ? null : (acc.dd_breach_value || null);
 
-          if (!breachDetected) {
+          // CRITICAL FIX: If API returned 0 balance AND DB had 0 balance, this is likely
+          // an unfunded MT5 account (broker didn't deposit). Don't auto-breach — flag for manual review.
+          // This prevents false breaches on paid accounts where MT5 broker hasn't funded yet.
+          const isUnfundedAccount = apiReturnedZero && (acc.balance || 0) === 0;
+          
+          if (!breachDetected && !isUnfundedAccount) {
             if (persistentOverallDD >= overallLimit) {
               breachDetected = true;
               breachType = (acc.rule_snapshot?.trailing_dd ?? acc.challenge_type === 'instant_light') ? 'trailing' : 'overall';
@@ -297,6 +302,10 @@ Deno.serve(async (req) => {
               breachValue = persistentDailyDD;
               console.log(`[BREACH] ${acc.account_id} daily DD: ${persistentDailyDD.toFixed(2)}% / limit ${dailyLimit}%`);
             }
+          }
+          
+          if (isUnfundedAccount) {
+            console.log(`[UNFUNDED] ${acc.account_id} — MT5 returned 0 balance, skipping auto-breach (needs manual MT5 funding)`);
           }
 
           const updates = {
