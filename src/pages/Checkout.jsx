@@ -53,14 +53,6 @@ export default function Checkout() {
     };
     checkAuthAndRedirect();
   }, []);
-  
-  if (redirecting) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -152,6 +144,14 @@ export default function Checkout() {
       setPlanLoaded(true);
     });
   }, []);
+
+  if (redirecting) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
 
