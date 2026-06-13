@@ -88,54 +88,54 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
 console.log('================accounts2:', accounts2);
 
-  // const { data: accounts = [], isLoading, refetch } = useQuery({
-  //   queryKey: ['funded-dashboard-accounts', user?.email],
-  //   // queryFn: () => base44.entities.ChallengeAccount.filter({ "data.user_email": user?.email }),
-  //   queryFn: async () => {
-  //     console.log('[FundedDashboard] Fetching accounts for email:', user?.email);
-  //     try {
-  //       const result = await base44.entities.ChallengeAccount.filter({ user_email: user?.email });
-  //       console.log('[FundedDashboard] Accounts result:', result);
-  //       return result;
-  //     } catch (err) {
-  //       console.error('[FundedDashboard] Accounts fetch error:', err);
-  //       return [];
-  //     }
-  //   },
-  //   enabled: !!user?.email,
-  //   refetchInterval: 5000, // 5s for near-live P&L sync from terminal
-  // });
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
-    // queryFn: () => getChallengeAccounts(user?.email),
+    // queryFn: () => base44.entities.ChallengeAccount.filter({ "data.user_email": user?.email }),
     queryFn: async () => {
-      const email = user?.email;
-      console.log('[FundedDashboard] Fetching accounts for email:', JSON.stringify(email));
+      console.log('[FundedDashboard] Fetching accounts for email:', user?.email);
       try {
-        // Debug: raw Supabase query to check table state
-        const { supabase } = await import('@/lib/supabaseClient');
-        const { data: session } = await supabase.auth.getSession();
-        console.log('[FundedDashboard] Supabase session exists:', !!session?.session);
-        
-        // Try without email filter to see if ANY data exists
-        const { data: allRows, error: rawErr } = await supabase
-          .from('challenge_accounts')
-          // .select('id, user_email, status', { count: 'exact' })
-          .limit(5);
-        console.log('[FundedDashboard] Raw table check - rows:', allRows, 'error:', rawErr);
-        console.log('[FundedDashboard] Emails in table:', allRows?.map(r => r.user_email));
-
-        const result = await getChallengeAccounts(email);
-        console.log('[FundedDashboard] Filtered result:', result, 'count:', result?.length);
-        return allRows;
+        const result = await base44.entities.ChallengeAccount.filter({ user_email: user?.email });
+        console.log('[FundedDashboard] Accounts result:', result);
+        return result;
       } catch (err) {
-        console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
+        console.error('[FundedDashboard] Accounts fetch error:', err);
         return [];
       }
     },
     enabled: !!user?.email,
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
+  // const { data: accounts = [], isLoading, refetch } = useQuery({
+  //   queryKey: ['funded-dashboard-accounts', user?.email],
+  //   // queryFn: () => getChallengeAccounts(user?.email),
+  //   queryFn: async () => {
+  //     const email = user?.email;
+  //     console.log('[FundedDashboard] Fetching accounts for email:', JSON.stringify(email));
+  //     try {
+  //       // Debug: raw Supabase query to check table state
+  //       const { supabase } = await import('@/lib/supabaseClient');
+  //       const { data: session } = await supabase.auth.getSession();
+  //       console.log('[FundedDashboard] Supabase session exists:', !!session?.session);
+        
+  //       // Try without email filter to see if ANY data exists
+  //       const { data: allRows, error: rawErr } = await supabase
+  //         .from('challenge_accounts')
+  //         // .select('id, user_email, status', { count: 'exact' })
+  //         .limit(5);
+  //       console.log('[FundedDashboard] Raw table check - rows:', allRows, 'error:', rawErr);
+  //       console.log('[FundedDashboard] Emails in table:', allRows?.map(r => r.user_email));
+
+  //       const result = await getChallengeAccounts(email);
+  //       console.log('[FundedDashboard] Filtered result:', result, 'count:', result?.length);
+  //       return allRows;
+  //     } catch (err) {
+  //       console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
+  //       return [];
+  //     }
+  //   },
+  //   enabled: !!user?.email,
+  //   refetchInterval: 5000, // 5s for near-live P&L sync from terminal
+  // });
 
 console.log('================accounts:', accounts);
   // Load KYC for welcome header
