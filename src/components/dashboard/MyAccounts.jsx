@@ -257,8 +257,9 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
     queryKey: ['challenge-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
     enabled: !!userEmail,
-    refetchInterval: 30000,
-    staleTime: 0,
+    refetchInterval: 60000,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: myOrders = [] } = useQuery({

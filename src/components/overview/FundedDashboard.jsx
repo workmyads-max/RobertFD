@@ -77,8 +77,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     queryKey: ['funded-dashboard-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
     enabled: !!userEmail,
-    refetchInterval: 30000,
-    staleTime: 0, // Always refetch when userEmail becomes available — critical for mobile
+    refetchInterval: 60000,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 
   // Load KYC for welcome header
@@ -117,7 +118,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(selectedAccount, trades);
 
-  if (authLoading || isLoading) {
+  if (authLoading || (isLoading && accounts.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}

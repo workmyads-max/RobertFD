@@ -135,7 +135,8 @@ export default function Dashboard() {
     queryKey: ['challenge-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
     enabled: !!userEmail,
-    staleTime: 0,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
