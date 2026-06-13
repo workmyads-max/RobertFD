@@ -13,7 +13,6 @@ const STEPS = ['Payment Method', 'Payment', 'Confirmation'];
 
 export default function Checkout() {
   // All hooks at top level - React rules require consistent order
-  const [redirecting, setRedirecting] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);
@@ -37,39 +36,12 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    const checkAuthAndRedirect = async () => {
-      try {
-        const user = await base44.auth.me();
-        if (user && user.email) {
-          // Logged in - redirect to dashboard checkout
-          const params = new URLSearchParams(window.location.search);
-          window.location.href = '/dashboard?tab=checkout&' + params.toString();
-          return;
-        }
-      } catch (e) {
-        // Not logged in - continue with guest checkout (will redirect to login)
-      }
-      setRedirecting(false);
-    };
-    checkAuthAndRedirect();
-  }, []);
-  
-  if (redirecting) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type') || 'two-step';
     const size = parseInt(params.get('size') || '100000');
     const acctType = params.get('account_type') || 'standard';
     const leverage = acctType === 'swing' ? '1:30' : '1:100';
 
-    // Fetch price and full rule snapshot from ChallengePlan DB
     const loadPlan = async () => {
       let basePrice = 0;
       let ruleSnapshot = null;
@@ -105,27 +77,25 @@ export default function Checkout() {
       return { basePrice, ruleSnapshot, leverage };
     };
 
-    // Check authentication - ONLY logged-in users can purchase
     const checkAuth = async () => {
       try {
         const user = await base44.auth.me();
         if (!user || !user.email) {
-          // Guest user - redirect to login
           window.location.href = '/login?redirect=/checkout?' + params.toString();
-          return;
+          return null;
         }
+        // Logged in — redirect to dashboard checkout
+        window.location.href = '/dashboard?tab=checkout&' + params.toString();
         return user;
       } catch (e) {
-        // Not authenticated - redirect to login
         window.location.href = '/login?redirect=/checkout?' + params.toString();
         return null;
       }
     };
 
-    // Load plan + auth in parallel
     Promise.all([loadPlan(), checkAuth()]).then(([{ basePrice, ruleSnapshot, leverage }, user]) => {
-      if (!user) return; // Will redirect
-      
+      if (!user) return;
+
       setIsLoggedIn(true);
       setOrder({
         challenge_type: type,
@@ -150,6 +120,7 @@ export default function Checkout() {
       });
       setAuthChecked(true);
       setPlanLoaded(true);
+      setRedirecting(false);
     });
   }, []);
 

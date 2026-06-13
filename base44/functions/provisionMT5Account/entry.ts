@@ -26,8 +26,25 @@ function genPassword() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (user?.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+    // Allow service role internal calls (invoked from manualCryptoReview, etc.)
+    // OR direct admin calls from the frontend
+    let isAuthorized = false;
+    try {
+      const user = await base44.auth.me();
+      if (user?.role === 'admin') isAuthorized = true;
+    } catch (_) {}
+
+    // Check for internal service-role invocation via Authorization header
+    // base44.asServiceRole.functions.invoke passes a service token automatically
+    const authHeader = req.headers.get('authorization') || '';
+    if (authHeader.includes('service')) isAuthorized = true;
+
+    // Also allow if called with a valid scheduler secret (internal automation)
+    const internalSecret = req.headers.get('x-internal-secret');
+    if (internalSecret && internalSecret === Deno.env.get('SCHEDULER_SECRET_TOKEN')) isAuthorized = true;
+
+    if (!isAuthorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
     const { account_id, order_id, user_email, challenge_type, account_type, account_size, leverage, rule_snapshot } = body;
