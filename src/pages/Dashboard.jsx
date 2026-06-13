@@ -68,6 +68,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -104,6 +105,9 @@ export default function Dashboard() {
   }, []);
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
+  const { user: supabaseUser } = useSupabaseAuth();
+  // Use Supabase email for entity queries — works reliably on mobile
+  const userEmail = supabaseUser?.email || user?.email;
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -122,9 +126,10 @@ export default function Dashboard() {
   const isAdmin = isUserAdmin || user?.role === 'admin' || user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    enabled: !!user,
+    queryKey: ['challenge-accounts', userEmail],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
+    enabled: !!userEmail,
+    staleTime: 10000,
   });
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
@@ -250,7 +255,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-12 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
