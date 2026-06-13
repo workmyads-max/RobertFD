@@ -20,53 +20,97 @@ import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 // ─── Debug Overlay (temporary — remove after diagnosis) ──────────────────────
 function DebugOverlay({ supabaseUser, user, userEmail, accounts, activeAccounts, b44TokenReady, authLoading, isLoading, selectedAccount }) {
   const [ls, setLs] = React.useState({});
+  const [trace, setTrace] = React.useState(null);
+  const [tracing, setTracing] = React.useState(false);
+
   React.useEffect(() => {
-    setLs({
-      base44_access_token: localStorage.getItem('base44_access_token')?.slice(0, 30) + '...',
-      base44_app_id: localStorage.getItem('base44_app_id'),
-      supabase_auth: Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-')).join(', '),
-    });
+    const allKeys = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.includes('base44') || k.includes('supabase') || k.includes('sb-') || k.includes('xf_')) {
+        allKeys[k] = (localStorage.getItem(k) || '').slice(0, 40);
+      }
+    }
+    setLs(allKeys);
   }, []);
+
+  const runTrace = async () => {
+    setTracing(true);
+    try {
+      const res = await base44.functions.invoke('debugAccountQuery', { user_email: userEmail });
+      setTrace(res.data);
+    } catch (e) {
+      setTrace({ error: e.message });
+    }
+    setTracing(false);
+  };
 
   const allStatuses = accounts.map(a => a.status);
   const isFilterKilling = accounts.length > 0 && activeAccounts.length === 0;
 
+  const s = { fontSize: '11px', fontFamily: 'monospace', margin: '1px 0' };
+  const hl = (c) => ({ ...s, color: c, fontWeight: 'bold' });
+
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.92)', color: '#0f0', fontFamily: 'monospace',
-      fontSize: '11px', padding: '10px', maxHeight: '70vh', overflowY: 'auto',
-      border: '2px solid #0f0'
+      background: 'rgba(0,0,0,0.95)', color: '#0f0', fontFamily: 'monospace',
+      fontSize: '11px', padding: '10px 12px', maxHeight: '80vh', overflowY: 'auto',
+      border: '2px solid lime'
     }}>
-      <div style={{ color: '#ff0', fontWeight: 'bold', marginBottom: 6 }}>🔍 MOBILE DEBUG OVERLAY</div>
-      <div>authLoading: <b>{String(authLoading)}</b></div>
-      <div>isLoading: <b>{String(isLoading)}</b></div>
-      <div>b44TokenReady: <b>{String(b44TokenReady)}</b></div>
-      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
-      <div>supabaseUser?.id: <b style={{ color: '#0ff' }}>{supabaseUser?.id || 'NULL'}</b></div>
-      <div>supabaseUser?.email: <b style={{ color: '#0ff' }}>{supabaseUser?.email || 'NULL'}</b></div>
-      <div>user?.email (prop): <b style={{ color: '#0ff' }}>{user?.email || 'NULL'}</b></div>
-      <div>userEmail resolved: <b style={{ color: '#ff0' }}>{userEmail || 'NULL'}</b></div>
-      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
-      <div>accounts.length: <b style={{ color: '#f80' }}>{accounts.length}</b></div>
-      <div>all statuses: <b>{allStatuses.join(', ') || 'none'}</b></div>
-      <div>activeAccounts.length: <b style={{ color: '#f80' }}>{activeAccounts.length}</b></div>
-      <div>selectedAccount: <b>{selectedAccount?.account_id || 'null'}</b></div>
-      <div style={{ color: isFilterKilling ? '#f00' : '#0f0' }}>
-        ⚠ filter killing results: <b>{String(isFilterKilling)}</b>
-        {isFilterKilling && ` (statuses present: ${allStatuses.join(', ')})`}
+      <div style={{ color: '#ff0', fontWeight: 'bold', marginBottom: 4 }}>🔍 ACCOUNT QUERY TRACE</div>
+
+      {/* Auth state */}
+      <div style={s}>authLoading: <span style={hl(authLoading ? '#f00' : '#0f0')}>{String(authLoading)}</span></div>
+      <div style={s}>b44TokenReady: <span style={hl(b44TokenReady ? '#0f0' : '#f00')}>{String(b44TokenReady)}</span> {!b44TokenReady && '← TIMEOUT FIRED'}</div>
+      <div style={s}>supabaseUser.email: <span style={hl('#0ff')}>{supabaseUser?.email || 'NULL'}</span></div>
+      <div style={s}>userEmail resolved: <span style={hl('#ff0')}>{userEmail || 'NULL'}</span></div>
+      <div style={s}>base44_access_token: <span style={hl(ls['base44_access_token'] ? '#0f0' : '#f00')}>{ls['base44_access_token'] || 'UNDEFINED ← ROOT CAUSE'}</span></div>
+
+      {/* localStorage dump */}
+      <div style={{ color: '#555', marginTop: 4 }}>── localStorage keys ──</div>
+      {Object.entries(ls).map(([k, v]) => (
+        <div key={k} style={{ ...s, wordBreak: 'break-all', color: '#888' }}>{k}: <span style={{ color: '#aaa' }}>{v || '(empty)'}</span></div>
+      ))}
+
+      {/* Query results */}
+      <div style={{ color: '#555', marginTop: 4 }}>── Query Results ──</div>
+      <div style={s}>accounts.length: <span style={hl(accounts.length > 0 ? '#0f0' : '#f00')}>{accounts.length}</span></div>
+      <div style={s}>activeAccounts.length: <span style={hl(activeAccounts.length > 0 ? '#0f0' : '#f00')}>{activeAccounts.length}</span></div>
+      <div style={s}>all statuses: <span style={hl('#f80')}>{allStatuses.join(', ') || 'none'}</span></div>
+      <div style={s}>filter killing: <span style={hl(isFilterKilling ? '#f00' : '#0f0')}>{String(isFilterKilling)}</span></div>
+
+      {accounts.length > 0 && accounts.map((a, i) => (
+        <div key={i} style={{ ...s, color: '#aaa' }}>#{i} {a.account_id} | {a.status} | {a.user_email} | owner:{a.created_by_id?.slice(0,8)}</div>
+      ))}
+
+      {/* Backend trace button */}
+      <div style={{ marginTop: 8 }}>
+        <button onClick={runTrace} disabled={tracing} style={{
+          background: '#1a3a1a', border: '1px solid lime', color: 'lime',
+          padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontFamily: 'monospace'
+        }}>
+          {tracing ? '⏳ running...' : '▶ RUN BACKEND TRACE'}
+        </button>
       </div>
-      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
-      <div style={{ color: '#888' }}>localStorage:</div>
-      <div>base44_access_token: <b>{ls.base44_access_token || 'MISSING'}</b></div>
-      <div>base44_app_id: <b>{ls.base44_app_id || 'MISSING'}</b></div>
-      <div style={{ wordBreak: 'break-all' }}>supabase keys: <b>{ls.supabase_auth || 'none'}</b></div>
-      {accounts.length > 0 && (
+
+      {/* Backend trace results */}
+      {trace && (
         <div style={{ marginTop: 6 }}>
-          <div style={{ color: '#ff0' }}>raw accounts:</div>
-          {accounts.map((a, i) => (
-            <div key={i}>#{i}: id={a.account_id} status={a.status} email={a.user_email} owner={a.created_by_id}</div>
+          <div style={{ color: '#ff0' }}>── Backend Trace ──</div>
+          <div style={s}>b44 authenticated: <span style={hl(trace.base44_auth?.authenticated ? '#0f0' : '#f00')}>{String(trace.base44_auth?.authenticated)}</span></div>
+          <div style={s}>b44 user: <span style={hl('#0ff')}>{trace.base44_auth?.user ? `${trace.base44_auth.user.email} (${trace.base44_auth.user.role})` : 'NULL — ' + (trace.base44_auth?.error || 'no session')}</span></div>
+          <div style={s}>user_scoped count: <span style={hl(trace.user_scoped_query?.count > 0 ? '#0f0' : '#f00')}>{trace.user_scoped_query?.count}</span> {trace.user_scoped_query?.error && `ERR: ${trace.user_scoped_query.error}`}</div>
+          <div style={s}>service_role count: <span style={hl(trace.service_role_query?.count > 0 ? '#0f0' : '#f00')}>{trace.service_role_query?.count}</span> {trace.service_role_query?.error && `ERR: ${trace.service_role_query.error}`}</div>
+          <div style={s}>filtered_by_email count: <span style={hl(trace.filtered_by_email_query?.count > 0 ? '#0f0' : '#f00')}>{trace.filtered_by_email_query?.count}</span></div>
+          <div style={{ ...s, color: '#ff0', marginTop: 4 }}>VERDICT: {trace.verdict?.root_cause_hypothesis}</div>
+          {trace.filtered_by_email_query?.records?.map((r, i) => (
+            <div key={i} style={{ ...s, color: '#aaa' }}>#{i} {r.account_id} | {r.status} | {r.user_email}</div>
           ))}
+          {trace.service_role_query?.sample?.map((r, i) => (
+            <div key={i} style={{ ...s, color: '#666' }}>svc#{i} {r.account_id} | {r.status} | {r.user_email}</div>
+          ))}
+          {trace.error && <div style={{ color: '#f00' }}>FUNCTION ERROR: {trace.error}</div>}
         </div>
       )}
     </div>
