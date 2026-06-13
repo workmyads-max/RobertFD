@@ -875,24 +875,39 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Get current user for email-based filtering
+  React.useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
-        queryClient.setQueryData(['challenge-accounts'], (old = []) =>
+        queryClient.setQueryData(['challenge-accounts', currentUser?.email], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
         if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
       }
     });
     return unsub;
-  }, [queryClient]);
+  }, [queryClient, currentUser?.email]);
 
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      // ONLY fetch MT5-synced accounts for the current user
+      const allAccounts = await base44.entities.ChallengeAccount.filter({ 
+        user_email: currentUser.email,
+        platform: 'mt5'
+      }, '-created_date', 50);
+      return allAccounts;
+    },
+    enabled: !!currentUser?.email,
     refetchInterval: 5000,
-    staleTime: 60000, // Increase stale time to reduce refetches
+    staleTime: 60000,
   });
 
   // Load account from sessionStorage immediately when accounts are available
