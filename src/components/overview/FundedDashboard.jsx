@@ -107,7 +107,19 @@ console.log('================accounts2:', accounts2);
   // });
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
-    queryFn: () => getChallengeAccounts(user?.email),
+    // queryFn: () => getChallengeAccounts(user?.email),
+    queryFn: async () => {
+      const email = user?.email;
+      console.log('[FundedDashboard] Fetching accounts for email:', JSON.stringify(email));
+      try {
+        const result = await getChallengeAccounts(email);
+        console.log('[FundedDashboard] Accounts result:', result, 'count:', result?.length);
+        return result;
+      } catch (err) {
+        console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
+        return [];
+      }
+    },
     enabled: !!user?.email,
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
