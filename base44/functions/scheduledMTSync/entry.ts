@@ -294,10 +294,12 @@ Deno.serve(async (req) => {
           let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
           let breachValue = dbWasCorrupted ? null : (acc.dd_breach_value || null);
 
-          // CRITICAL FIX #2: Check if account has a PAID ORDER.
+          // CRITICAL FIX #2: Check if account has a PAID ORDER matching this user's email.
           // If account has paid order BUT MT5 returns 0 balance, the broker hasn't funded it yet.
           // NEVER auto-breach these accounts — they need manual MT5 funding review.
-          const hasPaidOrder = paidOrderAccountIds.has(acc.account_id);
+          // Also match by user email to prevent false positive on account_id collisions.
+          const hasPaidOrder = paidOrderAccountIds.has(acc.account_id) ||
+            paidOrders.some(o => o.email === acc.user_email && ['confirmed','paid'].includes(o.payment_status));
           const isUnfundedPaidAccount = hasPaidOrder && apiReturnedZero;
           
           // CRITICAL: Never breach accounts that have zero balance/equity — API glitch or unfunded

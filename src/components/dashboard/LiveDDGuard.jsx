@@ -73,12 +73,16 @@ export default function LiveDDGuard({ onBreach }) {
 
     try {
       // Only check active MT5 accounts belonging to THIS user
+      // Skip accounts already breached in DB (status=failed or dd_breach_detected=true)
+      // to prevent showing the breach modal again on page reload
       const mtAccounts = userAccounts.filter(a =>
         a.mt_login &&
-        ['active', 'funded', 'passed'].includes(a.status) &&
+        a.user_email === currentUser.email && // triple-verify ownership
+        ['active', 'funded', 'passed'].includes(a.status) && // only non-failed
         a.platform === 'mt5' &&
         !breachedAccountsRef.current.has(a.account_id) &&
-        !a.dd_breach_detected // Skip already-breached accounts
+        !a.dd_breach_detected && // skip already-breached in DB
+        a.status !== 'failed' // extra guard
       );
 
       if (mtAccounts.length === 0) {
@@ -135,9 +139,9 @@ export default function LiveDDGuard({ onBreach }) {
 
           if (breachType) {
             breachedAccountsRef.current.add(acc.account_id);
-            console.warn(`[LiveDDGuard] BREACH ${acc.account_id} (user: ${currentUser.email}): ${breachType} ${breachValue.toFixed(2)}%`);
 
-            queryClient.invalidateQueries({ queryKey: ['challenge-accounts'] });
+            // CRITICAL: Invalidate ONLY this user's scoped cache key
+            queryClient.invalidateQueries({ queryKey: ['challenge-accounts', currentUser.email] });
 
             if (onBreach) {
               onBreach({
@@ -150,8 +154,9 @@ export default function LiveDDGuard({ onBreach }) {
               });
             }
           } else {
-            queryClient.setQueryData(['challenge-accounts'], (old) => {
-              if (!old) return old;
+            // CRITICAL: Update ONLY this user's scoped cache key — never the global key
+            queryClient.setQueryData(['challenge-accounts', currentUser.email], (old) => {
+              if (!Array.isArray(old)) return old;
               return old.map(a => a.account_id === acc.account_id
                 ? { ...a, balance, equity, max_drawdown_used: persistentOverallDD, daily_drawdown_used: persistentDailyDD }
                 : a
