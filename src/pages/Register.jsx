@@ -11,6 +11,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState('register'); // 'register' | 'otp'
   const [otpCode, setOtpCode] = useState('');
+  const [resending, setResending] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
 
@@ -47,6 +48,18 @@ export default function Register() {
       toast.error(err.message || 'Registration failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResending(true);
+    try {
+      await base44.auth.resendOtp(formData.email);
+      toast.success('A new code has been sent to your email');
+    } catch (err) {
+      toast.error(err.message || 'Failed to resend code');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -209,7 +222,12 @@ export default function Register() {
                 {isLoading ? 'Verifying...' : 'Verify & Continue'}
               </button>
 
-              <button type="button" onClick={() => { setStep('register'); setError(''); }}
+              <button type="button" onClick={handleResendOtp} disabled={resending}
+                className="w-full py-2 text-sm text-primary hover:text-primary/80 transition-colors disabled:opacity-50">
+                {resending ? 'Sending...' : 'Resend verification code'}
+              </button>
+
+              <button type="button" onClick={() => { setStep('register'); setError(''); setOtpCode(''); }}
                 className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 ← Back to registration
               </button>
