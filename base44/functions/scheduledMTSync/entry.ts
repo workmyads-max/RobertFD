@@ -95,6 +95,15 @@ Deno.serve(async (req) => {
     }
 
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
+    
+    // CRITICAL: Fetch all paid orders to identify legitimate accounts that shouldn't be auto-breached
+    const allOrders = await base44.asServiceRole.entities.Order.filter({});
+    const paidOrderAccountIds = new Set(
+      allOrders
+        .filter(o => ['confirmed', 'paid'].includes(o.payment_status) && o.order_id)
+        .map(o => o.order_id)
+    );
+    
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
       ['active', 'funded', 'passed', 'pending'].includes(a.status) &&
@@ -283,12 +292,13 @@ Deno.serve(async (req) => {
           let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
           let breachValue = dbWasCorrupted ? null : (acc.dd_breach_value || null);
 
-          // CRITICAL FIX: If API returned 0 balance AND DB had 0 balance, this is likely
-          // an unfunded MT5 account (broker didn't deposit). Don't auto-breach — flag for manual review.
-          // This prevents false breaches on paid accounts where MT5 broker hasn't funded yet.
-          const isUnfundedAccount = apiReturnedZero && (acc.balance || 0) === 0;
+          // CRITICAL FIX #2: Check if account has a PAID ORDER.
+          // If account has paid order BUT MT5 returns 0 balance, the broker hasn't funded it yet.
+          // NEVER auto-breach these accounts — they need manual MT5 funding review.
+          const hasPaidOrder = paidOrderAccountIds.has(acc.account_id);
+          const isUnfundedPaidAccount = hasPaidOrder && apiReturnedZero;
           
-          if (!breachDetected && !isUnfundedAccount) {
+          if (!breachDetected && !isUnfundedPaidAccount) {
             if (persistentOverallDD >= overallLimit) {
               breachDetected = true;
               breachType = (acc.rule_snapshot?.trailing_dd ?? acc.challenge_type === 'instant_light') ? 'trailing' : 'overall';
@@ -304,8 +314,8 @@ Deno.serve(async (req) => {
             }
           }
           
-          if (isUnfundedAccount) {
-            console.log(`[UNFUNDED] ${acc.account_id} — MT5 returned 0 balance, skipping auto-breach (needs manual MT5 funding)`);
+          if (isUnfundedPaidAccount) {
+            console.log(`[UNFUNDED-PAID] ${acc.account_id} — Has paid order but MT5 balance=0, skipping auto-breach (broker needs to fund)`);
           }
 
           const updates = {
