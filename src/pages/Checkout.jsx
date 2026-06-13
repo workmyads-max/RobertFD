@@ -13,6 +13,7 @@ const STEPS = ['Payment Method', 'Payment', 'Confirmation'];
 
 export default function Checkout() {
   // All hooks at top level - React rules require consistent order
+  const [redirecting, setRedirecting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);

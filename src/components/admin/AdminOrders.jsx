@@ -37,8 +37,25 @@ export default function AdminOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-orders'] }); setSelected(null); },
+    mutationFn: async ({ id, data, order }) => {
+      // If setting to confirmed, ALWAYS go through manualCryptoReview to trigger provisioning
+      if (data.payment_status === 'confirmed' && order) {
+        return confirmAndProvisionAccount(order);
+      }
+      return base44.entities.Order.update(id, data);
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      qc.invalidateQueries({ queryKey: ['admin-accounts'] });
+      qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
+      if (vars.data?.payment_status === 'confirmed') {
+        alert('✅ Payment confirmed & MT5 account provisioned!');
+      }
+      setSelected(null);
+    },
+    onError: (err) => {
+      alert(`❌ Error: ${err?.message || 'Operation failed'}`);
+    },
   });
 
   const confirmMutation = useMutation({
@@ -123,7 +140,7 @@ export default function AdminOrders() {
               <span className="text-xs text-foreground">${(o.account_size||0).toLocaleString()}</span>
               <span className="text-xs font-bold text-foreground">${o.price}</span>
               <div>
-                <select value={o.payment_status} onChange={e => updateMutation.mutate({ id: o.id, data: { payment_status: e.target.value } })}
+                <select value={o.payment_status} onChange={e => updateMutation.mutate({ id: o.id, data: { payment_status: e.target.value }, order: o })}
                   className="text-[10px] font-mono px-2 py-1 rounded-lg outline-none capitalize"
                   style={{ background: `${sc}15`, color: sc, border: `1px solid ${sc}30` }}>
                   {STATUS_OPTS.map(s => <option key={s} value={s} className="bg-[#0e0e10] text-foreground capitalize">{s}</option>)}
