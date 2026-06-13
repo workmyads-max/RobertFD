@@ -73,10 +73,25 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const currentUser = supabaseUser || user;
   const userEmail = supabaseUser?.email || user?.email;
 
+  // Wait for Base44 platform token to be present in localStorage before querying
+  const [b44TokenReady, setB44TokenReady] = useState(false);
+  useEffect(() => {
+    const checkToken = () => {
+      const tok = localStorage.getItem('base44_access_token');
+      if (tok) { setB44TokenReady(true); return true; }
+      return false;
+    };
+    if (checkToken()) return;
+    // Poll every 200ms until token appears (mobile: token arrives slightly after mount)
+    const interval = setInterval(() => { if (checkToken()) clearInterval(interval); }, 200);
+    const timeout = setTimeout(() => { clearInterval(interval); setB44TokenReady(true); }, 3000);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
+  }, []);
+
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
-    enabled: !!userEmail,
+    enabled: !!userEmail && !authLoading && b44TokenReady,
     refetchInterval: 60000,
     staleTime: 30000,
     refetchOnWindowFocus: false,

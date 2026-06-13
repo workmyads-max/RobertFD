@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X, Loader2, ExternalLink, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -253,10 +253,24 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const userEmail = supabaseUser?.email;
 
+  // Wait for Base44 platform token before firing query (fixes mobile empty state)
+  const [b44TokenReady, setB44TokenReady] = useState(false);
+  useEffect(() => {
+    const checkToken = () => {
+      const tok = localStorage.getItem('base44_access_token');
+      if (tok) { setB44TokenReady(true); return true; }
+      return false;
+    };
+    if (checkToken()) return;
+    const interval = setInterval(() => { if (checkToken()) clearInterval(interval); }, 200);
+    const timeout = setTimeout(() => { clearInterval(interval); setB44TokenReady(true); }, 3000);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
+  }, []);
+
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
-    enabled: !!userEmail,
+    enabled: !!userEmail && !authLoading && b44TokenReady,
     refetchInterval: 60000,
     staleTime: 30000,
     refetchOnWindowFocus: false,
