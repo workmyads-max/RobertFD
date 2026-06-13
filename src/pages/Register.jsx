@@ -47,7 +47,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await base44.auth.signUpViaEmailPassword(formData.email, formData.password);
+      await base44.auth.registerViaEmailPassword(formData.email, formData.password);
 
       // Affiliate attribution: if ?ref= param present, link this user to the referrer
       if (refCode) {
