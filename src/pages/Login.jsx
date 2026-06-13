@@ -37,10 +37,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const session = await base44.auth.loginViaEmailPassword({
-        email: formData.email,
-        password: formData.password
-      });
+      const session = await base44.auth.loginViaEmailPassword(
+        formData.email,
+        formData.password
+      );
       
       if (!session) throw new Error("Failed to retrieve session");
 
