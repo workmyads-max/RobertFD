@@ -112,8 +112,20 @@ console.log('================accounts2:', accounts2);
       const email = user?.email;
       console.log('[FundedDashboard] Fetching accounts for email:', JSON.stringify(email));
       try {
+        // Debug: raw Supabase query to check table state
+        const { supabase } = await import('@/lib/supabaseClient');
+        const { data: session } = await supabase.auth.getSession();
+        console.log('[FundedDashboard] Supabase session exists:', !!session?.session);
+        
+        // Try without email filter to see if ANY data exists
+        const { data: allRows, error: rawErr } = await supabase
+          .from('challenge_accounts')
+          .select('id, user_email, status', { count: 'exact' })
+          .limit(5);
+        console.log('[FundedDashboard] Raw table check - rows:', allRows, 'error:', rawErr);
+
         const result = await getChallengeAccounts(email);
-        console.log('[FundedDashboard] Accounts result:', result, 'count:', result?.length);
+        console.log('[FundedDashboard] Filtered result:', result, 'count:', result?.length);
         return result;
       } catch (err) {
         console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
