@@ -878,7 +878,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const [currentUser, setCurrentUser] = useState(null);
 
   // Get current user for email-based filtering
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
