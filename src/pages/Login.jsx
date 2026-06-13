@@ -36,29 +36,14 @@ export default function Login() {
     setError('');
     setIsLoading(true);
 
-    try {
-      const session = await base44.auth.loginViaEmailPassword(
-        formData.email,
-        formData.password
-      );
-      
-      if (!session) throw new Error("Failed to retrieve session");
-
-      toast.success('Welcome back!');
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message);
-      toast.error(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-
     // try {
-    //   const { error } = await supabase.auth.signInWithPassword({
-    //     email: formData.email,
-    //     password: formData.password
-    //   });
-    //   if (error) throw error;
+    //   const session = await base44.auth.loginViaEmailPassword(
+    //     formData.email,
+    //     formData.password
+    //   );
+      
+    //   if (!session) throw new Error("Failed to retrieve session");
+
     //   toast.success('Welcome back!');
     //   navigate('/dashboard');
     // } catch (err) {
@@ -67,6 +52,21 @@ export default function Login() {
     // } finally {
     //   setIsLoading(false);
     // }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+      if (error) throw error;
+      toast.success('Welcome back!');
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
