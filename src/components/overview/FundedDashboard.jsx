@@ -87,10 +87,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
 console.log('================accounts2:', accounts2);
 
-// This bypasses RLS, but ONLY works on the server-side / backend functions
-const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list();
-console.log("Admin Bypass Accounts:", allAccounts);
-
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
