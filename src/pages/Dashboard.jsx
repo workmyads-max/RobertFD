@@ -250,7 +250,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+          <div className={isTerminal ? 'h-full' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
