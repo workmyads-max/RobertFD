@@ -37,7 +37,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const session = await base44.auth.login({
+      const session = await base44.auth.signInWithOAuth({
         email: formData.email,
         password: formData.password
       });
