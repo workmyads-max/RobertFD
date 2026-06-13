@@ -72,6 +72,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     queryKey: ['current-user'],
     queryFn: async () => {
       const me = await base44.auth.me();
+      console.log("================base44.auth.me:", me);
       return me || user;
     },
     enabled: !!user?.id,
@@ -79,14 +80,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   });
 
   console.log('================user:', user);
-
-  const { data: accounts2 = [], isLoading2, refetch2 } = useQuery({
-  queryKey: ['funded-dashboard-accounts-all'], // Removed email dependency since we are fetching all
-  queryFn: () => base44.entities.ChallengeeAccount.list(), // .list() fetches all records
-  refetchInterval: 5000, 
-});
-
-console.log('================accounts2:', accounts2);
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
