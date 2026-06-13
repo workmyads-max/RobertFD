@@ -250,7 +250,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
   // Use Supabase auth — works reliably on both desktop and mobile
-  const { user: supabaseUser } = useSupabaseAuth();
+  const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const userEmail = supabaseUser?.email;
 
   const { data: accounts = [], isLoading } = useQuery({
@@ -258,7 +258,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
     enabled: !!userEmail,
     refetchInterval: 30000,
-    staleTime: 10000,
+    staleTime: 0,
   });
 
   const { data: myOrders = [] } = useQuery({
@@ -271,6 +271,12 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
   // Only show active/funded/passed/pending accounts — failed ones go to Trash
   const displayAccounts = accounts;
+
+  if (authLoading) return (
+    <div className="flex items-center justify-center py-16">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div>

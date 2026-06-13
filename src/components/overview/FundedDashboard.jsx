@@ -68,17 +68,17 @@ function AccountInfoStrip({ account }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
   // Use Supabase auth directly — reliable on both desktop and mobile
-  const { user: supabaseUser } = useSupabaseAuth();
+  const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   // Merge: prefer Supabase user (has user_metadata.full_name), fallback to prop
   const currentUser = supabaseUser || user;
   const userEmail = supabaseUser?.email || user?.email;
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }),
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
     enabled: !!userEmail,
-    refetchInterval: 30000, // Reduced from 5s to 30s to prevent mobile refresh loops
-    staleTime: 10000,
+    refetchInterval: 30000,
+    staleTime: 0, // Always refetch when userEmail becomes available — critical for mobile
   });
 
   // Load KYC for welcome header
@@ -117,7 +117,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(selectedAccount, trades);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
@@ -166,7 +166,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {activeAccounts.length === 0 ? (
+        {activeAccounts.length === 0 && userEmail ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>
