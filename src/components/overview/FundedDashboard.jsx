@@ -8,6 +8,7 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
+import PromotionBanner from '../dashboard/PromotionBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
 
@@ -220,6 +221,9 @@ console.log('================accounts:', accounts);
 
         {/* Main content area with proper spacing */}
         <div className="space-y-6 mt-6 min-h-[40vh]">
+          {/* Active Promotions — always shown when available */}
+          <PromotionBanner location="dashboard" />
+
           {activeAccounts.length === 0 ? (
             <EmptyState onStartChallenge={onStartChallenge} />
           ) : (
