@@ -89,7 +89,7 @@ console.log('================accounts2:', accounts2);
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', user?.email],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    queryFn: () => base44.entities.ChallengeAccount.filter({ "data.user_email": user?.email }),
     enabled: !!user?.email,
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
