@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { base44 } from '@/api/base44Client';
 
 export default function Login() {
   const navigate = useNavigate();
