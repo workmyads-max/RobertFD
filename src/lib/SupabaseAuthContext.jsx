@@ -31,6 +31,15 @@ export const SupabaseAuthProvider = ({ children }) => {
     return () => { mounted = false; };
   }, []);
 
+  const refreshUser = async () => {
+    try {
+      const me = await base44.auth.me();
+      setUser(me ?? null);
+    } catch {
+      setUser(null);
+    }
+  };
+
   const logout = async () => {
     await base44.auth.logout('/');
   };
@@ -45,6 +54,7 @@ export const SupabaseAuthProvider = ({ children }) => {
       session: user ? { user } : null,
       loading,
       logout,
+      refreshUser,
       isAdmin,
       userEmail,
       userId,

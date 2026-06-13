@@ -5,9 +5,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { refreshUser } = useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,6 +33,7 @@ export default function Login() {
 
     try {
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
+      await refreshUser();
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err) {
