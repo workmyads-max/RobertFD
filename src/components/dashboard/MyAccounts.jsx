@@ -266,6 +266,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
+    // Unified with all other account queries to share cache
     queryFn: async () => {
       // CRITICAL: Only fetch MT5-synced accounts for this user's email
       // Include all statuses (active, pending, passed, funded) - exclude only 'failed'

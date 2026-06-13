@@ -51,11 +51,17 @@ export default function LiveDDGuard({ onBreach }) {
   });
 
   const { data: allAccounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
+    // CRITICAL: Must match the email-scoped cache key used everywhere else
+    queryKey: ['challenge-accounts', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: currentUser.email }, '-created_date', 100);
+    },
+    enabled: !!currentUser?.email,
     staleTime: 30000,
   });
 
-  // CRITICAL: Only monitor accounts that belong to the currently logged-in user
+  // CRITICAL: Triple-check — only monitor accounts that explicitly belong to the logged-in user
   const userAccounts = allAccounts.filter(a =>
     currentUser?.email && a.user_email === currentUser.email
   );

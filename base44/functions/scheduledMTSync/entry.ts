@@ -97,15 +97,17 @@ Deno.serve(async (req) => {
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
     
     // CRITICAL: Fetch all paid orders to identify legitimate accounts that shouldn't be auto-breached
+    // Match by order_id (which becomes account_id on the ChallengeAccount) OR by account_id field on Order
     const allOrders = await base44.asServiceRole.entities.Order.filter({});
-    const paidOrderAccountIds = new Set(
-      allOrders
-        .filter(o => ['confirmed', 'paid'].includes(o.payment_status) && o.order_id)
-        .map(o => o.order_id)
-    );
+    const paidOrders = allOrders.filter(o => ['confirmed', 'paid'].includes(o.payment_status));
+    const paidOrderAccountIds = new Set([
+      ...paidOrders.filter(o => o.order_id).map(o => o.order_id),
+      ...paidOrders.filter(o => o.account_id).map(o => o.account_id),
+    ]);
     
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
+      a.user_email && // CRITICAL: Skip any orphaned accounts with no owner
       ['active', 'funded', 'passed', 'pending'].includes(a.status) &&
       a.platform === 'mt5'
     );
@@ -298,7 +300,14 @@ Deno.serve(async (req) => {
           const hasPaidOrder = paidOrderAccountIds.has(acc.account_id);
           const isUnfundedPaidAccount = hasPaidOrder && apiReturnedZero;
           
-          if (!breachDetected && !isUnfundedPaidAccount) {
+          // CRITICAL: Never breach accounts that have zero balance/equity — API glitch or unfunded
+          const hasRealBalance = balance > 0 && equity > 0;
+          // Never breach accounts provisioned less than 2 hours ago — deposit may still be processing
+          const provisionedAt = acc.provisioned_at ? new Date(acc.provisioned_at).getTime() : 0;
+          const hoursSinceProvisioned = (Date.now() - provisionedAt) / (1000 * 60 * 60);
+          const isTooNew = provisionedAt > 0 && hoursSinceProvisioned < 2;
+
+          if (!breachDetected && !isUnfundedPaidAccount && hasRealBalance && !isTooNew) {
             if (persistentOverallDD >= overallLimit) {
               breachDetected = true;
               breachType = (acc.rule_snapshot?.trailing_dd ?? acc.challenge_type === 'instant_light') ? 'trailing' : 'overall';

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { getChallengeAccounts, getTradeRecords, getKYC, getProfile } from '@/lib/supabaseService';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
@@ -72,71 +71,23 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const { data: currentUser = user } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      try {
-        const me = await base44.auth.me();
-        console.log("================base44.auth.me:", me);
-        return me || user;
-      } catch(err) {
-        console.error("================error:base44.auth.me:", err);
-        return null;
-      }
+      try { return await base44.auth.me() || user; } catch { return user; }
     },
     enabled: !!user?.id,
-    refetchInterval: 10000, // Refetch every 10s to catch profile updates
+    staleTime: 30000,
   });
-
-  console.log('================user:', user);
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['funded-dashboard-accounts', user?.email],
-    // queryFn: () => base44.entities.ChallengeAccount.filter({ "data.user_email": user?.email }),
+    // CRITICAL: Same email-scoped key as LiveDDGuard and all other account queries
+    queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
-      console.log('[FundedDashboard] Fetching accounts for email:', user?.email);
-      try {
-        const result = await base44.entities.ChallengeAccount.filter({ user_email: user?.email });
-        console.log('[FundedDashboard] Accounts result:', result);
-        return result;
-      } catch (err) {
-        console.error('[FundedDashboard] Accounts fetch error:', err);
-        return [];
-      }
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
     },
     enabled: !!user?.email,
-    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
+    refetchInterval: 5000,
   });
-  // const { data: accounts = [], isLoading, refetch } = useQuery({
-  //   queryKey: ['funded-dashboard-accounts', user?.email],
-  //   // queryFn: () => getChallengeAccounts(user?.email),
-  //   queryFn: async () => {
-  //     const email = user?.email;
-  //     console.log('[FundedDashboard] Fetching accounts for email:', JSON.stringify(email));
-  //     try {
-  //       // Debug: raw Supabase query to check table state
-  //       const { supabase } = await import('@/lib/supabaseClient');
-  //       const { data: session } = await supabase.auth.getSession();
-  //       console.log('[FundedDashboard] Supabase session exists:', !!session?.session);
-        
-  //       // Try without email filter to see if ANY data exists
-  //       const { data: allRows, error: rawErr } = await supabase
-  //         .from('challenge_accounts')
-  //         // .select('id, user_email, status', { count: 'exact' })
-  //         .limit(5);
-  //       console.log('[FundedDashboard] Raw table check - rows:', allRows, 'error:', rawErr);
-  //       console.log('[FundedDashboard] Emails in table:', allRows?.map(r => r.user_email));
 
-  //       const result = await getChallengeAccounts(email);
-  //       console.log('[FundedDashboard] Filtered result:', result, 'count:', result?.length);
-  //       return allRows;
-  //     } catch (err) {
-  //       console.error('[FundedDashboard] Accounts fetch error:', err?.message, err);
-  //       return [];
-  //     }
-  //   },
-  //   enabled: !!user?.email,
-  //   refetchInterval: 5000, // 5s for near-live P&L sync from terminal
-  // });
-
-console.log('================accounts:', accounts);
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
     queryKey: ['kyc-status', user?.email],
@@ -160,11 +111,11 @@ console.log('================accounts:', accounts);
     }
   }, [activeAccounts]);
 
-  // Load REAL trade records — fast refetch for live floating P&L
+  // Load trade records scoped to this account's MT5 account_id
   const { data: trades = [] } = useQuery({
-    queryKey: ['trade-records', selectedAccount?.id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
-    enabled: !!selectedAccount?.id,
+    queryKey: ['trade-records', selectedAccount?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.account_id }),
+    enabled: !!selectedAccount?.account_id,
     refetchInterval: 5000,
   });
 

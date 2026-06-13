@@ -15,8 +15,8 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
   const [lastRealtime, setLastRealtime] = useState(null);
 
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    // CRITICAL: Filter by user email — never list all accounts globally
+    // CRITICAL: Email-scoped key prevents cross-user cache leakage
+    queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
       return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
@@ -33,7 +33,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
       if (event.type === 'update' || event.type === 'create') {
         // CRITICAL: Only accept events for accounts belonging to the current user
         if (event.data?.user_email && event.data.user_email !== user.email) return;
-        queryClient.setQueryData(['challenge-accounts'], (old = []) => {
+        queryClient.setQueryData(['challenge-accounts', user.email], (old = []) => {
           if (event.type === 'create') return [event.data, ...old];
           return old.map(a => a.id === event.id ? event.data : a);
         });

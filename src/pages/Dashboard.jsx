@@ -122,8 +122,8 @@ export default function Dashboard() {
   const isAdmin = isUserAdmin || user?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    // CRITICAL: Filter by user email — never list all accounts globally for regular users
+    // CRITICAL: Always scope the cache key by user email to prevent cross-user cache leakage
+    queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
       return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
@@ -131,6 +131,7 @@ export default function Dashboard() {
     enabled: !!user?.email,
   });
 
+  // CRITICAL: Only count accounts belonging to the current user (allAccounts is already email-filtered)
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
   const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;
 

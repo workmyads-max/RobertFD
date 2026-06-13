@@ -939,7 +939,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       if (event.type === 'update' || event.type === 'create') {
         // CRITICAL: Only accept events for accounts belonging to the current user
         if (event.data?.user_email && event.data.user_email !== currentUser.email) return;
-        queryClient.setQueryData(['challenge-accounts', currentUser.email], (old = []) =>
+        queryClient.setQueryData(['challenge-accounts', currentUser?.email], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
         if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
@@ -952,10 +952,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryKey: ['challenge-accounts', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      // CRITICAL: Always filter by user_email — never use list() without ownership filter
+      // CRITICAL: Always filter by user_email — never list() without ownership filter
       const userAccounts = await base44.entities.ChallengeAccount.filter({
         user_email: currentUser.email,
-        platform: 'mt5',
       }, '-created_date', 100);
       console.log('[AccountOverview] User accounts for', currentUser.email, ':', userAccounts.length);
       return userAccounts;
@@ -979,11 +978,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     }
   }, [accounts]);
 
-  // Debug: log accounts and error
-  useEffect(() => {
-    if (error) console.error('[AccountOverview] Query error:', error);
-    if (accounts) console.log('[AccountOverview] Accounts loaded:', accounts.length, accounts.map(a => ({ id: a.account_id, mt_login: a.mt_login, status: a.status })));
-  }, [accounts, error]);
+
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
