@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 500);
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
-      ['active', 'funded', 'passed'].includes(a.status) &&
+      ['active', 'funded', 'passed', 'pending'].includes(a.status) &&
       a.platform === 'mt5'
     );
 
@@ -262,17 +262,26 @@ Deno.serve(async (req) => {
           const currentDailyDD = calcDailyDD(acc, equity);
 
           // ── PERSISTENT DD — only ever increases (Math.max) ─────────────────
-          const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(2));
-          const persistentDailyDD = parseFloat(Math.max(acc.daily_drawdown_used || 0, currentDailyDD).toFixed(2));
+          // IMPORTANT: If the API returned real non-zero data but DB has suspiciously high DD
+          // (>= 90%), the stored value is from a corrupted/false breach — reset to real value.
+          const dbOverallDD = acc.max_drawdown_used || 0;
+          const dbDailyDD = acc.daily_drawdown_used || 0;
+          const dbWasCorrupted = !apiReturnedZero && (dbOverallDD >= 90 || dbDailyDD >= 90);
+          const persistentOverallDD = parseFloat((dbWasCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(2));
+          const persistentDailyDD = parseFloat((dbWasCorrupted ? currentDailyDD : Math.max(dbDailyDD, currentDailyDD)).toFixed(2));
+          if (dbWasCorrupted) {
+            console.log(`[sync] ${acc.account_id} — resetting corrupted DD values (was ${dbOverallDD}% overall, ${dbDailyDD}% daily) → real: ${currentOverallDD.toFixed(2)}% / ${currentDailyDD.toFixed(2)}%`);
+          }
 
           const { dailyLimit, overallLimit } = getDDLimits(acc);
 
           // ── BREACH DETECTION — fires in same sync, no delay ────────────────
-          // Once breachDetected is true, it is NEVER set to false again
-          let breachDetected = acc.dd_breach_detected || false;
-          let breachType = acc.dd_breach_type || null;
-          let breachTime = acc.dd_breach_time || null;
-          let breachValue = acc.dd_breach_value || null;
+          // If DB was corrupted (false breach from API returning 0), clear breach flags
+          // so real breach detection can run cleanly on real data.
+          let breachDetected = dbWasCorrupted ? false : (acc.dd_breach_detected || false);
+          let breachType = dbWasCorrupted ? null : (acc.dd_breach_type || null);
+          let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
+          let breachValue = dbWasCorrupted ? null : (acc.dd_breach_value || null);
 
           if (!breachDetected) {
             if (persistentOverallDD >= overallLimit) {
@@ -296,16 +305,18 @@ Deno.serve(async (req) => {
             pnl: parseFloat((balance - accountSize).toFixed(2)),
             win_rate: parseFloat(winRate.toFixed(1)),
             total_trades: closedTrades.length,
-            max_drawdown_used: persistentOverallDD,   // PERSISTENT — Math.max
-            daily_drawdown_used: persistentDailyDD,   // PERSISTENT — Math.max
+            max_drawdown_used: persistentOverallDD,
+            daily_drawdown_used: persistentDailyDD,
             profit_target_progress: parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
             dd_breach_detected: breachDetected,
-            // Breach flags written ONCE — spread operator skips nulls
+            // If data was corrupted, clear all breach flags in DB
+            ...(dbWasCorrupted && { dd_breach_type: null, dd_breach_time: null, dd_breach_value: null, status: acc.status === 'failed' ? 'active' : acc.status }),
+            // Breach flags written ONCE — only if not already set
             ...(breachType && !acc.dd_breach_type && { dd_breach_type: breachType }),
             ...(breachTime && !acc.dd_breach_time && { dd_breach_time: breachTime }),
-            ...(breachValue !== null && !acc.dd_breach_value && { dd_breach_value: breachValue }),
+            ...(breachValue !== null && acc.dd_breach_value == null && { dd_breach_value: breachValue }),
           };
 
           // Immediate failure — same DB write, no waiting for automatedDDBreach
