@@ -71,9 +71,14 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const { data: currentUser = user } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      const me = await base44.auth.me();
-      console.log("================base44.auth.me:", me);
-      return me || user;
+      try {
+        const me = await base44.auth.me();
+        console.log("================base44.auth.me:", me);
+        return me || user;
+      } catch(err) {
+        console.error("================error:base44.auth.me:", err);
+        return null;
+      }
     },
     enabled: !!user?.id,
     refetchInterval: 10000, // Refetch every 10s to catch profile updates
