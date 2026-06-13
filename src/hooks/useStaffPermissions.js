@@ -26,19 +26,17 @@ export function useStaffPermissions() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
-    // Classic admin shortcut — check role from user object
-    // Supabase stores role in user_metadata.role or app_metadata.role
-    const userRole = user.role || user.user_metadata?.role || user.app_metadata?.role;
-
-    // Return cached result for same user, but skip stale non-admin cache if user is now admin
-    if (_cacheEmail === user.email && _cache && !(!_cache.isClassicAdmin && userRole === 'admin')) {
+    // Return cached result for same user
+    if (_cacheEmail === user.email && _cache) {
       setPermissions(_cache.permissions);
       setStaffRole(_cache.staffRole);
       setIsClassicAdmin(_cache.isClassicAdmin);
       setLoading(false);
       return;
     }
-    if (userRole === 'admin') {
+
+    // Classic admin shortcut — check role from user object
+    if (user.role === 'admin') {
       const result = { permissions: ALL_PERMISSIONS, staffRole: 'admin', isClassicAdmin: true };
       _cache = result;
       _cacheEmail = user.email;

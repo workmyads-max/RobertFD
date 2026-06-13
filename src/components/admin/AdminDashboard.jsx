@@ -30,7 +30,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
           <Shield className="w-6 h-6 text-primary" /> Admin Dashboard
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">XFunded — Admin Control Center</p>
+        <p className="text-sm text-muted-foreground font-mono mt-1">Robert Funds — Admin Control Center</p>
       </div>
 
       {/* Stats */}

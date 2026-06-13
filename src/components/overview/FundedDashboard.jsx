@@ -9,151 +9,11 @@ import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
-import { useB44TokenReady } from '@/hooks/useB44TokenReady';
-import { useChallengeAccounts } from '@/hooks/useSupabaseQuery';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
 import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
-
-// ─── Debug Overlay (temporary — remove after diagnosis) ──────────────────────
-function DebugOverlay({ supabaseUser, user, userEmail, accounts, activeAccounts, b44TokenReady, authLoading, isLoading, selectedAccount }) {
-  const [ls, setLs] = React.useState({});
-  const [trace, setTrace] = React.useState(null);
-  const [tracing, setTracing] = React.useState(false);
-
-  React.useEffect(() => {
-    const allKeys = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k.includes('base44') || k.includes('supabase') || k.includes('sb-') || k.includes('xf_')) {
-        allKeys[k] = (localStorage.getItem(k) || '').slice(0, 40);
-      }
-    }
-    setLs(allKeys);
-  }, []);
-
-  const runTrace = async () => {
-    setTracing(true);
-    try {
-      // 1. Backend trace (Base44)
-      const res = await base44.functions.invoke('debugAccountQuery', { user_email: userEmail });
-
-      // 2. Direct Supabase query from frontend
-      const { createClient } = await import('@supabase/supabase-js');
-      // Use same client as the app
-      const { supabase: sb } = await import('@/lib/supabaseClient');
-      const { data: sbData, error: sbError } = await sb
-        .from('challenge_accounts')
-        .select('account_id, status, user_email')
-        .eq('user_email', userEmail);
-
-      const { data: sbDataNoFilter, error: sbErrorNoFilter } = await sb
-        .from('challenge_accounts')
-        .select('account_id, status, user_email')
-        .limit(5);
-
-      setTrace({
-        ...res.data,
-        supabase_direct: {
-          filtered_count: sbData?.length ?? 'ERROR',
-          filtered_error: sbError?.message || null,
-          filtered_code: sbError?.code || null,
-          no_filter_count: sbDataNoFilter?.length ?? 'ERROR',
-          no_filter_error: sbErrorNoFilter?.message || null,
-          no_filter_code: sbErrorNoFilter?.code || null,
-          sample: sbData?.slice(0, 3) || [],
-        }
-      });
-    } catch (e) {
-      setTrace({ error: e.message });
-    }
-    setTracing(false);
-  };
-
-  const allStatuses = accounts.map(a => a.status);
-  const isFilterKilling = accounts.length > 0 && activeAccounts.length === 0;
-
-  const s = { fontSize: '11px', fontFamily: 'monospace', margin: '1px 0' };
-  const hl = (c) => ({ ...s, color: c, fontWeight: 'bold' });
-
-  return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.95)', color: '#0f0', fontFamily: 'monospace',
-      fontSize: '11px', padding: '10px 12px', maxHeight: '80vh', overflowY: 'auto',
-      border: '2px solid lime'
-    }}>
-      <div style={{ color: '#ff0', fontWeight: 'bold', marginBottom: 4 }}>🔍 ACCOUNT QUERY TRACE</div>
-
-      {/* Auth state */}
-      <div style={s}>authLoading: <span style={hl(authLoading ? '#f00' : '#0f0')}>{String(authLoading)}</span></div>
-      <div style={s}>b44TokenReady: <span style={hl(b44TokenReady ? '#0f0' : '#f00')}>{String(b44TokenReady)}</span> {!b44TokenReady && '← TIMEOUT FIRED'}</div>
-      <div style={s}>supabaseUser.email: <span style={hl('#0ff')}>{supabaseUser?.email || 'NULL'}</span></div>
-      <div style={s}>userEmail resolved: <span style={hl('#ff0')}>{userEmail || 'NULL'}</span></div>
-      <div style={s}>base44_access_token: <span style={hl(ls['base44_access_token'] ? '#0f0' : '#f00')}>{ls['base44_access_token'] || 'UNDEFINED ← ROOT CAUSE'}</span></div>
-
-      {/* localStorage dump */}
-      <div style={{ color: '#555', marginTop: 4 }}>── localStorage keys ──</div>
-      {Object.entries(ls).map(([k, v]) => (
-        <div key={k} style={{ ...s, wordBreak: 'break-all', color: '#888' }}>{k}: <span style={{ color: '#aaa' }}>{v || '(empty)'}</span></div>
-      ))}
-
-      {/* Query results */}
-      <div style={{ color: '#555', marginTop: 4 }}>── Query Results ──</div>
-      <div style={s}>accounts.length: <span style={hl(accounts.length > 0 ? '#0f0' : '#f00')}>{accounts.length}</span></div>
-      <div style={s}>activeAccounts.length: <span style={hl(activeAccounts.length > 0 ? '#0f0' : '#f00')}>{activeAccounts.length}</span></div>
-      <div style={s}>all statuses: <span style={hl('#f80')}>{allStatuses.join(', ') || 'none'}</span></div>
-      <div style={s}>filter killing: <span style={hl(isFilterKilling ? '#f00' : '#0f0')}>{String(isFilterKilling)}</span></div>
-
-      {accounts.length > 0 && accounts.map((a, i) => (
-        <div key={i} style={{ ...s, color: '#aaa' }}>#{i} {a.account_id} | {a.status} | {a.user_email} | owner:{a.created_by_id?.slice(0,8)}</div>
-      ))}
-
-      {/* Backend trace button */}
-      <div style={{ marginTop: 8 }}>
-        <button onClick={runTrace} disabled={tracing} style={{
-          background: '#1a3a1a', border: '1px solid lime', color: 'lime',
-          padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontFamily: 'monospace'
-        }}>
-          {tracing ? '⏳ running...' : '▶ RUN BACKEND TRACE'}
-        </button>
-      </div>
-
-      {/* Backend trace results */}
-      {trace && (
-        <div style={{ marginTop: 6 }}>
-          <div style={{ color: '#ff0' }}>── Backend Trace ──</div>
-          <div style={s}>b44 authenticated: <span style={hl(trace.base44_auth?.authenticated ? '#0f0' : '#f00')}>{String(trace.base44_auth?.authenticated)}</span></div>
-          <div style={s}>b44 user: <span style={hl('#0ff')}>{trace.base44_auth?.user ? `${trace.base44_auth.user.email} (${trace.base44_auth.user.role})` : 'NULL — ' + (trace.base44_auth?.error || 'no session')}</span></div>
-          <div style={s}>user_scoped count: <span style={hl(trace.user_scoped_query?.count > 0 ? '#0f0' : '#f00')}>{trace.user_scoped_query?.count}</span> {trace.user_scoped_query?.error && `ERR: ${trace.user_scoped_query.error}`}</div>
-          <div style={s}>service_role count: <span style={hl(trace.service_role_query?.count > 0 ? '#0f0' : '#f00')}>{trace.service_role_query?.count}</span> {trace.service_role_query?.error && `ERR: ${trace.service_role_query.error}`}</div>
-          <div style={s}>filtered_by_email count: <span style={hl(trace.filtered_by_email_query?.count > 0 ? '#0f0' : '#f00')}>{trace.filtered_by_email_query?.count}</span></div>
-          <div style={{ ...s, color: '#ff0', marginTop: 4 }}>VERDICT: {trace.verdict?.root_cause_hypothesis}</div>
-          {trace.filtered_by_email_query?.records?.map((r, i) => (
-            <div key={i} style={{ ...s, color: '#aaa' }}>#{i} {r.account_id} | {r.status} | {r.user_email}</div>
-          ))}
-          {trace.service_role_query?.sample?.map((r, i) => (
-            <div key={i} style={{ ...s, color: '#666' }}>svc#{i} {r.account_id} | {r.status} | {r.user_email}</div>
-          ))}
-          {trace.supabase_direct && (
-            <div style={{ marginTop: 4 }}>
-              <div style={{ color: '#0ff' }}>── Direct Supabase (frontend) ──</div>
-              <div style={s}>filtered_by_email count: <span style={hl(trace.supabase_direct.filtered_count > 0 ? '#0f0' : '#f00')}>{trace.supabase_direct.filtered_count}</span> {trace.supabase_direct.filtered_error && <span style={{ color: '#f00' }}>ERR: {trace.supabase_direct.filtered_error} (code: {trace.supabase_direct.filtered_code})</span>}</div>
-              <div style={s}>no_filter count: <span style={hl(trace.supabase_direct.no_filter_count > 0 ? '#0f0' : '#f00')}>{trace.supabase_direct.no_filter_count}</span> {trace.supabase_direct.no_filter_error && <span style={{ color: '#f00' }}>ERR: {trace.supabase_direct.no_filter_error} (code: {trace.supabase_direct.no_filter_code})</span>}</div>
-              {trace.supabase_direct.sample?.map((r, i) => (
-                <div key={i} style={{ ...s, color: '#aaa' }}>sb#{i} {r.account_id} | {r.status} | {r.user_email}</div>
-              ))}
-            </div>
-          )}
-          {trace.error && <div style={{ color: '#f00' }}>FUNCTION ERROR: {trace.error}</div>}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -206,26 +66,31 @@ function AccountInfoStrip({ account }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
-  // Use Supabase auth directly — reliable on both desktop and mobile
-  const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
-  // Merge: prefer Supabase user (has user_metadata.full_name), fallback to prop
-  const currentUser = supabaseUser || user;
-  const userEmail = supabaseUser?.email || user?.email;
+  // Refetch user to get latest avatar_url/profile_photo_url
+  const { data: currentUser = user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const me = await base44.auth.me();
+      return me || user;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10s to catch profile updates
+  });
 
-  const b44TokenReady = useB44TokenReady(); // kept for debug overlay only
-
-  const { data: accounts = [], isLoading, refetch } = useChallengeAccounts();
+  const { data: accounts = [], isLoading, refetch } = useQuery({
+    queryKey: ['funded-dashboard-accounts', user?.email],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+    refetchInterval: 5000, // 5s for near-live P&L sync from terminal
+  });
 
   // Load KYC for welcome header
-  const { data: kyc = null } = useQuery({
-    queryKey: ['kyc-sb', userEmail],
-    queryFn: async () => {
-      const { supabase: sb } = await import('@/lib/supabaseClient');
-      const { data } = await sb.from('kyc_verifications').select('*').eq('user_email', userEmail).maybeSingle();
-      return data || null;
-    },
-    enabled: !!userEmail,
+  const { data: kycList = [] } = useQuery({
+    queryKey: ['kyc-status', user?.email],
+    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
   });
+  const kyc = kycList[0] || null;
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -247,36 +112,17 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
-    queryKey: ['trade-records-sb', selectedAccount?.account_id],
-    queryFn: async () => {
-      const { supabase: sb } = await import('@/lib/supabaseClient');
-      const { data } = await sb.from('trade_records').select('*').eq('account_id', selectedAccount.account_id).order('open_time', { ascending: false });
-      return data || [];
-    },
-    enabled: !!selectedAccount?.account_id,
+    queryKey: ['trade-records', selectedAccount?.id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
+    enabled: !!selectedAccount?.id,
     refetchInterval: 5000,
   });
 
   const stats = useAccountStats(selectedAccount, trades);
 
-  const debugOverlay = (
-    <DebugOverlay
-      supabaseUser={supabaseUser}
-      user={user}
-      userEmail={userEmail}
-      accounts={accounts}
-      activeAccounts={activeAccounts}
-      b44TokenReady={b44TokenReady}
-      authLoading={authLoading}
-      isLoading={isLoading}
-      selectedAccount={selectedAccount}
-    />
-  );
-
-  if (authLoading || (isLoading && accounts.length === 0)) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
-        {debugOverlay}
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
           className="w-7 h-7 rounded-full border-2 border-primary/20 border-t-primary" />
       </div>
@@ -292,7 +138,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
-      {debugOverlay}
       {/* Background accent */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div className="absolute top-0 left-1/4 w-[700px] h-[500px] rounded-full blur-[140px] opacity-[0.06]"
@@ -319,12 +164,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-12 sm:mt-6">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {activeAccounts.length === 0 && userEmail ? (
+        {activeAccounts.length === 0 ? (
           <EmptyState onStartChallenge={onStartChallenge} />
         ) : (
           <>

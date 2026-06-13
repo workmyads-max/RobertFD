@@ -10,8 +10,7 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
   const kycStatus = kyc?.status || 'not_submitted';
   const isVerified = kycStatus === 'approved';
-  // Support both Supabase user object (user_metadata) and Base44 user object (full_name)
-  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.full_name || user?.email?.split('@')[0] || 'Trader';
+  const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
   const firstName = displayName.split(' ')[0];
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 

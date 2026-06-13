@@ -5,8 +5,6 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { useAffiliateProfile, useAffiliateCommissions, useChallengeAccounts, useWithdrawals } from '@/hooks/useSupabaseQuery';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import AffiliateOverview from '../affiliate/AffiliateOverview';
 import ReferralLink from '../affiliate/ReferralLink';
 import CommissionHistory from '../affiliate/CommissionHistory';
@@ -23,12 +21,42 @@ const TABS = [
 
 export default function Affiliate({ user }) {
   const [activeTab, setActiveTab] = useState('overview');
-  const { user: sbUser } = useSupabaseAuth();
 
-  const { data: profile } = useAffiliateProfile();
-  const { data: commissions = [] } = useAffiliateCommissions({ refetchInterval: 30000 });
-  const { data: accounts = [] } = useChallengeAccounts();
-  const { data: withdrawals = [] } = useWithdrawals();
+  const { data: profile } = useQuery({
+    queryKey: ['affiliate-profile', user?.email],
+    queryFn: async () => {
+      const profiles = await base44.entities.AffiliateProfile.filter({ user_email: user?.email });
+      if (profiles.length > 0) return profiles[0];
+      const code = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      return base44.entities.AffiliateProfile.create({
+        user_email: user?.email,
+        referral_code: code,
+        tier: 'standard',
+        total_earned: 0, total_pending: 0, total_paid: 0,
+        referral_clicks: 0, total_referrals: 0, conversions: 0,
+        active_funded_traders: 0, is_active: true, is_frozen: false,
+      });
+    },
+    enabled: !!user?.email,
+  });
+
+  const { data: commissions = [] } = useQuery({
+    queryKey: ['my-commissions', user?.email],
+    queryFn: () => base44.entities.AffiliateCommission.filter({ affiliate_email: user?.email }),
+    enabled: !!user?.email,
+    refetchInterval: 30000,
+  });
+
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['challenge-accounts-affiliate'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
+  });
+
+  const { data: withdrawals = [] } = useQuery({
+    queryKey: ['affiliate-withdrawals', user?.email],
+    queryFn: () => base44.entities.WithdrawalRequest.filter({ user_email: user?.email, account_id: 'affiliate' }),
+    enabled: !!user?.email,
+  });
 
   const totalEarned = commissions.reduce((s, c) => s + (c.commission_amount || 0), 0);
   const pendingComm = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amount || 0), 0);

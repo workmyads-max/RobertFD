@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { FileText, Download, Filter, CreditCard, Eye, X, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { useOrders, useChallengeAccounts } from '@/hooks/useSupabaseQuery';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import jsPDF from 'jspdf';
 
 // ─── Payment method labels ────────────────────────────────────────────────────
@@ -453,11 +451,21 @@ function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
 export default function Billing() {
   const [filter, setFilter] = useState('all');
   const [previewOrder, setPreviewOrder] = useState(null);
-  const { user: sbUser } = useSupabaseAuth();
-  const user = sbUser;
 
-  const { data: orders = [], isLoading } = useOrders();
-  const { data: accounts = [] } = useChallengeAccounts();
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ['my-orders', user?.email],
+    queryFn: () => base44.entities.Order.filter({ email: user?.email }, '-created_date', 100),
+    enabled: !!user?.email,
+  });
+
+  // Load all user's challenge accounts for linking to invoices
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['billing-accounts', user?.email],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+  });
 
   const getLinkedAccount = (order) =>
     accounts.find(a => a.account_id === order.account_id || a.account_id === order.order_id) || null;

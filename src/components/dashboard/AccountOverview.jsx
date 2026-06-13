@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useB44TokenReady } from '@/hooks/useB44TokenReady';
-import { useChallengeAccounts, useTradeRecords } from '@/hooks/useSupabaseQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -11,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useCustomAuth } from '@/lib/CustomAuthContext';
 import { useAccountStats } from '../overview/useAccountStats';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
@@ -876,25 +873,27 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
 // ─── Main AccountOverview ─────────────────────────────────────────────────────
 export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
-  const { user: authUser } = useCustomAuth();
-  const userEmail = authUser?.email;
-  const b44TokenReady = useB44TokenReady();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
 
   useEffect(() => {
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
-        queryClient.setQueryData(['challenge-accounts', userEmail], (old = []) =>
+        queryClient.setQueryData(['challenge-accounts'], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
         if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
       }
     });
     return unsub;
-  }, [queryClient, userEmail]);
+  }, [queryClient]);
 
-  const { data: accounts = [], isLoading } = useChallengeAccounts({ refetchInterval: 5000, staleTime: 60000 });
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    refetchInterval: 5000,
+    staleTime: 60000, // Increase stale time to reduce refetches
+  });
 
   // Load account from sessionStorage immediately when accounts are available
   useEffect(() => {
@@ -915,7 +914,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: tradeRecords = [] } = useTradeRecords(account?.account_id);
+  const { data: tradeRecords = [] } = useQuery({
+    queryKey: ['trade-records-overview', account?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    enabled: !!account?.account_id,
+    refetchInterval: 5000, staleTime: 3000,
+  });
 
   const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],

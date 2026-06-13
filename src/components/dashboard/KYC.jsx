@@ -3,9 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Upload, CheckCircle2, Clock, XCircle, AlertTriangle, FileText, User, Home, Camera, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useKYC } from '@/hooks/useSupabaseQuery';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
-import { supabase } from '@/lib/supabaseClient';
 
 const STATUS_CONFIG = {
   not_submitted: { label: 'Not Submitted', color: '#888', bg: 'rgba(136,136,136,0.1)', icon: FileText },
@@ -51,25 +48,24 @@ function UploadCard({ label, icon: Icon, field, value, onUpload, uploading, disa
 
 export default function KYC({ user }) {
   const qc = useQueryClient();
-  const { user: sbUser } = useSupabaseAuth();
-  const userEmail = sbUser?.email || user?.email;
   const [uploading, setUploading] = useState(null);
   const [form, setForm] = useState({ id_type: 'passport', full_name: user?.full_name || '', date_of_birth: '', nationality: '' });
 
-  const { data: kyc, isLoading } = useKYC();
+  const { data: kyc, isLoading } = useQuery({
+    queryKey: ['kyc', user?.email],
+    queryFn: async () => {
+      const results = await base44.entities.KYCVerification.filter({ user_email: user?.email });
+      return results[0] || null;
+    },
+    enabled: !!user?.email,
+  });
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
-      if (kyc?.id) {
-        const { data: updated, error } = await supabase.from('kyc_verifications').update({ ...data, status: 'pending', submitted_at: new Date().toISOString() }).eq('id', kyc.id).select().single();
-        if (error) throw error;
-        return updated;
-      }
-      const { data: created, error } = await supabase.from('kyc_verifications').insert({ ...data, user_email: userEmail, status: 'pending', submitted_at: new Date().toISOString() }).select().single();
-      if (error) throw error;
-      return created;
+      if (kyc?.id) return base44.entities.KYCVerification.update(kyc.id, { ...data, status: 'pending', submitted_at: new Date().toISOString() });
+      return base44.entities.KYCVerification.create({ ...data, user_email: user?.email, status: 'pending', submitted_at: new Date().toISOString() });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc-sb', userEmail] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc', user?.email] }),
   });
 
   const handleUpload = async (field, file) => {
@@ -77,11 +73,12 @@ export default function KYC({ user }) {
     setUploading(field);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     if (kyc?.id) {
-      await supabase.from('kyc_verifications').update({ [field]: file_url }).eq('id', kyc.id);
+      await base44.entities.KYCVerification.update(kyc.id, { [field]: file_url });
     } else {
+      // stage locally until submit
       setForm(f => ({ ...f, [field]: file_url }));
     }
-    qc.invalidateQueries({ queryKey: ['kyc-sb', userEmail] });
+    qc.invalidateQueries({ queryKey: ['kyc', user?.email] });
     setUploading(null);
   };
 

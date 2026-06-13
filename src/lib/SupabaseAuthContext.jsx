@@ -69,11 +69,9 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   // Helpers for components
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin' || user?.role === 'admin';
+  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
   const userEmail = user?.email;
   const userId = user?.id;
-  // Normalize full_name: Supabase stores it in user_metadata
-  const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.full_name || user?.email?.split('@')[0] || '';
 
   return (
     <SupabaseAuthContext.Provider value={{
@@ -84,7 +82,6 @@ export const SupabaseAuthProvider = ({ children }) => {
       isAdmin,
       userEmail,
       userId,
-      fullName,
       supabase,
     }}>
       {children}

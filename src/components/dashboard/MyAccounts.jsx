@@ -4,9 +4,6 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
-import { useB44TokenReady } from '@/hooks/useB44TokenReady';
-import { useChallengeAccounts, useOrders } from '@/hooks/useSupabaseQuery';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -251,23 +248,25 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
-  // Use Supabase auth — works reliably on both desktop and mobile
-  const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
-  const userEmail = supabaseUser?.email;
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
 
-  const { data: accounts = [], isLoading } = useChallengeAccounts();
-  const { data: myOrders = [] } = useOrders();
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
+    enabled: !!user,
+    refetchInterval: 15000,
+  });
+
+  const { data: myOrders = [] } = useQuery({
+    queryKey: ['my-orders', user?.email],
+    queryFn: () => base44.entities.Order.filter({ email: user?.email }),
+    enabled: !!user?.email,
+  });
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
   // Only show active/funded/passed/pending accounts — failed ones go to Trash
   const displayAccounts = accounts;
-
-  if (authLoading) return (
-    <div className="flex items-center justify-center py-16">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
 
   return (
     <div>

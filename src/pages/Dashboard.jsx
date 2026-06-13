@@ -68,9 +68,6 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
-import { useB44TokenReady } from '@/hooks/useB44TokenReady';
-import { useChallengeAccounts, useNotifications } from '@/hooks/useSupabaseQuery';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -107,11 +104,13 @@ export default function Dashboard() {
   }, []);
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
-  const { user: supabaseUser } = useSupabaseAuth();
-  // Use Supabase email for entity queries — works reliably on mobile
-  const userEmail = supabaseUser?.email || user?.email;
 
-  const { data: notifications = [] } = useNotifications({ enabled: !!user });
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => base44.entities.Notification.filter({ is_active: true }),
+    refetchInterval: 30000,
+    enabled: !!user,
+  });
 
   const bannerNotification = notifications.find(n =>
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
@@ -120,15 +119,13 @@ export default function Dashboard() {
   // Disabled popup notifications for now
   const popupNotification = null;
 
-  // isAdmin: check all possible locations — Supabase stores role in user_metadata/app_metadata
-  const isAdmin = isUserAdmin
-    || user?.role === 'admin'
-    || user?.user_metadata?.role === 'admin'
-    || user?.app_metadata?.role === 'admin'
-    || supabaseUser?.user_metadata?.role === 'admin'
-    || supabaseUser?.app_metadata?.role === 'admin';
+  const isAdmin = isUserAdmin || user?.role === 'admin';
 
-  const { data: allAccounts = [] } = useChallengeAccounts();
+  const { data: allAccounts = [] } = useQuery({
+    queryKey: ['challenge-accounts'],
+    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    enabled: !!user,
+  });
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
   const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;
@@ -203,7 +200,6 @@ export default function Dashboard() {
       case 'admin-funded-review': return isAdmin ? <AdminFundedReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-mt5-config': return isAdmin ? <AdminMT5Configuration /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
@@ -254,7 +250,7 @@ export default function Dashboard() {
 
         <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
           style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-12 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+          <div className={isTerminal ? 'h-full' : isOverview ? '' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}

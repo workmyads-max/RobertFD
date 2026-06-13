@@ -9,7 +9,6 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 const tabs = [
   { id: 'profile',  label: 'Profile',        icon: User },
@@ -178,13 +177,8 @@ const WALLET_TYPES = [
 ];
 
 export default function DashboardSettings({ user }) {
-  const { user: supabaseUser } = useSupabaseAuth();
-  // Always prefer Supabase user_metadata for name — reliable on mobile and desktop
-  const resolvedName = supabaseUser?.user_metadata?.full_name || supabaseUser?.user_metadata?.name || user?.full_name || '';
-  const resolvedEmail = supabaseUser?.email || user?.email || '';
-
   const [activeTab, setActiveTab] = useState('profile');
-  const [profile, setProfile] = useState({ full_name: resolvedName, email: resolvedEmail });
+  const [profile, setProfile] = useState({ full_name: user?.full_name || '', email: user?.email || '' });
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [wallets, setWallets] = useState({ usdt_trc20: user?.usdt_trc20 || '', bitcoin: user?.bitcoin || '', usdt_bep20: user?.usdt_bep20 || '', ethereum: user?.ethereum || '' });
   const [notifs, setNotifs] = useState({ email: true, payouts: true, news: false, marketing: false });
