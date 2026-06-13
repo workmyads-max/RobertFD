@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
-import { base44 } from '@/api/base44Client';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,13 +36,11 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const session = await base44.auth.loginViaEmailPassword(
-        formData.email,
-        formData.password
-      );
-      
-      if (!session) throw new Error("Failed to retrieve session");
-
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+      if (error) throw error;
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err) {
@@ -52,21 +49,6 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
-
-  //   try {
-  //     const { error } = await supabase.auth.signInWithPassword({
-  //       email: formData.email,
-  //       password: formData.password
-  //     });
-  //     if (error) throw error;
-  //     toast.success('Welcome back!');
-  //     navigate('/dashboard');
-  //   } catch (err) {
-  //     setError(err.message);
-  //     toast.error(err.message);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
   };
 
   return (
