@@ -252,8 +252,18 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user?.email }, '-created_date', 100),
-    enabled: !!user?.email,
+    queryFn: async () => {
+      // Filter by user_email; also fetch by created_by_id as fallback for older records
+      const [byEmail, byOwner] = await Promise.all([
+        base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100),
+        base44.entities.ChallengeAccount.filter({ created_by_id: user.id }, '-created_date', 100),
+      ]);
+      // Merge and deduplicate by id
+      const map = new Map();
+      [...byEmail, ...byOwner].forEach(a => map.set(a.id, a));
+      return Array.from(map.values()).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    },
+    enabled: !!user?.email && !!user?.id,
     refetchInterval: 15000,
   });
 
