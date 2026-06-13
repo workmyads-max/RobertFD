@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Info, Settings, Download, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useChallengeAccounts, useTradeRecords } from '@/hooks/useSupabaseQuery';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const TABS = ['Daily PnL', 'Closed trades', 'Charts'];
@@ -558,20 +559,12 @@ export default function TradingJournal({ user }) {
   const [tab, setTab] = useState('Daily PnL');
   const [selectedAccountId, setSelectedAccountId] = useState(null);
 
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 10),
-    select: d => d.filter(a => ['active', 'funded', 'passed'].includes(a.status)),
-  });
+  const { data: allAccounts = [] } = useChallengeAccounts();
+  const accounts = allAccounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
 
   const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
 
-  const { data: trades = [], isLoading } = useQuery({
-    queryKey: ['trade-records-journal', account?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
-    enabled: !!account?.account_id,
-    refetchInterval: 30000,
-  });
+  const { data: trades = [], isLoading } = useTradeRecords(account?.account_id, { refetchInterval: 30000 });
 
   return (
     <div>

@@ -70,6 +70,7 @@ import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import { useB44TokenReady } from '@/hooks/useB44TokenReady';
+import { useChallengeAccounts, useNotifications } from '@/hooks/useSupabaseQuery';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -107,16 +108,10 @@ export default function Dashboard() {
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
   const { user: supabaseUser } = useSupabaseAuth();
-  const b44TokenReady = useB44TokenReady();
   // Use Supabase email for entity queries — works reliably on mobile
   const userEmail = supabaseUser?.email || user?.email;
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => base44.entities.Notification.filter({ is_active: true }),
-    refetchInterval: 30000,
-    enabled: !!user,
-  });
+  const { data: notifications = [] } = useNotifications({ enabled: !!user });
 
   const bannerNotification = notifications.find(n =>
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
@@ -133,13 +128,7 @@ export default function Dashboard() {
     || supabaseUser?.user_metadata?.role === 'admin'
     || supabaseUser?.app_metadata?.role === 'admin';
 
-  const { data: allAccounts = [] } = useQuery({
-    queryKey: ['challenge-accounts', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
-    enabled: !!userEmail && b44TokenReady,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-  });
+  const { data: allAccounts = [] } = useChallengeAccounts();
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
   const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;

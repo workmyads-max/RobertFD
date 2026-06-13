@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Award, Download, CheckCircle, Shield, Star, Trophy, Zap, Crown, Eye, Loader2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useCertificates } from '@/hooks/useSupabaseQuery';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -406,11 +407,7 @@ function CertPreviewModal({ cert, onClose }) {
 export default function Certificates({ user }) {
   const [previewCert, setPreviewCert] = useState(null);
 
-  const { data: certs = [], isLoading } = useQuery({
-    queryKey: ['certificates', user?.email],
-    queryFn: () => base44.entities.Certificate.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
+  const { data: certs = [], isLoading } = useCertificates();
 
   const stats = [
     { label: 'Total Certificates', value: certs.length,                                                                       color: '#FF5C00', icon: Award },

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useChallengeAccounts, useKYC, useWithdrawals } from '@/hooks/useSupabaseQuery';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 const STATUS_CFG = {
   pending: { label: 'Pending Review', color: '#f59e0b', icon: Clock },
@@ -142,30 +144,16 @@ export default function Withdrawals({ user }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '', account_id: '' });
   const qc = useQueryClient();
+  const { user: sbUser } = useSupabaseAuth();
 
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 20),
-  });
-
-  // ONLY show funded live accounts (not challenge/phase accounts)
+  const { data: accounts = [] } = useChallengeAccounts();
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
   const eligiblePnl = fundedAccounts.reduce((s, a) => s + Math.max(0, a.pnl || 0), 0);
 
-  // KYC check
-  const { data: kycList = [] } = useQuery({
-    queryKey: ['kyc', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-  const kyc = kycList[0] || null;
+  const { data: kyc } = useKYC();
   const kycApproved = kyc?.status === 'approved';
 
-  const { data: withdrawals = [] } = useQuery({
-    queryKey: ['withdrawals', user?.email],
-    queryFn: () => base44.entities.WithdrawalRequest.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
+  const { data: withdrawals = [] } = useWithdrawals();
 
   const createMutation = useMutation({
     mutationFn: async (data) => {

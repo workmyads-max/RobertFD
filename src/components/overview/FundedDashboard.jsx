@@ -11,6 +11,7 @@ import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import { useB44TokenReady } from '@/hooks/useB44TokenReady';
+import { useChallengeAccounts } from '@/hooks/useSupabaseQuery';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -174,24 +175,20 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const currentUser = supabaseUser || user;
   const userEmail = supabaseUser?.email || user?.email;
 
-  const b44TokenReady = useB44TokenReady();
+  const b44TokenReady = useB44TokenReady(); // kept for debug overlay only
 
-  const { data: accounts = [], isLoading, refetch } = useQuery({
-    queryKey: ['funded-dashboard-accounts', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
-    enabled: !!userEmail && !authLoading && b44TokenReady,
-    refetchInterval: 60000,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-  });
+  const { data: accounts = [], isLoading, refetch } = useChallengeAccounts();
 
   // Load KYC for welcome header
-  const { data: kycList = [] } = useQuery({
-    queryKey: ['kyc-status', userEmail],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: userEmail }),
+  const { data: kyc = null } = useQuery({
+    queryKey: ['kyc-sb', userEmail],
+    queryFn: async () => {
+      const { supabase: sb } = await import('@/lib/supabaseClient');
+      const { data } = await sb.from('kyc_verifications').select('*').eq('user_email', userEmail).maybeSingle();
+      return data || null;
+    },
     enabled: !!userEmail,
   });
-  const kyc = kycList[0] || null;
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -213,9 +210,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
-    queryKey: ['trade-records', selectedAccount?.id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.id }),
-    enabled: !!selectedAccount?.id,
+    queryKey: ['trade-records-sb', selectedAccount?.account_id],
+    queryFn: async () => {
+      const { supabase: sb } = await import('@/lib/supabaseClient');
+      const { data } = await sb.from('trade_records').select('*').eq('account_id', selectedAccount.account_id).order('open_time', { ascending: false });
+      return data || [];
+    },
+    enabled: !!selectedAccount?.account_id,
     refetchInterval: 5000,
   });
 

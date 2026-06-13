@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useB44TokenReady } from '@/hooks/useB44TokenReady';
+import { useChallengeAccounts, useTradeRecords } from '@/hooks/useSupabaseQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -893,13 +894,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     return unsub;
   }, [queryClient, userEmail]);
 
-  const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
-    enabled: !!userEmail && b44TokenReady,
-    refetchInterval: 5000,
-    staleTime: 60000,
-  });
+  const { data: accounts = [], isLoading } = useChallengeAccounts({ refetchInterval: 5000, staleTime: 60000 });
 
   // Load account from sessionStorage immediately when accounts are available
   useEffect(() => {
@@ -920,12 +915,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
-  const { data: tradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-overview', account?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
-    enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
-  });
+  const { data: tradeRecords = [] } = useTradeRecords(account?.account_id);
 
   const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],

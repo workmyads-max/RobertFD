@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import { useB44TokenReady } from '@/hooks/useB44TokenReady';
+import { useChallengeAccounts, useOrders } from '@/hooks/useSupabaseQuery';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -254,22 +255,8 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const userEmail = supabaseUser?.email;
 
-  const b44TokenReady = useB44TokenReady();
-
-  const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
-    enabled: !!userEmail && !authLoading && b44TokenReady,
-    refetchInterval: 60000,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: myOrders = [] } = useQuery({
-    queryKey: ['my-orders', userEmail],
-    queryFn: () => base44.entities.Order.filter({ email: userEmail }),
-    enabled: !!userEmail,
-  });
+  const { data: accounts = [], isLoading } = useChallengeAccounts();
+  const { data: myOrders = [] } = useOrders();
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
