@@ -247,25 +247,23 @@ console.log('================accounts:', accounts);
               {selectedAccount && (
                 <motion.div key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-4 sm:space-y-6">
-
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
-
-                  {/* Three Paths to Funded Trading */}
-                  <ThreePathsToFunded onNavigate={onNavigate} />
-                  
-                  {/* Affiliate Section */}
-                  <AffiliateSection onNavigate={onNavigate} />
-                  
-                  {/* Footer */}
-                  <Footer />
                 </motion.div>
               )}
             </AnimatePresence>
           </>
         )}
+
+        {/* Three Paths to Funded Trading — ALWAYS SHOWN */}
+        <ThreePathsToFunded onNavigate={onNavigate} />
+        
+        {/* Affiliate Section — ALWAYS SHOWN */}
+        <AffiliateSection onNavigate={onNavigate} />
+        
+        {/* Footer — ALWAYS SHOWN */}
+        <Footer />
       </div>
     </div>
   );
