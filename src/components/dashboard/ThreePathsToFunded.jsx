@@ -77,6 +77,20 @@ export default function ThreePathsToFunded({ onNavigate }) {
 
   return (
     <div className="rounded-3xl overflow-hidden mt-8" style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Header */}
+      <div className="text-center pt-10 pb-4 px-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-6"
+          style={{ borderColor: 'rgba(245,108,44,0.5)', background: 'rgba(245,108,44,0.08)' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F56C2C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-400">Choose Your Capital</span>
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-3">
+          Three Paths to <span style={{ color: '#F56C2C' }}>Funded</span> <span style={{ color: '#CCFF00' }}>Trading</span>
+        </h2>
+        <p className="text-sm text-[#808080] max-w-md mx-auto leading-relaxed">
+          Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to 80% profit split.
+        </p>
+      </div>
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 px-4 sm:px-8 py-8 sm:py-10">
         {CHALLENGE_PATHS.map((path) => {

@@ -4,6 +4,7 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
+import ThreePathsToFunded from './ThreePathsToFunded';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -310,10 +311,13 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
         ))}
       </div>
 
+      {/* Three Paths section */}
+      <ThreePathsToFunded onNavigate={() => onStartChallenge?.()} />
+
       {isLoading ? (
         <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-8">
           {/* Funding showcase */}
           {displayAccounts.filter(a => a.status === 'funded').map(fundedAcc => (
             <FundingShowcase key={fundedAcc.id} account={fundedAcc} />
