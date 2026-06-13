@@ -4,6 +4,7 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
+import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -248,19 +249,22 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  // Use Supabase auth — works reliably on both desktop and mobile
+  const { user: supabaseUser } = useSupabaseAuth();
+  const userEmail = supabaseUser?.email;
 
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
-    enabled: !!user,
-    refetchInterval: 15000,
+    queryKey: ['challenge-accounts', userEmail],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 100),
+    enabled: !!userEmail,
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
   const { data: myOrders = [] } = useQuery({
-    queryKey: ['my-orders', user?.email],
-    queryFn: () => base44.entities.Order.filter({ email: user?.email }),
-    enabled: !!user?.email,
+    queryKey: ['my-orders', userEmail],
+    queryFn: () => base44.entities.Order.filter({ email: userEmail }),
+    enabled: !!userEmail,
   });
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');

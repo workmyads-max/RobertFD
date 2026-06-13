@@ -104,38 +104,42 @@ Deno.serve(async (req) => {
       const order = orders[0];
       if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
-      if (order.payment_status === 'confirmed') {
-        // Already confirmed - return success (idempotent)
-        console.log(`[ManualCrypto] Order ${order_id} already confirmed`);
-        return Response.json({ success: true, message: 'Payment already confirmed', already_confirmed: true });
-      }
-
+      // Always update status to confirmed (idempotent)
       await sr.entities.Order.update(order.id, {
         payment_status: 'confirmed',
       });
 
-      await sr.entities.PaymentLog.create({
-        gateway: 'manual_crypto', event_type: 'admin_approved',
-        event_data: { approved_by: user.email, notes, order_id },
-        order_id, transaction_id: order.transaction_id,
-        status: 'paid', customer_email: order.email, processed: true,
-        notes: `Approved by admin ${user.email}. Notes: ${notes || 'none'}`,
-      });
+      // Check if ChallengeAccount was already provisioned for this order
+      const existingAccounts = await sr.entities.ChallengeAccount.filter({ account_id: order.order_id });
+      const alreadyProvisioned = existingAccounts.length > 0 && existingAccounts[0].mt_login;
 
-      // NOW provision challenge account — only after admin approval
-      try {
-        await sr.functions.invoke('provisionMT5Account', {
-          account_id: order.account_id || order.order_id,
-          order_id: order.order_id,
-          user_email: order.email,
-          challenge_type: order.challenge_type,
-          account_type: order.account_type || 'standard',
-          account_size: order.account_size,
-          leverage: order.leverage || '1:100',
-          platform: 'mt5',
-          rule_snapshot: order.rule_snapshot || null,
+      if (!alreadyProvisioned) {
+        console.log(`[ManualCrypto] Provisioning MT5 account for order ${order_id}...`);
+        await sr.entities.PaymentLog.create({
+          gateway: 'manual_crypto', event_type: 'admin_approved',
+          event_data: { approved_by: user.email, notes, order_id },
+          order_id, transaction_id: order.transaction_id,
+          status: 'paid', customer_email: order.email, processed: true,
+          notes: `Approved by admin ${user.email}. Notes: ${notes || 'none'}`,
         });
-      } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
+
+        // Provision challenge account
+        try {
+          await sr.functions.invoke('provisionMT5Account', {
+            account_id: order.account_id || order.order_id,
+            order_id: order.order_id,
+            user_email: order.email,
+            challenge_type: order.challenge_type,
+            account_type: order.account_type || 'standard',
+            account_size: order.account_size,
+            leverage: order.leverage || '1:100',
+            platform: 'mt5',
+            rule_snapshot: order.rule_snapshot || null,
+          });
+        } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
+      } else {
+        console.log(`[ManualCrypto] Order ${order_id} already has MT5 account ${existingAccounts[0].mt_login}, skipping provisioning`);
+      }
 
       // Affiliate commissions L1/L2/L3 — non-blocking
       sr.functions.invoke('createAffiliateCommissions', {
