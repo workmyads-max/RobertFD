@@ -147,17 +147,20 @@ console.log('================accounts:', accounts);
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account on load and when accounts change
+  // Auto-select first account
   useEffect(() => {
-    if (activeAccounts.length > 0) {
-      // If no selection yet, or current selection doesn't exist anymore
-      if (!selectedAccount || !activeAccounts.find(a => a.id === selectedAccount?.id)) {
-        setSelectedAccount(activeAccounts[0]);
-      }
-    } else {
-      setSelectedAccount(null);
+    if (activeAccounts.length > 0 && !selectedAccount) {
+      setSelectedAccount(activeAccounts[0]);
     }
-  }, [activeAccounts]);
+  }, [activeAccounts.length]);
+
+  // Keep selected in sync with refetches
+  useEffect(() => {
+    if (selectedAccount) {
+      const fresh = activeAccounts.find(a => a.id === selectedAccount.id);
+      if (fresh) setSelectedAccount(fresh);
+    }
+  }, [accounts]);
 
   // Load REAL trade records — fast refetch for live floating P&L
   const { data: trades = [] } = useQuery({
@@ -213,57 +216,56 @@ console.log('================accounts:', accounts);
       )}
 
       {/* Content */}
-      <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full mt-14 sm:mt-6 min-h-[60vh]">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full space-y-4 sm:space-y-6 mt-14 sm:mt-6">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {/* Main content area with proper spacing */}
-        <div className="space-y-6 mt-6 min-h-[40vh]">
-          {activeAccounts.length === 0 ? (
-            <EmptyState onStartChallenge={onStartChallenge} />
-          ) : (
-            <>
-              {/* First-Time Promo Banner */}
-              <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+        {activeAccounts.length === 0 ? (
+          <EmptyState onStartChallenge={onStartChallenge} />
+        ) : (
+          <>
+            {/* First-Time Promo Banner */}
+            <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-              {/* Account Switcher */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
-                    {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
-                  </span>
-                  <button onClick={() => refetch()}
-                    className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
-                    <RefreshCw className="w-3 h-3" /> Sync
-                  </button>
-                </div>
-                <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+            {/* Account Switcher */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
+                  {activeAccounts.length} Active Account{activeAccounts.length !== 1 ? 's' : ''}
+                </span>
+                <button onClick={() => refetch()}
+                  className="flex items-center gap-1.5 text-[9px] font-mono text-muted-foreground hover:text-foreground transition-colors">
+                  <RefreshCw className="w-3 h-3" /> Sync
+                </button>
               </div>
+              <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+            </div>
 
-              {/* Per-account content */}
+            {/* Per-account content */}
+            <AnimatePresence mode="wait">
               {selectedAccount && (
-                <motion.div
-                  key={selectedAccount.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
+                <motion.div key={selectedAccount.id}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-4 sm:space-y-6">
+
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
+
+                  {/* Three Paths to Funded Trading */}
+                  <ThreePathsToFunded onNavigate={onNavigate} />
+                  
+                  {/* Affiliate Section */}
+                  <AffiliateSection onNavigate={onNavigate} />
+                  
+                  {/* Footer */}
+                  <Footer />
                 </motion.div>
               )}
-            </>
-          )}
-
-          {/* Three Paths to Funded Trading — ALWAYS SHOWN */}
-          <ThreePathsToFunded onNavigate={onNavigate} />
-          
-          {/* Affiliate Section — ALWAYS SHOWN */}
-          <AffiliateSection onNavigate={onNavigate} />
-          
-          {/* Footer — ALWAYS SHOWN */}
-          <Footer />
-        </div>
+            </AnimatePresence>
+          </>
+        )}
       </div>
     </div>
   );
