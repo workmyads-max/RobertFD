@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
 
@@ -18,13 +18,7 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
-      if (error) throw error;
+      await base44.auth.loginViaGoogle({ redirectTo: `${window.location.origin}/dashboard` });
     } catch (err) {
       toast.error('Google login failed: ' + err.message);
     }
@@ -36,16 +30,12 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      });
-      if (error) throw error;
+      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
-      toast.error(err.message);
+      setError(err.message || 'Invalid email or password');
+      toast.error(err.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }

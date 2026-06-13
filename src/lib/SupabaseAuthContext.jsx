@@ -1,88 +1,53 @@
 /**
- * SupabaseAuthContext — Production auth context using Supabase Auth natively.
- * - Real JWTs issued by Supabase → RLS works correctly
- * - Realtime subscriptions authenticate correctly
- * - Session auto-refreshes via Supabase SDK
- * - No custom localStorage session management needed
- * - Fixed: Added timeout to prevent hanging on initial load
+ * SupabaseAuthContext — Now wraps Base44 auth so all entity data loads correctly
+ * on the published URL. base44.auth.me() returns a real Base44 session.
+ * Backward-compatible: all existing useCustomAuth / useSupabaseAuth imports still work.
  */
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { base44 } from '@/api/base44Client';
 
 const SupabaseAuthContext = createContext(null);
 
 export const SupabaseAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    let initTimeout;
-    let loadTimeout;
 
     const initAuth = async () => {
       try {
-        // Get session - Supabase SDK handles persistence automatically
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-      } catch (e) {
-        console.warn('Auth init:', e.message);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-        }
+        const me = await base44.auth.me();
+        if (mounted) setUser(me ?? null);
+      } catch {
+        if (mounted) setUser(null);
       } finally {
-        // Always stop loading even if session fetch fails
         if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      clearTimeout(initTimeout);
-      clearTimeout(loadTimeout);
-      subscription.unsubscribe();
-    };
+    return () => { mounted = false; };
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    window.location.href = '/';
+    await base44.auth.logout('/');
   };
 
-  // Helpers for components
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
   const userEmail = user?.email;
   const userId = user?.id;
 
   return (
     <SupabaseAuthContext.Provider value={{
       user,
-      session,
+      session: user ? { user } : null,
       loading,
       logout,
       isAdmin,
       userEmail,
       userId,
-      supabase,
     }}>
       {children}
     </SupabaseAuthContext.Provider>
@@ -95,7 +60,6 @@ export const useSupabaseAuth = () => {
   return ctx;
 };
 
-// Backward-compatible alias so existing components using useCustomAuth keep working
 export const useCustomAuth = useSupabaseAuth;
 export const CustomAuthProvider = SupabaseAuthProvider;
 
