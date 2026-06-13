@@ -85,6 +85,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
     refetchInterval: 5000, // 5s for near-live P&L sync from terminal
   });
 
+console.log('================data:', data);
+console.log('================accounts:', accounts);
   // Load KYC for welcome header
   const { data: kycList = [] } = useQuery({
     queryKey: ['kyc-status', user?.email],
