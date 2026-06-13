@@ -123,7 +123,13 @@ export default function Dashboard() {
   // Disabled popup notifications for now
   const popupNotification = null;
 
-  const isAdmin = isUserAdmin || user?.role === 'admin' || user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin';
+  // isAdmin: check all possible locations — Supabase stores role in user_metadata/app_metadata
+  const isAdmin = isUserAdmin
+    || user?.role === 'admin'
+    || user?.user_metadata?.role === 'admin'
+    || user?.app_metadata?.role === 'admin'
+    || supabaseUser?.user_metadata?.role === 'admin'
+    || supabaseUser?.app_metadata?.role === 'admin';
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts', userEmail],
@@ -205,6 +211,7 @@ export default function Dashboard() {
       case 'admin-funded-review': return isAdmin ? <AdminFundedReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-mt5-config': return isAdmin ? <AdminMT5Configuration /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'admin-visibility': return isAdmin ? <PlatformVisibilityControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'marketplace': return <ChallengeMarketplace onProceedToCheckout={handleProceedToCheckout} />;
