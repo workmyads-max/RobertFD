@@ -16,15 +16,23 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    refetchInterval: 15 * 1000,   // poll every 15s as fallback
+    // CRITICAL: Filter by user email — never list all accounts globally
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+    },
+    enabled: !!user?.email,
+    refetchInterval: 15 * 1000,
     staleTime: 10 * 1000,
   });
 
-  // Real-time subscription — instantly updates when sync writes new data
+  // Real-time subscription — only update records belonging to this user
   useEffect(() => {
+    if (!user?.email) return;
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
+        // CRITICAL: Only accept events for accounts belonging to the current user
+        if (event.data?.user_email && event.data.user_email !== user.email) return;
         queryClient.setQueryData(['challenge-accounts'], (old = []) => {
           if (event.type === 'create') return [event.data, ...old];
           return old.map(a => a.id === event.id ? event.data : a);
@@ -33,7 +41,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
       }
     });
     return unsub;
-  }, [queryClient]);
+  }, [queryClient, user?.email]);
 
   const { data: pendingOrders = [] } = useQuery({
     queryKey: ['my-pending-orders'],

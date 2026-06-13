@@ -7,9 +7,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 export default function TrashAccounts({ onStartChallenge }) {
   const qc = useQueryClient();
 
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['trash-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ status: 'failed' }),
+    queryKey: ['trash-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      // CRITICAL: Always filter by the logged-in user's email — never expose other users' failed accounts
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email, status: 'failed' });
+    },
+    enabled: !!user?.email,
   });
 
   const deleteMutation = useMutation({

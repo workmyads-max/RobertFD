@@ -66,14 +66,21 @@ function EmptyState({ onStartChallenge }) {
 export default function Analytics({ onStartChallenge }) {
   const [selectedAccountId, setSelectedAccountId] = useState(null);
 
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+    },
+    enabled: !!user?.email,
   });
 
   const { data: journalEntries = [] } = useQuery({
-    queryKey: ['journal-entries'],
-    queryFn: () => base44.entities.TradingJournalEntry.list('-entry_date', 30),
+    queryKey: ['journal-entries', user?.email],
+    queryFn: () => base44.entities.TradingJournalEntry.filter({ user_email: user.email }),
+    enabled: !!user?.email,
   });
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));

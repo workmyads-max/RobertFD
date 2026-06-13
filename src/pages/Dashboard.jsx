@@ -123,8 +123,12 @@ export default function Dashboard() {
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
-    enabled: !!user,
+    // CRITICAL: Filter by user email — never list all accounts globally for regular users
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+    },
+    enabled: !!user?.email,
   });
 
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;

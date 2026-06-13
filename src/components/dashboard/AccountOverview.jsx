@@ -934,9 +934,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   }, []);
 
   useEffect(() => {
+    if (!currentUser?.email) return;
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
-        queryClient.setQueryData(['challenge-accounts', currentUser?.email], (old = []) =>
+        // CRITICAL: Only accept events for accounts belonging to the current user
+        if (event.data?.user_email && event.data.user_email !== currentUser.email) return;
+        queryClient.setQueryData(['challenge-accounts', currentUser.email], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
         if (event.type === 'update') queryClient.invalidateQueries({ queryKey: ['challenge-account-live'] });
@@ -949,14 +952,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     queryKey: ['challenge-accounts', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      // Fetch MT5-synced accounts for the current user
-      const allAccounts = await base44.entities.ChallengeAccount.list('-created_date', 50);
-      // Filter client-side to ensure we get accounts for this user
-      const userAccounts = allAccounts.filter(a => 
-        a.platform === 'mt5' && 
-        (a.user_email === currentUser.email || a.created_by_id)
-      );
-      console.log('[AccountOverview] Total accounts:', allAccounts.length, 'MT5 user accounts:', userAccounts.length);
+      // CRITICAL: Always filter by user_email — never use list() without ownership filter
+      const userAccounts = await base44.entities.ChallengeAccount.filter({
+        user_email: currentUser.email,
+        platform: 'mt5',
+      }, '-created_date', 100);
+      console.log('[AccountOverview] User accounts for', currentUser.email, ':', userAccounts.length);
       return userAccounts;
     },
     enabled: !!currentUser?.email,
