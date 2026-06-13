@@ -38,8 +38,35 @@ function DebugOverlay({ supabaseUser, user, userEmail, accounts, activeAccounts,
   const runTrace = async () => {
     setTracing(true);
     try {
+      // 1. Backend trace (Base44)
       const res = await base44.functions.invoke('debugAccountQuery', { user_email: userEmail });
-      setTrace(res.data);
+
+      // 2. Direct Supabase query from frontend
+      const { createClient } = await import('@supabase/supabase-js');
+      // Use same client as the app
+      const { supabase: sb } = await import('@/lib/supabaseClient');
+      const { data: sbData, error: sbError } = await sb
+        .from('challenge_accounts')
+        .select('account_id, status, user_email')
+        .eq('user_email', userEmail);
+
+      const { data: sbDataNoFilter, error: sbErrorNoFilter } = await sb
+        .from('challenge_accounts')
+        .select('account_id, status, user_email')
+        .limit(5);
+
+      setTrace({
+        ...res.data,
+        supabase_direct: {
+          filtered_count: sbData?.length ?? 'ERROR',
+          filtered_error: sbError?.message || null,
+          filtered_code: sbError?.code || null,
+          no_filter_count: sbDataNoFilter?.length ?? 'ERROR',
+          no_filter_error: sbErrorNoFilter?.message || null,
+          no_filter_code: sbErrorNoFilter?.code || null,
+          sample: sbData?.slice(0, 3) || [],
+        }
+      });
     } catch (e) {
       setTrace({ error: e.message });
     }
@@ -111,6 +138,16 @@ function DebugOverlay({ supabaseUser, user, userEmail, accounts, activeAccounts,
           {trace.service_role_query?.sample?.map((r, i) => (
             <div key={i} style={{ ...s, color: '#666' }}>svc#{i} {r.account_id} | {r.status} | {r.user_email}</div>
           ))}
+          {trace.supabase_direct && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ color: '#0ff' }}>── Direct Supabase (frontend) ──</div>
+              <div style={s}>filtered_by_email count: <span style={hl(trace.supabase_direct.filtered_count > 0 ? '#0f0' : '#f00')}>{trace.supabase_direct.filtered_count}</span> {trace.supabase_direct.filtered_error && <span style={{ color: '#f00' }}>ERR: {trace.supabase_direct.filtered_error} (code: {trace.supabase_direct.filtered_code})</span>}</div>
+              <div style={s}>no_filter count: <span style={hl(trace.supabase_direct.no_filter_count > 0 ? '#0f0' : '#f00')}>{trace.supabase_direct.no_filter_count}</span> {trace.supabase_direct.no_filter_error && <span style={{ color: '#f00' }}>ERR: {trace.supabase_direct.no_filter_error} (code: {trace.supabase_direct.no_filter_code})</span>}</div>
+              {trace.supabase_direct.sample?.map((r, i) => (
+                <div key={i} style={{ ...s, color: '#aaa' }}>sb#{i} {r.account_id} | {r.status} | {r.user_email}</div>
+              ))}
+            </div>
+          )}
           {trace.error && <div style={{ color: '#f00' }}>FUNCTION ERROR: {trace.error}</div>}
         </div>
       )}

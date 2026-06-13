@@ -19,12 +19,19 @@ export function useChallengeAccounts(options = {}) {
   return useQuery({
     queryKey: ['challenge-accounts-sb', email],
     queryFn: async () => {
+      // Try direct filter by user_email first
       const { data, error } = await supabase
         .from('challenge_accounts')
         .select('*')
         .eq('user_email', email)
         .order('created_at', { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        console.error('[useChallengeAccounts] Supabase error:', error);
+        throw error;
+      }
+
+      console.log('[useChallengeAccounts] email:', email, 'count:', data?.length, 'error:', error);
       return data || [];
     },
     enabled: !!email,
