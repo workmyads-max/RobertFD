@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-// import { base44 } from '@/api/base44Client';
+import { base44 } from '@/api/base44Client';
 import { getChallengeAccounts, getTradeRecords, getKYC, getProfile } from '@/lib/supabaseService';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
