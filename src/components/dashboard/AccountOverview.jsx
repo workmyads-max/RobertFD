@@ -894,16 +894,19 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
     return unsub;
   }, [queryClient, currentUser?.email]);
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading, error } = useQuery({
     queryKey: ['challenge-accounts', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      // ONLY fetch MT5-synced accounts for the current user
-      const allAccounts = await base44.entities.ChallengeAccount.filter({ 
-        user_email: currentUser.email,
-        platform: 'mt5'
-      }, '-created_date', 50);
-      return allAccounts;
+      // Fetch MT5-synced accounts for the current user
+      const allAccounts = await base44.entities.ChallengeAccount.list('-created_date', 50);
+      // Filter client-side to ensure we get accounts for this user
+      const userAccounts = allAccounts.filter(a => 
+        a.platform === 'mt5' && 
+        (a.user_email === currentUser.email || a.created_by_id)
+      );
+      console.log('[AccountOverview] Total accounts:', allAccounts.length, 'MT5 user accounts:', userAccounts.length);
+      return userAccounts;
     },
     enabled: !!currentUser?.email,
     refetchInterval: 5000,
@@ -923,6 +926,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       }
     }
   }, [accounts]);
+
+  // Debug: log accounts and error
+  useEffect(() => {
+    if (error) console.error('[AccountOverview] Query error:', error);
+    if (accounts) console.log('[AccountOverview] Accounts loaded:', accounts.length, accounts.map(a => ({ id: a.account_id, mt_login: a.mt_login, status: a.status })));
+  }, [accounts, error]);
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
