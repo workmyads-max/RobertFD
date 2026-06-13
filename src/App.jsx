@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -19,8 +20,19 @@ const LoginRoute = () => {
 };
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useSupabaseAuth();
-  if (loading) return (
+  const { user, loading, refreshUser } = useSupabaseAuth();
+  const [checking, setChecking] = React.useState(false);
+
+  React.useEffect(() => {
+    // If auth context finished loading but has no user, do one extra check
+    // to handle the race condition after login redirect
+    if (!loading && !user) {
+      setChecking(true);
+      refreshUser().finally(() => setChecking(false));
+    }
+  }, [loading]);
+
+  if (loading || checking) return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
       <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>

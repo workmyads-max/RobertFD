@@ -12,23 +12,19 @@ export const SupabaseAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const loadUser = async () => {
+    try {
+      const me = await base44.auth.me();
+      setUser(me ?? null);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-
-    const initAuth = async () => {
-      try {
-        const me = await base44.auth.me();
-        if (mounted) setUser(me ?? null);
-      } catch {
-        if (mounted) setUser(null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    return () => { mounted = false; };
+    loadUser();
   }, []);
 
   const refreshUser = async () => {
