@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, AlertCircle, Copy, X, Loader2, ExternalLink, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
+import { useB44TokenReady } from '@/hooks/useB44TokenReady';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -253,19 +254,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
   const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const userEmail = supabaseUser?.email;
 
-  // Wait for Base44 platform token before firing query (fixes mobile empty state)
-  const [b44TokenReady, setB44TokenReady] = useState(false);
-  useEffect(() => {
-    const checkToken = () => {
-      const tok = localStorage.getItem('base44_access_token');
-      if (tok) { setB44TokenReady(true); return true; }
-      return false;
-    };
-    if (checkToken()) return;
-    const interval = setInterval(() => { if (checkToken()) clearInterval(interval); }, 200);
-    const timeout = setTimeout(() => { clearInterval(interval); setB44TokenReady(true); }, 3000);
-    return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, []);
+  const b44TokenReady = useB44TokenReady();
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', userEmail],

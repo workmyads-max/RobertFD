@@ -69,6 +69,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
+import { useB44TokenReady } from '@/hooks/useB44TokenReady';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -106,6 +107,7 @@ export default function Dashboard() {
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
   const { user: supabaseUser } = useSupabaseAuth();
+  const b44TokenReady = useB44TokenReady();
   // Use Supabase email for entity queries — works reliably on mobile
   const userEmail = supabaseUser?.email || user?.email;
 
@@ -134,7 +136,7 @@ export default function Dashboard() {
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['challenge-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
-    enabled: !!userEmail,
+    enabled: !!userEmail && b44TokenReady,
     staleTime: 30000,
     refetchOnWindowFocus: false,
   });

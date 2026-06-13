@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useB44TokenReady } from '@/hooks/useB44TokenReady';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -876,6 +877,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const { user: authUser } = useCustomAuth();
   const userEmail = authUser?.email;
+  const b44TokenReady = useB44TokenReady();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
 
@@ -894,7 +896,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', userEmail],
     queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
-    enabled: !!userEmail,
+    enabled: !!userEmail && b44TokenReady,
     refetchInterval: 5000,
     staleTime: 60000,
   });

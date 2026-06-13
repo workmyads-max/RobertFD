@@ -10,6 +10,7 @@ import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
+import { useB44TokenReady } from '@/hooks/useB44TokenReady';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
@@ -73,20 +74,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const currentUser = supabaseUser || user;
   const userEmail = supabaseUser?.email || user?.email;
 
-  // Wait for Base44 platform token to be present in localStorage before querying
-  const [b44TokenReady, setB44TokenReady] = useState(false);
-  useEffect(() => {
-    const checkToken = () => {
-      const tok = localStorage.getItem('base44_access_token');
-      if (tok) { setB44TokenReady(true); return true; }
-      return false;
-    };
-    if (checkToken()) return;
-    // Poll every 200ms until token appears (mobile: token arrives slightly after mount)
-    const interval = setInterval(() => { if (checkToken()) clearInterval(interval); }, 200);
-    const timeout = setTimeout(() => { clearInterval(interval); setB44TokenReady(true); }, 3000);
-    return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, []);
+  const b44TokenReady = useB44TokenReady();
 
   const { data: accounts = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-dashboard-accounts', userEmail],
