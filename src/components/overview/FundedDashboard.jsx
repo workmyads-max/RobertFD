@@ -17,6 +17,62 @@ import AccountSwitcher      from './AccountSwitcher.jsx';
 import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 
+// ─── Debug Overlay (temporary — remove after diagnosis) ──────────────────────
+function DebugOverlay({ supabaseUser, user, userEmail, accounts, activeAccounts, b44TokenReady, authLoading, isLoading, selectedAccount }) {
+  const [ls, setLs] = React.useState({});
+  React.useEffect(() => {
+    setLs({
+      base44_access_token: localStorage.getItem('base44_access_token')?.slice(0, 30) + '...',
+      base44_app_id: localStorage.getItem('base44_app_id'),
+      supabase_auth: Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-')).join(', '),
+    });
+  }, []);
+
+  const allStatuses = accounts.map(a => a.status);
+  const isFilterKilling = accounts.length > 0 && activeAccounts.length === 0;
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.92)', color: '#0f0', fontFamily: 'monospace',
+      fontSize: '11px', padding: '10px', maxHeight: '70vh', overflowY: 'auto',
+      border: '2px solid #0f0'
+    }}>
+      <div style={{ color: '#ff0', fontWeight: 'bold', marginBottom: 6 }}>🔍 MOBILE DEBUG OVERLAY</div>
+      <div>authLoading: <b>{String(authLoading)}</b></div>
+      <div>isLoading: <b>{String(isLoading)}</b></div>
+      <div>b44TokenReady: <b>{String(b44TokenReady)}</b></div>
+      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
+      <div>supabaseUser?.id: <b style={{ color: '#0ff' }}>{supabaseUser?.id || 'NULL'}</b></div>
+      <div>supabaseUser?.email: <b style={{ color: '#0ff' }}>{supabaseUser?.email || 'NULL'}</b></div>
+      <div>user?.email (prop): <b style={{ color: '#0ff' }}>{user?.email || 'NULL'}</b></div>
+      <div>userEmail resolved: <b style={{ color: '#ff0' }}>{userEmail || 'NULL'}</b></div>
+      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
+      <div>accounts.length: <b style={{ color: '#f80' }}>{accounts.length}</b></div>
+      <div>all statuses: <b>{allStatuses.join(', ') || 'none'}</b></div>
+      <div>activeAccounts.length: <b style={{ color: '#f80' }}>{activeAccounts.length}</b></div>
+      <div>selectedAccount: <b>{selectedAccount?.account_id || 'null'}</b></div>
+      <div style={{ color: isFilterKilling ? '#f00' : '#0f0' }}>
+        ⚠ filter killing results: <b>{String(isFilterKilling)}</b>
+        {isFilterKilling && ` (statuses present: ${allStatuses.join(', ')})`}
+      </div>
+      <hr style={{ borderColor: '#333', margin: '4px 0' }} />
+      <div style={{ color: '#888' }}>localStorage:</div>
+      <div>base44_access_token: <b>{ls.base44_access_token || 'MISSING'}</b></div>
+      <div>base44_app_id: <b>{ls.base44_app_id || 'MISSING'}</b></div>
+      <div style={{ wordBreak: 'break-all' }}>supabase keys: <b>{ls.supabase_auth || 'none'}</b></div>
+      {accounts.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          <div style={{ color: '#ff0' }}>raw accounts:</div>
+          {accounts.map((a, i) => (
+            <div key={i}>#{i}: id={a.account_id} status={a.status} email={a.user_email} owner={a.created_by_id}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
   return (
@@ -121,9 +177,24 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(selectedAccount, trades);
 
+  const debugOverlay = (
+    <DebugOverlay
+      supabaseUser={supabaseUser}
+      user={user}
+      userEmail={userEmail}
+      accounts={accounts}
+      activeAccounts={activeAccounts}
+      b44TokenReady={b44TokenReady}
+      authLoading={authLoading}
+      isLoading={isLoading}
+      selectedAccount={selectedAccount}
+    />
+  );
+
   if (authLoading || (isLoading && accounts.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
+        {debugOverlay}
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
           className="w-7 h-7 rounded-full border-2 border-primary/20 border-t-primary" />
       </div>
@@ -139,6 +210,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
+      {debugOverlay}
       {/* Background accent */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div className="absolute top-0 left-1/4 w-[700px] h-[500px] rounded-full blur-[140px] opacity-[0.06]"
