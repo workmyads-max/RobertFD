@@ -662,15 +662,16 @@ function DisciplinePanel({ account, tradeRecords }) {
 // ─── Open Trades ──────────────────────────────────────────────────────────────
 function OpenTradeRow({ trade, index }) {
   const [expanded, setExpanded] = useState(false);
-  const [elapsed, setElapsed] = useState(fmtTime(trade.open_time));
+  const isClosed = trade.status === 'closed';
+  const [elapsed, setElapsed] = useState(isClosed ? fmtTime(trade.close_time) : fmtTime(trade.open_time));
   const isBuy = trade.type === 'BUY';
   const pnl = trade.pnl || 0;
-  const pips = Math.abs(((trade.current_price || trade.entry || 0) - (trade.entry || 0)) * 10).toFixed(1);
+  const pips = Math.abs(((trade.current_price || trade.entry || trade.close || 0) - (trade.entry || 0)) * 10).toFixed(1);
 
   useEffect(() => {
-    const iv = setInterval(() => setElapsed(fmtTime(trade.open_time)), 1000);
+    const iv = setInterval(() => setElapsed(isClosed ? fmtTime(trade.close_time) : fmtTime(trade.open_time)), 1000);
     return () => clearInterval(iv);
-  }, [trade.open_time]);
+  }, [trade.open_time, trade.close_time, isClosed]);
 
   return (
     <>
@@ -689,7 +690,11 @@ function OpenTradeRow({ trade, index }) {
           </div>
         </td>
         <td className="px-4 py-3.5 text-[11px] text-white/40 font-mono hidden sm:table-cell">
-          {trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+          {isClosed ? (
+            <span className="text-emerald-400/70">CLOSED</span>
+          ) : (
+            trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
+          )}
         </td>
         <td className="px-4 py-3.5 text-xs font-mono font-bold text-white/60">{trade.lots || 0}</td>
         <td className="px-4 py-3.5 text-xs font-black text-white">{trade.symbol || '—'}</td>
@@ -718,7 +723,7 @@ function OpenTradeRow({ trade, index }) {
                 <div>
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Price</div>
                   <div className="space-y-1.5 text-xs">
-                    {[['Type', trade.type, trade.type === 'BUY' ? '#10b981' : '#ef4444'], ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—', '#f1f5f9'], ['Bid', trade.current_price > 0 ? trade.current_price.toFixed(5) : '—', '#f1f5f9']].map(([k, v, c]) => (
+                    {[['Type', trade.type, trade.type === 'BUY' ? '#10b981' : '#ef4444'], ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—', '#f1f5f9'], [isClosed ? 'Close' : 'Current', (isClosed ? trade.close : trade.current_price) > 0 ? (isClosed ? trade.close : trade.current_price).toFixed(5) : '—', '#f1f5f9']].map(([k, v, c]) => (
                       <div key={k} className="flex justify-between gap-3">
                         <span className="text-white/30">{k}</span>
                         <span className="font-mono font-semibold" style={{ color: c }}>{v}</span>
@@ -727,11 +732,17 @@ function OpenTradeRow({ trade, index }) {
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Protection</div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">{isClosed ? 'Exit' : 'Protection'}</div>
                   <div className="space-y-1.5 text-xs">
-                    {[['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'], ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—']].map(([k, v]) => (
-                      <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
-                    ))}
+                    {isClosed ? (
+                      [['Close Reason', trade.close_reason || 'closed']].map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                      ))
+                    ) : (
+                      [['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'], ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—']].map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
+                      ))
+                    )}
                   </div>
                 </div>
                 <div>
@@ -751,7 +762,13 @@ function OpenTradeRow({ trade, index }) {
                     <div><span className="text-white/30 block">Opened</span>
                       <span className="font-mono text-foreground text-[10px]">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
                     </div>
-                    <div><span className="text-white/30 block">Duration</span><span className="font-mono text-foreground">{elapsed}</span></div>
+                    {isClosed ? (
+                      <div><span className="text-white/30 block">Closed</span>
+                        <span className="font-mono text-foreground text-[10px]">{trade.close_time ? new Date(trade.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      </div>
+                    ) : (
+                      <div><span className="text-white/30 block">Duration</span><span className="font-mono text-foreground">{elapsed}</span></div>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -780,10 +797,11 @@ function OpenTradeRow({ trade, index }) {
 }
 
 const PAGE_SIZE = 5;
-function OpenTradesPanel({ account, initialPositions = [] }) {
+function OpenTradesPanel({ account, initialPositions = [], tradeRecords = [] }) {
   const [positions, setPositions] = useState(initialPositions);
   const [loading, setLoading] = useState(initialPositions.length === 0);
   const [page, setPage] = useState(1);
+  const [showClosed, setShowClosed] = useState(false);
 
   useEffect(() => {
     if (initialPositions.length > 0) { setPositions(initialPositions); setLoading(false); }
@@ -800,9 +818,28 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
 
   useEffect(() => { fetchPositions(); const iv = setInterval(fetchPositions, 5000); return () => clearInterval(iv); }, [account?.account_id]);
 
-  const totalPages = Math.ceil(positions.length / PAGE_SIZE);
-  const paginated = positions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const totalPnl = positions.reduce((s, p) => s + (p.pnl || 0), 0);
+  // Get recently closed trades (last 20)
+  const closedTrades = tradeRecords
+    .filter(t => t.status === 'closed' && t.close_time)
+    .sort((a, b) => new Date(b.close_time).getTime() - new Date(a.close_time).getTime())
+    .slice(0, 20)
+    .map(t => ({
+      ...t,
+      current_price: t.close,
+      type: t.type,
+      lots: t.lots,
+      pnl: t.pnl,
+      symbol: t.symbol,
+      sl: t.sl || 0,
+      tp: t.tp || 0,
+      swap: t.swap || 0,
+    }));
+
+  // Combine open and closed based on toggle
+  const allPositions = showClosed ? [...positions, ...closedTrades] : positions;
+  const totalPages = Math.ceil(allPositions.length / PAGE_SIZE);
+  const paginated = allPositions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPnl = allPositions.reduce((s, p) => s + (p.pnl || 0), 0);
 
   return (
     <Card>
@@ -816,22 +853,34 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
               style={{ borderColor: '#0d0e14', animation: 'pulse 2s infinite' }} />
           </div>
           <span className="text-sm font-bold text-foreground">Live Trade Feed</span>
-          {positions.length > 0 && (
+          {allPositions.length > 0 && (
             <span className={`text-sm font-black font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {totalPnl >= 0 ? '+' : ''}${fmt(totalPnl)}
             </span>
           )}
         </div>
-        <button onClick={fetchPositions} disabled={loading}
-          className="p-2 rounded-lg hover:bg-white/5 text-white/35 hover:text-white/60 transition-colors">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowClosed(!showClosed)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              showClosed ? 'bg-primary/20 text-primary' : 'bg-white/5 text-white/40 hover:text-white/60'
+            }`}
+          >
+            {showClosed ? '✓ Closed' : 'Closed'}
+          </button>
+          <button onClick={fetchPositions} disabled={loading}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/35 hover:text-white/60 transition-colors">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </CardHeader>
 
-      {loading && positions.length === 0 ? (
+      {loading && allPositions.length === 0 ? (
         <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
-      ) : positions.length === 0 ? (
-        <div className="py-10 text-center text-sm text-white/30">No open positions — auto-refreshes every 5s</div>
+      ) : allPositions.length === 0 ? (
+        <div className="py-10 text-center text-sm text-white/30">
+          {showClosed ? 'No closed trades yet' : 'No open positions — auto-refreshes every 5s'}
+        </div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -851,7 +900,9 @@ function OpenTradesPanel({ account, initialPositions = [] }) {
             </table>
           </div>
           <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            <span className="text-xs text-white/35">Open positions: <strong className="text-white/60">{positions.length}</strong></span>
+            <span className="text-xs text-white/35">
+              {showClosed ? 'Total trades: ' : 'Open positions: '}<strong className="text-white/60">{allPositions.length}</strong>
+            </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1.5 text-xs">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
@@ -1026,7 +1077,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
       {/* Live Open Trades */}
-      <OpenTradesPanel account={account} initialPositions={livePositions} />
+      <OpenTradesPanel account={account} initialPositions={livePositions} tradeRecords={tradeRecords} />
 
       {/* Performance Metrics */}
       <AccountPerformanceMetrics account={account} stats={stats} />
