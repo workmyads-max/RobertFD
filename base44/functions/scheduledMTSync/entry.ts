@@ -388,6 +388,9 @@ Deno.serve(async (req) => {
           // Sets status=passed and review_status=pending_review.
           // NEVER provisions MT5 credentials — that requires admin approval.
           // Idempotent: skips if already passed or already in review.
+          // MIN TRADING DAYS: gated here using acc.trading_days (updated by enforceChallengeTradingRules).
+          const minTradingDays = acc.rule_snapshot?.min_trading_days ?? 4;
+
           if (
             !breachDetected &&
             acc.status === 'active' &&
@@ -396,8 +399,12 @@ Deno.serve(async (req) => {
           ) {
             const phase1Target = acc.rule_snapshot?.phase1_target ?? 10;
             const currentProgress = updates.profit_target_progress;
-            if (currentProgress >= phase1Target) {
-              console.log(`[PHASE1-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase1Target}%`);
+            const meetsMinDays = (acc.trading_days || 0) >= minTradingDays;
+            if (currentProgress >= phase1Target && !meetsMinDays) {
+              console.log(`[PHASE1-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${acc.trading_days || 0}/${minTradingDays} trading days`);
+            }
+            if (currentProgress >= phase1Target && meetsMinDays) {
+              console.log(`[PHASE1-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase1Target}%, trading_days=${acc.trading_days || 0}/${minTradingDays}`);
               await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
                 status: 'passed',
                 phase_review_status: 'pending_review',
@@ -422,8 +429,12 @@ Deno.serve(async (req) => {
           ) {
             const phase2Target = acc.rule_snapshot?.phase2_target ?? 5;
             const currentProgress = updates.profit_target_progress;
-            if (currentProgress >= phase2Target) {
-              console.log(`[PHASE2-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase2Target}%`);
+            const meetsMinDays2 = (acc.trading_days || 0) >= minTradingDays;
+            if (currentProgress >= phase2Target && !meetsMinDays2) {
+              console.log(`[PHASE2-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${acc.trading_days || 0}/${minTradingDays} trading days`);
+            }
+            if (currentProgress >= phase2Target && meetsMinDays2) {
+              console.log(`[PHASE2-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase2Target}%, trading_days=${acc.trading_days || 0}/${minTradingDays}`);
               await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
                 status: 'passed',
                 funded_review_status: 'pending_review',
@@ -521,6 +532,20 @@ Deno.serve(async (req) => {
     }
 
     const totalNewTrades = results.reduce((s, r) => s + (r.new_trades || 0), 0);
+
+    // ── TRADING RULE ENFORCEMENT (non-DD rules) ────────────────────────────
+    // Run enforceChallengeTradingRules after the sync batch to check:
+    // max lots, hedging, weekend holding, overnight holding, leverage, trading days
+    // Non-blocking: enforcement result is logged but does not affect sync response.
+    (async () => {
+      try {
+        const ruleRes = await base44.asServiceRole.functions.invoke('enforceChallengeTradingRules', {});
+        console.log(`[scheduledMTSync] Rule enforcement: ${ruleRes?.accounts_checked ?? 0} accounts checked, ${ruleRes?.total_violations ?? 0} violations, ${ruleRes?.total_hard_fails ?? 0} hard fails`);
+      } catch (e) {
+        console.warn('[scheduledMTSync] enforceChallengeTradingRules failed (non-blocking):', e.message);
+      }
+    })();
+
     return Response.json({ success: true, synced: results.length, total_new_trades: totalNewTrades, results });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
