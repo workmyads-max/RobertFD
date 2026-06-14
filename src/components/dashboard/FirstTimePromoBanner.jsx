@@ -9,16 +9,14 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // Check if user has already used discount
-  const { data: userDiscount } = useQuery({
-    queryKey: ['first-time-discount', 'user'],
+  // Get challenge plans for max account size display
+  const { data: plans = [] } = useQuery({
+    queryKey: ['challenge-plans-all'],
     queryFn: async () => {
-      const user = await base44.auth.me();
-      if (!user) return null;
-      const discounts = await base44.entities.FirstTimeDiscount.filter({ user_email: user.email });
-      return discounts[0] || null;
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      return res?.data?.plans || res?.plans || [];
     },
-    refetchInterval: 10000,
+    staleTime: 60000,
   });
 
   // Get promotion settings
@@ -31,19 +29,8 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
     refetchInterval: 30000,
   });
 
-  // Get challenge plans to check eligibility
-  const { data: plans = [] } = useQuery({
-    queryKey: ['challenge-plans-all'],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getChallengePlans', {});
-      return res?.data?.plans || res?.plans || [];
-    },
-    staleTime: 60000,
-  });
-
-  // Check if banner should be shown
-  const shouldShow = settings?.is_first_time_discount_active && 
-                     !userDiscount?.is_used;
+  // Always show banner - eligibility checked at checkout
+  const shouldShow = settings?.is_first_time_discount_active !== false;
 
   // Countdown timer
   useEffect(() => {
@@ -81,7 +68,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
   if (!shouldShow) return null;
 
   const discountPercent = settings?.first_time_discount_percent || 25;
-  const maxAccountSize = settings?.max_account_size_for_discount || 50000;
+  const maxAccountSize = settings?.max_account_size_for_discount || 200000;
 
   return (
     <motion.div
