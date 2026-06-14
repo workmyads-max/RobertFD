@@ -172,6 +172,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* Main content area with proper spacing */}
         <div className="space-y-6 mt-6 min-h-[40vh]">
+          {/* First-Time Promo Banner — ALWAYS SHOWN */}
+          <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+
           {/* Active Promotions — always shown when available */}
           <PromotionBanner location="dashboard" />
 
@@ -179,9 +182,6 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
             <EmptyState onStartChallenge={onStartChallenge} />
           ) : (
             <>
-              {/* First-Time Promo Banner */}
-              <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
-
               {/* Account Switcher */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">

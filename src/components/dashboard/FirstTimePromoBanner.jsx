@@ -30,7 +30,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
   });
 
   // Always show banner - eligibility checked at checkout
-  const shouldShow = settings?.is_first_time_discount_active !== false;
+  const shouldShow = true;
 
   // Countdown timer
   useEffect(() => {
