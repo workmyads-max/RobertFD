@@ -1,24 +1,54 @@
 /**
- * syncMatchTraderAccount — Live equity fetch for realtime DD monitoring.
+ * syncMatchTraderAccount — Live equity fetch + server-side breach enforcement.
  *
- * PURPOSE: Returns live balance, equity, and open positions from MT5 API.
- * Called by LiveDDGuard every few seconds for realtime enforcement.
+ * Called by LiveDDGuard (frontend) every 5 seconds for realtime monitoring.
  *
- * STRICT SCOPE — this function ONLY:
- *   - Fetches live balance/equity from MT5 API
- *   - Returns open positions for display
- *   - Returns live DD calculations for client-side breach detection
+ * ARCHITECTURE:
+ *   - Fetches live balance/equity from MT5 API (read-only MT5 call)
+ *   - Performs ALL breach detection and enforcement SERVER-SIDE
+ *   - Returns breach result to frontend for immediate modal display
+ *   - Frontend NEVER makes the breach decision — only displays the result
+ *
+ * BREACH ENFORCEMENT (server-side, atomic):
+ *   1. Update ChallengeAccount: status=failed, dd_breach_detected, dd_breach_type, dd_breach_value, dd_breach_time
+ *   2. Create RiskFlag (audit trail)
+ *   3. Create Notification (user alert)
+ *   4. Disable MT5 account broker-side (non-blocking)
  *
  * MUST NOT:
- *   - Create or update TradeRecords
- *   - Update account statistics (win_rate, total_trades, pnl, etc.)
- *   - Update ChallengeAccount fields other than breach-related fields
- *   - Write to any entity (read-only MT5 API call)
+ *   - Create or update TradeRecords (scheduledMTSync owns that)
+ *   - Update win_rate, total_trades, pnl history (scheduledMTSync owns that)
  *
- * Breach writing is handled exclusively by realtimeBreachEnforce.
- * Statistics are handled exclusively by scheduledMTSync.
+ * Idempotent: already-breached accounts return immediately with breach_detected=true.
+ * Ownership-verified: user must own the account.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+// ── DD helpers (inlined — no local imports in Deno) ───────────────────────────
+
+function getDDLimits(acc) {
+  const snap = acc.rule_snapshot || {};
+  const dailyLimit   = snap.daily_dd_limit ?? 5;
+  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : 10);
+  const isTrailing   = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  return { dailyLimit, overallLimit, isTrailing };
+}
+
+function calcOverallDD(acc, equity, hwm) {
+  const accountSize = acc.account_size || 100000;
+  const isTrailing  = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  if (isTrailing) {
+    return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
+  }
+  return Math.max(0, ((accountSize - equity) / accountSize) * 100);
+}
+
+function calcDailyDD(acc, equity) {
+  const base = acc.daily_start_balance || acc.account_size || 100000;
+  return base > 0 ? Math.max(0, ((base - equity) / base) * 100) : 0;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   try {
@@ -31,12 +61,24 @@ Deno.serve(async (req) => {
     if (!mt_login) return Response.json({ error: 'mt_login required' }, { status: 400 });
 
     // ── OWNERSHIP VERIFICATION ────────────────────────────────────────────────
-    // Only allow fetching data for accounts belonging to the authenticated user.
     const accounts = await base44.entities.ChallengeAccount.filter({ account_id });
     const acc = accounts[0];
     if (!acc) return Response.json({ error: 'Account not found' }, { status: 404 });
     if (acc.user_email !== user.email) {
       return Response.json({ error: 'Forbidden: account does not belong to this user' }, { status: 403 });
+    }
+
+    // ── ALREADY BREACHED — return immediately, nothing to enforce ─────────────
+    if (acc.dd_breach_detected || acc.status === 'failed') {
+      return Response.json({
+        success: true,
+        breach_detected: true,
+        already_breached: true,
+        breach_type: acc.dd_breach_type,
+        breach_value: acc.dd_breach_value,
+        balance: acc.balance,
+        equity: acc.equity,
+      });
     }
 
     // ── MT5 CREDENTIALS ───────────────────────────────────────────────────────
@@ -53,62 +95,182 @@ Deno.serve(async (req) => {
     };
     const loginNum = parseInt(mt_login);
 
-    // ── LIVE EQUITY FETCH (userget only — no deal history) ───────────────────
+    // ── LIVE EQUITY FETCH (userget — fast, single call) ───────────────────────
     const infoRes = await fetch(`${MT5_BASE}/api/v1/user/userget`, {
       method: 'POST', headers,
       body: JSON.stringify({ Login: loginNum, apikey: MT5_KEY }),
     });
 
     let balance = null;
-    let equity = null;
-    let mtData = {};
+    let equity  = null;
 
     if (infoRes.ok) {
-      const r = await infoRes.json().catch(() => ({}));
-      mtData = r?.data || r?.User || r?.Data || r || {};
-      balance = parseFloat(mtData?.Balance ?? mtData?.balance ?? 0) || null;
-      equity  = parseFloat(mtData?.Equity  ?? mtData?.equity  ?? 0) || null;
+      const r   = await infoRes.json().catch(() => ({}));
+      const mtd = r?.data || r?.User || r?.Data || r || {};
+      balance = parseFloat(mtd?.Balance ?? mtd?.balance ?? 0) || null;
+      equity  = parseFloat(mtd?.Equity  ?? mtd?.equity  ?? 0) || null;
     }
 
-    // ── GLITCH PROTECTION ────────────────────────────────────────────────────
-    // If API returns 0 but DB has real data, fall back to DB values
-    // (prevents false 100% DD breach from transient API zero)
+    // ── GLITCH PROTECTION ─────────────────────────────────────────────────────
+    // If API returns 0 but DB has real data, keep DB values (transient MT5 API zero)
     if ((balance === 0 || balance === null) && (acc.balance || 0) > 0) {
       balance = acc.balance;
       equity  = acc.equity || acc.balance;
     }
 
-    // ── LIVE DD CALCULATIONS ──────────────────────────────────────────────────
-    // Returned to client for display and breach detection logic in LiveDDGuard.
-    // No persistence here — scheduledMTSync owns the persistent values.
-    const accountSize = acc.account_size || 100000;
-    const snap = acc.rule_snapshot || {};
-    const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
-    const hwm = acc.high_water_mark || accountSize;
-
-    let liveOverallDD = 0;
-    let liveDailyDD = 0;
-
-    if (equity !== null && equity > 0) {
-      if (isTrailing) {
-        liveOverallDD = hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
-      } else {
-        liveOverallDD = Math.max(0, ((accountSize - equity) / accountSize) * 100);
-      }
-      const dailyBase = acc.daily_start_balance || accountSize;
-      liveDailyDD = dailyBase > 0 ? Math.max(0, ((dailyBase - equity) / dailyBase) * 100) : 0;
+    // If still no real data, skip enforcement cycle
+    if (!equity || !balance || balance === 0 || equity === 0) {
+      return Response.json({
+        success: true,
+        breach_detected: false,
+        skipped: true,
+        reason: 'zero_balance',
+        balance: balance ?? acc.balance,
+        equity:  equity  ?? acc.equity,
+      });
     }
 
+    // ── SERVER-SIDE BREACH DETECTION ──────────────────────────────────────────
+    const accountSize = acc.account_size || 100000;
+
+    // Glitch: balance < 1% of account size = API error
+    if (balance > 0 && balance < accountSize * 0.01) {
+      return Response.json({
+        success: true,
+        breach_detected: false,
+        skipped: true,
+        reason: 'api_glitch',
+        balance,
+        equity,
+      });
+    }
+
+    const newHWM = Math.max(acc.high_water_mark || 0, balance);
+
+    const currentOverallDD = calcOverallDD(acc, equity, newHWM);
+    const currentDailyDD   = calcDailyDD(acc, equity);
+
+    // Persistent DD: use Math.max so DD never decreases between syncs
+    // EXCEPTION: if stored DD is corrupted (>=90%), trust the live value
+    const dbOverallDD = acc.max_drawdown_used || 0;
+    const dbDailyDD   = acc.daily_drawdown_used || 0;
+    const dbCorrupted = dbOverallDD >= 90 || dbDailyDD >= 90;
+    const persistentOverallDD = parseFloat((dbCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(3));
+    const persistentDailyDD   = parseFloat((dbCorrupted ? currentDailyDD   : Math.max(dbDailyDD,   currentDailyDD  )).toFixed(3));
+
+    const { dailyLimit, overallLimit, isTrailing } = getDDLimits(acc);
+
+    // ── LIVE DD CALCULATIONS (for display) ────────────────────────────────────
+    const liveDailyDD   = parseFloat(currentDailyDD.toFixed(3));
+    const liveOverallDD = parseFloat(currentOverallDD.toFixed(3));
+
+    // Determine breach
+    let breachType  = null;
+    let breachValue = null;
+
+    if (persistentOverallDD >= overallLimit) {
+      breachType  = isTrailing ? 'trailing' : 'overall';
+      breachValue = persistentOverallDD;
+    } else if (persistentDailyDD >= dailyLimit) {
+      breachType  = 'daily';
+      breachValue = persistentDailyDD;
+    }
+
+    if (breachType) {
+      // ── SERVER-SIDE ENFORCEMENT — atomic write ─────────────────────────────
+      const breachTime = new Date().toISOString();
+      const sr = base44.asServiceRole;
+
+      await sr.entities.ChallengeAccount.update(acc.id, {
+        status: 'failed',
+        dd_breach_detected: true,
+        dd_breach_type:  breachType,
+        dd_breach_value: parseFloat(breachValue.toFixed(2)),
+        dd_breach_time:  breachTime,
+        // Update live equity in same write
+        balance,
+        equity,
+        max_drawdown_used:   persistentOverallDD,
+        daily_drawdown_used: persistentDailyDD,
+        high_water_mark:     newHWM,
+        last_synced_at:      breachTime,
+      });
+
+      // RiskFlag (non-blocking)
+      const breachLabels = {
+        daily:    'Daily drawdown limit exceeded',
+        overall:  'Maximum drawdown limit exceeded',
+        trailing: 'Trailing drawdown limit exceeded',
+      };
+      sr.entities.RiskFlag.create({
+        user_email:   acc.user_email,
+        account_id:   account_id,
+        flag_type:    'unusual_dd_behavior',
+        severity:     'critical',
+        description:  `REALTIME BREACH (${breachType}): ${breachLabels[breachType]} — ${breachValue.toFixed(2)}% (equity: $${equity.toFixed(2)})`,
+        status:       'active',
+        triggered_at: breachTime,
+      }).catch(() => {});
+
+      // Notification (non-blocking)
+      sr.entities.Notification.create({
+        title:        '🚫 Challenge Account Failed',
+        message:      `Account ${account_id} breached: ${breachLabels[breachType]}. DD reached ${breachValue.toFixed(2)}%. Account has been automatically closed.`,
+        type:         'market_alert',
+        priority:     'critical',
+        display_mode: 'popup',
+        is_active:    true,
+        target:       'challenge',
+      }).catch(() => {});
+
+      // MT5 broker-side disable (non-blocking)
+      if (acc.mt_login) {
+        (async () => {
+          try {
+            const res  = await fetch(`${MT5_BASE}/api/v1/user/move-disabled`, {
+              method: 'POST', headers,
+              body: JSON.stringify({ Login: loginNum, apikey: MT5_KEY }),
+            });
+            const data = await res.json().catch(() => ({}));
+            const code = data?.data?.errorcode;
+            if (code === 3) {
+              console.warn(`[MT5-DISABLE] MT_RET_ERR_PARAMS for ${acc.mt_login} — no disabled sub-group configured. DB-only disable applied.`);
+            } else {
+              console.log(`[MT5-DISABLE] move-disabled ${acc.mt_login}: code=${code}`);
+            }
+          } catch (e) {
+            console.error(`[MT5-DISABLE] Failed for ${acc.mt_login}:`, e.message);
+          }
+        })();
+      }
+
+      return Response.json({
+        success: true,
+        breach_detected:      true,
+        breach_type:          breachType,
+        breach_value:         parseFloat(breachValue.toFixed(2)),
+        breach_time:          breachTime,
+        balance,
+        equity,
+        live_overall_dd:      liveOverallDD,
+        live_daily_dd:        liveDailyDD,
+        is_trailing:          isTrailing,
+        mt5_disable_initiated: !!acc.mt_login,
+      });
+    }
+
+    // ── NO BREACH — return live equity for dashboard display ──────────────────
     return Response.json({
-      success: true,
+      success:         true,
+      breach_detected: false,
       balance,
       equity,
-      float_pnl: equity !== null && balance !== null ? equity - balance : null,
-      live_overall_dd: parseFloat(liveOverallDD.toFixed(3)),
-      live_daily_dd: parseFloat(liveDailyDD.toFixed(3)),
-      is_trailing: isTrailing,
-      account_size: accountSize,
-      high_water_mark: hwm,
+      float_pnl:       equity - balance,
+      live_overall_dd: liveOverallDD,
+      live_daily_dd:   liveDailyDD,
+      is_trailing:     isTrailing,
+      account_size:    accountSize,
+      high_water_mark: newHWM,
       daily_start_balance: acc.daily_start_balance || accountSize,
     });
 

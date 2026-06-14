@@ -1,6 +1,11 @@
 /**
  * getLivePositions — Fetch open positions from MT5 for the current user's accounts.
- * Uses Tritech API: /api/v1/user/get-positions or /api/v1/order/get-open-orders
+ *
+ * Uses Tritech API: /api/v1/deal/get-position (primary)
+ * Fallback:         /api/v1/user/get-positions
+ *
+ * Ownership-verified: only returns positions for accounts belonging to the authenticated user.
+ * Read-only: does not write any entities.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -11,65 +16,25 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const accountId = body.account_id;
+    const accountId = body.account_id || null;
 
-    const mt5Providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true }).catch(() => []);
-    const mt5Provider = mt5Providers[0];
-    const MT5_BASE = mt5Provider?.server_url || Deno.env.get('MT5_API_BASE_URL');
-    const MT5_KEY  = mt5Provider?.api_key    || Deno.env.get('MT5_API_KEY');
-
-    console.log('MT5 Config:', { 
-      from_db: !!mt5Provider, 
-      server_url: MT5_BASE ? 'configured' : 'missing', 
-      api_key: MT5_KEY ? 'configured' : 'missing' 
-    });
-
+    // ── MT5 CREDENTIALS ───────────────────────────────────────────────────────
+    const MT5_BASE = Deno.env.get('MT5_API_BASE_URL');
+    const MT5_KEY  = Deno.env.get('MT5_API_KEY');
     if (!MT5_BASE || !MT5_KEY) {
-      console.error('MT5 not configured - missing server_url or api_key');
-      return Response.json({ 
-        success: false, 
-        positions: [], 
-        error: 'MT5 not configured',
-        debug: { 
-          has_provider: !!mt5Provider,
-          has_server_url: !!MT5_BASE,
-          has_api_key: !!MT5_KEY
-        }
-      });
+      return Response.json({ success: false, positions: [], error: 'MT5 not configured' });
     }
 
-    // Get user's accounts - check for mt_login regardless of platform field
+    // ── OWNERSHIP: only fetch accounts belonging to this user ─────────────────
     const userAccounts = await base44.entities.ChallengeAccount.filter({ user_email: user.email });
-    console.log('User accounts found:', userAccounts.length, 'for email:', user.email);
-    
-    const activeAccounts = userAccounts.filter(a => {
-      const hasMtLogin = !!a.mt_login;
-      const isActiveStatus = ['active', 'funded', 'passed'].includes(a.status);
-      const matchesAccountId = !accountId || a.account_id === accountId;
-      
-      if (!hasMtLogin) console.log('Account missing mt_login:', a.account_id, 'status:', a.status);
-      if (!isActiveStatus) console.log('Account inactive status:', a.account_id, 'status:', a.status);
-      
-      return hasMtLogin && isActiveStatus && matchesAccountId;
-    });
+    const activeAccounts = userAccounts.filter(a =>
+      a.mt_login &&
+      ['active', 'funded', 'passed'].includes(a.status) &&
+      (!accountId || a.account_id === accountId)
+    );
 
-    console.log('Active MT5 accounts:', activeAccounts.length);
     if (activeAccounts.length === 0) {
-      console.log('No active MT5 accounts found for user:', user.email, 'total accounts:', userAccounts.length);
-      return Response.json({ 
-        success: true, 
-        positions: [], 
-        debug: { 
-          message: 'No active MT5 accounts', 
-          userAccounts: userAccounts.length,
-          accounts: userAccounts.map(a => ({ 
-            account_id: a.account_id, 
-            status: a.status, 
-            has_mt_login: !!a.mt_login,
-            mt_login: a.mt_login 
-          }))
-        } 
-      });
+      return Response.json({ success: true, positions: [] });
     }
 
     const headers = {
@@ -80,79 +45,62 @@ Deno.serve(async (req) => {
 
     const allPositions = [];
 
-    for (const acc of activeAccounts) {
+    await Promise.all(activeAccounts.map(async (acc) => {
       const loginNum = parseInt(acc.mt_login);
-      console.log('Fetching positions for MT5 login:', loginNum, 'account_id:', acc.account_id);
-
-      // Try multiple endpoints for better reliability
       let positions = [];
-      
+
       // Primary: /api/v1/deal/get-position
       const posRes = await fetch(`${MT5_BASE}/api/v1/deal/get-position`, {
         method: 'POST', headers,
         body: JSON.stringify({ logins: [loginNum], groups: [], apikey: MT5_KEY, pageOffset: 0, pageSize: 500 }),
-      }).catch(err => {
-        console.error('MT5 API error:', err);
-        return { ok: false };
-      });
+      }).catch(() => ({ ok: false }));
 
       if (posRes.ok) {
-        try {
-          const r = await posRes.json();
-          positions = r?.data || [];
-          console.log('Got positions from /api/v1/deal/get-position:', positions.length);
-        } catch (e) {
-          console.error('Error parsing MT5 response:', e);
-        }
-      } else {
-        console.error('MT5 API /api/v1/deal/get-position failed, status:', posRes.status);
-        // Fallback: try /api/v1/user/get-positions
+        const r = await posRes.json().catch(() => ({}));
+        positions = r?.data || [];
+      }
+
+      // Fallback: /api/v1/user/get-positions
+      if (!positions.length) {
         const fallbackRes = await fetch(`${MT5_BASE}/api/v1/user/get-positions`, {
           method: 'POST', headers,
           body: JSON.stringify({ login: loginNum }),
         }).catch(() => ({ ok: false }));
-        
         if (fallbackRes.ok) {
-          try {
-            const r = await fallbackRes.json();
-            positions = r?.data || r?.positions || [];
-            console.log('Got positions from fallback endpoint:', positions.length);
-          } catch (e) {
-            console.error('Error parsing fallback response:', e);
-          }
+          const r = await fallbackRes.json().catch(() => ({}));
+          positions = r?.data || r?.positions || [];
         }
       }
 
       // Map Tritech get-position fields to standard format
-      // Tritech actionID: 0=BUY, 1=SELL; volume is in centi-lots (÷10000)
-      // Verified: 10000 = 1.00 lot, 1000 = 0.10 lot, 1 = 0.0001 lot
+      // Tritech: actionID 0=BUY, 1=SELL; volume in centi-lots (÷10000)
       positions.forEach(p => {
         const actionID = p.actionID ?? p.action ?? 0;
-        const isSell = actionID === 1 || actionID === 'SELL';
-        const rawVol = parseFloat(p.volume ?? 0);
-        const lots = rawVol / 10000;
-        const profit = parseFloat(p.profit ?? 0);
-        const storage = parseFloat(p.storage ?? 0);
+        const isSell   = actionID === 1 || actionID === 'SELL';
+        const lots     = parseFloat(p.volume ?? 0) / 10000;
+        const profit   = parseFloat(p.profit ?? 0);
+        const storage  = parseFloat(p.storage ?? 0);
 
         allPositions.push({
-          account_id: acc.account_id,
-          trade_id: String(p.position ?? p.externalID ?? Math.random()),
-          symbol: (p.symbol ?? '').toUpperCase(),
-          type: isSell ? 'SELL' : 'BUY',
+          account_id:    acc.account_id,
+          trade_id:      String(p.position ?? p.externalID ?? ''),
+          symbol:        (p.symbol ?? '').toUpperCase(),
+          type:          isSell ? 'SELL' : 'BUY',
           lots,
-          entry: parseFloat(p.priceOpen ?? p.priceCurrent ?? 0),
-          current_price: parseFloat(p.priceCurrent ?? p.priceOpen ?? 0),
-          sl: parseFloat(p.priceSL ?? 0),
-          tp: parseFloat(p.priceTP ?? 0),
-          pnl: profit + storage,
-          swap: storage,
-          status: 'open',
-          open_time: p.timeCreateDateTime ?? p.timeCreate ?? null,
+          entry:         parseFloat(p.priceOpen    ?? p.priceCurrent ?? 0),
+          current_price: parseFloat(p.priceCurrent ?? p.priceOpen    ?? 0),
+          sl:            parseFloat(p.priceSL ?? 0),
+          tp:            parseFloat(p.priceTP ?? 0),
+          pnl:           profit + storage,
+          swap:          storage,
+          status:        'open',
+          open_time:     p.timeCreateDateTime ?? p.timeCreate ?? null,
         });
       });
-    }
+    }));
 
     return Response.json({ success: true, positions: allPositions });
+
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
