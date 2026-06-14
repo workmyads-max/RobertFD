@@ -48,8 +48,12 @@ export default function Affiliate({ user }) {
   });
 
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts-affiliate'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+    },
+    enabled: !!user?.email,
   });
 
   const { data: withdrawals = [] } = useQuery({

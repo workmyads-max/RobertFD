@@ -105,19 +105,12 @@ export default function Dashboard() {
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications'],
+  const { data: rawNotifications = [] } = useQuery({
+    queryKey: ['notifications', user?.email],
     queryFn: () => base44.entities.Notification.filter({ is_active: true }),
     refetchInterval: 30000,
     enabled: !!user,
   });
-
-  const bannerNotification = notifications.find(n =>
-    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
-  );
-
-  // Disabled popup notifications for now
-  const popupNotification = null;
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
 
@@ -134,6 +127,22 @@ export default function Dashboard() {
   // CRITICAL: Only count accounts belonging to the current user (allAccounts is already email-filtered)
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
   const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;
+
+  // SECURITY: Filter notifications by target audience
+  const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
+  const hasChallengeAccount = allAccounts.some(a => ['active', 'passed', 'pending'].includes(a.status));
+  const notifications = rawNotifications.filter(n => {
+    if (n.target === 'all') return true;
+    if (n.target === 'admin') return isAdmin;
+    if (n.target === 'funded') return hasFundedAccount;
+    if (n.target === 'challenge') return hasChallengeAccount;
+    return true;
+  });
+
+  const bannerNotification = notifications.find(n =>
+    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
+  );
+  const popupNotification = null;
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);

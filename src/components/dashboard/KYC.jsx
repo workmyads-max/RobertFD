@@ -71,12 +71,15 @@ export default function KYC({ user }) {
   const handleUpload = async (field, file) => {
     if (!file) return;
     setUploading(field);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    // Upload to PRIVATE storage — KYC documents must not be publicly accessible
+    const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+    // Create a short-lived signed URL for immediate display only
+    const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri, expires_in: 3600 });
+    // Store the private URI in the entity (NOT the signed URL — signed URLs expire)
     if (kyc?.id) {
-      await base44.entities.KYCVerification.update(kyc.id, { [field]: file_url });
+      await base44.entities.KYCVerification.update(kyc.id, { [field]: file_uri });
     } else {
-      // stage locally until submit
-      setForm(f => ({ ...f, [field]: file_url }));
+      setForm(f => ({ ...f, [field]: file_uri }));
     }
     qc.invalidateQueries({ queryKey: ['kyc', user?.email] });
     setUploading(null);

@@ -144,8 +144,12 @@ export default function Withdrawals({ user }) {
   const qc = useQueryClient();
 
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 20),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 50);
+    },
+    enabled: !!user?.email,
   });
 
   // ONLY show funded live accounts (not challenge/phase accounts)
