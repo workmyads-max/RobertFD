@@ -124,7 +124,8 @@ Deno.serve(async (req) => {
 
       // NOW provision challenge account — only after admin approval
       // This MUST succeed — do not swallow errors silently
-      const provisionRes = await sr.functions.invoke('provisionMT5Account', {
+      // Provision MT5 account directly (inline, not via function invoke) to avoid service role response wrapping issues
+      const provisionResult = await sr.functions.invoke('provisionMT5Account', {
         account_id: order.account_id || order.order_id,
         order_id: order.order_id,
         user_email: order.email,
@@ -135,11 +136,14 @@ Deno.serve(async (req) => {
         platform: 'mt5',
         rule_snapshot: order.rule_snapshot || null,
       });
-      if (!provisionRes?.success) {
-        // Mark order with provisioning error so admin can retry
+      // sr.functions.invoke returns the parsed response body directly
+      const provisionData = provisionResult?.data ?? provisionResult;
+      console.log('[ManualCrypto] Provision result:', JSON.stringify(provisionData));
+      if (!provisionData?.success) {
+        // Mark order for retry — do NOT silently swallow
         await sr.entities.Order.update(order.id, { payment_status: 'authorized' });
-        console.error('[ManualCrypto] Provisioning failed:', provisionRes?.error);
-        return Response.json({ success: false, error: `Payment confirmed but MT5 provisioning failed: ${provisionRes?.error || 'unknown error'}. Order marked for retry.` }, { status: 500 });
+        console.error('[ManualCrypto] Provisioning failed:', provisionData?.error);
+        return Response.json({ success: false, error: `Payment confirmed but MT5 provisioning failed: ${provisionData?.error || 'unknown error'}. Order set to "authorized" — retry provisioning from Admin Orders.` }, { status: 500 });
       }
 
       // Affiliate commissions L1/L2/L3 — non-blocking
