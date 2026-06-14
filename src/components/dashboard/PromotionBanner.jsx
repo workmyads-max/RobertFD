@@ -8,7 +8,7 @@ export default function PromotionBanner({ location = 'dashboard' }) {
   const [dismissed, setDismissed] = useState([]);
 
   const { data: promotions = [] } = useQuery({
-    queryKey: ['active-promotions', location],
+    queryKey: ['promotions', location],
     queryFn: async () => {
       const all = await base44.entities.Promotion.filter({ is_active: true });
       const now = new Date();
