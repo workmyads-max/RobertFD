@@ -2,8 +2,8 @@
  * LiveDDGuard — Realtime MT5 equity monitoring display layer.
  *
  * ARCHITECTURE (server-side enforcement):
- *   - Polls syncMatchTraderAccount every 5s (read-only from frontend perspective)
- *   - syncMatchTraderAccount performs ALL breach detection and enforcement server-side:
+ *   - Polls mt5RealtimeSync every 5s (read-only from frontend perspective)
+ *   - mt5RealtimeSync performs ALL breach detection and enforcement server-side:
  *       → Updates ChallengeAccount (status=failed, breach flags)
  *       → Creates RiskFlag + Notification
  *       → Disables MT5 account broker-side
@@ -12,7 +12,7 @@
  *   - On no-breach: updates local cache with live equity for dashboard display
  *
  * Scope: display and cache management only.
- * Enforcement: syncMatchTraderAccount (backend) exclusively.
+ * Enforcement: mt5RealtimeSync (backend) exclusively.
  * Statistics: scheduledMTSync (backend) exclusively.
  */
 import React, { useEffect, useRef, useCallback } from 'react';
@@ -68,7 +68,7 @@ export default function LiveDDGuard({ onBreach }) {
         try {
           inFlightRef.current.add(acc.account_id);
 
-          const response = await base44.functions.invoke('syncMatchTraderAccount', {
+          const response = await base44.functions.invoke('mt5RealtimeSync', {
             account_id: acc.account_id,
             mt_login:   acc.mt_login,
           });

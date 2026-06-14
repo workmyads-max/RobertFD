@@ -70,7 +70,7 @@ export default function AdminMatchTrader() {
   });
 
   const syncMutation = useMutation({
-    mutationFn: () => base44.functions.invoke('syncMatchTraderAccount', {
+    mutationFn: () => base44.functions.invoke('mt5RealtimeSync', {
       account_id: syncAccountId, mt_login: syncLogin,
     }),
     onSuccess: (res) => setSyncResult(res.data),

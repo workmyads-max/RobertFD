@@ -19,7 +19,7 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
     challenge_type: 'two-step',
     account_type: 'standard',
     account_size: 100000,
-    platform: 'match_trader',
+    platform: 'mt5',
     leverage: '1:100',
     price: 517,
     discount_amount: 0,

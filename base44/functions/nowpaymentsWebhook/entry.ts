@@ -20,7 +20,7 @@ async function verifyNowPaymentsSignature(body, signature, ipcSecret) {
 
 async function provisionAfterPayment(base44, order) {
   try {
-    await base44.asServiceRole.functions.invoke('provisionMatchTraderAccount', {
+    await base44.asServiceRole.functions.invoke('provisionMT5Account', {
       account_id: order.account_id || order.order_id,
       order_id: order.order_id,
       user_email: order.email,
@@ -28,7 +28,6 @@ async function provisionAfterPayment(base44, order) {
       account_type: order.account_type || 'standard',
       account_size: order.account_size,
       leverage: order.leverage || '1:100',
-      platform: order.platform || 'mt5',
       rule_snapshot: order.rule_snapshot || null,
     });
   } catch (e) {

@@ -375,13 +375,16 @@ Deno.serve(async (req) => {
             profit_target_progress: parseFloat(Math.max(0, (equity - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
+            // ── BREACH FLAGS: safety-net writes — only if mt5RealtimeSync has not already set them
+            // dd_breach_detected is always written (false=no breach, true=breach)
+            // breach type/time/value: written ONCE only — never overwrite existing flags (mt5RealtimeSync owns first-write)
             dd_breach_detected: breachDetected,
-            // If data was corrupted, clear all breach flags in DB
+            // If data was corrupted (API returned 0 on a real account), clear breach flags
             ...(dbWasCorrupted && { dd_breach_type: null, dd_breach_time: null, dd_breach_value: null, status: acc.status === 'failed' ? 'active' : acc.status }),
-            // Breach flags written ONCE — only if not already set
-            ...(breachType && !acc.dd_breach_type && { dd_breach_type: breachType }),
-            ...(breachTime && !acc.dd_breach_time && { dd_breach_time: breachTime }),
-            ...(breachValue !== null && acc.dd_breach_value == null && { dd_breach_value: breachValue }),
+            // Safety-net breach flags — guarded: only write if not already set by mt5RealtimeSync
+            ...(breachType && !acc.dd_breach_detected && !acc.dd_breach_type && { dd_breach_type: breachType }),
+            ...(breachTime && !acc.dd_breach_detected && !acc.dd_breach_time && { dd_breach_time: breachTime }),
+            ...(breachValue !== null && !acc.dd_breach_detected && acc.dd_breach_value == null && { dd_breach_value: breachValue }),
           };
 
           // Immediate failure — same DB write, no waiting for automatedDDBreach

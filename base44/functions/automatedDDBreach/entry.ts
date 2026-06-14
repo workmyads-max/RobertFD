@@ -1,12 +1,18 @@
 /**
- * automatedDDBreach — Secondary DD enforcement layer.
+ * automatedDDBreach — DB consistency safety checker.
  * Runs every 5 minutes via scheduled automation.
  * Does NOT call MT5 API — reads persistent DB fields written by scheduledMTSync.
  *
- * Roles:
- * 1. Catch any account where dd_breach_detected=true but status≠'failed' (sync wrote flag but failed to update status)
- * 2. Catch any account where stored DD values exceed limits (safety net)
- * 3. Reset daily_drawdown_used at 23:00 UTC (also sets daily_start_balance for next day)
+ * Roles (post-consolidation):
+ * 1. Catch accounts where dd_breach_detected=true but status≠'failed'
+ *    (mt5RealtimeSync or scheduledMTSync wrote the flag but status update failed)
+ * 2. Catch accounts where stored DD values exceed limits but status≠'failed'
+ *    (safety net for accounts where no active dashboard session was running)
+ *
+ * NOT responsible for:
+ * - Daily reset (owned exclusively by scheduledMTSync at 23:00 UTC)
+ * - Writing balance/equity/DD statistics (owned by scheduledMTSync)
+ * - Fetching live MT5 data
  *
  * Scans: active + passed + funded accounts
  */
@@ -67,8 +73,6 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
-    const utcHour = now.getUTCHours();
-    const utcMinute = now.getUTCMinutes();
 
     // Fetch all enforceable accounts in parallel
     const [active, passed, funded] = await Promise.all([
@@ -79,32 +83,14 @@ Deno.serve(async (req) => {
     const activeAccounts = [...active, ...passed, ...funded];
 
     const breached = [];
-    const dailyResets = [];
     const errors = [];
 
-    // ── DAILY DD RESET at 23:00 UTC ────────────────────────────────────────────
-    // Resets daily_drawdown_used to 0 AND records current balance as daily_start_balance
-    // This is what enables the true institutional daily DD formula
-    const isDailyResetWindow = utcHour === 23 && utcMinute < 10;
+    // NOTE: Daily reset (daily_start_balance, daily_drawdown_used=0, daily_reset_at)
+    // is handled exclusively by scheduledMTSync at 23:00 UTC.
+    // automatedDDBreach no longer performs daily resets to avoid duplicate writes.
 
     await Promise.all(activeAccounts.map(async (account) => {
       try {
-
-        // ── DAILY RESET ─────────────────────────────────────────────────────────
-        if (isDailyResetWindow) {
-          const lastReset = account.daily_reset_at ? new Date(account.daily_reset_at) : null;
-          const resetToday = lastReset && lastReset.getUTCDate() === now.getUTCDate();
-          if (!resetToday) {
-            // Record today's closing balance as tomorrow's daily_start_balance
-            await sr.entities.ChallengeAccount.update(account.id, {
-              daily_pnl: 0,
-              daily_drawdown_used: 0,
-              daily_start_balance: account.balance || account.account_size,
-              daily_reset_at: now.toISOString(),
-            });
-            dailyResets.push(account.account_id);
-          }
-        }
 
         // ── BREACH DETECTION ────────────────────────────────────────────────────
         const maxDDUsed = account.max_drawdown_used || 0;
@@ -214,10 +200,10 @@ Deno.serve(async (req) => {
       success: true,
       scanned: activeAccounts.length,
       breached: breached.length,
-      daily_resets: dailyResets.length,
       errors: errors.length,
       breached_accounts: breached,
       timestamp: now.toISOString(),
+      note: 'Daily resets are handled exclusively by scheduledMTSync at 23:00 UTC.',
     });
 
   } catch (error) {
