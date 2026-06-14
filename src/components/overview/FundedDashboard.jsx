@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
+import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import PromotionBanner from '../dashboard/PromotionBanner';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
@@ -171,6 +172,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* Main content area with proper spacing */}
         <div className="space-y-6 mt-6 min-h-[40vh]">
+          {/* First-Time Promo Banner — ALWAYS SHOWN */}
+          <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+
           {/* Active Promotions — always shown when available */}
           <PromotionBanner location="dashboard" />
 
