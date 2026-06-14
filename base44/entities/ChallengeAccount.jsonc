@@ -3,7 +3,7 @@
   "type": "object",
   "permissions": {
     "read": "owner",
-    "create": "admin",
+    "create": "service_role",
     "update": "admin",
     "delete": "admin"
   },
@@ -231,7 +231,7 @@
   "rls": {
     "create": null,
     "read": {
-      "created_by_id": "{{user.id}}"
+      "user_email": "{{user.email}}"
     },
     "update": {
       "created_by_id": "{{user.id}}"
