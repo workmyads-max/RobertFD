@@ -30,19 +30,6 @@
     "discount_end_date": {
       "type": "string",
       "format": "date-time"
-    },
-    "applicable_plans": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "one_per_ip_mac": {
-      "type": "boolean",
-      "default": true
-    },
-    "admin_notes": {
-      "type": "string"
     }
   },
   "required": [
