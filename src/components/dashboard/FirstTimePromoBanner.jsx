@@ -9,16 +9,6 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // Get challenge plans for max account size display
-  const { data: plans = [] } = useQuery({
-    queryKey: ['challenge-plans-all'],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getChallengePlans', {});
-      return res?.data?.plans || res?.plans || [];
-    },
-    staleTime: 60000,
-  });
-
   // Get promotion settings
   const { data: settings } = useQuery({
     queryKey: ['promotion-settings'],
@@ -27,6 +17,16 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
       return settingsList[0] || null;
     },
     refetchInterval: 30000,
+  });
+
+  // Get challenge plans for max account size display
+  const { data: plans = [] } = useQuery({
+    queryKey: ['challenge-plans-all'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      return res?.data?.plans || res?.plans || [];
+    },
+    staleTime: 60000,
   });
 
   // Always show banner - eligibility checked at checkout
@@ -77,8 +77,8 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
       exit={{ opacity: 0, y: -20 }}
       className="relative rounded-2xl overflow-hidden mb-8"
       style={{
-        background: '#15151b',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: '#141416',
+        border: '1px solid rgba(255,255,255,0.06)',
       }}
     >
       <div className="grid lg:grid-cols-2 gap-0">
@@ -89,9 +89,9 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="inline-flex items-center justify-center px-4 py-1.5 rounded-full mb-5 w-fit"
-            style={{ background: '#FF5C00' }}
+            style={{ background: '#FF4500' }}
           >
-            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Limited Time Offer</span>
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider">LIMITED TIME OFFER</span>
           </motion.div>
 
           {/* Headline */}
@@ -100,7 +100,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
           </h2>
 
           {/* Subtext */}
-          <p className="text-sm text-[#A0A0A0] mb-6 leading-relaxed">
+          <p className="text-sm text-[#B0B0B0] mb-8 leading-relaxed">
             Applies to all Stellar challenges from $10K to ${maxAccountSize.toLocaleString()}. New users only.
           </p>
 
@@ -109,25 +109,23 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mb-6"
           >
-            <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2.5">Use Coupon Code</div>
+            <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">USE COUPON CODE</div>
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               onClick={handleCopy}
               className="flex items-center gap-4 px-5 py-4 rounded-xl w-full sm:w-auto"
               style={{
-                background: 'rgba(204,255,0,0.08)',
-                border: '2px dashed rgba(204,255,0,0.4)',
-                boxShadow: '0 4px 20px rgba(204,255,0,0.1)',
+                background: 'rgba(20,20,22,0.8)',
+                border: '2px dashed #333333',
               }}
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0" style={{ background: '#CCFF00' }}>
                 <Gift className="w-5 h-5 text-black" />
               </div>
               <div className="flex-1 text-left">
-                <div className="text-xs font-semibold text-white/60 mb-0.5">Coupon Code</div>
+                <div className="text-xs font-semibold text-white/50 mb-0.5">Coupon Code</div>
                 <div className="text-xl font-black text-white tracking-wider">
                   {settings?.first_time_discount_code || 'NEW25'}
                 </div>
@@ -147,37 +145,25 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
               </div>
             </motion.button>
           </motion.div>
-
-          {/* Countdown */}
-          {settings?.discount_end_date && (
-            <div className="flex items-center gap-2.5 text-white/60">
-              <Clock className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Offer ends in</span>
-              <span className="text-sm font-mono font-bold text-white">
-                {String(timeLeft.hours).padStart(2, '0')}H :{String(timeLeft.minutes).padStart(2, '0')}M :{String(timeLeft.seconds).padStart(2, '0')}S
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Right Card */}
         <div className="relative hidden lg:flex items-center justify-center p-8 lg:p-10">
           <motion.div
-            initial={{ opacity: 0, rotate: -5, x: 20 }}
-            animate={{ opacity: 1, rotate: 3, x: 0 }}
+            initial={{ opacity: 0, rotate: 0, x: 20 }}
+            animate={{ opacity: 1, rotate: 0, x: 0 }}
             transition={{ delay: 0.2 }}
             className="relative w-full max-w-md rounded-2xl overflow-hidden p-6"
             style={{
               background: '#CCFF00',
-              boxShadow: '0 20px 60px rgba(204,255,0,0.4)',
-              transform: 'rotate(3deg)',
+              boxShadow: '0 20px 60px rgba(204,255,0,0.3)',
             }}
           >
             {/* New Users Only Ribbon */}
             <div
               className="absolute -top-2 -right-2 z-10 shadow-xl overflow-visible"
               style={{
-                background: '#FF5C00',
+                background: '#FF4500',
                 transform: 'translateX(8px) translateY(8px) rotate(12deg)',
               }}
             >
@@ -233,8 +219,8 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
               onClick={onStartChallenge}
               className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all"
               style={{
-                background: '#FF5C00',
-                boxShadow: '0 4px 15px rgba(255,92,0,0.4)',
+                background: '#FF4500',
+                boxShadow: '0 4px 15px rgba(255,69,0,0.4)',
               }}
             >
               Claim Your Discount →
