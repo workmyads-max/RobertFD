@@ -230,7 +230,9 @@
   ],
   "rls": {
     "create": null,
-    "read": null,
+    "read": {
+      "user_email": "{{user.email}}"
+    },
     "update": null,
     "delete": null
   }
