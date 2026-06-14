@@ -123,19 +123,24 @@ Deno.serve(async (req) => {
       });
 
       // NOW provision challenge account — only after admin approval
-      try {
-        await sr.functions.invoke('provisionMT5Account', {
-          account_id: order.account_id || order.order_id,
-          order_id: order.order_id,
-          user_email: order.email,
-          challenge_type: order.challenge_type,
-          account_type: order.account_type || 'standard',
-          account_size: order.account_size,
-          leverage: order.leverage || '1:100',
-          platform: 'mt5',
-          rule_snapshot: order.rule_snapshot || null,
-        });
-      } catch (e) { console.error('[ManualCrypto] Provisioning failed:', e.message); }
+      // This MUST succeed — do not swallow errors silently
+      const provisionRes = await sr.functions.invoke('provisionMT5Account', {
+        account_id: order.account_id || order.order_id,
+        order_id: order.order_id,
+        user_email: order.email,
+        challenge_type: order.challenge_type,
+        account_type: order.account_type || 'standard',
+        account_size: order.account_size,
+        leverage: order.leverage || '1:100',
+        platform: 'mt5',
+        rule_snapshot: order.rule_snapshot || null,
+      });
+      if (!provisionRes?.success) {
+        // Mark order with provisioning error so admin can retry
+        await sr.entities.Order.update(order.id, { payment_status: 'authorized' });
+        console.error('[ManualCrypto] Provisioning failed:', provisionRes?.error);
+        return Response.json({ success: false, error: `Payment confirmed but MT5 provisioning failed: ${provisionRes?.error || 'unknown error'}. Order marked for retry.` }, { status: 500 });
+      }
 
       // Affiliate commissions L1/L2/L3 — non-blocking
       sr.functions.invoke('createAffiliateCommissions', {
