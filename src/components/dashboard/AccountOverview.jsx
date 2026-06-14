@@ -18,6 +18,21 @@ import ClosedTradesSection from './ClosedTradesSection';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
+// ─── Hook: fetch closed trades live from MT5 (same source as ClosedTradesSection) ──
+function useClosedTrades(account) {
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!account?.account_id) { setTrades([]); return; }
+    setLoading(true);
+    base44.functions.invoke('getClosedTrades', { account_id: account.account_id, page_size: 500 })
+      .then(res => setTrades(res?.data?.trades || []))
+      .catch(() => setTrades([]))
+      .finally(() => setLoading(false));
+  }, [account?.account_id]);
+  return { trades, loading };
+}
+
 function useResetCountdown() {
   const [countdown, setCountdown] = useState('');
   useEffect(() => {
@@ -309,11 +324,10 @@ function StatRow({ label, value, valueColor, bar, barPct }) {
   );
 }
 
-function StatisticsPanel({ account, tradeRecords }) {
+function StatisticsPanel({ account, closedTrades = [] }) {
   const balance = account?.balance || account?.account_size || 0;
   const equity = account?.equity || balance;
   const accountSize = account?.account_size || 100000;
-  const closedTrades = tradeRecords.filter(t => t.status === 'closed');
   const wins = closedTrades.filter(t => (t.pnl || 0) > 0);
   const losses = closedTrades.filter(t => (t.pnl || 0) < 0);
   const avgWin = wins.length ? wins.reduce((s, t) => s + t.pnl, 0) / wins.length : 0;
@@ -359,10 +373,10 @@ function StatisticsPanel({ account, tradeRecords }) {
 }
 
 // ─── Daily Summary ────────────────────────────────────────────────────────────
-function DailySummaryPanel({ tradeRecords }) {
+function DailySummaryPanel({ closedTrades = [] }) {
   const rows = useMemo(() => {
     const byDay = {};
-    tradeRecords.filter(t => t.status === 'closed' && t.close_time).forEach(t => {
+    closedTrades.filter(t => t.close_time).forEach(t => {
       const day = (t.close_time || '').split('T')[0] || (t.close_time || '').split(' ')[0];
       if (!day) return;
       if (!byDay[day]) byDay[day] = { trades: 0, lots: 0, pnl: 0 };
@@ -372,7 +386,7 @@ function DailySummaryPanel({ tradeRecords }) {
     });
     return Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 20)
       .map(([day, d]) => ({ day, trades: d.trades, lots: d.lots.toFixed(2), pnl: d.pnl }));
-  }, [tradeRecords]);
+  }, [closedTrades]);
 
   return (
     <Card>
@@ -464,7 +478,7 @@ function DisciplineGauge({ score }) {
   );
 }
 
-function DisciplinePanel({ account, tradeRecords }) {
+function DisciplinePanel({ account, closedTrades = [] }) {
   const snap = account?.rule_snapshot || {};
   const accountSize = account?.account_size || 100000;
   const balance = account?.balance || accountSize;
@@ -476,7 +490,7 @@ function DisciplinePanel({ account, tradeRecords }) {
   const minDays = snap.min_trading_days ?? 4;
 
   const tradingDaySet = new Set();
-  tradeRecords.filter(t => t.status === 'closed' && t.close_time).forEach(t => {
+  closedTrades.filter(t => t.close_time).forEach(t => {
     const d = new Date(t.close_time);
     const bangkokOffset = 7 * 60;
     const localDate = new Date(d.getTime() + (bangkokOffset + d.getTimezoneOffset()) * 60000);
@@ -486,8 +500,8 @@ function DisciplinePanel({ account, tradeRecords }) {
 
   const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
   const todayStr = nowBangkok.toISOString().split('T')[0];
-  const todayTrades = tradeRecords.filter(t => {
-    if (t.status !== 'closed' || !t.close_time) return false;
+  const todayTrades = closedTrades.filter(t => {
+    if (!t.close_time) return false;
     const d = new Date(t.close_time);
     const localDate = new Date(d.getTime() + (7 * 60 + d.getTimezoneOffset()) * 60000);
     return localDate.toISOString().startsWith(todayStr);
@@ -1011,6 +1025,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
   const stats = useAccountStats(account, tradeRecords);
 
+  // Live closed trades from MT5 — used by Statistics, Daily Summary, Discipline panels
+  const { trades: closedTrades } = useClosedTrades(account);
+
   if (isLoading) return (
     <div className="flex items-center justify-center py-24">
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -1084,12 +1101,12 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <StatisticsPanel account={account} tradeRecords={tradeRecords} />
-        <DailySummaryPanel tradeRecords={tradeRecords} />
+        <StatisticsPanel account={account} closedTrades={closedTrades} />
+        <DailySummaryPanel closedTrades={closedTrades} />
       </div>
 
       {/* Discipline + Objectives */}
-      <DisciplinePanel account={account} tradeRecords={tradeRecords} />
+      <DisciplinePanel account={account} closedTrades={closedTrades} />
 
       {/* Account History */}
       <AccountHistorySection accounts={accounts} />
