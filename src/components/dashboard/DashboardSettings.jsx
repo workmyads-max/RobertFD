@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabaseClient';
 
 const tabs = [
   { id: 'profile',  label: 'Profile',        icon: User },
@@ -211,7 +210,10 @@ export default function DashboardSettings({ user }) {
      });
 
     const passwordUpdateMutation = useMutation({
-      mutationFn: (newPassword) => supabase.auth.updateUser({ password: newPassword }),
+      mutationFn: async (newPassword) => {
+        // Base44 Auth — update current user's password
+        await base44.auth.updateMe({ password: newPassword });
+      },
       onSuccess: () => {
         alert('Password updated successfully!');
         setPasswords({ current: '', new: '', confirm: '' });
@@ -225,10 +227,9 @@ export default function DashboardSettings({ user }) {
       if (passwords.new !== passwords.confirm) {
         return alert('New passwords do not match.');
       }
-      if (passwords.new.length < 6) {
-        return alert('New password must be at least 6 characters long.');
+      if (passwords.new.length < 8) {
+        return alert('New password must be at least 8 characters long.');
       }
-      // Supabase does not require the current password for an update when the user is logged in.
       passwordUpdateMutation.mutate(passwords.new);
     };
 

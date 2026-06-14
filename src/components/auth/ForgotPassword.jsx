@@ -10,7 +10,7 @@ export default function ForgotPassword({ onBack }) {
   const [step, setStep] = useState('email'); // email | otp | newpass | done
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [userId, setUserId] = useState(null);
+  const [otpId, setOtpId] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -32,7 +32,7 @@ export default function ForgotPassword({ onBack }) {
     const res = await callAuth('forgot_password', { email });
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    setUserId(res.userId);
+    setOtpId(res.otpId);
     setStep('otp');
     startResendTimer();
   };
@@ -41,7 +41,7 @@ export default function ForgotPassword({ onBack }) {
     if (resendTimer > 0) return;
     setError('');
     setLoading(true);
-    const res = await callAuth('forgot_password', { email });
+    const res = await callAuth('resend_otp', { otpId });
     setLoading(false);
     if (res.error) { setError(res.error); return; }
     startResendTimer();
@@ -51,7 +51,6 @@ export default function ForgotPassword({ onBack }) {
     e.preventDefault();
     setError('');
     if (otp.length !== 6) { setError('Please enter the 6-digit code.'); return; }
-    // Verify OTP directly by moving to password step - actual verification happens on reset
     setStep('newpass');
   };
 
@@ -61,7 +60,7 @@ export default function ForgotPassword({ onBack }) {
     if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (newPassword !== confirmPassword) { setError('Passwords do not match.'); return; }
     setLoading(true);
-    const res = await callAuth('reset_password_otp', { userId, otp, newPassword });
+    const res = await callAuth('reset_password_otp', { otpId, otp, newPassword });
     setLoading(false);
     if (res.error) { setError(res.error); return; }
     setStep('done');

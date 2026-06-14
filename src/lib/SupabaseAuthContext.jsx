@@ -24,6 +24,12 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Clear any ghost Supabase sessions from localStorage that may have persisted
+    // from a previous architecture. These are no longer valid or needed.
+    try {
+      localStorage.removeItem('xf_supabase_session');
+      localStorage.removeItem('ff_session');
+    } catch { /* ignore if localStorage is unavailable */ }
     loadUser();
   }, []);
 

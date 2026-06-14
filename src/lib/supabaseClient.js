@@ -6,9 +6,9 @@ const supabaseAnonKey = 'sb_publishable_WtyPv8akefzovYvz9hacAg__hvfbUOg';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
     storageKey: 'xf_supabase_session',
   },
   realtime: {
