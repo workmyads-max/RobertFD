@@ -198,18 +198,12 @@ Deno.serve(async (req) => {
       const sr = base44.asServiceRole;
 
       await sr.entities.ChallengeAccount.update(acc.id, {
-        status: 'failed',
+        status:            'failed',
         dd_breach_detected: true,
-        dd_breach_type:  breachType,
-        dd_breach_value: parseFloat(breachValue.toFixed(2)),
-        dd_breach_time:  breachTime,
-        // Update live equity in same write
-        balance,
-        equity,
-        max_drawdown_used:   persistentOverallDD,
-        daily_drawdown_used: persistentDailyDD,
-        high_water_mark:     newHWM,
-        last_synced_at:      breachTime,
+        dd_breach_type:    breachType,
+        dd_breach_value:   parseFloat(breachValue.toFixed(2)),
+        dd_breach_time:    breachTime,
+        // Statistics fields intentionally omitted — scheduledMTSync owns all stats
       });
 
       // RiskFlag (non-blocking)
