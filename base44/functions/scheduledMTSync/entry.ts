@@ -1,8 +1,15 @@
 /**
- * scheduledMTSync — Batch MT5/Match Trader sync
+ * scheduledMTSync — Batch MT5 sync engine.
  * Runs every 5 minutes via scheduled automation.
  *
- * INSTITUTIONAL DD ENFORCEMENT (FTMO/E8/FundedNext standard):
+ * PROFIT TARGET (Priority 6):
+ *   - Based on live EQUITY: (equity - accountSize) / accountSize * 100
+ *   - Captures floating PnL from open positions — not just closed balance
+ *
+ * DAILY RESET (Priority 7):
+ *   - Runs inline at 23:00–23:04 UTC each day, idempotent per UTC date
+ *   - Resets: daily_start_balance=balance, daily_drawdown_used=0, daily_pnl=0, daily_reset_at
+ *   - automatedDDBreach remains as backup safety net
  *
  * OVERALL DD:
  *   - Two-step / Instant / Funded: (accountSize - equity) / accountSize * 100
@@ -14,13 +21,11 @@
  *   - daily_start_balance = balance recorded at last 23:00 UTC reset
  *   - Falls back to account_size if never reset (new account)
  *   - Stored with Math.max — NEVER decreases within a trading day
- *   - Closed profits do NOT increase daily DD allowance
  *
  * BREACH:
  *   - Detected inside the sync — no waiting for automatedDDBreach
  *   - status='failed' written in same DB update as breach flags
- *   - Breach flags (dd_breach_detected, dd_breach_type, dd_breach_time, dd_breach_value)
- *     are written once and NEVER overwritten
+ *   - Breach flags written once and NEVER overwritten
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -268,6 +273,35 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+          // ── DAILY RESET at 23:00 UTC ───────────────────────────────────────
+          // Runs inside each account's sync pass. Idempotent: only fires once per UTC day.
+          // Resets daily tracking fields so daily DD starts fresh each trading day.
+          const nowUtc = new Date();
+          const utcHour = nowUtc.getUTCHours();
+          const utcMin  = nowUtc.getUTCMinutes();
+          const isResetWindow = utcHour === 23 && utcMin < 5; // 23:00–23:04 UTC
+          const lastResetAt = acc.daily_reset_at ? new Date(acc.daily_reset_at) : null;
+          const lastResetDateStr = lastResetAt
+            ? `${lastResetAt.getUTCFullYear()}-${lastResetAt.getUTCMonth()}-${lastResetAt.getUTCDate()}`
+            : null;
+          const todayDateStr = `${nowUtc.getUTCFullYear()}-${nowUtc.getUTCMonth()}-${nowUtc.getUTCDate()}`;
+          const needsDailyReset = isResetWindow && lastResetDateStr !== todayDateStr;
+
+          if (needsDailyReset && !apiReturnedZero && balance > 0) {
+            // Snapshot today's closing balance as the baseline for tomorrow's daily DD
+            await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+              daily_start_balance: balance,
+              daily_drawdown_used: 0,
+              daily_pnl: 0,
+              daily_reset_at: nowUtc.toISOString(),
+            });
+            // Update local acc reference so DD calculations below use the fresh baseline
+            acc.daily_start_balance = balance;
+            acc.daily_drawdown_used = 0;
+            acc.daily_pnl = 0;
+            console.log(`[DAILY-RESET] ${acc.account_id} — daily_start_balance=${balance}, reset at ${nowUtc.toISOString()}`);
+          }
+
           // ── TRUE INSTITUTIONAL DD CALCULATIONS ─────────────────────────────
           const currentOverallDD = calcOverallDD(acc, equity, newHWM);
           const currentDailyDD = calcDailyDD(acc, equity);
@@ -337,7 +371,8 @@ Deno.serve(async (req) => {
             total_trades: closedTrades.length,
             max_drawdown_used: persistentOverallDD,
             daily_drawdown_used: persistentDailyDD,
-            profit_target_progress: parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2)),
+            // PRIORITY 6: Use live equity for profit target progress — captures open floating PnL
+            profit_target_progress: parseFloat(Math.max(0, (equity - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
             dd_breach_detected: breachDetected,
