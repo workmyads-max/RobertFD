@@ -1,6 +1,11 @@
 /**
  * getClosedTrades — Fetch closed deal history from MT5 for the authenticated user's account.
  * Uses Tritech API: /api/v1/deal/get-deal-history
+ * Credentials loaded from TradingPlatformProvider entity.
+ *
+ * Tritech field reference (confirmed from live API):
+ *   deal_id, login, symbol, type (0=BUY,1=SELL,2=BALANCE,...), volume (lots*10000),
+ *   openPrice, closePrice, openTime (ISO), closeTime (ISO), profit, commission, storage
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -11,12 +16,16 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const { account_id, page_size = 100 } = body;
+    const { account_id, page_size = 200 } = body;
 
+    // Load credentials from TradingPlatformProvider entity
     const providers = await base44.asServiceRole.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
     const provider = providers[0];
     const apiBase = provider?.server_url;
     const apiKey = provider?.api_key;
+    const managerLogin = provider?.manager_login;
+    const managerPassword = provider?.manager_password;
+
     if (!apiBase || !apiKey) {
       return Response.json({ success: false, trades: [], error: 'MT5 not configured' });
     }
@@ -32,11 +41,19 @@ Deno.serve(async (req) => {
     }
 
     const loginNum = parseInt(account.mt_login);
-    const headers = { 'Content-Type': 'application/json', 'ApiKey': apiKey };
 
-    // Last 90 days
-    const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-    const toDate = new Date().toISOString();
+    const headers = {
+      'Content-Type': 'application/json',
+      'ApiKey': apiKey,
+      'ManagerLogin': managerLogin || '',
+      'ManagerPassword': managerPassword || '',
+    };
+
+    // Wide range: from 1 day before provisioning → tomorrow (ensures today's trades are included)
+    const fromDate = account.provisioned_at
+      ? new Date(new Date(account.provisioned_at).getTime() - 24 * 60 * 60 * 1000).toISOString()
+      : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    const toDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const dealRes = await fetch(`${apiBase}/api/v1/deal/get-deal-history`, {
       method: 'POST',
@@ -67,9 +84,13 @@ Deno.serve(async (req) => {
     const dealData = await dealRes.json().catch(() => ({}));
     const rawDeals = dealData?.data || [];
 
-    const trades = rawDeals.map(d => {
-      // type: 0=BUY, 1=SELL
-      const isSell = (d.type ?? 0) === 1;
+    // type: 0=BUY, 1=SELL, 2=BALANCE/DEPOSIT, 3=CREDIT, etc. — keep only real trades (0 or 1)
+    const tradingDeals = rawDeals.filter(d => d.type === 0 || d.type === 1);
+
+    const trades = tradingDeals.map(d => {
+      const isSell = d.type === 1;
+
+      // volume is lots * 10000 (e.g. 2500 = 0.25 lots)
       const lots = parseFloat(d.volume ?? 0) / 10000;
       const profit = parseFloat(d.profit ?? 0);
       const commission = parseFloat(d.commission ?? 0);
@@ -80,16 +101,15 @@ Deno.serve(async (req) => {
       const openPrice = parseFloat(d.openPrice ?? 0);
       const closePrice = parseFloat(d.closePrice ?? 0);
 
-      // Pips calculation
       let pips = 0;
       if (openPrice && closePrice) {
         const diff = Math.abs(closePrice - openPrice);
-        const pipSize = symbol.includes('JPY') || symbol.includes('XAU') ? 0.01 : 0.0001;
+        const pipSize = symbol.includes('JPY') ? 0.01 : symbol.includes('XAU') ? 0.1 : symbol.includes('BTC') || symbol.includes('ETH') ? 1 : 0.0001;
         pips = diff / pipSize;
       }
 
       return {
-        trade_id: String(d.deal_id ?? d.dealId ?? ''),
+        trade_id: String(d.deal_id ?? ''),
         symbol,
         type: isSell ? 'SELL' : 'BUY',
         lots,
