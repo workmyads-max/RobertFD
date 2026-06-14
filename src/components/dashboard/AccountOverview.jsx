@@ -14,6 +14,7 @@ import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
+import ClosedTradesSection from './ClosedTradesSection';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1074,6 +1075,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Live Open Trades */}
       <OpenTradesPanel account={account} initialPositions={livePositions} tradeRecords={tradeRecords} />
+
+      {/* Closed Trades — fetched live from MT5 deal history */}
+      <ClosedTradesSection account={account} />
 
       {/* Performance Metrics */}
       <AccountPerformanceMetrics account={account} stats={stats} />
