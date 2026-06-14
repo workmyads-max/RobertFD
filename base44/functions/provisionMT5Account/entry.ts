@@ -142,29 +142,42 @@ Deno.serve(async (req) => {
     }
 
     // Save to ChallengeAccount
-    const newAccount = await base44.asServiceRole.entities.ChallengeAccount.create({
-      account_id: account_id || order_id || `MT5-${mtLogin}`,
-      challenge_type: challenge_type || 'two-step',
-      account_type: account_type || 'standard',
-      account_size,
-      platform: 'mt5',
-      leverage: leverage || '1:100',
-      status: 'active',
-      phase: 'phase1',
-      balance: account_size,
-      equity: account_size,
-      user_email,
-      mt_login: String(mtLogin),
-      mt_password: masterPassword,
-      mt_server: 'XyloMarkets-Server',
-      mt_group: groupName,
-      login_credentials: `Login: ${mtLogin} | Password: ${masterPassword} | Server: XyloMarkets-Server`,
-      server: 'XyloMarkets-Server',
-      provisioned_at: new Date().toISOString(),
-      high_water_mark: account_size,
-      daily_start_balance: account_size,
-      rule_snapshot: rule_snapshot || null,
-    });
+    let newAccount;
+    try {
+      newAccount = await base44.asServiceRole.entities.ChallengeAccount.create({
+        account_id: account_id || order_id || `MT5-${mtLogin}`,
+        challenge_type: challenge_type || 'two-step',
+        account_type: account_type || 'standard',
+        account_size,
+        platform: 'mt5',
+        leverage: leverage || '1:100',
+        status: 'active',
+        phase: 'phase1',
+        balance: account_size,
+        equity: account_size,
+        user_email,
+        mt_login: String(mtLogin),
+        mt_password: masterPassword,
+        mt_server: 'XyloMarkets-Server',
+        mt_group: groupName,
+        login_credentials: `Login: ${mtLogin} | Password: ${masterPassword} | Server: XyloMarkets-Server`,
+        server: 'XyloMarkets-Server',
+        provisioned_at: new Date().toISOString(),
+        high_water_mark: account_size,
+        daily_start_balance: account_size,
+        rule_snapshot: rule_snapshot || null,
+      });
+      console.log(`[provisionMT5Account] ✅ ChallengeAccount saved: id=${newAccount?.id}, user_email=${user_email}`);
+    } catch (dbErr) {
+      console.error(`[provisionMT5Account] ❌ ChallengeAccount.create FAILED: ${dbErr.message}`);
+      // MT5 account was created — return partial success with error so caller can retry DB insert
+      return Response.json({
+        success: false,
+        error: `MT5 account created (login=${mtLogin}) but DB save failed: ${dbErr.message}`,
+        mt_login: String(mtLogin),
+        mt_server: 'XyloMarkets-Server',
+      }, { status: 500 });
+    }
 
     return Response.json({
       success: true,

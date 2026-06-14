@@ -2,9 +2,9 @@
   "name": "ChallengeAccount",
   "type": "object",
   "permissions": {
-    "read": "owner",
-    "create": "admin",
-    "update": "admin",
+    "read": "authenticated",
+    "create": "authenticated",
+    "update": "authenticated",
     "delete": "admin"
   },
   "properties": {
