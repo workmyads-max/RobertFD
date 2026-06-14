@@ -50,40 +50,48 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      // Check if order already exists (prevent duplicates)
+      const orderId = `RF-${Date.now().toString(36).toUpperCase()}`;
+
+      // Check if order already exists (prevent duplicates on re-render)
       if (order.order_id) {
-        const existingOrders = await base44.entities.Order.filter({ order_id: order.order_id });
-        if (existingOrders && existingOrders.length > 0) {
-          console.log('Order already exists:', order.order_id);
-          return { order_id: order.order_id, ...order, exists: true };
+        const existing = await base44.entities.Order.filter({ order_id: order.order_id });
+        if (existing && existing.length > 0) {
+          return { order_id: order.order_id, exists: true };
         }
       }
-      
-      const orderId = order.order_id || `RF-${Date.now().toString(36).toUpperCase()}`;
-      
-      // Sync to Supabase only (Base44 order created by backend function)
-      const syncResponse = await base44.functions.invoke('createManualOrderInSupabase', {
+
+      // Create order directly in Base44 Order entity — no Supabase
+      await base44.entities.Order.create({
         order_id: orderId,
-        email: order.email,
-        orderData: {
-          ...order,
-          payment_address: wallet?.address || '',
-          payment_status: ['usdt_trc20', 'bitcoin'].includes(order.payment_method) ? 'awaiting_confirmation' : 'pending',
-          rule_snapshot: order.rule_snapshot || null,
-        },
+        challenge_type: order.challenge_type,
+        account_type: order.account_type || 'standard',
+        account_size: order.account_size,
+        platform: order.platform || 'mt5',
+        leverage: order.leverage || '1:100',
+        price: order.final_price || order.price,
+        payment_method: order.payment_method,
+        payment_gateway: order.payment_gateway || 'manual',
+        payment_address: wallet?.address || '',
+        payment_status: 'awaiting_confirmation',
+        full_name: order.full_name || '',
+        username: order.username || '',
+        email: order.email || '',
+        phone: order.phone || '',
+        country: order.country || '',
+        city: order.city || '',
+        address: order.address || '',
+        postal_code: order.postal_code || '',
+        coupon_code: order.coupon_code || '',
+        discount_amount: order.discount_amount || 0,
+        affiliate_code: order.affiliate_code || '',
       });
-      
-      console.log('Supabase sync result:', syncResponse.data);
-      
-      return { order_id: orderId, ...order, exists: false };
+
+      return { order_id: orderId, exists: false };
     },
     onSuccess: (data) => {
-      if (!data.exists && !order.order_id) {
+      if (!data.exists) {
         updateOrder({ order_id: data.order_id });
       }
-    },
-    onError: (error) => {
-      console.error('Failed to create order:', error);
     },
   });
 
