@@ -3,7 +3,7 @@
   "type": "object",
   "permissions": {
     "read": "owner",
-    "create": "service_role",
+    "create": "admin",
     "update": "admin",
     "delete": "admin"
   },
@@ -234,10 +234,10 @@
       "user_email": "{{user.email}}"
     },
     "update": {
-      "created_by_id": "{{user.id}}"
+      "user_email": "{{user.email}}"
     },
     "delete": {
-      "created_by_id": "{{user.id}}"
+      "user_email": "{{user.email}}"
     }
   }
 }
