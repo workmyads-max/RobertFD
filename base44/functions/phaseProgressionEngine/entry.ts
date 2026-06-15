@@ -249,10 +249,12 @@ Deno.serve(async (req) => {
         // ── CREDENTIALS FROM ADMIN > PLATFORMS API (single source of truth) ────
         const creds = await loadMT5Creds(sr);
         if (creds && creds.apiKey && creds.apiBase) {
-          const sizeK = account.account_size / 1000;
-          const model = account.account_type === 'swing' ? 'SWING' : 'STD';
-          const groupName = `FF_2STEP_${sizeK}K_${model}_P2`;
-          const leverage = parseInt((account.leverage || '1:100').split(':')[1]) || 100;
+          // Use env var MT5_PHASE2_GROUP directly — do NOT construct group names
+          const groupName = Deno.env.get('MT5_PHASE2_GROUP') || '';
+          if (!groupName) {
+            console.error('[approve_phase1] MT5_PHASE2_GROUP env var not set — cannot provision Phase 2 account');
+          }
+          const leverage = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
 
           phase2Credentials = await provisionMT5Account(
             creds.apiBase, creds.apiKey, creds.serverName,
@@ -378,10 +380,11 @@ Deno.serve(async (req) => {
         // ── CREDENTIALS FROM ADMIN > PLATFORMS API (single source of truth) ────
         const creds = await loadMT5Creds(sr);
         if (creds && creds.apiKey && creds.apiBase) {
-          const sizeK = account.account_size / 1000;
-          const model = account.account_type === 'swing' ? 'SWING' : 'STD';
-          const groupName = `FF_FUNDED_${sizeK}K_${model}_LIVE`;
-
+          // Use env var MT5_FUNDED_GROUP directly — do NOT construct group names
+          const groupName = Deno.env.get('MT5_FUNDED_GROUP') || '';
+          if (!groupName) {
+            console.error('[approve_funded] MT5_FUNDED_GROUP env var not set — cannot provision funded account');
+          }
           // Use leverage from rule_snapshot (set at purchase). Fallback to account.leverage then 100.
           const fundedLeverage = parseInt(
             ((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1])

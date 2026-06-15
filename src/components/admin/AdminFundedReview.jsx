@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, CheckCircle, XCircle, AlertTriangle, Clock, ChevronDown,
-  User, BarChart3, TrendingDown, Star, MessageSquare, Loader2, RefreshCw, Flag
+  User, BarChart3, TrendingDown, Star, MessageSquare, Loader2, RefreshCw, Flag,
+  ArrowRight, Layers
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -177,9 +178,102 @@ function ReviewCard({ review, onAction }) {
   );
 }
 
+// ── Phase 1 Review Card ───────────────────────────────────────────────────────
+function Phase1ReviewCard({ account, onApprove, onReject, loading }) {
+  const [expanded, setExpanded] = useState(false);
+  const size = (account.account_size || 0).toLocaleString();
+  const cLabel = account.challenge_type === 'two-step' ? '2-Step' : account.challenge_type === 'instant' ? 'Instant' : 'Inst.Light';
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl overflow-hidden"
+      style={{ border: '1px solid rgba(96,165,250,0.25)', background: 'rgba(255,255,255,0.02)' }}>
+      <div className="flex items-center justify-between p-5 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)' }}>
+            <Layers className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-white truncate">{account.user_email}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono text-blue-400"
+                style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)' }}>
+                Phase 1 Passed
+              </span>
+            </div>
+            <div className="text-[11px] text-white/40 font-mono mt-0.5">
+              {account.account_id} · ${size} · {cLabel} · Progress: {(account.profit_target_progress || 0).toFixed(1)}%
+            </div>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform flex-shrink-0 ml-4 ${expanded ? 'rotate-180' : ''}`} />
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="p-5 space-y-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Size', value: `$${size}` },
+                  { label: 'Balance', value: `$${(account.balance || 0).toLocaleString()}` },
+                  { label: 'Trading Days', value: account.trading_days || 0 },
+                  { label: 'Win Rate', value: `${(account.win_rate || 0).toFixed(1)}%` },
+                ].map(s => (
+                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <div className="text-xs font-bold text-white">{s.value}</div>
+                    <div className="text-[9px] font-mono text-white/30 mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => onApprove(account.account_id)} disabled={loading}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
+                  style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
+                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                  Approve → Provision Phase 2 MT5 Account
+                </button>
+                <button onClick={() => onReject(account.id)} disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
+                  style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <XCircle className="w-3.5 h-3.5" /> Reject
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export default function AdminFundedReview() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('pending_review');
+
+  // Phase 1 accounts waiting for admin to provision Phase 2
+  const { data: phase1Pending = [], refetch: refetchP1 } = useQuery({
+    queryKey: ['phase1-pending-review'],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ phase_review_status: 'pending_review' }),
+    refetchInterval: 15000,
+  });
+
+  const phase1ApproveMutation = useMutation({
+    mutationFn: (account_id) => base44.functions.invoke('phaseProgressionEngine', { action: 'approve_phase1', account_id }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['phase1-pending-review'] });
+      toast.success('Phase 2 account provisioned successfully');
+    },
+    onError: (e) => toast.error('Approval failed: ' + (e.response?.data?.error || e.message)),
+  });
+
+  const phase1RejectMutation = useMutation({
+    mutationFn: (id) => base44.entities.ChallengeAccount.update(id, { phase_review_status: 'rejected', status: 'failed' }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['phase1-pending-review'] }); toast.success('Rejected'); },
+    onError: (e) => toast.error('Failed: ' + e.message),
+  });
 
   const { data: reviews = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-reviews', statusFilter],
@@ -231,14 +325,56 @@ export default function AdminFundedReview() {
               style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
               <Shield className="w-5 h-5 text-emerald-400" />
             </div>
-            Funded Account Review Queue
+            Phase Review & Funded Approvals
           </h1>
-          <p className="text-sm text-white/30 font-mono mt-1">Manual risk review before funded approval</p>
+          <p className="text-sm text-white/30 font-mono mt-1">Phase 1→2 provisioning and funded account review queue</p>
         </div>
         <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white/60 hover:text-white transition-colors"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
+      </div>
+
+      {/* ── Phase 1 Pending Review Queue ── */}
+      {phase1Pending.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(96,165,250,0.2)', background: 'rgba(96,165,250,0.03)' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(96,165,250,0.15)' }}>
+            <div className="flex items-center gap-2.5">
+              <Layers className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-bold text-blue-400">Phase 1 → Phase 2 Approvals</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono text-blue-400"
+                style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)' }}>
+                {phase1Pending.length} pending
+              </span>
+            </div>
+            <button onClick={() => refetchP1()} className="text-white/30 hover:text-white/60 transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="p-4 space-y-3">
+            {phase1Pending.map(acc => (
+              <Phase1ReviewCard
+                key={acc.id}
+                account={acc}
+                onApprove={(account_id) => {
+                  if (!window.confirm(`Approve Phase 1 for ${acc.user_email}? This will provision a new MT5 Phase 2 account.`)) return;
+                  phase1ApproveMutation.mutate(account_id);
+                }}
+                onReject={(id) => {
+                  if (!window.confirm('Reject this Phase 1 pass?')) return;
+                  phase1RejectMutation.mutate(id);
+                }}
+                loading={phase1ApproveMutation.isPending || phase1RejectMutation.isPending}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Funded Review Queue header ── */}
+      <div className="flex items-center gap-2.5 mt-2">
+        <Shield className="w-4 h-4 text-emerald-400" />
+        <span className="text-sm font-bold text-white">Phase 2 → Funded Approvals</span>
       </div>
 
       {/* Status filter tabs */}
