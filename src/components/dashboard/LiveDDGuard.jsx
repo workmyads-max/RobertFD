@@ -2,7 +2,7 @@
  * LiveDDGuard — Realtime MT5 equity monitoring display layer.
  *
  * ARCHITECTURE (server-side enforcement):
- *   - Polls mt5RealtimeSync every 5s (read-only from frontend perspective)
+ *   - Polls mt5RealtimeSync every 1s for near-instant breach detection
  *   - mt5RealtimeSync performs ALL breach detection and enforcement server-side:
  *       → Updates ChallengeAccount (status=failed, breach flags)
  *       → Creates RiskFlag + Notification
@@ -14,23 +14,26 @@
  * Scope: display and cache management only.
  * Enforcement: mt5RealtimeSync (backend) exclusively.
  * Statistics: scheduledMTSync (backend) exclusively.
+ *
+ * NOTE: 1s polling with per-account in-flight guard ensures no overlapping calls.
+ * The global checkingRef lock is intentionally removed so accounts are checked
+ * independently — a slow response on one account does NOT delay others.
  */
 import React, { useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const POLL_INTERVAL_MS = 5000; // 5 seconds
+const POLL_INTERVAL_MS = 1000; // 1 second — near-instant floating loss breach detection
 
 export default function LiveDDGuard({ onBreach }) {
-  const queryClient   = useQueryClient();
-  const intervalRef   = useRef(null);
-  const checkingRef   = useRef(false);
-  const breachedRef   = useRef(new Set()); // accounts already breached this session
-  const inFlightRef   = useRef(new Set()); // accounts with an in-flight enforcement call
+  const queryClient = useQueryClient();
+  const intervalRef = useRef(null);
+  const breachedRef = useRef(new Set()); // accounts already breached this session
+  const inFlightRef = useRef(new Set()); // per-account in-flight guard (prevents overlap)
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn:  () => base44.auth.me(),
+    queryFn: () => base44.auth.me(),
     staleTime: 60000,
   });
 
@@ -56,67 +59,56 @@ export default function LiveDDGuard({ onBreach }) {
     !breachedRef.current.has(a.account_id)
   );
 
-  const checkEquityNow = useCallback(async () => {
-    if (checkingRef.current) return;
+  const checkEquityNow = useCallback(() => {
     if (!currentUser?.email || monitorableAccounts.length === 0) return;
-    checkingRef.current = true;
 
-    try {
-      await Promise.all(monitorableAccounts.map(async (acc) => {
-        if (inFlightRef.current.has(acc.account_id)) return;
+    // Per-account independent checks — slow response on one never blocks others
+    monitorableAccounts.forEach(async (acc) => {
+      if (inFlightRef.current.has(acc.account_id)) return; // skip if already in-flight
 
-        try {
-          inFlightRef.current.add(acc.account_id);
+      inFlightRef.current.add(acc.account_id);
+      try {
+        const response = await base44.functions.invoke('mt5RealtimeSync', {
+          account_id: acc.account_id,
+          mt_login: acc.mt_login,
+        });
 
-          const response = await base44.functions.invoke('mt5RealtimeSync', {
-            account_id: acc.account_id,
-            mt_login:   acc.mt_login,
-          });
+        const data = response?.data;
+        if (!data?.success) return;
 
-          const data = response?.data;
-          if (!data?.success) return;
+        if (data.breach_detected) {
+          // ── BREACH: server already wrote all enforcement atomically ──────
+          breachedRef.current.add(acc.account_id);
+          queryClient.invalidateQueries({ queryKey: ['challenge-accounts', currentUser.email] });
 
-          if (data.breach_detected) {
-            // ── BREACH: server already wrote all enforcement atomically ──────
-            // Mark locally so we stop polling this account
-            breachedRef.current.add(acc.account_id);
-
-            // Invalidate cache so all dashboard components reflect failed status
-            queryClient.invalidateQueries({ queryKey: ['challenge-accounts', currentUser.email] });
-
-            // Fire modal — data already persisted by server
-            if (onBreach && !data.already_breached) {
-              onBreach({
-                account_id:   acc.account_id,
-                account_size: acc.account_size,
-                breach_type:  data.breach_type,
-                breach_value: data.breach_value,
-                equity:       data.equity,
-                balance:      data.balance,
-              });
-            }
-
-          } else if (!data.skipped) {
-            // ── NO BREACH: update local cache with live equity for display ───
-            queryClient.setQueryData(['challenge-accounts', currentUser.email], (old) => {
-              if (!Array.isArray(old)) return old;
-              return old.map(a => a.account_id === acc.account_id
-                ? { ...a, balance: data.balance, equity: data.equity }
-                : a
-              );
+          if (onBreach && !data.already_breached) {
+            onBreach({
+              account_id:   acc.account_id,
+              account_size: acc.account_size,
+              breach_type:  data.breach_type,
+              breach_value: data.breach_value,
+              equity:       data.equity,
+              balance:      data.balance,
             });
           }
 
-        } catch (err) {
-          // Non-fatal — log silently and continue polling
-          console.warn(`[LiveDDGuard] Poll failed for ${acc.account_id}:`, err.message);
-        } finally {
-          inFlightRef.current.delete(acc.account_id);
+        } else if (!data.skipped) {
+          // ── NO BREACH: update local cache with live equity for display ───
+          queryClient.setQueryData(['challenge-accounts', currentUser.email], (old) => {
+            if (!Array.isArray(old)) return old;
+            return old.map(a => a.account_id === acc.account_id
+              ? { ...a, balance: data.balance, equity: data.equity }
+              : a
+            );
+          });
         }
-      }));
-    } finally {
-      checkingRef.current = false;
-    }
+
+      } catch (err) {
+        console.warn(`[LiveDDGuard] Poll failed for ${acc.account_id}:`, err.message);
+      } finally {
+        inFlightRef.current.delete(acc.account_id);
+      }
+    });
   }, [monitorableAccounts, queryClient, onBreach, currentUser?.email]);
 
   useEffect(() => {
