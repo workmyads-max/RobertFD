@@ -76,10 +76,13 @@ function TradeDetailDrawer({ trade, onClose }) {
   );
 }
 
+const PAGE_SIZE = 12;
+
 export default function ClosedTradesSection({ account }) {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrade, setSelectedTrade] = useState(null);
+  const [page, setPage] = useState(1);
 
   const fetchTrades = async () => {
     if (!account?.account_id) return;
@@ -103,6 +106,8 @@ export default function ClosedTradesSection({ account }) {
 
   const totalPnl = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const winCount = trades.filter(t => (t.pnl || 0) > 0).length;
+  const totalPages = Math.ceil(trades.length / PAGE_SIZE);
+  const paginated = trades.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <>
@@ -149,7 +154,7 @@ export default function ClosedTradesSection({ account }) {
               {/* Trade rows */}
               <div>
                 <AnimatePresence>
-                  {trades.map((trade, i) => {
+                  {paginated.map((trade, i) => {
                     const isBuy = trade.type === 'BUY';
                     const pnl = trade.pnl || 0;
                     const isProfit = pnl >= 0;
@@ -206,6 +211,37 @@ export default function ClosedTradesSection({ account }) {
                   })}
                 </AnimatePresence>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1.5 px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-xs text-white/40 hover:text-white/70 disabled:opacity-20 transition-colors"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                    ‹
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button key={p} onClick={() => setPage(p)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all"
+                      style={{
+                        background: page === p ? 'rgba(255,92,0,0.2)' : 'transparent',
+                        border: `1px solid ${page === p ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        color: page === p ? '#FF5C00' : 'rgba(255,255,255,0.4)',
+                      }}>
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-xs text-white/40 hover:text-white/70 disabled:opacity-20 transition-colors"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                    ›
+                  </button>
+                </div>
+              )}
 
               {/* Footer summary */}
               <div className="flex flex-wrap items-center gap-4 px-5 py-3 text-xs font-mono text-white/35"

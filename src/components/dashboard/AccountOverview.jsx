@@ -127,66 +127,72 @@ function SectionLabel({ children }) {
   return <span className="text-[11px] font-bold uppercase tracking-widest text-white/30">{children}</span>;
 }
 
-// ─── Active Account Card ─────────────────────────────────────────────────────
+// ─── Active Account Card (Professional Funded Firm Style) ────────────────────
 function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl, setShowCredentials }) {
-  const { copied, copy } = useCopyText();
   if (!account) return null;
 
   const balance = account.balance ?? account.account_size ?? 0;
   const equity = liveEquity ?? (account.equity ?? balance);
   const unrealizedPnl = liveUnrealizedPnl ?? (equity - balance);
   const todayPnl = account.daily_pnl ?? 0;
-  const challengeLabel = account.challenge_type === 'two-step' ? '2-Step Challenge'
-    : account.challenge_type === 'instant' ? 'Instant Funding' : 'Instant Light';
+  const accountSize = account.account_size || 0;
+  const challengeTypeLabel = account.challenge_type === 'two-step' ? '2-STEP'
+    : account.challenge_type === 'instant' ? 'INSTANT' : 'INST. LIGHT';
+  const phaseLabel = (account.phase || 'phase1').replace('phase', 'PH ');
+  const modelLabel = (account.account_type || 'standard').charAt(0).toUpperCase() + (account.account_type || 'standard').slice(1);
   const statusLabel = account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Funded' : account.status;
-  const statusColor = account.status === 'active' ? '#10b981' : account.status === 'funded' ? '#FF5C00'
-    : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
-  const phase = (account.phase || 'phase1').replace('phase', 'Phase ');
-  const progressPct = Math.min((account.profit_target_progress || 0) / (account.rule_snapshot?.phase1_target || 10) * 100, 100);
-  const endDate = account.provisioned_at
-    ? new Date(new Date(account.provisioned_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
-    : '—';
-
-  const metrics = [
-    { label: "Today's P&L", value: `${todayPnl >= 0 ? '+' : ''}$${fmt(todayPnl)}`, color: todayPnl >= 0 ? '#10b981' : '#ef4444', icon: todayPnl >= 0 ? TrendingUp : TrendingDown },
-    { label: 'Live Equity', value: `$${fmt(equity)}`, color: '#60a5fa', icon: Activity },
-    { label: 'Unrealized PnL', value: `${unrealizedPnl >= 0 ? '+' : ''}$${fmt(unrealizedPnl)}`, color: unrealizedPnl >= 0 ? '#10b981' : '#ef4444', icon: Zap },
-  ];
+  const isActive = account.status === 'active';
+  const isFunded = account.status === 'funded';
+  const statusColor = isActive ? '#10b981' : isFunded ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
+  const profitTargetPct = account.rule_snapshot?.phase1_target ?? 10;
+  const progressPct = Math.min((account.profit_target_progress || 0) / profitTargetPct * 100, 100);
+  const totalPnl = balance - accountSize;
 
   return (
-    <Card accent>
-      {/* Top header */}
-      <div className="px-5 pt-5 pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="rounded-2xl overflow-hidden" style={{
+      background: 'rgba(12,12,18,0.95)',
+      border: '1px solid rgba(255,255,255,0.08)',
+    }}>
+      {/* Top bar: type + status */}
+      <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold tracking-widest" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
+          <span className="text-white/20 text-xs">·</span>
+          <span className="text-[11px] font-bold tracking-widest text-white/50">{phaseLabel}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusColor }} />
+          <span className="text-[11px] font-semibold" style={{ color: statusColor }}>{statusLabel}</span>
+        </div>
+      </div>
+
+      {/* Main body */}
+      <div className="px-5 py-5">
+        {/* Account ID */}
+        <div className="text-xs font-mono font-bold text-white/50 mb-3 tracking-widest">{account.account_id || account.mt_login || '—'}</div>
+
+        {/* Size + P&L */}
+        <div className="flex items-end justify-between mb-5">
           <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
-                style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}35` }}>
-                ● {statusLabel}
-              </span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
-                style={{ background: 'rgba(255,92,0,0.12)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.2)' }}>
-                {phase}
-              </span>
-            </div>
-            <div className="text-lg font-black text-white tracking-tight">{challengeLabel}</div>
-            <div className="text-xs font-mono text-white/40 mt-0.5">MT5 Login: {account.mt_login || '—'} · {account.leverage || '1:100'} leverage</div>
+            <div className="text-[11px] text-white/30 font-mono mb-1">ACCOUNT SIZE</div>
+            <div className="text-4xl font-black text-white tracking-tight">${accountSize.toLocaleString()}</div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-white/30 mb-0.5">Account Size</div>
-            <div className="text-2xl font-black text-white">${(account.account_size || 0).toLocaleString()}</div>
-            <div className="text-[10px] text-white/30 mt-0.5 font-mono">Exp: {endDate}</div>
+            <div className="text-[11px] text-white/30 font-mono mb-1">TOTAL P&L</div>
+            <div className={`text-2xl font-black tracking-tight ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {totalPnl >= 0 ? '+' : ''}${Math.abs(totalPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-[10px] font-semibold mb-1.5">
-            <span className="text-white/40">Profit Target Progress</span>
-            <span style={{ color: '#FF5C00' }}>{progressPct.toFixed(1)}%</span>
+        {/* Profit Target Progress */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between text-[11px] mb-2">
+            <span className="text-white/40 font-mono">PROFIT TARGET</span>
+            <span className="font-bold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
             <motion.div className="h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
@@ -194,46 +200,44 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
               style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
           </div>
         </div>
-      </div>
 
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        {/* Today's P&L highlight */}
+        <div className="flex items-center gap-2 mb-5">
+          {todayPnl >= 0
+            ? <TrendingUp className="w-4 h-4 text-emerald-400" />
+            : <TrendingDown className="w-4 h-4 text-red-400" />}
+          <span className={`text-sm font-bold ${todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {todayPnl >= 0 ? '+' : ''}${fmt(todayPnl)} today
+          </span>
+          <span className="text-white/20 text-xs ml-1">·</span>
+          <span className="text-xs text-white/40">Equity <span className="text-white/70 font-mono">${fmt(equity)}</span></span>
+        </div>
+
+        {/* Details button */}
         <button
           onClick={() => setShowCredentials?.(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
-          <Key className="w-3.5 h-3.5" />
-          View Credentials
-        </button>
-        <button onClick={() => onNavigate?.('accounts')}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#94a3b8' }}>
-          <CalendarDays className="w-3.5 h-3.5" />
-          Account Metrics
-        </button>
-        <button onClick={() => onNavigate?.('accounts')}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto transition-all hover:opacity-90"
-          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.25)', color: '#FF5C00' }}>
-          Full Detail <ChevronRight className="w-3.5 h-3.5" />
+          className="w-full py-2.5 rounded-xl text-sm font-bold tracking-wide flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+          style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', color: '#fff' }}>
+          Details <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Metrics row */}
-      <div className="grid grid-cols-3">
-        {metrics.map((m, i) => {
-          const Icon = m.icon;
-          return (
-            <div key={m.label} className="px-5 py-4 text-center relative"
-              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-              <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-white/35 mb-2">
-                <Icon className="w-3 h-3" /> {m.label}
-              </div>
-              <div className="text-xl font-black tracking-tight" style={{ color: m.color }}>{m.value}</div>
-            </div>
-          );
-        })}
+      {/* Bottom info strip */}
+      <div className="grid grid-cols-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
+        {[
+          { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
+          { label: 'TYPE', value: challengeTypeLabel === '2-STEP' ? 'Two-Step' : challengeTypeLabel === 'INSTANT' ? 'Instant' : 'Inst. Light' },
+          { label: 'MODEL', value: modelLabel, highlight: true },
+          { label: 'PHASE', value: phaseLabel.replace('PH ', 'Phase ') },
+          { label: 'LEVERAGE', value: account.leverage || '1:100' },
+        ].map((item, i) => (
+          <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+            <div className="text-[9px] font-bold tracking-widest text-white/25 mb-1">{item.label}</div>
+            <div className={`text-[11px] font-bold ${item.highlight ? 'text-primary' : 'text-white/70'}`}>{item.value}</div>
+          </div>
+        ))}
       </div>
-    </Card>
+    </div>
   );
 }
 
