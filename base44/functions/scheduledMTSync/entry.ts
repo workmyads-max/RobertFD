@@ -7,7 +7,9 @@
  *   - Captures floating PnL from open positions — not just closed balance
  *
  * DAILY RESET (Priority 7):
- *   - Runs inline at 23:00–23:04 UTC each day, idempotent per UTC date
+ *   - Runs inline at 00:00–00:04 UTC (midnight UTC) — single canonical reset time
+ *   - Uses BALANCE (not equity) as daily_start_balance baseline — FTMO standard
+ *   - Also initialises daily_start_balance for new accounts on first sync
  *   - Resets: daily_start_balance=balance, daily_drawdown_used=0, daily_pnl=0, daily_reset_at
  *   - automatedDDBreach remains as backup safety net
  *
@@ -273,33 +275,36 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
-          // ── DAILY RESET at 23:00 UTC ───────────────────────────────────────
-          // Runs inside each account's sync pass. Idempotent: only fires once per UTC day.
-          // Resets daily tracking fields so daily DD starts fresh each trading day.
+          // ── DAILY RESET at 00:00 UTC (midnight UTC) — single canonical reset ──
+          // Idempotent per UTC date. Uses BALANCE (not equity) as baseline — FTMO standard.
+          // Also initialises daily_start_balance for new accounts that have never reset.
           const nowUtc = new Date();
           const utcHour = nowUtc.getUTCHours();
           const utcMin  = nowUtc.getUTCMinutes();
-          const isResetWindow = utcHour === 23 && utcMin < 5; // 23:00–23:04 UTC
+          const isResetWindow = utcHour === 0 && utcMin < 5; // 00:00–00:04 UTC
           const lastResetAt = acc.daily_reset_at ? new Date(acc.daily_reset_at) : null;
+          const pad = n => String(n).padStart(2, '0');
           const lastResetDateStr = lastResetAt
-            ? `${lastResetAt.getUTCFullYear()}-${lastResetAt.getUTCMonth()}-${lastResetAt.getUTCDate()}`
+            ? `${lastResetAt.getUTCFullYear()}-${pad(lastResetAt.getUTCMonth()+1)}-${pad(lastResetAt.getUTCDate())}`
             : null;
-          const todayDateStr = `${nowUtc.getUTCFullYear()}-${nowUtc.getUTCMonth()}-${nowUtc.getUTCDate()}`;
+          const todayDateStr = `${nowUtc.getUTCFullYear()}-${pad(nowUtc.getUTCMonth()+1)}-${pad(nowUtc.getUTCDate())}`;
           const needsDailyReset = isResetWindow && lastResetDateStr !== todayDateStr;
+          // First-time init: new accounts that have never had a daily reset
+          const needsInit = !acc.daily_start_balance && !apiReturnedZero && balance > 0;
 
-          if (needsDailyReset && !apiReturnedZero && balance > 0) {
-            // Snapshot today's closing balance as the baseline for tomorrow's daily DD
+          if ((needsDailyReset || needsInit) && !apiReturnedZero && balance > 0) {
+            // Snapshot BALANCE (not equity) as the daily baseline — FTMO/industry standard
             await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
               daily_start_balance: balance,
               daily_drawdown_used: 0,
               daily_pnl: 0,
               daily_reset_at: nowUtc.toISOString(),
             });
-            // Update local acc reference so DD calculations below use the fresh baseline
             acc.daily_start_balance = balance;
             acc.daily_drawdown_used = 0;
             acc.daily_pnl = 0;
-            console.log(`[DAILY-RESET] ${acc.account_id} — daily_start_balance=${balance}, reset at ${nowUtc.toISOString()}`);
+            const resetReason = needsInit ? 'INIT' : 'RESET';
+            console.log(`[DAILY-${resetReason}] ${acc.account_id} — daily_start_balance=${balance} at ${nowUtc.toISOString()}`);
           }
 
           // ── TRUE INSTITUTIONAL DD CALCULATIONS ─────────────────────────────
