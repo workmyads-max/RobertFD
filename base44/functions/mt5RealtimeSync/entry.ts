@@ -50,18 +50,77 @@ function getDDLimits(acc) {
   return { dailyLimit, overallLimit, isTrailing };
 }
 
+/**
+ * FTMO Maximum Loss (Overall DD) — STATIC FLOOR
+ *
+ * Minimum allowed equity = accountSize - (max_dd_limit% of accountSize)
+ * e.g. 100K account: floor = $90,000 — ALWAYS, regardless of profits.
+ * This floor NEVER changes even if balance grows to $200K.
+ *
+ * For trailing (instant_light only): floor rises with high water mark.
+ */
 function calcOverallDD(acc, equity, hwm) {
   const accountSize = acc.account_size || 100000;
   const isTrailing  = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
   if (isTrailing) {
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
   }
+  // Static floor: always relative to original account size
   return Math.max(0, ((accountSize - equity) / accountSize) * 100);
 }
 
-function calcDailyDD(acc, equity) {
-  const base = acc.daily_start_balance || acc.account_size || 100000;
-  return base > 0 ? Math.max(0, ((base - equity) / base) * 100) : 0;
+/**
+ * FTMO Daily Loss — DYNAMIC ALLOWANCE (correct industry formula)
+ *
+ * The daily allowance EXPANDS intraday when you bank profits:
+ *   daily_loss_limit_$ = fixed_daily_limit_$ + max(realized_profit_today, 0)
+ *   realized_profit_today = balance - daily_start_balance  (positive if profitable)
+ *
+ * Minimum daily equity = daily_start_balance - fixed_daily_limit_$
+ *   (this floor is fixed at the start of each day, does NOT move intraday with profits)
+ *
+ * Breach condition:
+ *   daily_loss_used = (daily_start_balance + realized_profit_today) - equity > daily_loss_limit_$
+ *   i.e. equity < (daily_start_balance + realized_profit_today) - daily_loss_limit_$
+ *   i.e. equity < daily_start_balance - fixed_daily_limit_$   ← simplified minimum equity
+ *
+ * BUT the correct breach check using %:
+ *   daily_loss_used_$ = (daily_start_balance + max(balance - daily_start_balance, 0)) - equity
+ *   daily_loss_limit_$ = fixed_daily_limit_pct * accountSize + max(balance - daily_start_balance, 0)
+ *
+ * Returns daily_loss_used as a % of accountSize for consistent comparison with dailyLimit%.
+ */
+function calcDailyDD(acc, balance, equity) {
+  const accountSize       = acc.account_size || 100000;
+  const dailyStartBalance = acc.daily_start_balance || accountSize;
+  const fixedDailyLimitPct = (acc.rule_snapshot?.daily_dd_limit ?? 5);
+  const fixedDailyLimit$   = accountSize * (fixedDailyLimitPct / 100);
+
+  // Realized profit earned today (only positive counts — losses reduce balance but don't shrink allowance)
+  const realizedProfitToday = Math.max(0, balance - dailyStartBalance);
+
+  // Effective daily loss allowance in dollars (expands with intraday profit)
+  const effectiveDailyLimit$ = fixedDailyLimit$ + realizedProfitToday;
+
+  // Effective peak equity for today = start_balance + realized_profit_today
+  const todayPeak = dailyStartBalance + realizedProfitToday;
+
+  // Daily loss used in dollars (includes both closed + floating via equity)
+  const dailyLossUsed$ = Math.max(0, todayPeak - equity);
+
+  // Return as % of accountSize for comparison against dailyLimit%
+  const dailyLossUsedPct = (dailyLossUsed$ / accountSize) * 100;
+  const effectiveDailyLimitPct = (effectiveDailyLimit$ / accountSize) * 100;
+
+  return {
+    dailyLossUsedPct: parseFloat(dailyLossUsedPct.toFixed(4)),
+    effectiveDailyLimitPct: parseFloat(effectiveDailyLimitPct.toFixed(4)),
+    dailyLossUsed$: parseFloat(dailyLossUsed$.toFixed(2)),
+    effectiveDailyLimit$: parseFloat(effectiveDailyLimit$.toFixed(2)),
+    minDailyEquity: parseFloat((dailyStartBalance - fixedDailyLimit$).toFixed(2)),
+    todayPeak: parseFloat(todayPeak.toFixed(2)),
+    realizedProfitToday: parseFloat(realizedProfitToday.toFixed(2)),
+  };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -163,34 +222,37 @@ Deno.serve(async (req) => {
 
     const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+    // ── OVERALL DD (static floor vs original account size) ────────────────────
     const currentOverallDD = calcOverallDD(acc, equity, newHWM);
-    const currentDailyDD   = calcDailyDD(acc, equity);
 
-    // Persistent DD: use Math.max so DD never decreases between syncs
-    // EXCEPTION: if stored DD is corrupted (>=90%), trust the live value
+    // ── DAILY DD (FTMO dynamic allowance formula) ─────────────────────────────
+    const dailyCalc = calcDailyDD(acc, balance, equity);
+
+    // Persistent overall DD: never decreases (Math.max), reset if corrupted
     const dbOverallDD = acc.max_drawdown_used || 0;
-    const dbDailyDD   = acc.daily_drawdown_used || 0;
-    const dbCorrupted = dbOverallDD >= 90 || dbDailyDD >= 90;
+    const dbCorrupted = dbOverallDD >= 90;
     const persistentOverallDD = parseFloat((dbCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(3));
-    const persistentDailyDD   = parseFloat((dbCorrupted ? currentDailyDD   : Math.max(dbDailyDD,   currentDailyDD  )).toFixed(3));
 
     const { dailyLimit, overallLimit, isTrailing } = getDDLimits(acc);
 
-    // ── LIVE DD CALCULATIONS (for display) ────────────────────────────────────
-    const liveDailyDD   = parseFloat(currentDailyDD.toFixed(3));
-    const liveOverallDD = parseFloat(currentOverallDD.toFixed(3));
-
-    // Determine breach
+    // ── BREACH DETECTION ──────────────────────────────────────────────────────
+    // Overall: breached if persistentOverallDD >= limit (static floor never resets)
+    // Daily: breached if dailyLossUsed$ > effectiveDailyLimit$ (dynamic, resets midnight)
     let breachType  = null;
     let breachValue = null;
 
     if (persistentOverallDD >= overallLimit) {
       breachType  = isTrailing ? 'trailing' : 'overall';
       breachValue = persistentOverallDD;
-    } else if (persistentDailyDD >= dailyLimit) {
+    } else if (dailyCalc.dailyLossUsed$ > dailyCalc.effectiveDailyLimit$) {
       breachType  = 'daily';
-      breachValue = persistentDailyDD;
+      // Report as % of accountSize for consistency
+      breachValue = dailyCalc.dailyLossUsedPct;
     }
+
+    // For display metrics
+    const liveOverallDD = parseFloat(currentOverallDD.toFixed(3));
+    const liveDailyDD   = parseFloat(dailyCalc.dailyLossUsedPct.toFixed(3));
 
     if (breachType) {
       // ── SERVER-SIDE ENFORCEMENT — atomic write ─────────────────────────────
@@ -281,7 +343,16 @@ Deno.serve(async (req) => {
       is_trailing:     isTrailing,
       account_size:    accountSize,
       high_water_mark: newHWM,
-      daily_start_balance: acc.daily_start_balance || accountSize,
+      daily_start_balance:      dailyCalc.todayPeak - dailyCalc.realizedProfitToday,
+      daily_loss_used$:         dailyCalc.dailyLossUsed$,
+      daily_loss_limit$:        dailyCalc.effectiveDailyLimit$,
+      daily_loss_remaining$:    parseFloat((dailyCalc.effectiveDailyLimit$ - dailyCalc.dailyLossUsed$).toFixed(2)),
+      min_daily_equity:         dailyCalc.minDailyEquity,
+      realized_profit_today$:   dailyCalc.realizedProfitToday,
+      today_peak_balance:       dailyCalc.todayPeak,
+      // Overall: static floor
+      min_overall_equity:       parseFloat((accountSize - accountSize * (overallLimit / 100)).toFixed(2)),
+      overall_loss_remaining$:  parseFloat(((accountSize * overallLimit / 100) - Math.max(0, accountSize - equity)).toFixed(2)),
     });
 
   } catch (error) {

@@ -44,28 +44,46 @@ function getDDLimits(acc) {
 }
 
 /**
- * Calculate current overall DD%.
- * Instant Light uses trailing DD from high water mark.
+ * FTMO Overall DD — static floor against original account size.
+ * Minimum equity = accountSize - max_dd_limit% — NEVER changes regardless of profits.
+ * Instant Light only uses trailing (high water mark) DD.
  */
 function calcOverallDD(acc, equity, newHWM) {
   const accountSize = acc.account_size || 100000;
-  // Use snapshot trailing_dd flag; fall back to challenge_type check for pre-migration accounts
   const isTrailing = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
   if (isTrailing) {
     const hwm = newHWM || accountSize;
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
   }
+  // Static floor: always relative to original account size
   return Math.max(0, ((accountSize - equity) / accountSize) * 100);
 }
 
 /**
- * Calculate current daily DD%.
- * Uses daily_start_balance as the base — true institutional formula.
- * daily_start_balance is set at 23:00 UTC daily reset and never changes intraday.
+ * FTMO Daily DD — dynamic allowance formula.
+ *
+ * daily_loss_limit_$ = fixed_daily_limit_$ + max(realized_profit_today, 0)
+ * realized_profit_today = balance - daily_start_balance  (clamped to 0 if negative)
+ *
+ * Returns { dailyLossUsedPct, effectiveDailyLimitPct, dailyLossUsed$, effectiveDailyLimit$ }
  */
-function calcDailyDD(acc, equity) {
-  const base = acc.daily_start_balance || acc.account_size || 100000;
-  return base > 0 ? Math.max(0, ((base - equity) / base) * 100) : 0;
+function calcDailyDD(acc, balance, equity) {
+  const accountSize        = acc.account_size || 100000;
+  const dailyStartBalance  = acc.daily_start_balance || accountSize;
+  const fixedDailyLimitPct = acc.rule_snapshot?.daily_dd_limit ?? 5;
+  const fixedDailyLimit$   = accountSize * (fixedDailyLimitPct / 100);
+
+  const realizedProfitToday  = Math.max(0, balance - dailyStartBalance);
+  const effectiveDailyLimit$ = fixedDailyLimit$ + realizedProfitToday;
+  const todayPeak            = dailyStartBalance + realizedProfitToday;
+  const dailyLossUsed$       = Math.max(0, todayPeak - equity);
+
+  return {
+    dailyLossUsedPct:       parseFloat(((dailyLossUsed$ / accountSize) * 100).toFixed(4)),
+    effectiveDailyLimitPct: parseFloat(((effectiveDailyLimit$ / accountSize) * 100).toFixed(4)),
+    dailyLossUsed$:         parseFloat(dailyLossUsed$.toFixed(2)),
+    effectiveDailyLimit$:   parseFloat(effectiveDailyLimit$.toFixed(2)),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -307,27 +325,21 @@ Deno.serve(async (req) => {
             console.log(`[DAILY-${resetReason}] ${acc.account_id} — daily_start_balance=${balance} at ${nowUtc.toISOString()}`);
           }
 
-          // ── TRUE INSTITUTIONAL DD CALCULATIONS ─────────────────────────────
+          // ── DD CALCULATIONS (FTMO-standard formulas) ───────────────────────
           const currentOverallDD = calcOverallDD(acc, equity, newHWM);
-          const currentDailyDD = calcDailyDD(acc, equity);
+          const dailyCalc        = calcDailyDD(acc, balance, equity);
 
-          // ── PERSISTENT DD — only ever increases (Math.max) ─────────────────
-          // IMPORTANT: If the API returned real non-zero data but DB has suspiciously high DD
-          // (>= 90%), the stored value is from a corrupted/false breach — reset to real value.
+          // Overall DD: persistent (Math.max), reset if corrupted
           const dbOverallDD = acc.max_drawdown_used || 0;
-          const dbDailyDD = acc.daily_drawdown_used || 0;
-          const dbWasCorrupted = !apiReturnedZero && (dbOverallDD >= 90 || dbDailyDD >= 90);
+          const dbWasCorrupted = !apiReturnedZero && dbOverallDD >= 90;
           const persistentOverallDD = parseFloat((dbWasCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(2));
-          const persistentDailyDD = parseFloat((dbWasCorrupted ? currentDailyDD : Math.max(dbDailyDD, currentDailyDD)).toFixed(2));
           if (dbWasCorrupted) {
-            console.log(`[sync] ${acc.account_id} — resetting corrupted DD values (was ${dbOverallDD}% overall, ${dbDailyDD}% daily) → real: ${currentOverallDD.toFixed(2)}% / ${currentDailyDD.toFixed(2)}%`);
+            console.log(`[sync] ${acc.account_id} — resetting corrupted overall DD (was ${dbOverallDD}%) → real: ${currentOverallDD.toFixed(2)}%`);
           }
 
           const { dailyLimit, overallLimit } = getDDLimits(acc);
 
-          // ── BREACH DETECTION — fires in same sync, no delay ────────────────
-          // If DB was corrupted (false breach from API returning 0), clear breach flags
-          // so real breach detection can run cleanly on real data.
+          // ── BREACH DETECTION ────────────────────────────────────────────────
           let breachDetected = dbWasCorrupted ? false : (acc.dd_breach_detected || false);
           let breachType = dbWasCorrupted ? null : (acc.dd_breach_type || null);
           let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
@@ -355,12 +367,12 @@ Deno.serve(async (req) => {
               breachTime = new Date().toISOString();
               breachValue = persistentOverallDD;
               console.log(`[BREACH] ${acc.account_id} overall DD: ${persistentOverallDD.toFixed(2)}% / limit ${overallLimit}%`);
-            } else if (persistentDailyDD >= dailyLimit) {
+            } else if (dailyCalc.dailyLossUsed$ > dailyCalc.effectiveDailyLimit$) {
               breachDetected = true;
               breachType = 'daily';
               breachTime = new Date().toISOString();
-              breachValue = persistentDailyDD;
-              console.log(`[BREACH] ${acc.account_id} daily DD: ${persistentDailyDD.toFixed(2)}% / limit ${dailyLimit}%`);
+              breachValue = dailyCalc.dailyLossUsedPct;
+              console.log(`[BREACH] ${acc.account_id} daily loss: $${dailyCalc.dailyLossUsed$} > limit $${dailyCalc.effectiveDailyLimit$} (used ${dailyCalc.dailyLossUsedPct.toFixed(2)}%)`);
             }
           }
           
@@ -375,14 +387,13 @@ Deno.serve(async (req) => {
             win_rate: parseFloat(winRate.toFixed(1)),
             total_trades: closedTrades.length,
             max_drawdown_used: persistentOverallDD,
-            daily_drawdown_used: persistentDailyDD,
+            // Daily DD stored as % of accountSize used (for UI display)
+            daily_drawdown_used: dailyCalc.dailyLossUsedPct,
             // PRIORITY 6: Use live equity for profit target progress — captures open floating PnL
             profit_target_progress: parseFloat(Math.max(0, (equity - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
             // ── BREACH FLAGS: safety-net writes — only if mt5RealtimeSync has not already set them
-            // dd_breach_detected is always written (false=no breach, true=breach)
-            // breach type/time/value: written ONCE only — never overwrite existing flags (mt5RealtimeSync owns first-write)
             dd_breach_detected: breachDetected,
             // If data was corrupted (API returned 0 on a real account), clear breach flags
             ...(dbWasCorrupted && { dd_breach_type: null, dd_breach_time: null, dd_breach_value: null, status: acc.status === 'failed' ? 'active' : acc.status }),
@@ -562,7 +573,11 @@ Deno.serve(async (req) => {
           return {
             account_id: acc.account_id, ok: true,
             balance, equity,
-            overall_dd: persistentOverallDD, daily_dd: persistentDailyDD,
+            overall_dd: persistentOverallDD,
+            daily_dd_used_pct: dailyCalc.dailyLossUsedPct,
+            daily_dd_limit_pct: dailyCalc.effectiveDailyLimitPct,
+            daily_loss_used$: dailyCalc.dailyLossUsed$,
+            daily_loss_limit$: dailyCalc.effectiveDailyLimit$,
             breached: breachDetected,
             new_trades: newDeals.length,
           };
