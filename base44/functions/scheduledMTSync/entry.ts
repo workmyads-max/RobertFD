@@ -389,8 +389,9 @@ Deno.serve(async (req) => {
             max_drawdown_used: persistentOverallDD,
             // Daily DD stored as % of accountSize used (for UI display)
             daily_drawdown_used: dailyCalc.dailyLossUsedPct,
-            // PRIORITY 6: Use live equity for profit target progress — captures open floating PnL
-            profit_target_progress: parseFloat(Math.max(0, (equity - accountSize) / accountSize * 100).toFixed(2)),
+            // FTMO-standard: profit target measured against BALANCE (closed trades only)
+            // Floating PnL does NOT count toward passing — only realised/closed profit counts
+            profit_target_progress: parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
             // ── BREACH FLAGS: safety-net writes — only if mt5RealtimeSync has not already set them
@@ -452,6 +453,7 @@ Deno.serve(async (req) => {
             (!acc.phase_review_status || acc.phase_review_status === 'none')
           ) {
             const phase1Target = acc.rule_snapshot?.phase1_target ?? 10;
+            // FTMO: phase pass gated on BALANCE-based progress only (closed trades)
             const currentProgress = updates.profit_target_progress;
             const meetsMinDays = (acc.trading_days || 0) >= minTradingDays;
             if (currentProgress >= phase1Target && !meetsMinDays) {

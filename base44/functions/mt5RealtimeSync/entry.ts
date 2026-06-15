@@ -332,12 +332,16 @@ Deno.serve(async (req) => {
     }
 
     // ── NO BREACH — return live equity for dashboard display ──────────────────
+    // profit_target_progress uses BALANCE (closed trades only) — FTMO standard
+    const balanceBasedProgress = parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2));
+
     return Response.json({
       success:         true,
       breach_detected: false,
       balance,
       equity,
       float_pnl:       equity - balance,
+      profit_target_progress: balanceBasedProgress,
       live_overall_dd: liveOverallDD,
       live_daily_dd:   liveDailyDD,
       is_trailing:     isTrailing,
