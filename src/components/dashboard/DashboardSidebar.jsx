@@ -141,7 +141,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           )}
         </button>
 
-        {/* Admin only */}
+        {/* Admin only - Dashboard button only */}
         {isAdmin && (
           <>
             {/* Admin Toggle Button */}
@@ -162,90 +162,15 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 <ChevronRight className="w-3.5 h-3.5 text-primary" />
               </button>
             )}
-
-            {!collapsed && (
-              <div className="pt-3 pb-1 px-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.3), transparent)' }} />
-                  <span className="text-[8px] sm:text-[9px] font-mono px-2 py-0.5 rounded-full whitespace-nowrap" style={{ color: '#FF5C00', background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>⚡ ADMIN</span>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(255,92,0,0.3), transparent)' }} />
-                </div>
-              </div>
-            )}
             {collapsed && <div className="my-2 mx-2 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />}
-            {[
-              { id: 'admin-risk-center', label: 'Risk System', icon: Shield, permission: 'manage_risk' },
-              { id: 'admin-visibility', label: 'Platform Visibility', icon: Zap, permission: 'manage_settings' }
-            ].filter(item => isAdminLevel || hasPermission(item.permission)).map(item => {
-              const Icon = item.icon;
-              const isActive = activePage === item.id;
-              return (
-                <button key={item.id} onClick={() => handleNav(item.id)}
-                  title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center rounded-xl text-[12px] font-medium transition-all duration-150 group ${
-                    collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2'
-                  } ${
-                    isActive ? 'text-white' : 'text-white/25 hover:text-primary/70 hover:bg-primary/[0.06]'
-                  }`}
-                  style={isActive ? {
-                    background: 'rgba(255,92,0,0.1)',
-                    borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
-                  } : {}}>
-                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-primary/60'}`} />
-                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                </button>
-              );
-            })}
-            {[
-              { id: 'admin-overview', label: 'Admin Overview', icon: Shield },
-              { id: 'admin-orders', label: 'Orders', icon: ShoppingBag, permission: 'manage_payments' },
-              { id: 'admin-accounts', label: 'Manage Accounts', icon: Wallet, permission: 'manage_challenges' },
-              { id: 'admin-withdrawals', label: 'Withdrawals', icon: DollarSign, permission: 'manage_payouts' },
-              { id: 'admin-support', label: 'Support Tickets', icon: HeadphonesIcon, permission: 'manage_support' },
-              { id: 'admin-users', label: 'User Management', icon: Users, permission: 'manage_users' },
-              { id: 'admin-notifications', label: 'Notifications', icon: Bell, permission: 'manage_notifications' },
-              { id: 'admin-wallets', label: 'Payment Gateways', icon: Wallet, permission: 'manage_payments' },
-              { id: 'admin-payment-review', label: 'Payment Review Queue', icon: Shield, permission: 'manage_payments' },
-              { id: 'admin-kyc', label: 'KYC Review', icon: ShieldCheck, permission: 'manage_kyc' },
-              { id: 'admin-livechat', label: 'Live Chat', icon: MessageCircle, permission: 'manage_support' },
-              { id: 'admin-match-trader', label: 'Match Trader API', icon: Activity, permission: 'manage_settings' },
-              { id: 'admin-mt5-config', label: 'MT5 Config', icon: Globe, permission: 'manage_settings' },
-              { id: 'admin-platforms', label: 'Platforms API', icon: Cpu, permission: 'manage_settings' },
-              { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap, permission: 'manage_challenges' },
-              { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders, permission: 'manage_settings' },
-              { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield, permission: 'manage_risk' },
-              { id: 'admin-funded-review', label: 'Funded Review Queue', icon: ShieldCheck, permission: 'manage_risk' },
-              { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle, permission: 'manage_risk' },
-              { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag, permission: 'manage_coupons' },
-              { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield, permission: 'manage_risk' },
-              { id: 'admin-affiliate', label: 'Affiliate & IB', icon: Users, permission: 'manage_affiliates' },
-              { id: 'admin-social', label: 'Social Media', icon: Share2, permission: 'manage_settings' },
-              { id: 'admin-email-logs', label: 'Email Logs', icon: Mail, permission: 'manage_audit_logs' },
-              { id: 'admin-staff', label: 'Staff Management', icon: Users, permission: 'manage_staff' },
-              { id: 'admin-roles', label: 'Roles & Permissions', icon: Shield, permission: 'manage_staff' },
-              { id: 'admin-promotions', label: 'Promotions', icon: Tag, permission: 'manage_settings' },
-              { id: 'admin-first-time-discount', label: 'First-Time Discount', icon: Gift, permission: 'manage_settings' },
-              ].filter(item => !item.permission || isAdminLevel || hasPermission(item.permission)).map(item => {
-              const Icon = item.icon;
-              const isActive = activePage === item.id;
-              return (
-                <button key={item.id} onClick={() => handleNav(item.id)}
-                  title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center rounded-xl text-[12px] font-medium transition-all duration-150 group ${
-                    collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2'
-                  } ${
-                    isActive ? 'text-white' : 'text-white/25 hover:text-primary/70 hover:bg-primary/[0.06]'
-                  }`}
-                  style={isActive ? {
-                    background: 'rgba(255,92,0,0.1)',
-                    borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
-                  } : {}}>
-                  <Icon className={`flex-shrink-0 w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-primary/60'}`} />
-                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                  {!collapsed && isActive && <div className="w-1 h-1 rounded-full bg-primary/60" />}
-                </button>
-              );
-            })}
+            {/* Collapsed quick access - Risk System only */}
+            {collapsed && (
+              <button onClick={() => handleNav('admin-risk-center')}
+                title="Risk System"
+                className="w-full flex items-center justify-center rounded-xl text-[12px] font-medium transition-all duration-150 group">
+                <Shield className="flex-shrink-0 w-3.5 h-3.5 text-white/20 group-hover:text-primary/60" />
+              </button>
+            )}
           </>
         )}
       </nav>
