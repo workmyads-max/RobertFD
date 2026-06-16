@@ -11,8 +11,8 @@ import CommissionHistory from '../affiliate/CommissionHistory';
 import ReferralTree from '../affiliate/ReferralTree';
 import AffiliateWithdrawal from '../affiliate/AffiliateWithdrawal';
 
-const ORANGE = '#FF5C00';
-const CARD = '#15171e';
+const ACCENT = '#CCFF00';
+const CARD = '#1a1d25';
 
 const TABS = [
 { id: 'overview', label: 'Overview', icon: Activity },
@@ -76,9 +76,9 @@ export default function Affiliate({ user }) {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-2"
-            style={{ background: `${ORANGE}0d`, border: `1px solid ${ORANGE}22` }}>
-            <Radio className="w-3 h-3 animate-pulse" style={{ color: ORANGE }} />
-            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: ORANGE }}>Partner Program</span>
+            style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}22` }}>
+            <Radio className="w-3 h-3 animate-pulse" style={{ color: ACCENT }} />
+            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: ACCENT }}>Partner Program</span>
           </div>
           <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
             <Users className="w-7 h-7 text-primary" /> Affiliate & IB
@@ -102,11 +102,11 @@ export default function Affiliate({ user }) {
           </div>
           {profile?.referral_code && (
             <div className="rounded-xl px-4 py-2.5 flex items-center gap-2"
-              style={{ background: `${ORANGE}0a`, border: `1px solid ${ORANGE}1a` }}>
-              <TrendingUp className="w-3.5 h-3.5" style={{ color: ORANGE }} />
+              style={{ background: `${ACCENT}0a`, border: `1px solid ${ACCENT}1a` }}>
+              <TrendingUp className="w-3.5 h-3.5" style={{ color: ACCENT }} />
               <div>
                 <div className="text-[10px] font-mono text-white/25 uppercase tracking-wider">Code</div>
-                <div className="text-sm font-black font-mono" style={{ color: ORANGE }}>{profile.referral_code}</div>
+                <div className="text-sm font-black font-mono" style={{ color: ACCENT }}>{profile.referral_code}</div>
               </div>
             </div>
           )}
@@ -118,8 +118,8 @@ export default function Affiliate({ user }) {
         {isFrozen && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="rounded-2xl p-4 mb-6 flex items-center gap-3"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
-            <span className="text-red-400 text-sm font-bold">⚠ Your affiliate commissions are currently frozen by admin. Please contact support.</span>
+            style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <span className="text-red-400 text-sm font-bold">⚠ Your affiliate commissions are currently frozen by admin. Please contact support.</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -134,9 +134,9 @@ export default function Affiliate({ user }) {
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: active ? `${ORANGE}15` : 'transparent',
-                color: active ? ORANGE : 'rgba(255,255,255,0.4)',
-                border: active ? `1px solid ${ORANGE}30` : '1px solid transparent',
+                background: active ? `${ACCENT}15` : 'transparent',
+                color: active ? ACCENT : 'rgba(255,255,255,0.4)',
+                border: active ? `1px solid ${ACCENT}30` : '1px solid transparent',
               }}>
               <Icon className="w-3.5 h-3.5" /> {tab.label}
             </button>

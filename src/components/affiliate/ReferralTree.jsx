@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Zap, GitBranch, ArrowRight, Share2 } from 'lucide-react';
 
-const ORANGE = '#FF5C00';
+const ORANGE = '#CCFF00';
 const CARD = '#15171e';
 const BORDER = 'rgba(255,255,255,0.07)';
 const MUTED = 'rgba(255,255,255,0.35)';

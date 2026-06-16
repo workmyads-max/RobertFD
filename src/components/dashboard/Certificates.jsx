@@ -10,7 +10,7 @@ import CertificateDocument from './CertificateDocument';
 const FIRM = { name: 'XFUNDED TRADER', website: 'xfundedtrader.com' };
 
 const ACCENT = '#CCFF00';
-const ACCENT_DIM = '#B8E600';
+const ACCENT_DIM = '#b3e600';
 
 const CERT_TYPES = {
   phase1_passed: { label: 'Phase 1', color: '#FF5C00', icon: Star, tier: 1 },

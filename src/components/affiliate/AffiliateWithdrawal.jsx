@@ -4,7 +4,7 @@ import { DollarSign, Wallet, Clock, CheckCircle2, XCircle, Send, AlertTriangle, 
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-const ORANGE = '#FF5C00';
+const ORANGE = '#CCFF00';
 const CARD = '#15171e';
 const BORDER = 'rgba(255,255,255,0.07)';
 

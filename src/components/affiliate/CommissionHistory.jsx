@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Briefcase, Trophy } from 'lucide-react';
 
-const ORANGE = '#FF5C00';
+const ORANGE = '#CCFF00';
 const CARD = '#15171e';
 const BORDER = 'rgba(255,255,255,0.07)';
 
