@@ -40,27 +40,91 @@ const SUBTITLES = {
   special:       'SPECIAL ACHIEVEMENT',
 };
 
-// ─── Subtle chart watermark ────────────────────────────────────────────────
+// ─── Trading Chart Watermark ───────────────────────────────────────────────
 function Watermark() {
+  // Generate realistic-looking candle data
+  const candles = [
+    { o: 120, c: 135, h: 142, l: 115 },
+    { o: 135, c: 128, h: 140, l: 122 },
+    { o: 128, c: 145, h: 150, l: 125 },
+    { o: 145, c: 160, h: 165, l: 140 },
+    { o: 160, c: 152, h: 168, l: 148 },
+    { o: 152, c: 170, h: 175, l: 148 },
+    { o: 170, c: 162, h: 178, l: 158 },
+    { o: 162, c: 185, h: 190, l: 160 },
+    { o: 185, c: 178, h: 192, l: 172 },
+    { o: 178, c: 195, h: 200, l: 175 },
+    { o: 195, c: 210, h: 215, l: 190 },
+    { o: 210, c: 200, h: 218, l: 195 },
+    { o: 200, c: 225, h: 230, l: 198 },
+    { o: 225, c: 240, h: 248, l: 220 },
+    { o: 240, c: 260, h: 265, l: 238 },
+  ];
+
+  const chartW = 480;
+  const chartH = 330;
+  const padding = { top: 30, right: 25, bottom: 25, left: 25 };
+  const candleW = (chartW - padding.left - padding.right) / candles.length - 3;
+  const allPrices = candles.flatMap(c => [c.h, c.l]);
+  const minP = Math.min(...allPrices) - 10;
+  const maxP = Math.max(...allPrices) + 10;
+  const scale = (v) => padding.top + chartH - padding.bottom - ((v - minP) / (maxP - minP)) * (chartH - padding.top - padding.bottom);
+
+  // Support & resistance levels
+  const levels = [135, 160, 185, 210, 240];
+
   return (
-    <svg width="100%" height="100%" viewBox="0 0 500 350" fill="none"
-      style={{ position: 'absolute', inset: 0, opacity: 0.03, pointerEvents: 'none' }}>
-      {Array.from({ length: 20 }, (_, i) => (
-        <line key={`h${i}`} x1="0" y1={i * 18} x2="500" y2={i * 18} stroke="#C5A059" strokeWidth="0.3" />
+    <svg width="100%" height="100%" viewBox={`0 0 ${chartW} ${chartH}`} fill="none"
+      style={{ position: 'absolute', inset: 0, opacity: 0.025, pointerEvents: 'none' }}>
+      {/* Grid lines */}
+      {Array.from({ length: 16 }, (_, i) => (
+        <React.Fragment key={`grid-${i}`}>
+          <line x1={padding.left} y1={padding.top + i * 19} x2={chartW - padding.right} y2={padding.top + i * 19}
+            stroke="#C5A059" strokeWidth="0.2" />
+          <line x1={padding.left + i * 30} y1={padding.top} x2={padding.left + i * 30} y2={chartH - padding.bottom}
+            stroke="#C5A059" strokeWidth="0.2" />
+        </React.Fragment>
       ))}
-      {Array.from({ length: 28 }, (_, i) => (
-        <line key={`v${i}`} x1={i * 18} y1="0" x2={i * 18} y2="350" stroke="#C5A059" strokeWidth="0.3" />
+
+      {/* Support/Resistance levels */}
+      {levels.map((lv, i) => (
+        <line key={`sr-${i}`} x1={padding.left} y1={scale(lv)} x2={chartW - padding.right} y2={scale(lv)}
+          stroke="#C5A059" strokeWidth="0.6" strokeDasharray="6,4" opacity="0.8" />
       ))}
-      {[50,80,110,140,170,200,230,260,290,320,350,380,410,440].map((x, i) => {
-        const h = 25 + Math.sin(i * 1.1) * 30 + Math.cos(i * 0.8) * 15;
-        const y = 190 - h / 2;
+
+      {/* Candlesticks */}
+      {candles.map((c, i) => {
+        const x = padding.left + i * (candleW + 3) + candleW / 2;
+        const isBullish = c.c >= c.o;
+        const fill = isBullish ? 'none' : '#C5A059';
+        const strokeC = '#C5A059';
+        const bodyTop = scale(Math.max(c.o, c.c));
+        const bodyBottom = scale(Math.min(c.o, c.c));
+        const bodyH = Math.max(bodyBottom - bodyTop, 1);
         return (
-          <React.Fragment key={x}>
-            <rect x={x} y={y} width="5" height={h} rx="1.5" fill="#C5A059" opacity={0.3 + Math.sin(i) * 0.3} />
-            <line x1={x + 2.5} y1={y - 15} x2={x + 2.5} y2={y + h + 15} stroke="#C5A059" strokeWidth="0.5" opacity="0.35" />
+          <React.Fragment key={i}>
+            {/* Wick */}
+            <line x1={x} y1={scale(c.h)} x2={x} y2={scale(c.l)} stroke={strokeC} strokeWidth="0.8" />
+            {/* Body */}
+            <rect x={x - candleW / 2} y={bodyTop} width={candleW} height={bodyH} rx="1"
+              fill={fill} stroke={strokeC} strokeWidth="0.7" />
+            {/* Volume bar below */}
+            <rect x={x - candleW / 2 + 0.5} y={chartH - padding.bottom + 2} width={candleW - 1}
+              height={3 + Math.abs(c.c - c.o) * 0.5} fill={strokeC} opacity="0.35" rx="0.5" />
           </React.Fragment>
         );
       })}
+
+      {/* Trend line — rising channel */}
+      <line x1={padding.left} y1={scale(118)} x2={chartW - padding.right} y2={scale(250)}
+        stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
+      <line x1={padding.left + 20} y1={scale(105)} x2={chartW - padding.right} y2={scale(238)}
+        stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
+
+      {/* Pulsing breakout arrow — top right */}
+      <line x1={400} y1={scale(230)} x2={430} y2={scale(210)} stroke="#C5A059" strokeWidth="1" opacity="0.6" />
+      <polygon points="430,150 436,166 424,166" fill="#C5A059" opacity="0.6"
+        transform={`translate(0, ${scale(210) - 158})`} />
     </svg>
   );
 }
@@ -120,7 +184,7 @@ function Seal() {
           const rad = (deg * Math.PI) / 180;
           return <circle key={deg} cx={36 + 27 * Math.cos(rad)} cy={36 + 27 * Math.sin(rad)} r="1.3" fill="#C5A059" opacity="0.65" />;
         })}
-        <text x="36" y="62" textAnchor="middle" fontSize="4.5" fontWeight="700" fill="#C5A059" opacity="0.4" fontFamily="'Inter', sans-serif" letterSpacing="0.15em">VERIFIED</text>
+        <text x="36" y="62" textAnchor="middle" fontSize="4.5" fontWeight="700" fill="#C5A059" opacity="0.4" fontFamily="'Inter', sans-serif" letterSpacing="0.15em">PROP TRADER</text>
       </svg>
     </div>
   );
@@ -185,6 +249,24 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       {/* Corner marks */}
       <Corners />
 
+      {/* Side tick marks — Bloomberg terminal style */}
+      <div style={{ position: 'absolute', top: '50%', left: '30px', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none' }}>
+        {['1.0842', '1.0838', '1.0834', '1.0830', '1.0826', '1.0822'].map((v, i) => (
+          <div key={`l${i}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ width: '8px', height: '1px', background: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)' }} />
+            <span style={{ color: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)', fontSize: '5px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ position: 'absolute', top: '50%', right: '30px', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none', alignItems: 'flex-end' }}>
+        {['2,652.40', '2,651.80', '2,651.20', '2,650.60', '2,650.00', '2,649.40'].map((v, i) => (
+          <div key={`r${i}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)', fontSize: '5px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>{v}</span>
+            <div style={{ width: '8px', height: '1px', background: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)' }} />
+          </div>
+        ))}
+      </div>
+
       {/* ── Header ── */}
       <div style={{
         position: 'absolute', top: '42px', left: '56px', right: '56px',
@@ -192,6 +274,11 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         paddingBottom: '16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
+        {/* Tiny bull/bear accent */}
+        <svg width="20" height="12" viewBox="0 0 20 12" fill="none" style={{ opacity: 0.2 }}>
+          <path d="M2 10 L5 4 L8 7 L11 2 L14 5 L17 1" stroke="#C5A059" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15 1 L17 1 L17 3" stroke="#C5A059" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
         <XFLogo size="md" />
         <Badge type={type} />
       </div>
@@ -273,6 +360,21 @@ export default function CertificateDocument({ cert, forCapture = false }) {
           {isWithdrawal
             ? 'Your hard work and consistency have paid off. Congratulations!'
             : 'You have demonstrated exceptional skill, discipline and consistency.'}
+        </div>
+
+        {/* Trading philosophy mantra */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px', marginTop: '22px',
+          color: 'rgba(197,160,89,0.3)', fontSize: '8px', fontWeight: 700,
+          letterSpacing: '0.25em', fontFamily: "'Inter', sans-serif",
+        }}>
+          <span style={{ width: '14px', height: '1px', background: 'rgba(197,160,89,0.2)' }} />
+          DISCIPLINE
+          <span style={{ width: '4px', height: '4px', background: 'rgba(197,160,89,0.3)', borderRadius: '50%' }} />
+          CONSISTENCY
+          <span style={{ width: '4px', height: '4px', background: 'rgba(197,160,89,0.3)', borderRadius: '50%' }} />
+          EXECUTION
+          <span style={{ width: '14px', height: '1px', background: 'rgba(197,160,89,0.2)' }} />
         </div>
 
         {/* Stats row */}
