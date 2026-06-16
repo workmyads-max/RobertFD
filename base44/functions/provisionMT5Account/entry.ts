@@ -79,12 +79,17 @@ Deno.serve(async (req) => {
         ? 'HAR\\MAN15\\contest.3'
         : 'HAR\\MAN15\\contest.1'; // two-step (default)
 
-    // Build custom account name: "100k Phase1 XFunded Trader 2 Step"
+    // Build custom account name:
+    //   Two-step:  "100K Phase 1 XFunded Trader 2-Step"
+    //   Instant:   "100K Instant XFunded Trader"
+    //   InstLight: "100K Instant Light XFunded Trader"
     const sizeK = account_size >= 1000000 ? `${account_size / 1000000}M` : `${account_size / 1000}K`;
-    const phaseName = 'Phase1';
     const brandName = 'XFunded Trader';
-    const stepName = challenge_type === 'two-step' ? '2 Step' : challenge_type === 'instant' ? 'Instant' : 'Light';
-    const accountName = `${sizeK} ${phaseName} ${brandName} ${stepName}`;
+    const accountName = challenge_type === 'instant'
+      ? `${sizeK} Instant ${brandName}`
+      : challenge_type === 'instant_light'
+        ? `${sizeK} Instant Light ${brandName}`
+        : `${sizeK} Phase 1 ${brandName} 2-Step`; // two-step default
 
     console.log(`[provisionMT5Account] Creating account: name="${accountName}", email=${user_email}, group=${groupName}, leverage=${leverageInt}`);
 

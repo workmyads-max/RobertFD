@@ -66,7 +66,7 @@ function mt5Headers(apiKey) {
  * Provision a new MT5 account via broker REST API.
  * Returns { mt_login, mt_password, mt_server, mt_group } or null on failure.
  */
-async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, groupName, leverage, balance) {
+async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, groupName, leverage, balance, accountName) {
   const masterPassword = genPassword();
   const investorPassword = genPassword();
   try {
@@ -78,7 +78,7 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
         Login: 0,            // 0 = auto-assign
         MasterPassword: masterPassword,
         InvestorPassword: investorPassword,
-        Name: userEmail.split('@')[0],
+        Name: accountName || userEmail.split('@')[0],
         Email: userEmail,
         Group: groupName,
         Leverage: leverage,
@@ -256,9 +256,14 @@ Deno.serve(async (req) => {
           }
           const leverage = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
 
+          // Build Phase 2 account name: "100K Phase 2 XFunded Trader 2-Step"
+          const sizeLabel = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
+          const phase2Name = `${sizeLabel} Phase 2 XFunded Trader 2-Step`;
+
           phase2Credentials = await provisionMT5Account(
             creds.apiBase, creds.apiKey, creds.serverName,
-            account.user_email, groupName, leverage, account.account_size
+            account.user_email, groupName, leverage, account.account_size,
+            phase2Name
           );
 
           if (phase2Credentials) {
