@@ -216,7 +216,7 @@ export default function Dashboard() {
     switch (activePage) {
       case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'accounts': return <MyAccounts onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
-      case 'account-overview': return <AccountOverview onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;

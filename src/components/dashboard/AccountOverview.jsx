@@ -941,16 +941,11 @@ function OpenTradesPanel({ account, initialPositions = [], tradeRecords = [] }) 
 }
 
 // ─── Main AccountOverview ─────────────────────────────────────────────────────
-export default function AccountOverview({ onStartChallenge, onNavigate }) {
+export default function AccountOverview({ user, onStartChallenge, onNavigate }) {
   const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  // Get current user for email-based filtering
-  useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
+  const currentUser = user || null;
 
   useEffect(() => {
     if (!currentUser?.email) return;
@@ -973,9 +968,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       if (!currentUser?.email) return [];
       // CRITICAL: Always filter by user_email — never list() without ownership filter
       const userAccounts = await base44.entities.ChallengeAccount.filter({
-        user_email: currentUser.email,
+        user_email: currentUser?.email,
       }, '-created_date', 100);
-      console.log('[AccountOverview] User accounts for', currentUser.email, ':', userAccounts.length);
       return userAccounts;
     },
     enabled: !!currentUser?.email,
@@ -1032,7 +1026,8 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
   // Live closed trades from MT5 — used by Statistics, Daily Summary, Discipline panels
   const { trades: closedTrades } = useClosedTrades(account);
 
-  if (isLoading) return (
+  const showLoader = isLoading || !currentUser;
+  if (showLoader) return (
     <div className="flex items-center justify-center py-24">
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
