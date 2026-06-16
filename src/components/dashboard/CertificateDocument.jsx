@@ -172,8 +172,8 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       color: T.text,
       border: forCapture ? 'none' : '1px solid rgba(255,255,255,0.06)',
     }}>
-      {/* Ambient glow top */}
-      <div style={{ position: 'absolute', top: '-120px', left: '50%', transform: 'translateX(-50%)', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(255,92,0,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      {/* Ambient glow top — subtle solid oval */}
+      <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '120px', background: 'rgba(255,92,0,0.03)', borderRadius: '50%', pointerEvents: 'none' }} />
 
       {/* Chart watermark */}
       <Watermark />
@@ -230,11 +230,11 @@ export default function CertificateDocument({ cert, forCapture = false }) {
           {isWithdrawal ? 'OF WITHDRAWAL' : 'OF COMPLETION'}
         </div>
 
-        {/* Gold divider */}
+        {/* Gold divider — use solid lines to avoid html2canvas gradient bug */}
         <div style={{ display: 'flex', alignItems: 'center', width: '55%', maxWidth: '420px', margin: '22px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, #C5A059)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(197,160,89,0.35)' }} />
           <div style={{ width: '8px', height: '8px', background: '#C5A059', transform: 'rotate(45deg)', margin: '0 14px', boxShadow: '0 0 10px rgba(197,160,89,0.5)' }} />
-          <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, #C5A059, transparent)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(197,160,89,0.35)' }} />
         </div>
 
         {/* Presented to */}
@@ -325,7 +325,7 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>CEO</div>
           <Signature />
-          <div style={{ width: '120px', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3))', marginLeft: 'auto', marginBottom: '3px' }} />
+          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.25)', marginLeft: 'auto', marginBottom: '3px' }} />
           <div style={{ color: 'rgba(226,232,240,0.8)', fontSize: '9px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
           <div style={{ color: T.muted, fontSize: '7px', marginTop: '1px', fontFamily: "'Inter', sans-serif" }}>Chief Executive Officer</div>
         </div>

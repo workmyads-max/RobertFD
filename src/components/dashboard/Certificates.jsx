@@ -66,7 +66,7 @@ function CertCard({ cert, index, onPreview }) {
       className="rounded-2xl overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
     >
-      <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${cfg.color}, ${cfg.color}80, transparent)` }} />
+      <div style={{ height: '3px', background: cfg.color, opacity: 0.4 }} />
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-widest"
