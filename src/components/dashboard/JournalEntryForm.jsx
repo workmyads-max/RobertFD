@@ -11,7 +11,7 @@ const emotionColors = {
   fearful: '#ef4444', greedy: '#ef4444', frustrated: '#ef4444', overexcited: '#f59e0b',
 };
 
-export default function JournalEntryForm({ entry, periodType, onClose, onSaved }) {
+export default function JournalEntryForm({ entry, periodType, onClose, onSaved, accountId, userEmail }) {
   const [form, setForm] = useState({
     entry_date: entry?.entry_date || new Date().toISOString().split('T')[0],
     period_type: entry?.period_type || periodType || 'daily',
@@ -35,9 +35,13 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved }
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data) => entry
-      ? base44.entities.TradingJournalEntry.update(entry.id, data)
-      : base44.entities.TradingJournalEntry.create(data),
+    mutationFn: (data) => {
+      // Always attach ownership on create
+      const payload = { ...data, user_email: userEmail, account_id: accountId };
+      return entry
+        ? base44.entities.TradingJournalEntry.update(entry.id, payload)
+        : base44.entities.TradingJournalEntry.create(payload);
+    },
     onSuccess: onSaved,
   });
 

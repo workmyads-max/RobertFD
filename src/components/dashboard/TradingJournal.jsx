@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Info, Settings, Download, ExternalLink } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Info, Settings, Download, ExternalLink, Plus, BookOpen } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import JournalEntryForm from './JournalEntryForm';
+import JournalAnalytics from './JournalAnalytics';
 
-const TABS = ['Daily PnL', 'Closed trades', 'Charts'];
+const TABS = ['Daily PnL', 'Closed trades', 'Charts', 'My Journal'];
 
 function fmt(n, d = 2) {
   if (n == null) return '—';
@@ -558,20 +560,38 @@ export default function TradingJournal({ user }) {
   const [tab, setTab] = useState('Daily PnL');
   const [selectedAccountId, setSelectedAccountId] = useState(null);
 
+  const userEmail = user?.email || '';
+
+  // FILTER BY USER — prevent cross-user data leakage
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 10),
+    queryKey: ['challenge-accounts-journal', userEmail],
+    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
+    enabled: !!userEmail,
     select: d => d.filter(a => ['active', 'funded', 'passed'].includes(a.status)),
   });
 
   const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
 
   const { data: trades = [], isLoading } = useQuery({
-    queryKey: ['trade-records-journal', account?.account_id],
+    queryKey: ['trade-records-journal', account?.account_id, userEmail],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
-    enabled: !!account?.account_id,
+    enabled: !!account?.account_id && !!userEmail,
     refetchInterval: 30000,
   });
+
+  // ── Actual journal entries (TradingJournalEntry entity) ──────────────────
+  const qc = useQueryClient();
+  const { data: journalEntries = [] } = useQuery({
+    queryKey: ['journal-entries', userEmail, account?.account_id],
+    queryFn: () => base44.entities.TradingJournalEntry.filter(
+      { user_email: userEmail, account_id: account?.account_id },
+      '-entry_date', 100
+    ),
+    enabled: !!userEmail && !!account?.account_id,
+  });
+
+  const [showEntryForm, setShowEntryForm] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
 
   return (
     <div>
@@ -598,22 +618,33 @@ export default function TradingJournal({ user }) {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b mb-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        {TABS.map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors mr-1"
-            style={{
-              borderBottomColor: tab === t ? '#3b82f6' : 'transparent',
-              color: tab === t ? '#3b82f6' : '#94a3b8',
-            }}>
-            {t}
-          </button>
-        ))}
-      </div>
+      {/* Empty state — no accounts */}
+      {accounts.length === 0 && (
+        <div className="text-center py-20 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No active trading accounts</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Purchase a challenge to start journaling your trades</p>
+        </div>
+      )}
+
+      {/* Tabs — only show when accounts exist */}
+      {accounts.length > 0 && (
+        <div className="flex border-b mb-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          {TABS.map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors mr-1"
+              style={{
+                borderBottomColor: tab === t ? '#3b82f6' : 'transparent',
+                color: tab === t ? '#3b82f6' : '#94a3b8',
+              }}>
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
-      {isLoading ? (
+      {accounts.length === 0 ? null : isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
@@ -622,6 +653,76 @@ export default function TradingJournal({ user }) {
           {tab === 'Daily PnL' && <DailyPnLTab trades={trades} />}
           {tab === 'Closed trades' && <ClosedTradesTab trades={trades} />}
           {tab === 'Charts' && <ChartsTab trades={trades} />}
+          {tab === 'My Journal' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-foreground">My Journal Entries</h2>
+                <button
+                  onClick={() => { setEditingEntry(null); setShowEntryForm(true); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all"
+                  style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 12px rgba(255,92,0,0.3)' }}>
+                  <Plus className="w-4 h-4" /> New Entry
+                </button>
+              </div>
+
+              <JournalAnalytics entries={journalEntries} />
+
+              {journalEntries.length === 0 ? (
+                <div className="text-center py-16 rounded-2xl mt-4" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">No journal entries yet. Start tracking your trading!</p>
+                </div>
+              ) : (
+                <div className="mt-6 space-y-3">
+                  {journalEntries.slice(0, 30).map(entry => (
+                    <div key={entry.id}
+                      onClick={() => { setEditingEntry(entry); setShowEntryForm(true); }}
+                      className="rounded-xl p-4 cursor-pointer hover:bg-white/[0.03] transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-primary">{entry.entry_date}</span>
+                          <span className="text-xs font-mono text-muted-foreground capitalize">{entry.period_type || 'daily'}</span>
+                          {(entry.emotions || []).slice(0, 3).map(e => (
+                            <span key={e} className="px-2 py-0.5 rounded-full text-[10px] font-mono capitalize"
+                              style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>{e}</span>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {entry.pnl != null && (
+                            <span className="text-sm font-bold font-mono" style={{ color: entry.pnl >= 0 ? '#4ade80' : '#f87171' }}>
+                              {entry.pnl >= 0 ? '+' : ''}${entry.pnl}
+                            </span>
+                          )}
+                          {entry.win_rate != null && (
+                            <span className="text-xs text-muted-foreground">WR: {entry.win_rate}%</span>
+                          )}
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                      {entry.notes && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{entry.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showEntryForm && (
+                <JournalEntryForm
+                  entry={editingEntry}
+                  accountId={account?.account_id}
+                  userEmail={userEmail}
+                  onClose={() => { setShowEntryForm(false); setEditingEntry(null); }}
+                  onSaved={() => {
+                    setShowEntryForm(false);
+                    setEditingEntry(null);
+                    qc.invalidateQueries({ queryKey: ['journal-entries', userEmail, account?.account_id] });
+                  }}
+                />
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

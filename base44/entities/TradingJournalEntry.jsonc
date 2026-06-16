@@ -7,22 +7,91 @@
     "update": "owner",
     "delete": "owner"
   },
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "update": {
+      "user_email": "{{user.email}}"
+    },
+    "delete": {
+      "user_email": "{{user.email}}"
+    }
+  },
   "properties": {
-    "account_id": {
+    "user_email": {
       "type": "string"
     },
-    "user_email": {
+    "account_id": {
       "type": "string"
     },
     "entry_date": {
       "type": "string",
       "format": "date"
     },
-    "title": {
+    "period_type": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default": "daily"
+    },
+    "notes": {
       "type": "string"
     },
-    "content": {
+    "emotions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mistakes": {
       "type": "string"
+    },
+    "strengths": {
+      "type": "string"
+    },
+    "strategy_notes": {
+      "type": "string"
+    },
+    "total_trades": {
+      "type": "number"
+    },
+    "winning_trades": {
+      "type": "number"
+    },
+    "losing_trades": {
+      "type": "number"
+    },
+    "pnl": {
+      "type": "number"
+    },
+    "best_trade_pnl": {
+      "type": "number"
+    },
+    "worst_trade_pnl": {
+      "type": "number"
+    },
+    "win_rate": {
+      "type": "number"
+    },
+    "avg_rr": {
+      "type": "number"
+    },
+    "most_traded_symbol": {
+      "type": "string"
+    },
+    "discipline_score": {
+      "type": "number"
+    },
+    "consistency_score": {
+      "type": "number"
+    },
+    "lot_size": {
+      "type": "string",
+      "default": "0.01"
     },
     "mood": {
       "type": "string",
@@ -33,18 +102,6 @@
         "bad",
         "terrible"
       ]
-    },
-    "pnl": {
-      "type": "number"
-    },
-    "trades_taken": {
-      "type": "number"
-    },
-    "followed_plan": {
-      "type": "boolean"
-    },
-    "lessons_learned": {
-      "type": "string"
     },
     "tags": {
       "type": "array",
@@ -60,6 +117,7 @@
     }
   },
   "required": [
-    "entry_date"
+    "entry_date",
+    "user_email"
   ]
 }
