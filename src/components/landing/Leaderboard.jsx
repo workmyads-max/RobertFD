@@ -18,17 +18,7 @@ const COUNTRY_NAMES = {
   NG:'Nigeria', ZA:'South Africa', BR:'Brazil', TH:'Thailand', MY:'Malaysia',
 };
 
-// Sample fallback data for demo when no real accounts exist
-const SAMPLE_TRADERS = [
-  { username:'ALPHA_X',   country:'AE', account_size:100000, pnl:14800, win_rate:78, challenge_type:'funded',        status:'funded' },
-  { username:'FURY_22',   country:'US', account_size:50000,  pnl:6200,  win_rate:74, challenge_type:'instant',       status:'active' },
-  { username:'NOVA_PRO',  country:'GB', account_size:200000, pnl:24600, win_rate:71, challenge_type:'funded',        status:'funded' },
-  { username:'BOLT_33',   country:'SG', account_size:25000,  pnl:2800,  win_rate:69, challenge_type:'instant_light', status:'active' },
-  { username:'STORM_KE',  country:'NG', account_size:100000, pnl:10900, win_rate:67, challenge_type:'funded',        status:'funded' },
-  { username:'EDGE_AU',   country:'AU', account_size:50000,  pnl:4400,  win_rate:65, challenge_type:'instant',       status:'active' },
-  { username:'BLAZE_JP',  country:'JP', account_size:100000, pnl:6800,  win_rate:63, challenge_type:'funded',        status:'funded' },
-  { username:'TITAN_IN',  country:'IN', account_size:25000,  pnl:1960,  win_rate:61, challenge_type:'instant',       status:'active' },
-];
+
 
 const MEDAL = {
   1: { color:'#FFD700', bg:'rgba(255,215,0,0.08)',   border:'rgba(255,215,0,0.3)',   icon:'🥇' },
@@ -52,20 +42,23 @@ export default function Leaderboard() {
     staleTime: 60000,
   });
 
-  const realTraders = accounts
+  // Mask email for privacy: "john.doe@gmail.com" → "j***e"
+  const maskName = (email) => {
+    if (!email) return 'Trader';
+    const local = email.split('@')[0];
+    if (local.length <= 2) return local[0] + '***';
+    return local[0] + '***' + local[local.length - 1];
+  };
+
+  const baseList = accounts
     .filter(a => (a.pnl || 0) > 0)
     .map(a => ({
       ...a,
-      username: a.login_credentials || `Trader_${(a.account_id || a.id || '').slice(-4)}`,
+      username: maskName(a.user_email),
       profitRatio: ((a.pnl || 0) / (a.account_size || 1)) * 100,
     }))
     .sort((x, y) => y.profitRatio - x.profitRatio)
     .slice(0, 20);
-
-  // Use real data if available, else sample
-  const baseList = realTraders.length >= 3
-    ? realTraders
-    : SAMPLE_TRADERS.map(t => ({ ...t, profitRatio: (t.pnl / t.account_size) * 100 })).sort((a, b) => b.profitRatio - a.profitRatio);
 
   const countries = [...new Set(baseList.map(t => t.country?.toUpperCase()).filter(Boolean))].slice(0, 8);
   const filtered = activeCountry === 'all' ? baseList : baseList.filter(t => t.country?.toUpperCase() === activeCountry);
@@ -197,7 +190,7 @@ export default function Leaderboard() {
           {/* Footer note */}
           <div className="px-5 py-3 text-[9px] font-mono text-muted-foreground/40 text-center"
             style={{ background:'rgba(255,255,255,0.01)' }}>
-            {realTraders.length >= 3 ? '● Live rankings from funded accounts' : '● Sample data — Rankings update as accounts are funded'}
+            ● Live rankings from funded accounts
           </div>
         </motion.div>
 

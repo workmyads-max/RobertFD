@@ -178,6 +178,10 @@
     "dd_breach_value": {
       "type": "number"
     },
+    "country": {
+      "type": "string",
+      "description": "Two-letter country code from the purchase order (e.g. US, GB, AE)"
+    },
     "rule_snapshot": {
       "type": "object",
       "description": "Immutable copy of ChallengePlan rules at time of purchase.",

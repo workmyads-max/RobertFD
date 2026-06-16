@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
             account_size: order.account_size,
             leverage: order.leverage || '1:100',
             platform: 'mt5',
+            country: order.country || null,
             rule_snapshot: order.rule_snapshot || null,
           });
         } catch (e) { console.error('[Checkout.com] Provisioning failed (non-blocking):', e.message); }

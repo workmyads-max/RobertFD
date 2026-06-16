@@ -119,21 +119,30 @@ export default function HomeLeaderboard() {
   const { data: accounts = [] } = useQuery({
     queryKey: ['home-leaderboard'],
     queryFn: async () => {
-      const [funded, instant] = await Promise.all([
+      const [funded, instant, instantLight] = await Promise.all([
         base44.entities.ChallengeAccount.filter({ status: 'funded' }, '-pnl', 100),
         base44.entities.ChallengeAccount.filter({ status: 'active', challenge_type: 'instant' }, '-pnl', 50),
+        base44.entities.ChallengeAccount.filter({ status: 'active', challenge_type: 'instant_light' }, '-pnl', 50),
       ]);
-      return [...funded, ...instant];
+      return [...funded, ...instant, ...instantLight];
     },
     refetchInterval: 45000,
     staleTime: 30000,
   });
 
+  // Mask email for privacy: "john.doe@gmail.com" → "j***e"
+  const maskName = (email) => {
+    if (!email) return 'Trader';
+    const local = email.split('@')[0];
+    if (local.length <= 2) return local[0] + '***';
+    return local[0] + '***' + local[local.length - 1];
+  };
+
   const sorted = accounts
     .filter(a => (a.pnl || 0) > 0)
     .map(a => ({
       ...a,
-      username: a.login_credentials || `Trader_${(a.account_id || '').slice(-4)}`,
+      username: maskName(a.user_email),
     }))
     .sort((x, y) => ((y.pnl || 0) / (y.account_size || 1)) - ((x.pnl || 0) / (x.account_size || 1)))
     .slice(0, 15);

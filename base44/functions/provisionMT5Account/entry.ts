@@ -141,6 +141,15 @@ Deno.serve(async (req) => {
       console.log(`[provisionMT5Account] Deposit: ${depText.slice(0, 200)}`);
     }
 
+    // Fetch country from Order if available
+    let country = body.country || null;
+    if (!country && order_id) {
+      try {
+        const orders = await base44.asServiceRole.entities.Order.filter({ order_id });
+        country = orders[0]?.country || null;
+      } catch (_) {}
+    }
+
     // Save to ChallengeAccount
     let newAccount;
     try {
@@ -165,6 +174,7 @@ Deno.serve(async (req) => {
         provisioned_at: new Date().toISOString(),
         high_water_mark: account_size,
         daily_start_balance: account_size,
+        country: country || undefined,
         rule_snapshot: rule_snapshot || null,
       });
       console.log(`[provisionMT5Account] ✅ ChallengeAccount saved: id=${newAccount?.id}, user_email=${user_email}`);
