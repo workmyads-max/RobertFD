@@ -155,7 +155,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             )}
             {collapsed && <div className="my-2 mx-2 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />}
             {[
-              { id: 'admin-risk-center', label: 'Risk System', icon: Shield, permission: 'manage_settings' },
+              { id: 'admin-risk-center', label: 'Risk System', icon: Shield, permission: 'manage_risk' },
               { id: 'admin-visibility', label: 'Platform Visibility', icon: Zap, permission: 'manage_settings' }
             ].filter(item => isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
@@ -195,7 +195,6 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               { id: 'admin-challenges', label: 'Manage Challenges', icon: Zap, permission: 'manage_challenges' },
               { id: 'admin-terminal', label: 'Terminal Control', icon: Sliders, permission: 'manage_settings' },
               { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield, permission: 'manage_risk' },
-              { id: 'admin-risk-center', label: 'Risk Center', icon: Shield, permission: 'manage_risk' },
               { id: 'admin-funded-review', label: 'Funded Review Queue', icon: ShieldCheck, permission: 'manage_risk' },
               { id: 'admin-risk', label: 'Risk Management', icon: AlertTriangle, permission: 'manage_risk' },
               { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag, permission: 'manage_coupons' },
