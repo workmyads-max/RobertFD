@@ -155,11 +155,11 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       border: '1px solid rgba(255,255,255,0.08)',
     }}>
       {/* Top bar: type + status */}
-      <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+      <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold tracking-widest" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
+          <span className="text-xs font-semibold tracking-wide" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
           <span className="text-white/20 text-xs">·</span>
-          <span className="text-[11px] font-bold tracking-widest text-white/50">{phaseLabel}</span>
+          <span className="text-xs font-semibold tracking-wide text-white/50">{phaseLabel}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusColor }} />
@@ -168,31 +168,31 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       </div>
 
       {/* Main body */}
-      <div className="px-5 py-5">
+      <div className="px-6 py-6">
         {/* Account ID */}
-        <div className="text-xs font-mono font-bold text-white/50 mb-3 tracking-widest">{account.account_id || account.mt_login || '—'}</div>
+        <div className="text-xs font-semibold text-white/40 mb-4 tracking-wide uppercase">{account.account_id || account.mt_login || '—'}</div>
 
         {/* Size + P&L */}
-        <div className="flex items-end justify-between mb-5">
+        <div className="flex items-end justify-between mb-6">
           <div>
-            <div className="text-[11px] text-white/30 font-mono mb-1">ACCOUNT SIZE</div>
-            <div className="text-4xl font-black text-white tracking-tight">${accountSize.toLocaleString()}</div>
+            <div className="text-[10px] text-white/25 font-semibold tracking-wide mb-1">ACCOUNT SIZE</div>
+            <div className="text-4xl font-bold text-white tracking-tight">${accountSize.toLocaleString()}</div>
           </div>
           <div className="text-right">
-            <div className="text-[11px] text-white/30 font-mono mb-1">TOTAL P&L</div>
-            <div className={`text-2xl font-black tracking-tight ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className="text-[10px] text-white/25 font-semibold tracking-wide mb-1">TOTAL P&L</div>
+            <div className={`text-2xl font-bold tracking-tight ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {totalPnl >= 0 ? '+' : ''}${Math.abs(totalPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         </div>
 
         {/* Profit Target Progress */}
-        <div className="mb-5">
+        <div className="mb-6">
           <div className="flex items-center justify-between text-[11px] mb-2">
-            <span className="text-white/40 font-mono">PROFIT TARGET</span>
-            <span className="font-bold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
+            <span className="text-white/35 font-medium tracking-wide">PROFIT TARGET</span>
+            <span className="font-semibold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
           </div>
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
             <motion.div className="h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
@@ -202,23 +202,23 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
         </div>
 
         {/* Today's P&L highlight */}
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-6">
           {todayPnl >= 0
             ? <TrendingUp className="w-4 h-4 text-emerald-400" />
             : <TrendingDown className="w-4 h-4 text-red-400" />}
-          <span className={`text-sm font-bold ${todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className={`text-sm font-semibold ${todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {todayPnl >= 0 ? '+' : ''}${fmt(todayPnl)} today
           </span>
           <span className="text-white/20 text-xs ml-1">·</span>
-          <span className="text-xs text-white/40">Equity <span className="text-white/70 font-mono">${fmt(equity)}</span></span>
+          <span className="text-xs text-white/40">Equity <span className="text-white/70 font-semibold">${fmt(equity)}</span></span>
         </div>
 
-        {/* Details button */}
+        {/* Manage button */}
         <button
           onClick={() => setShowCredentials?.(true)}
-          className="w-full py-2.5 rounded-xl text-sm font-bold tracking-wide flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+          className="w-full py-3 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
           style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', color: '#fff' }}>
-          Details <ChevronRight className="w-4 h-4" />
+          Manage <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -232,8 +232,8 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
         ].map((item, i) => (
           <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-            <div className="text-[9px] font-bold tracking-widest text-white/25 mb-1">{item.label}</div>
-            <div className={`text-[11px] font-bold ${item.highlight ? 'text-primary' : 'text-white/70'}`}>{item.value}</div>
+            <div className="text-[9px] font-semibold tracking-wide text-white/25 mb-1">{item.label}</div>
+            <div className={`text-[11px] font-semibold ${item.highlight ? 'text-primary' : 'text-white/70'}`}>{item.value}</div>
           </div>
         ))}
       </div>
