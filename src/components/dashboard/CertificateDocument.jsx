@@ -1,6 +1,6 @@
 import React from 'react';
 import XFLogo from '@/components/shared/XFLogo';
-import { QrCode, CheckCircle } from 'lucide-react';
+// No icon imports needed — using inline SVGs for html2canvas compatibility
 
 const FIRM = {
   name: 'XFUNDED TRADER',
@@ -129,29 +129,6 @@ function Watermark() {
   );
 }
 
-// ─── Corner accent marks ───────────────────────────────────────────────────
-function Corners() {
-  const marks = [
-    { top: '24px', left: '24px' },
-    { top: '24px', right: '24px', flipH: true },
-    { bottom: '24px', left: '24px', flipV: true },
-    { bottom: '24px', right: '24px', flipH: true, flipV: true },
-  ];
-  return marks.map((pos, i) => (
-    <div key={i} style={{
-      position: 'absolute', ...pos, width: '40px', height: '40px', pointerEvents: 'none',
-      transform: `${pos.flipH ? 'scaleX(-1)' : ''} ${pos.flipV ? 'scaleY(-1)' : ''}`,
-    }}>
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-        <line x1="2" y1="2" x2="18" y2="2" stroke="#FF5C00" strokeWidth="1.5" opacity="0.6" />
-        <line x1="2" y1="2" x2="2" y2="18" stroke="#FF5C00" strokeWidth="1.5" opacity="0.6" />
-        <line x1="2" y1="10" x2="12" y2="2" stroke="#FF5C00" strokeWidth="0.4" opacity="0.2" />
-        <circle cx="6" cy="6" r="1.5" fill="#FF5C00" opacity="0.5" />
-      </svg>
-    </div>
-  ));
-}
-
 // ─── Phase badge ───────────────────────────────────────────────────────────
 function Badge({ type }) {
   const b = BADGES[type] || BADGES.phase1_passed;
@@ -236,36 +213,11 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       color: T.text,
       border: forCapture ? 'none' : '1px solid rgba(255,255,255,0.06)',
     }}>
-      {/* Ambient glow top — subtle solid oval */}
-      <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '120px', background: 'rgba(255,92,0,0.03)', borderRadius: '50%', pointerEvents: 'none' }} />
-
       {/* Chart watermark */}
       <Watermark />
 
-      {/* Border frame */}
-      <div style={{ position: 'absolute', inset: '22px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', inset: '26px', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '2px', pointerEvents: 'none' }} />
-
-      {/* Corner marks */}
-      <Corners />
-
-      {/* Side tick marks — Bloomberg terminal style */}
-      <div style={{ position: 'absolute', top: '50%', left: '30px', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none' }}>
-        {['1.0842', '1.0838', '1.0834', '1.0830', '1.0826', '1.0822'].map((v, i) => (
-          <div key={`l${i}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ width: '8px', height: '1px', background: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)' }} />
-            <span style={{ color: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)', fontSize: '5px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>{v}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ position: 'absolute', top: '50%', right: '30px', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none', alignItems: 'flex-end' }}>
-        {['2,652.40', '2,651.80', '2,651.20', '2,650.60', '2,650.00', '2,649.40'].map((v, i) => (
-          <div key={`r${i}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ color: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)', fontSize: '5px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>{v}</span>
-            <div style={{ width: '8px', height: '1px', background: i === 2 ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.04)' }} />
-          </div>
-        ))}
-      </div>
+      {/* Clean border frame */}
+      <div style={{ position: 'absolute', inset: '24px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '2px', pointerEvents: 'none' }} />
 
       {/* ── Header ── */}
       <div style={{
@@ -274,11 +226,6 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         paddingBottom: '16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        {/* Tiny bull/bear accent */}
-        <svg width="20" height="12" viewBox="0 0 20 12" fill="none" style={{ opacity: 0.2 }}>
-          <path d="M2 10 L5 4 L8 7 L11 2 L14 5 L17 1" stroke="#C5A059" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M15 1 L17 1 L17 3" stroke="#C5A059" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
         <XFLogo size="md" />
         <Badge type={type} />
       </div>
@@ -288,16 +235,15 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         position: 'absolute', top: '120px', left: '56px', right: '56px', bottom: '100px',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* Crown icon */}
+        {/* Crown icon — clean, no glow */}
         <div style={{
-          width: '56px', height: '56px', borderRadius: '16px',
-          background: 'rgba(255,92,0,0.08)',
-          border: '1px solid rgba(255,92,0,0.2)',
+          width: '52px', height: '52px', borderRadius: '12px',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           marginBottom: '20px',
-          boxShadow: '0 0 30px rgba(255,92,0,0.1)',
         }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={badge.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C5A059" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
             <path d="M3 20h18" />
           </svg>
@@ -317,11 +263,11 @@ export default function CertificateDocument({ cert, forCapture = false }) {
           {isWithdrawal ? 'OF WITHDRAWAL' : 'OF COMPLETION'}
         </div>
 
-        {/* Gold divider — use solid lines to avoid html2canvas gradient bug */}
+        {/* Clean divider */}
         <div style={{ display: 'flex', alignItems: 'center', width: '55%', maxWidth: '420px', margin: '22px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(197,160,89,0.35)' }} />
-          <div style={{ width: '8px', height: '8px', background: '#C5A059', transform: 'rotate(45deg)', margin: '0 14px', boxShadow: '0 0 10px rgba(197,160,89,0.5)' }} />
-          <div style={{ flex: 1, height: '1px', background: 'rgba(197,160,89,0.35)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
+          <div style={{ width: '6px', height: '6px', background: '#C5A059', transform: 'rotate(45deg)', margin: '0 14px' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
         </div>
 
         {/* Presented to */}
@@ -348,7 +294,7 @@ export default function CertificateDocument({ cert, forCapture = false }) {
           fontFamily: "'Inter', sans-serif", lineHeight: 1.6,
         }}>
           {isWithdrawal ? (
-            <>For successfully processed a withdrawal from{' '}<span style={{ color: badge.color, fontWeight: 700 }}>XFUNDED TRADER</span></>
+            <>For successfully processing a withdrawal from{' '}<span style={{ color: badge.color, fontWeight: 700 }}>XFUNDED TRADER</span></>
           ) : (
             <>For successfully completing the{' '}<span style={{ color: badge.color, fontWeight: 700 }}>{subtitle}</span></>
           )}
@@ -362,44 +308,34 @@ export default function CertificateDocument({ cert, forCapture = false }) {
             : 'You have demonstrated exceptional skill, discipline and consistency.'}
         </div>
 
-        {/* Trading philosophy mantra */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px', marginTop: '22px',
-          color: 'rgba(197,160,89,0.3)', fontSize: '8px', fontWeight: 700,
-          letterSpacing: '0.25em', fontFamily: "'Inter', sans-serif",
-        }}>
-          <span style={{ width: '14px', height: '1px', background: 'rgba(197,160,89,0.2)' }} />
-          DISCIPLINE
-          <span style={{ width: '4px', height: '4px', background: 'rgba(197,160,89,0.3)', borderRadius: '50%' }} />
-          CONSISTENCY
-          <span style={{ width: '4px', height: '4px', background: 'rgba(197,160,89,0.3)', borderRadius: '50%' }} />
-          EXECUTION
-          <span style={{ width: '14px', height: '1px', background: 'rgba(197,160,89,0.2)' }} />
-        </div>
 
-        {/* Stats row */}
+
+        {/* Stats row — always 4 uniform boxes */}
         <div style={{
-          display: 'flex', gap: '14px', marginTop: '26px', width: '100%', maxWidth: '580px', justifyContent: 'center',
+          display: 'flex', gap: '14px', marginTop: '28px', width: '100%', maxWidth: '620px', justifyContent: 'center',
         }}>
           {(isWithdrawal
             ? [
               { label: 'WITHDRAWAL AMOUNT', value: cert?.withdrawal_amount ? `$${Number(cert.withdrawal_amount).toLocaleString()}` : '—' },
-              { label: 'ACCOUNT', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '—' },
+              { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '—' },
+              { label: 'DATE', value: cert?.issue_date || new Date().toLocaleDateString('en-GB') },
+              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '—' },
             ]
             : [
               { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '—' },
+              { label: 'CHALLENGE TYPE', value: (cert?.challenge_type || 'two-step').replace('-', ' ').toUpperCase() },
+              { label: 'DATE', value: cert?.issue_date || new Date().toLocaleDateString('en-GB') },
+              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '—' },
             ]
-          ).concat([
-            { label: 'DATE', value: cert?.issue_date || new Date().toLocaleDateString('en-GB') },
-            { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '—' },
-          ]).map((s) => (
+          ).map((s) => (
             <div key={s.label} style={{
-              flex: 1, background: T.glassBg,
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: '10px', padding: '10px 12px', textAlign: 'center',
+              flex: '1 1 0', minWidth: 0,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px', padding: '12px 10px', textAlign: 'center',
             }}>
-              <div style={{ color: badge.color, fontSize: '13px', fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>{s.value}</div>
-              <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.1em', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>{s.label}</div>
+              <div style={{ color: '#C5A059', fontSize: '13px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{s.value}</div>
+              <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginTop: '5px', fontFamily: "'Inter', sans-serif" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -410,13 +346,13 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         position: 'absolute', bottom: '44px', left: '56px', right: '56px',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         paddingTop: '14px',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
       }}>
-        {/* DATE */}
+        {/* Website */}
         <div>
-          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>DATE</div>
+          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '6px', fontFamily: "'Inter', sans-serif" }}>VERIFY AT</div>
           <div style={{ color: 'rgba(226,232,240,0.7)', fontSize: '10px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
-            {cert?.issue_date || new Date().toLocaleDateString('en-GB')}
+            {FIRM.website}
           </div>
         </div>
 
@@ -425,33 +361,11 @@ export default function CertificateDocument({ cert, forCapture = false }) {
 
         {/* CEO */}
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>CEO</div>
+          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>CERTIFIED BY</div>
           <Signature />
           <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.25)', marginLeft: 'auto', marginBottom: '3px' }} />
           <div style={{ color: 'rgba(226,232,240,0.8)', fontSize: '9px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
           <div style={{ color: T.muted, fontSize: '7px', marginTop: '1px', fontFamily: "'Inter', sans-serif" }}>Chief Executive Officer</div>
-        </div>
-      </div>
-
-      {/* ── QR Verification ── */}
-      <div style={{
-        position: 'absolute', bottom: '108px', left: '56px',
-        display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '7px 12px',
-        background: T.glassBg,
-        border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: '8px',
-      }}>
-        <div style={{
-          width: '40px', height: '40px', background: '#0a0a0a',
-          borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid rgba(197,160,89,0.3)',
-        }}>
-          <QrCode style={{ width: '26px', height: '26px', color: '#C5A059' }} />
-        </div>
-        <div>
-          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.08em', fontFamily: "'Inter', sans-serif" }}>VERIFY CERTIFICATE</div>
-          <div style={{ color: 'rgba(226,232,240,0.7)', fontSize: '9px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>{FIRM.verifyUrl}</div>
         </div>
       </div>
     </div>
