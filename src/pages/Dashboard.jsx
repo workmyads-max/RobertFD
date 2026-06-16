@@ -177,7 +177,12 @@ export default function Dashboard() {
   const bannerNotification = notifications.find(n =>
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
   );
-  const popupNotification = null;
+  // Find the most recent active popup notification that hasn't been dismissed this session
+  const [dismissedPopupIds, setDismissedPopupIds] = useState(new Set());
+  const popupNotification = notifications
+    .filter(n => n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all'))
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .find(n => !dismissedPopupIds.has(n.id)) || null;
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);
@@ -272,7 +277,7 @@ export default function Dashboard() {
       {/* Clean dark background — no animated overlays */}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
-      {popupNotification && <DashboardPopupNotification notification={popupNotification} />}
+      {popupNotification && <DashboardPopupNotification notification={popupNotification} onClose={() => setDismissedPopupIds(prev => new Set([...prev, popupNotification.id]))} />}
       {user && <UserWarningPanel user={user} />}
 
       {/* Live DD Guard — runs every 15s when trader has dashboard open */}
