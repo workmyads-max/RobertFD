@@ -71,7 +71,13 @@ Deno.serve(async (req) => {
     const masterPassword = genPassword();
     const investorPassword = genPassword();
     const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : 100;
-    const groupName = 'HAR\\MAN15\\contest.1';
+    // MT5 group mapping per challenge type
+    // Phase1 (two-step): HAR\MAN15\contest.1 | Instant: HAR\MAN15\LiveG.1 | Instant Light: HAR\MAN15\contest.3
+    const groupName = challenge_type === 'instant'
+      ? 'HAR\\MAN15\\LiveG.1'
+      : challenge_type === 'instant_light'
+        ? 'HAR\\MAN15\\contest.3'
+        : 'HAR\\MAN15\\contest.1'; // two-step (default)
 
     // Build custom account name: "100k Phase1 XFunded Trader 2 Step"
     const sizeK = account_size >= 1000000 ? `${account_size / 1000000}M` : `${account_size / 1000}K`;
