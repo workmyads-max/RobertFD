@@ -25,15 +25,9 @@ const TABS = [
 function VaultIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="avGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="20" width="48" height="36" rx="6" fill="url(#avGrad)" />
+      <rect x="8" y="20" width="48" height="36" rx="6" fill={ACCENT} opacity="0.85" />
       <rect x="8" y="20" width="48" height="36" rx="6" fill="none" stroke="#AADD00" strokeWidth="1.5" />
-      <rect x="12" y="24" width="40" height="28" rx="4" fill="#222" opacity="0.3" />
+      <rect x="12" y="24" width="40" height="28" rx="4" fill="#1a1a1a" opacity="0.3" />
       <circle cx="32" cy="38" r="10" fill="#1a1a1a" stroke={ACCENT} strokeWidth="2" />
       <circle cx="32" cy="38" r="3" fill={ACCENT} />
       <line x1="32" y1="28" x2="32" y2="32" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" />
@@ -46,14 +40,8 @@ function VaultIcon({ size = 52 }) {
 function MoneyBagIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="abGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill={ACCENT} opacity="0.3" />
-      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill="url(#abGrad)" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill={ACCENT} opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
       <path d="M22 28C22 28, 26 22, 32 22C38 22, 42 28, 42 28" fill="#1a1a1a" opacity="0.3" />
       <text x="32" y="40" textAnchor="middle" fontSize="10" fontWeight="900" fill="#1a1a1a">$</text>
     </svg>
@@ -62,15 +50,9 @@ function MoneyBagIcon({ size = 52 }) {
 function HourglassIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="ahGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill={ACCENT} opacity="0.3" />
-      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill="url(#ahGrad)" stroke="#AADD00" strokeWidth="1.5" />
-      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill="url(#ahGrad)" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill={ACCENT} opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill={ACCENT} opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
       <rect x="18" y="9" width="28" height="5" rx="2" fill={ACCENT} />
       <rect x="18" y="50" width="28" height="5" rx="2" fill={ACCENT} />
     </svg>
@@ -104,7 +86,7 @@ export default function Affiliate({ user }) {
   const { data: profile } = useQuery({
     queryKey: ['affiliate-profile', user?.email],
     queryFn: async () => {
-      const profiles = await base44.entities.AffiliateProfile.filter({ user_email: user?.email });
+      const profiles = await base44.entities.AffiliateProfile.filter({ user_email: user?.email }) || [];
       if (profiles.length > 0) return profiles[0];
       const code = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
       return base44.entities.AffiliateProfile.create({

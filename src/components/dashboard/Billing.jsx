@@ -180,13 +180,7 @@ function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
 function VaultIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="bvGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="20" width="48" height="36" rx="6" fill="url(#bvGrad)" />
+      <rect x="8" y="20" width="48" height="36" rx="6" fill={ACCENT} opacity="0.85" />
       <rect x="8" y="20" width="48" height="36" rx="6" fill="none" stroke="#AADD00" strokeWidth="1.5" />
       <circle cx="32" cy="38" r="10" fill="#1a1a1a" stroke={ACCENT} strokeWidth="2" />
       <circle cx="32" cy="38" r="3" fill={ACCENT} />
@@ -196,13 +190,7 @@ function VaultIcon({ size = 52 }) {
 function ReceiptIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="brGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <rect x="14" y="6" width="36" height="52" rx="4" fill="url(#brGrad)" stroke="#93c5fd" strokeWidth="1.5" />
+      <rect x="14" y="6" width="36" height="52" rx="4" fill="#60a5fa" opacity="0.85" stroke="#93c5fd" strokeWidth="1.5" />
       <line x1="22" y1="18" x2="42" y2="18" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
       <line x1="22" y1="26" x2="38" y2="26" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
       <line x1="22" y1="34" x2="42" y2="34" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" opacity="0.5" />

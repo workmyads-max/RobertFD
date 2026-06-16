@@ -67,15 +67,9 @@ async function downloadPDF(cert, setLoading) {
 function VaultIcon({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="vaultGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#CCFF00" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="20" width="48" height="36" rx="6" fill="url(#vaultGrad)" />
+      <rect x="8" y="20" width="48" height="36" rx="6" fill="#CCFF00" opacity="0.85" />
       <rect x="8" y="20" width="48" height="36" rx="6" fill="none" stroke="#AADD00" strokeWidth="1.5" />
-      <rect x="12" y="24" width="40" height="28" rx="4" fill="#222" opacity="0.3" />
+      <rect x="12" y="24" width="40" height="28" rx="4" fill="#1a1a1a" opacity="0.3" />
       <circle cx="32" cy="38" r="10" fill="#1a1a1a" stroke="#CCFF00" strokeWidth="2" />
       <circle cx="32" cy="38" r="3" fill="#CCFF00" />
       <line x1="32" y1="28" x2="32" y2="32" stroke="#CCFF00" strokeWidth="2" strokeLinecap="round" />
@@ -89,14 +83,8 @@ function VaultIcon({ size = 48 }) {
 function MoneyBagIcon({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="bagGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#CCFF00" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill="#CCFF00" opacity="0.3" />
-      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill="url(#bagGrad)" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill="#CCFF00" opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
       <path d="M22 28C22 28, 26 22, 32 22C38 22, 42 28, 42 28" fill="#1a1a1a" opacity="0.3" />
       <text x="32" y="40" textAnchor="middle" fontSize="10" fontWeight="900" fill="#1a1a1a">$</text>
       <line x1="28" y1="22" x2="36" y2="22" stroke="#CCFF00" strokeWidth="2" strokeLinecap="round" />
@@ -107,15 +95,9 @@ function MoneyBagIcon({ size = 48 }) {
 function HourglassIcon({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="hourGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#CCFF00" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#88AA00" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill="#CCFF00" opacity="0.3" />
-      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill="url(#hourGrad)" stroke="#AADD00" strokeWidth="1.5" />
-      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill="url(#hourGrad)" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill="#CCFF00" opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
+      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill="#CCFF00" opacity="0.85" stroke="#AADD00" strokeWidth="1.5" />
       <rect x="18" y="9" width="28" height="5" rx="2" fill="#CCFF00" />
       <rect x="18" y="50" width="28" height="5" rx="2" fill="#CCFF00" />
       <line x1="32" y1="14" x2="32" y2="28" stroke="#1a1a1a" strokeWidth="1" opacity="0.5" />

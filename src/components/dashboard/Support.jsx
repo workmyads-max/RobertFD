@@ -31,7 +31,10 @@ export default function Support() {
 
   const { data: tickets = [] } = useQuery({
     queryKey: ['support-tickets'],
-    queryFn: () => base44.entities.SupportTicket.list('-created_date', 20),
+    queryFn: async () => {
+      const result = await base44.entities.SupportTicket.list('-created_date', 20);
+      return result || [];
+    },
   });
 
   const createMutation = useMutation({

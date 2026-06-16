@@ -27,15 +27,9 @@ const DISPLAY_WITHDRAWAL_FEE = 25;
 function VaultIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="wvGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FF5C00" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#CC4400" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="20" width="48" height="36" rx="6" fill="url(#wvGrad)" />
+      <rect x="8" y="20" width="48" height="36" rx="6" fill="#FF5C00" opacity="0.85" />
       <rect x="8" y="20" width="48" height="36" rx="6" fill="none" stroke="#FF7A2F" strokeWidth="1.5" />
-      <rect x="12" y="24" width="40" height="28" rx="4" fill="#222" opacity="0.3" />
+      <rect x="12" y="24" width="40" height="28" rx="4" fill="#1a1a1a" opacity="0.3" />
       <circle cx="32" cy="38" r="10" fill="#1a1a1a" stroke="#FF5C00" strokeWidth="2" />
       <circle cx="32" cy="38" r="3" fill="#FF5C00" />
     </svg>
@@ -44,14 +38,8 @@ function VaultIcon({ size = 52 }) {
 function MoneyBagIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="wbGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#047857" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill="#10b981" opacity="0.3" />
-      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill="url(#wbGrad)" stroke="#34d399" strokeWidth="1.5" />
+      <path d="M18 28C18 28, 20 14, 32 14C44 14, 46 28, 46 28L48 48C48 48, 46 52, 32 52C18 52, 16 48, 16 48Z" fill="#10b981" opacity="0.85" stroke="#34d399" strokeWidth="1.5" />
       <text x="32" y="40" textAnchor="middle" fontSize="10" fontWeight="900" fill="#1a1a1a">$</text>
     </svg>
   );
@@ -59,15 +47,9 @@ function MoneyBagIcon({ size = 52 }) {
 function HourglassIcon({ size = 52 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <defs>
-        <linearGradient id="whGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
       <ellipse cx="32" cy="44" rx="4" ry="2" fill="#60a5fa" opacity="0.3" />
-      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill="url(#whGrad)" stroke="#93c5fd" strokeWidth="1.5" />
-      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill="url(#whGrad)" stroke="#93c5fd" strokeWidth="1.5" />
+      <path d="M20 12L20 24C20 24, 22 32, 32 32C42 32, 44 24, 44 24L44 12Z" fill="#60a5fa" opacity="0.85" stroke="#93c5fd" strokeWidth="1.5" />
+      <path d="M20 52L20 40C20 40, 22 32, 32 32C42 32, 44 40, 44 40L44 52Z" fill="#60a5fa" opacity="0.85" stroke="#93c5fd" strokeWidth="1.5" />
       <rect x="18" y="9" width="28" height="5" rx="2" fill="#60a5fa" />
       <rect x="18" y="50" width="28" height="5" rx="2" fill="#60a5fa" />
     </svg>
@@ -190,7 +172,7 @@ export default function Withdrawals({ user }) {
     queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
     enabled: !!user?.email,
   });
-  const kyc = kycList[0] || null;
+  const kyc = (kycList || [])[0] || null;
   const kycApproved = kyc?.status === 'approved';
 
   const { data: withdrawals = [] } = useQuery({

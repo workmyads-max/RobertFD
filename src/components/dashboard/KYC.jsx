@@ -56,7 +56,7 @@ export default function KYC({ user }) {
   const { data: kyc, isLoading } = useQuery({
     queryKey: ['kyc', user?.email],
     queryFn: async () => {
-      const results = await base44.entities.KYCVerification.filter({ user_email: user?.email });
+      const results = await base44.entities.KYCVerification.filter({ user_email: user?.email }) || [];
       return results[0] || null;
     },
     enabled: !!user?.email,
