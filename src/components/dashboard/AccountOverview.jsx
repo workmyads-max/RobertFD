@@ -1098,8 +1098,10 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Closed Trades — fetched live from MT5 deal history */}
       <ClosedTradesSection account={account} />
 
-      {/* Performance Metrics + Progress Timeline */}
-      <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} />
+      {/* MT5 Sync — only for active MT5 challenge accounts */}
+      {account?.platform === 'mt5' && ['active', 'funded', 'passed'].includes(account?.status) && (
+        <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} />
+      )}
 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

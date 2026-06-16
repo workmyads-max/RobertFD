@@ -13,7 +13,6 @@ const STEPS = ['Platform', 'Payment Method', 'Payment', 'Confirmation'];
 
 export default function DashboardCheckout({ initialOrder, onBack, onComplete }) {
   const [step, setStep] = useState(1);
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState({
     challenge_type: 'two-step',
@@ -71,24 +70,13 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
 
   const updateOrder = (data) => setOrder(o => ({ ...o, ...data }));
 
-  const handleApplyCoupon = (coupon) => {
-    setAppliedCoupon(coupon);
-    const discount = coupon.discountAmount || 0;
-    setOrder(o => ({ ...o, discount_amount: discount, final_price: Math.max(1, o.price - discount), coupon_code: coupon.code }));
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setOrder(o => ({ ...o, discount_amount: 0, final_price: o.price, coupon_code: undefined }));
-  };
-
   return (
     <div>
       {/* Coupon Input - Step 2 & 3 */}
       {(step === 2 || step === 3) && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-2">Discount Code</div>
-          <CouponInput order={order} appliedCoupon={appliedCoupon} onApply={handleApplyCoupon} onRemove={handleRemoveCoupon} />
+          <CouponInput order={order} updateOrder={updateOrder} />
         </motion.div>
       )}
 
