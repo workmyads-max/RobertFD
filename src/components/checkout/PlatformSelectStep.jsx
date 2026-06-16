@@ -1,118 +1,111 @@
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Clock, Monitor, BarChart3, Zap, Unlock } from 'lucide-react';
 
-const COMING_SOON_PLATFORMS = [
+const COMING_SOON = [
   { id: 'match_trader', name: 'Match Trader', subtitle: 'Institutional Platform', icon: BarChart3 },
   { id: 'xtrading', name: 'XTrading', subtitle: 'Built-in Terminal', icon: Zap },
   { id: 'tradelocker', name: 'TradeLocker', subtitle: 'Next-Gen Platform', icon: Unlock },
 ];
 
-function MT5Logo({ size = 48 }) {
-  return (
-    <img
-      src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
-      alt="MetaTrader 5"
-      width={size}
-      height={size}
-      className="object-contain"
-    />
-  );
-}
-
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
-  const selected = order.platform || '';
-
   useEffect(() => {
-    if (!selected) updateOrder({ platform: 'mt5' });
+    if (!order.platform) updateOrder({ platform: 'mt5' });
   }, []);
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3">
         {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10 border border-primary/15">
-              <Monitor className="w-4 h-4 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-white">Select Trading Platform</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/20">
+            <Monitor className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm text-white/35 ml-12">Choose where you'll trade. This is permanently assigned to your account.</p>
+          <div>
+            <h2 className="text-xl font-bold text-white">Select Trading Platform</h2>
+            <p className="text-sm text-white/35 mt-0.5">Choose where you'll trade. This is permanently assigned to your account.</p>
+          </div>
         </div>
 
-        {/* MT5 Card */}
-        <button
-          onClick={() => updateOrder({ platform: 'mt5' })}
-          className="relative w-full rounded-xl p-6 text-left transition-all duration-200 hover:border-blue-500/40"
-          style={{
-            background: '#161c28',
-            border: `1.5px solid ${selected === 'mt5' ? 'rgba(37,99,235,0.5)' : 'rgba(37,99,235,0.2)'}`,
-          }}
-        >
-          {/* Top row: badge + check */}
-          <div className="flex items-center justify-between mb-6">
-            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold"
-              style={{ background: 'rgba(37,99,235,0.15)', color: '#93c5fd' }}>
-              Available
-            </span>
-            {selected === 'mt5' && (
+        {/* MT5 Platform Hero */}
+        <div className="rounded-2xl overflow-hidden mb-6"
+          style={{ border: '1px solid rgba(37,99,235,0.25)', background: '#0f172a' }}>
+
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
+                alt="MT5" width={28} height={28} className="object-contain"
+              />
+              <span className="text-sm font-semibold text-white">MetaTrader 5</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">
+                Available
+              </span>
               <CheckCircle2 className="w-5 h-5 text-blue-500" />
-            )}
+            </div>
           </div>
 
-          <div className="flex items-start gap-5">
-            <div className="flex-shrink-0 mt-0.5">
-              <MT5Logo size={48} />
+          {/* Body */}
+          <div className="p-6">
+            <div className="text-[13px] text-white/50 leading-relaxed mb-6">
+              The industry-leading platform for professional traders. Advanced charting tools, Expert Advisors, multi-timeframe analysis, and one-click trading — all in one place.
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-lg font-bold text-white mb-0.5">MetaTrader 5</div>
-              <div className="text-xs text-blue-300/60 mb-4 font-medium">Industry Standard Platform</div>
-              <p className="text-sm text-white/35 leading-relaxed mb-4">
-                The world's most popular trading platform with advanced charting, Expert Advisors, and full algorithmic trading support.
-              </p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                {['Expert Advisors (EAs)', 'Advanced charting', 'Algorithmic trading', 'Multi-asset support'].map(f => (
-                  <div key={f} className="flex items-center gap-2.5 text-xs text-white/45 font-medium">
-                    <div className="w-1 h-1 rounded-full flex-shrink-0 bg-blue-500/70" />
-                    {f}
+
+            {/* Feature grid */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {[
+                { title: 'Expert Advisors', desc: 'Automated trading bots & custom indicators' },
+                { title: 'Advanced Charting', desc: '21 timeframes, 80+ technical indicators' },
+                { title: 'Algorithmic Trading', desc: 'MQL5 language for custom strategies' },
+                { title: 'Multi-Asset Class', desc: 'Forex, indices, commodities & crypto' },
+              ].map(f => (
+                <div key={f.title} className="flex gap-3 p-3 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: 'rgba(37,99,235,0.1)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white/80">{f.title}</div>
+                    <div className="text-[11px] text-white/35 mt-0.5 leading-snug">{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom info */}
+            <div className="flex items-center gap-4 text-[11px] text-white/30">
+              <span>Windows · macOS · iOS · Android</span>
+              <span>·</span>
+              <span>Free download</span>
+              <span>·</span>
+              <span>Permanently assigned</span>
             </div>
           </div>
-        </button>
+        </div>
 
         {/* Coming Soon */}
         <div>
-          <div className="text-[10px] text-white/15 font-semibold uppercase tracking-[0.2em] mb-3">Coming Soon</div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {COMING_SOON_PLATFORMS.map((p, i) => {
-              const Icon = p.icon;
-              return (
-                <div
-                  key={p.id}
-                  className="relative rounded-lg p-4 opacity-40 pointer-events-none"
-                  style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)' }}
-                >
-                  <div className="absolute top-3 right-3">
-                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold text-white/20 border border-white/8">
-                      Soon
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 mt-1"
-                    style={{ background: 'rgba(255,255,255,0.04)' }}>
+          <div className="text-[10px] text-white/15 font-semibold uppercase tracking-[0.25em] mb-3 px-1">Coming Soon</div>
+          <div className="grid grid-cols-3 gap-3">
+            {COMING_SOON.map(({ id, name, subtitle, icon: Icon }) => (
+              <div key={id} className="rounded-xl p-4 opacity-35 pointer-events-none select-none"
+                style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5">
                     <Icon className="w-4 h-4 text-white/20" />
                   </div>
-                  <div className="text-xs font-semibold text-white/35 mb-0.5">{p.name}</div>
-                  <div className="text-[10px] text-white/20 mb-2">{p.subtitle}</div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-white/15" />
-                    <span className="text-[9px] text-white/15">In Development</span>
-                  </div>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-semibold text-white/15 border border-white/8">Soon</span>
                 </div>
-              );
-            })}
+                <div className="text-xs font-semibold text-white/30">{name}</div>
+                <div className="text-[10px] text-white/18 mt-0.5">{subtitle}</div>
+                <div className="flex items-center gap-1.5 mt-3 text-[9px] text-white/12">
+                  <Clock className="w-3 h-3" /> In Development
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
