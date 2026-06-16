@@ -205,7 +205,7 @@ function PerformanceMetrics({ stats }) {
   return (
     <div className="rounded-xl px-5 py-4 h-full"
       style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
-      <h3 className="text-sm font-bold text-foreground mb-2">MT5 Sync</h3>
+      <h3 className="text-sm font-bold text-foreground mb-2">Performance Metrics</h3>
       {rows.map((r) => <MetricRow key={r.label} {...r} />)}
     </div>
   );
