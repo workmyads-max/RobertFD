@@ -220,7 +220,7 @@ export default function Dashboard() {
       case 'leaderboard': return <Leaderboard />;
       case 'journal': return <TradingJournal user={user} />;
       case 'billing': return <Billing />;
-      case 'withdrawals': return <Withdrawals user={user} />;
+      case 'withdrawals': return <Withdrawals user={user} onNavigate={setActivePage} />;
       case 'certificates': return <Certificates user={user} />;
       case 'affiliate': return <Affiliate user={user} />;
       case 'kyc': return <KYC user={user} />;

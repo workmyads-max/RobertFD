@@ -136,7 +136,7 @@ function WithdrawalCard({ w, i }) {
   );
 }
 
-export default function Withdrawals({ user }) {
+export default function Withdrawals({ user, onNavigate }) {
   const [showForm, setShowForm] = useState(false);
   const [showKycAlert, setShowKycAlert] = useState(true);
   const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '', account_id: '' });
@@ -220,8 +220,8 @@ export default function Withdrawals({ user }) {
               : kyc.status === 'pending'
               ? 'KYC under review (24-48 hours). Payouts unavailable until approved.'
               : 'KYC was rejected. Please resubmit correct documents.'}
-            buttonText="Okay, I Understand"
-            onButtonClick={() => setShowKycAlert(false)}
+            buttonText="Go to KYC"
+            onButtonClick={() => onNavigate?.('kyc')}
             onDismiss={() => setShowKycAlert(false)}
             icon={<Bell className="h-6 w-6 text-white" />}
           />
@@ -236,7 +236,7 @@ export default function Withdrawals({ user }) {
             title="No Funded Accounts"
             description="Withdrawals are only available for live funded accounts. Complete your challenge to unlock payouts."
             buttonText="Buy Challenge"
-            onButtonClick={() => { /* navigate to challenges */ }}
+            onButtonClick={() => onNavigate?.('marketplace')}
             icon={<Bell className="h-6 w-6 text-white" />}
           />
         </div>
@@ -283,7 +283,7 @@ export default function Withdrawals({ user }) {
           title={`80/20 Profit Split`}
           description={`$${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit. You keep 80% of all profits — a $25 fee and affiliate rewards are deducted from your share.`}
           buttonText="Learn More"
-          onButtonClick={() => {}}
+          onButtonClick={() => onNavigate?.('billing')}
           icon={<DollarSign className="h-6 w-6 text-white" />}
         />
       </div>

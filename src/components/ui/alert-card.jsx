@@ -18,20 +18,27 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
+const VARIANTS = {
+  danger: { bg: "#FF5C5C", color: "white" },
+  success: { bg: "#10b981", color: "white" },
+  info: { bg: "#3b82f6", color: "white" },
+};
+
 const AlertCard = React.forwardRef(({
   className, icon, title, description, buttonText,
-  onButtonClick, isVisible, onDismiss, ...props
+  onButtonClick, isVisible, onDismiss, variant = "danger", noDismiss, ...props
 }, ref) => {
+  const style = VARIANTS[variant] || VARIANTS.danger;
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
           ref={ref}
           className={cn(
-            "relative w-full max-w-sm overflow-hidden rounded-2xl p-6 shadow-2xl",
+            "relative w-full overflow-hidden rounded-2xl p-6 shadow-2xl",
             className
           )}
-          style={{ background: "#FF5C5C", color: "white" }}
+          style={{ background: style.bg, color: style.color }}
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -40,7 +47,7 @@ const AlertCard = React.forwardRef(({
           aria-live="assertive"
           {...props}
         >
-          {onDismiss && (
+          {onDismiss && !noDismiss && (
             <motion.div variants={itemVariants} className="absolute top-3 right-3">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-white/20" onClick={onDismiss}>
                 <X className="h-4 w-4 text-white" />
