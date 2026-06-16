@@ -13,10 +13,10 @@ const PRODUCT_LINKS = [
 
 const COMPANY_LINKS = [
   { label: 'About Us', href: '/#about' },
-  { label: 'Careers', href: 'mailto:careers@yourbrand.com' },
-  { label: 'Press Kit', href: 'mailto:press@yourbrand.com' },
+  { label: 'Careers', href: 'mailto:careers@xfundedtrader.com' },
+  { label: 'Press Kit', href: 'mailto:press@xfundedtrader.com' },
   { label: 'Blog', href: '#' },
-  { label: 'Contact', href: 'mailto:support@yourbrand.com' },
+  { label: 'Contact', href: 'mailto:support@xfundedtrader.com' },
 ];
 
 const LEGAL_LINKS = [
@@ -30,7 +30,7 @@ const SUPPORT_LINKS = [
   { label: 'Help Center', href: '#faq' },
   { label: 'FAQ', href: '#faq' },
   { label: 'Live Chat', href: '#', isChat: true },
-  { label: 'Email Support', href: 'mailto:support@yourbrand.com', isMail: true },
+  { label: 'Email Support', href: 'mailto:support@xfundedtrader.com', isMail: true },
 ];
 
 const SOCIALS = [
@@ -83,15 +83,15 @@ export default function Footer() {
       {/* Subtle bg watermark */}
       <div className="absolute bottom-0 left-0 right-0 text-center pointer-events-none select-none overflow-hidden">
         <span className="text-[10vw] font-black text-foreground/[0.018] leading-none tracking-tighter font-mono">
-          YOUR BRAND
+          XFUNDED TRADER
         </span>
       </div>
 
       {/* Main footer content */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 pt-16 pb-0">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-8 pt-24 pb-0">
 
         {/* Top grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
 
           {/* Brand column — 2 cols wide */}
           <div className="sm:col-span-2 lg:col-span-2">
@@ -100,7 +100,7 @@ export default function Footer() {
               <XFLogo size="xl" animate />
             </div>
 
-            <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-xs">
+            <p className="text-base text-muted-foreground leading-relaxed mb-6 max-w-xs">
               Dubai-based institutional proprietary trading firm. We fund elite traders with significant capital and share up to 80% of profits.
             </p>
 
@@ -114,8 +114,8 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-3 h-3 flex-shrink-0 text-primary/60" />
-                <a href="mailto:support@yourbrand.com" className="hover:text-primary transition-colors">
-                  support@yourbrand.com
+                <a href="mailto:support@xfundedtrader.com" className="hover:text-primary transition-colors">
+                  support@xfundedtrader.com
                 </a>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -193,13 +193,13 @@ export default function Footer() {
         </div>
 
         {/* Risk Disclosure Block */}
-        <div className="rounded-2xl p-5 mb-0"
+        <div className="rounded-2xl p-6 mb-0"
           style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="flex items-start gap-3">
-            <div className="w-1 flex-shrink-0 self-stretch rounded-full bg-primary/40 mt-0.5" />
+          <div className="flex items-start gap-4">
+            <div className="w-1.5 flex-shrink-0 self-stretch rounded-full bg-primary/40 mt-1" />
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-primary/70 mb-2">Risk Disclosure</div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <div className="text-xs font-mono uppercase tracking-widest text-primary/70 mb-3">Risk Disclosure</div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Trading leveraged financial instruments including foreign exchange, CFDs, and cryptocurrencies carries a 
                 significant level of risk and may not be suitable for all investors. You may lose all invested capital. 
                 We are a proprietary trading firm and do not manage client funds or provide investment advice. 
@@ -213,10 +213,10 @@ export default function Footer() {
       </div>
 
       {/* Bottom copyright bar */}
-      <div className="relative z-10 mt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)' }}>
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground/70 text-center sm:text-left">
-            © {new Date().getFullYear()} Your Brand. All Rights Reserved. · Dubai International Financial Centre, UAE
+      <div className="relative z-10 mt-10" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)' }}>
+        <div className="max-w-[1400px] mx-auto px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground/70 text-center sm:text-left">
+            © {new Date().getFullYear()} XFundedTrader.com — Prove Your Edge. Get Funded.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             {[
