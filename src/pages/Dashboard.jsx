@@ -46,6 +46,7 @@ import AdminLiveChat from '../components/admin/AdminLiveChat';
 import AdminUserManagement from '../components/admin/AdminUserManagement';
 import PlatformVisibilityControl from '../components/admin/PlatformVisibilityControl';
 import DashboardPopupNotification from '../components/dashboard/DashboardPopupNotification';
+import PaymentApprovalNotification from '../components/dashboard/PaymentApprovalNotification';
 import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
 import AdminCoupons from '../components/admin/AdminCoupons';
@@ -285,6 +286,7 @@ export default function Dashboard() {
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} onClose={() => setDismissedPopupIds(prev => new Set([...prev, popupNotification.id]))} />}
       {user && <UserWarningPanel user={user} />}
+      {user && <PaymentApprovalNotification user={user} />}
 
       {/* Live DD Guard — runs every 15s when trader has dashboard open */}
       {user && !isAdmin && <LiveDDGuard onBreach={handleDDBreach} />}

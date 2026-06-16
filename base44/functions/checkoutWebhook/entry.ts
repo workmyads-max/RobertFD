@@ -139,10 +139,16 @@ Deno.serve(async (req) => {
           });
         } catch (e) { console.error('[Checkout.com] Email failed (non-blocking):', e.message); }
 
+        // Create payment approval notification (persists in notification section)
         await base44.asServiceRole.entities.Notification.create({
-          title: '✅ Payment Confirmed',
-          message: `Your Checkout.com payment of $${order.price} was approved. Challenge account provisioning initiated.`,
-          type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+          user_email: order.email,
+          title: 'Payment Approved — Challenge Account Ready',
+          message: `Your payment for ${order.challenge_type} $${order.account_size.toLocaleString()} challenge has been verified. Your account is being provisioned.`,
+          type: 'system',
+          priority: 'high',
+          display_mode: 'all',
+          is_active: true,
+          target: 'all',
         });
       }
     } else if (event.type === 'payment_declined') {
