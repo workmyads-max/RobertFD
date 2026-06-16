@@ -52,7 +52,7 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
           Order Confirmed! 🎉
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto leading-relaxed mb-8">
-          Your <strong className="text-foreground">${order.account_size?.toLocaleString()} {order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'}</strong> account is being prepared by the Robert Funds team.
+          Your <strong className="text-foreground">${order.account_size?.toLocaleString()} {order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'}</strong> account is being prepared by the XFunded team.
         </p>
       </motion.div>
 
@@ -100,7 +100,7 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
             color: 'text-emerald-400',
             bg: 'rgba(16,185,129,0.06)',
             border: 'rgba(16,185,129,0.18)',
-            text: 'Your account is protected under Robert Funds\' Trader Agreement. Keep your credentials private.',
+            text: 'Your account is protected under XFunded Trader\'s Trader Agreement. Keep your credentials private.',
           },
         ].map(({ icon: Icon, color, bg, border, text }) => (
           <div key={text} className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-left"
