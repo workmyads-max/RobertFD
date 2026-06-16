@@ -12,8 +12,29 @@ const TIMEFRAMES = [
   { id: 'M15', label: 'M15', desc: '15-Minute Swing' },
 ];
 
+// ─── Fast Live Price Fetcher ──────────────────────────────────────────────────
+async function fetchLivePrice() {
+  const result = await base44.integrations.Core.InvokeLLM({
+    prompt: `What is the current XAUUSD (gold) spot price right now? Search the web for the latest bid/ask/spread from a reliable source like Kitco, FXStreet, or Investing.com. Return ONLY the live price data.`,
+    add_context_from_internet: true,
+    model: 'gemini_3_flash',
+    response_json_schema: {
+      type: 'object',
+      properties: {
+        bid: { type: 'number' },
+        ask: { type: 'number' },
+        spread: { type: 'string' },
+        price: { type: 'number', description: 'Mid price (bid+ask)/2' },
+        source: { type: 'string' },
+        fetched_at: { type: 'string' },
+      }
+    }
+  });
+  return result;
+}
+
 // ─── AI Signal Fetcher ───────────────────────────────────────────────────────
-async function fetchXAUUSDSignal(timeframe) {
+async function fetchXAUUSDSignal(timeframe, livePrice) {
   const now = new Date();
   const timestamp = now.toISOString();
 
@@ -22,6 +43,10 @@ async function fetchXAUUSDSignal(timeframe) {
     M5:  '5-minute intraday chart — focus on short-term trends, VWAP, EMA crossovers, and immediate support/resistance zones',
     M15: '15-minute swing chart — focus on intraday structure, Fibonacci retracements, MACD divergences, and session-based levels',
   };
+
+  const priceContext = livePrice 
+    ? `LIVE PRICE (verified): Bid $${livePrice.bid}, Ask $${livePrice.ask}, Spread ${livePrice.spread}. Use these exact numbers — do NOT search for a different price.`
+    : 'Search for the current XAUUSD spot price.';
 
   const smcStrategy = `
 SCALPING/SMC STRATEGY RULES (${timeframe}):
@@ -39,17 +64,18 @@ SCALPING/SMC STRATEGY RULES (${timeframe}):
   const result = await base44.integrations.Core.InvokeLLM({
     prompt: `You are an elite XAUUSD scalper using Smart Money Concepts (SMC) and ICT methodology. Perform ${timeframe}-specific analysis for XAUUSD right now (${timestamp}).
 
-Use web search for LIVE data:
-1. Current XAUUSD spot price (bid/ask with spread)
-2. ${tfDescriptions[timeframe]}
-3. Three higher timeframes for trend context: ${timeframe === 'M1' ? 'M5, M15, H1' : timeframe === 'M5' ? 'M15, H1, H4' : 'H1, H4, D1'}
-4. Key SMC levels: order blocks, breaker blocks, FVG zones, liquidity pools (equal highs/lows)
-5. Session context: which session (London/NY/Asian) is active and what that means for gold
-6. Recent economic data affecting gold in the last 2 hours
+${priceContext}
+
+Use web search for additional LIVE data:
+1. ${tfDescriptions[timeframe]}
+2. Three higher timeframes for trend context: ${timeframe === 'M1' ? 'M5, M15, H1' : timeframe === 'M5' ? 'M15, H1, H4' : 'H1, H4, D1'}
+3. Key SMC levels: order blocks, breaker blocks, FVG zones, liquidity pools (equal highs/lows)
+4. Session context: which session (London/NY/Asian) is active and what that means for gold
+5. Recent economic data affecting gold in the last 2 hours
 
 ${smcStrategy}
 
-Output: Complete signal analysis with SMC terminology. If the setup meets all confluence rules, provide the precise trade signal. If no valid setup exists, return NO_SIGNAL with the specific reason why.`,
+Output: Complete signal analysis with SMC terminology. Use the exact live price provided above for all calculations. If the setup meets all confluence rules, provide the precise trade signal. If no valid setup exists, return NO_SIGNAL with the specific reason why.`,
 
     add_context_from_internet: true,
     model: 'gemini_3_flash',
@@ -176,7 +202,14 @@ function SignalCard({ signal, currentPrice }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm text-muted-foreground font-mono">Spot Price</div>
+          <div className="text-sm text-muted-foreground font-mono flex items-center gap-2 justify-end">
+            Spot Price
+            {signal.source && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
+                {signal.source}
+              </span>
+            )}
+          </div>
           <div className="text-2xl font-black text-white">${currentPrice?.toFixed(2) || '—'}</div>
           <div className="text-[10px] font-mono text-muted-foreground/60">Spread: {signal.spread || '—'}</div>
         </div>
@@ -320,18 +353,33 @@ export default function MarketSignals() {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  const [priceSource, setPriceSource] = useState(null);
+
   const loadSignal = useCallback(async (tf) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchXAUUSDSignal(tf);
-      setSignal(data?.signal ? { ...data.signal, spread: data?.spread, timeframe: tf } : null);
+      // Step 1: Fetch live XAUUSD price from the web
+      const priceData = await fetchLivePrice();
+      const livePrice = priceData?.price || priceData?.bid;
+      setPriceSource(priceData?.source || 'Live Web');
+
+      // Step 2: Full SMC/ICT analysis using the verified live price
+      const data = await fetchXAUUSDSignal(tf, priceData);
+      setSignal(data?.signal ? { 
+        ...data.signal, 
+        spread: priceData?.spread || data?.spread, 
+        timeframe: tf,
+        current_price: data?.current_price || livePrice,
+        source: priceData?.source || 'Live',
+      } : null);
       setAnalysis({
-        current_price: data?.current_price,
+        current_price: data?.current_price || livePrice,
         smc: data?.smc_analysis || null,
         summary: data?.analysis_summary || '',
         disclaimer: data?.risk_disclaimer || '',
-        generatedAt: data?.generated_at || new Date().toISOString(),
+        generatedAt: priceData?.fetched_at || data?.generated_at || new Date().toISOString(),
+        price_source: priceData?.source || 'Live Web',
       });
       setLevels(data?.technical_levels || null);
       setLastUpdated(new Date().toLocaleTimeString());
@@ -355,6 +403,7 @@ export default function MarketSignals() {
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">
             SMC / ICT Scalping Strategy · {analysis?.generatedAt ? new Date(analysis.generatedAt).toLocaleString() : '—'}
+            {analysis?.price_source && <span className="text-primary/70"> · Price: {analysis.price_source}</span>}
             {lastUpdated && <span className="text-muted-foreground/50"> · Updated {lastUpdated}</span>}
           </p>
         </div>
