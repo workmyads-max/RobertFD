@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ArrowRight, CheckCircle2, Clock, Monitor, BarChart3, Zap, Unlock } from 'lucide-react';
+import { ArrowRight, Clock, BarChart3, Zap, Unlock } from 'lucide-react';
 
 const COMING_SOON = [
   { id: 'match_trader', name: 'Match Trader', subtitle: 'Institutional Platform', icon: BarChart3 },
@@ -11,10 +11,7 @@ function MT5Icon() {
   return (
     <img
       src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
-      alt="MT5"
-      width={44}
-      height={44}
-      className="object-contain"
+      alt="MT5" width={32} height={32} className="object-contain"
     />
   );
 }
@@ -29,81 +26,19 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   return (
     <div className="grid lg:grid-cols-5 gap-8">
       <div className="lg:col-span-3">
-        {/* Section title */}
-        <div className="flex items-center gap-3 mb-5">
-          <Monitor className="w-5 h-5 text-primary" />
-          <span className="text-[13px] font-semibold text-white/70 uppercase tracking-[0.15em]">Trading Platform</span>
-        </div>
+        {/* Header */}
+        <h3 className="text-lg font-bold text-white mb-3">Platform</h3>
+        <div className="border-b border-white/8 mb-5" />
 
-        {/* MT5 Card */}
+        {/* MT5 Button */}
         <button
           onClick={() => updateOrder({ platform: 'mt5' })}
-          className="w-full rounded-xl text-left transition-all duration-200 hover:border-primary/50"
-          style={{
-            background: 'rgba(255,92,0,0.03)',
-            border: `1.5px solid ${selected === 'mt5' ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.08)'}`,
-          }}
+          className="w-full rounded-xl flex items-center gap-3 px-5 py-4 transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{ background: '#2563eb', color: 'white' }}
         >
-          <div className="flex items-center gap-4 px-5 py-4">
-            {/* MT5 Logo */}
-            <div className="flex-shrink-0">
-              <MT5Icon />
-            </div>
-
-            {/* Title + Subtitle */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-base font-bold text-white">MetaTrader 5</span>
-                {selected === 'mt5' && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
-                    style={{ background: 'rgba(255,92,0,0.15)', color: '#FF8A3D' }}>
-                    Selected
-                  </span>
-                )}
-              </div>
-              <span className="text-xs font-medium text-primary/80">Industry standard platform</span>
-            </div>
-
-            {/* Features */}
-            <div className="hidden sm:flex items-center gap-5 text-[10px] text-white/25 font-medium">
-              <span>Expert Advisors</span>
-              <span>Advanced charting</span>
-              <span>Algorithmic trading</span>
-            </div>
-
-            {/* Check */}
-            <div className="flex-shrink-0">
-              {selected === 'mt5' ? (
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-              ) : (
-                <div className="w-5 h-5 rounded-full border-2 border-white/15" />
-              )}
-            </div>
-          </div>
+          <MT5Icon />
+          <span className="text-base font-semibold">MetaTrader 5</span>
         </button>
-
-        {/* Coming Soon */}
-        <div className="mt-6">
-          <div className="text-[10px] text-white/15 font-semibold uppercase tracking-[0.25em] mb-3 px-1">Coming Soon</div>
-          <div className="grid grid-cols-3 gap-3">
-            {COMING_SOON.map(({ id, name, subtitle, icon: Icon }) => (
-              <div key={id} className="rounded-xl p-4 opacity-35 pointer-events-none select-none"
-                style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5">
-                    <Icon className="w-4 h-4 text-white/20" />
-                  </div>
-                  <span className="px-2 py-0.5 rounded text-[9px] font-semibold text-white/15 border border-white/8">Soon</span>
-                </div>
-                <div className="text-xs font-semibold text-white/30">{name}</div>
-                <div className="text-[10px] text-white/18 mt-0.5">{subtitle}</div>
-                <div className="flex items-center gap-1.5 mt-3 text-[9px] text-white/12">
-                  <Clock className="w-3 h-3" /> In Development
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Right: Order Summary */}
