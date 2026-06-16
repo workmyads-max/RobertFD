@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
@@ -32,6 +32,20 @@ const IMAGES = {
 };
 
 export default function Home() {
+  // ── Cookie-based referral tracking ──────────────────────────────────────
+  useEffect(() => {
+    const refCode = new URLSearchParams(window.location.search).get('ref');
+    if (refCode) {
+      // Store in cookie with 30-day expiry (matches AffiliateSettings.cookie_days default)
+      const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `xf_ref=${refCode}; expires=${expires}; path=/; SameSite=Lax`;
+      // Clean URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('ref');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground font-inter dark">
       <PromoPopup mascotImage={IMAGES.mascot} />

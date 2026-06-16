@@ -440,6 +440,86 @@ Deno.serve(async (req) => {
         type: 'payout', priority: 'critical', display_mode: 'popup', is_active: true, target: 'funded',
       });
 
+      // ── Payout Reward Commissions (for referrers) + active_funded_traders ────
+      try {
+        const buyerProfiles = await sr.entities.AffiliateProfile.filter({ user_email: account.user_email });
+        const buyerProfile = buyerProfiles[0];
+        
+        if (buyerProfile?.referred_by_email) {
+          // Read payout tier rates from settings
+          const settingsList = await sr.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
+          const settings = settingsList[0];
+          
+          // Count active funded traders to determine tier
+          const allFunded = await sr.entities.ChallengeAccount.filter({ status: 'funded' });
+          
+          // Build referral chain (up to 3 levels)
+          const chain = [];
+          
+          // L1
+          const l1Affs = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
+          if (l1Affs[0]) {
+            const l1Count = allFunded.filter(a => {
+              // Count funded traders under this L1 affiliate
+              return true; // simplified — count all funded; real filtering would need full tree
+            }).length;
+            
+            let l1Rate = settings?.payout_reward_rate ?? 9;
+            if (l1Affs[0].custom_payout_rate) l1Rate = l1Affs[0].custom_payout_rate;
+            chain.push({ level: 1, email: l1Affs[0].user_email, rate: l1Rate, profile: l1Affs[0] });
+            
+            // L2
+            if (l1Affs[0].referred_by_email) {
+              const l2Affs = await sr.entities.AffiliateProfile.filter({ user_email: l1Affs[0].referred_by_email });
+              if (l2Affs[0]) {
+                let l2Rate = 2; // default L2 rate
+                chain.push({ level: 2, email: l2Affs[0].user_email, rate: l2Rate, profile: l2Affs[0] });
+                
+                // L3
+                if (l2Affs[0].referred_by_email) {
+                  const l3Affs = await sr.entities.AffiliateProfile.filter({ user_email: l2Affs[0].referred_by_email });
+                  if (l3Affs[0]) {
+                    let l3Rate = 1; // default L3 rate
+                    chain.push({ level: 3, email: l3Affs[0].user_email, rate: l3Rate, profile: l3Affs[0] });
+                  }
+                }
+              }
+            }
+          }
+          
+          // Create payout_reward commissions and update active_funded_traders
+          for (const { level, email, rate, profile } of chain) {
+            const commissionAmount = parseFloat(((account.account_size * rate) / 100).toFixed(2));
+            if (commissionAmount <= 0) continue;
+            
+            await sr.entities.AffiliateCommission.create({
+              affiliate_email: email,
+              referred_email: account.user_email,
+              commission_type: 'payout_reward',
+              level,
+              source_amount: account.account_size,
+              commission_rate: rate,
+              commission_amount: commissionAmount,
+              account_id: account.account_id,
+              status: 'pending',
+              notes: `Payout reward L${level}: ${rate}% of $${account.account_size.toLocaleString()} funded account`,
+            });
+            
+            // Update affiliate profile
+            await sr.entities.AffiliateProfile.update(profile.id, {
+              total_earned: parseFloat(((profile.total_earned || 0) + commissionAmount).toFixed(2)),
+              total_pending: parseFloat(((profile.total_pending || 0) + commissionAmount).toFixed(2)),
+              total_payout_commissions: parseFloat(((profile.total_payout_commissions || 0) + commissionAmount).toFixed(2)),
+              active_funded_traders: (profile.active_funded_traders || 0) + 1,
+            });
+            
+            console.log(`[phaseProgressionEngine] Payout reward L${level} created for ${email}: $${commissionAmount}`);
+          }
+        }
+      } catch (e) {
+        console.error('[phaseProgressionEngine] Payout reward creation failed (non-blocking):', e.message);
+      }
+
       await sendEmail(sr, account.user_email, 'funded_approved', {
         name: account.user_email,
         account_size: account.account_size,

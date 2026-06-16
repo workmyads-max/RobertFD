@@ -17,10 +17,19 @@ export default function Register() {
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
 
-  const refCode = new URLSearchParams(window.location.search).get('ref') || '';
+  // Read ref from URL param first, fallback to cookie (set by Home page)
+  const refCode = new URLSearchParams(window.location.search).get('ref')
+    || (() => {
+      const match = document.cookie.match(/(?:^|;\s*)xf_ref=([^;]*)/);
+      return match ? match[1] : '';
+    })();
 
   const handleGoogleSignup = async () => {
     try {
+      // Store ref code in sessionStorage so it survives Google OAuth redirect
+      if (refCode) {
+        sessionStorage.setItem('xf_pending_ref', refCode);
+      }
       await base44.auth.loginViaGoogle({ redirectTo: `${window.location.origin}/dashboard` });
     } catch (err) {
       toast.error('Google signup failed: ' + err.message);

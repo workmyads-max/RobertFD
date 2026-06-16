@@ -6,7 +6,7 @@ export default function ReferralLink({ profile }) {
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const refLink = profile ? `https://fundedfirms.com/?ref=${profile.referral_code}` : '';
+  const refLink = profile ? `${window.location.origin}/?ref=${profile.referral_code}` : '';
   const code = profile?.referral_code || '—';
 
   const copy = async (text, setter) => {

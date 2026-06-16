@@ -2,10 +2,12 @@
  * createAffiliateCommissions — Creates L1/L2/L3 AffiliateCommission records
  * Called after every confirmed challenge purchase payment.
  *
- * Rates:
- *   L1 (direct referrer): 8% of order price
- *   L2 (referrer's referrer): 2% of order price
- *   L3 (depth 3): 1% of order price
+ * Rates — in priority order:
+ *   1. Affiliate's custom_l1/l2/l3_rate (set by admin)
+ *   2. AffiliateSettings global_config l1/l2/l3_rate
+ *   3. Hardcoded defaults: L1=8%, L2=2%, L3=1%
+ *
+ * Also syncs: total_referrals → conversions counter on affiliate profile
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -15,29 +17,20 @@ Deno.serve(async (req) => {
     const sr = base44.asServiceRole;
 
     // ── SECURITY: Multi-layer authorization ───────────────────────────────────
-    // CRITICAL: Financial function - NEVER allow anonymous access
-    // Layer 1: Check for authenticated admin user (browser session)
-    // Layer 2: Check for scheduler secret token (internal automation)
-    // Layer 3: Reject ALL anonymous callers
     const schedulerToken = req.headers.get('X-Scheduler-Token');
     const expectedToken = Deno.env.get('SCHEDULER_SECRET_TOKEN');
     
     let authorized = false;
     try {
       const user = await base44.auth.me();
-      if (user && user.role === 'admin') {
-        authorized = true; // Admin user session
-      }
-    } catch {
-      // No user session - will check scheduler token below
-    }
+      if (user && user.role === 'admin') authorized = true;
+    } catch { /* No user session */ }
     
     if (!authorized && schedulerToken && expectedToken && schedulerToken === expectedToken) {
-      authorized = true; // Valid scheduler token
+      authorized = true;
     }
     
     if (!authorized) {
-      console.log('[createAffiliateCommissions] BLOCKED: Unauthorized attempt to create commissions');
       return Response.json({ 
         error: 'Forbidden: Admin authentication or valid scheduler token required',
         code: 'UNAUTHORIZED_ACCESS'
@@ -68,35 +61,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Read rates from AffiliateSettings entity — fallback to original defaults only if missing
+    // Read global rates from AffiliateSettings
     const settingsList = await sr.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
     const settings = settingsList[0];
-    const L1_RATE = settings?.l1_rate ?? 8;
-    const L2_RATE = settings?.l2_rate ?? 2;
-    const L3_RATE = settings?.l3_rate ?? 1;
-    console.log(`[createAffiliateCommissions] Rates — L1: ${L1_RATE}%, L2: ${L2_RATE}%, L3: ${L3_RATE}% (source: ${settings ? 'AffiliateSettings.global_config' : 'fallback defaults'})`);
+    const DEFAULT_L1 = settings?.l1_rate ?? 8;
+    const DEFAULT_L2 = settings?.l2_rate ?? 2;
+    const DEFAULT_L3 = settings?.l3_rate ?? 1;
 
     // Build referral chain: buyer → L1 sponsor → L2 sponsor → L3 sponsor
-    const RATES = [
-      { level: 1, email: buyerProfile.referred_by_email, rate: L1_RATE },
+    // For each level, check if the affiliate has custom rates
+    const chain = [
+      { level: 1, email: buyerProfile.referred_by_email },
     ];
 
     // L2: referrer's referrer
     const l1Profiles = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
     const l1Profile = l1Profiles[0];
     if (l1Profile?.referred_by_email) {
-      RATES.push({ level: 2, email: l1Profile.referred_by_email, rate: L2_RATE });
+      chain.push({ level: 2, email: l1Profile.referred_by_email });
 
       // L3: depth 3
       const l2Profiles = await sr.entities.AffiliateProfile.filter({ user_email: l1Profile.referred_by_email });
       const l2Profile = l2Profiles[0];
       if (l2Profile?.referred_by_email) {
-        RATES.push({ level: 3, email: l2Profile.referred_by_email, rate: L3_RATE });
+        chain.push({ level: 3, email: l2Profile.referred_by_email });
       }
     }
 
     let created = 0;
-    for (const { level, email, rate } of RATES) {
+    for (const { level, email } of chain) {
+      // Fetch THIS affiliate's profile to check for custom rates
+      const affProfiles = await sr.entities.AffiliateProfile.filter({ user_email: email });
+      const affProfile = affProfiles[0];
+
+      // Determine rate: custom > global > hardcoded default
+      let rate;
+      if (level === 1) {
+        rate = affProfile?.custom_l1_rate ?? DEFAULT_L1;
+      } else if (level === 2) {
+        rate = affProfile?.custom_l2_rate ?? DEFAULT_L2;
+      } else {
+        rate = affProfile?.custom_l3_rate ?? DEFAULT_L3;
+      }
+
       const commissionAmount = parseFloat(((order_price * rate) / 100).toFixed(2));
       if (commissionAmount <= 0) continue;
 
@@ -110,22 +117,23 @@ Deno.serve(async (req) => {
         commission_amount: commissionAmount,
         order_id: order_id || '',
         status: 'pending',
-        notes: `L${level} commission: ${rate}% of $${order_price} (${challenge_type} $${account_size})`,
+        notes: `L${level} commission: ${rate}% of $${order_price} (${challenge_type} $${account_size})${affProfile?.custom_l1_rate || affProfile?.custom_l2_rate || affProfile?.custom_l3_rate ? ' [custom rate]' : ''}`,
       });
 
       // Update affiliate profile totals
-      const profiles = await sr.entities.AffiliateProfile.filter({ user_email: email });
-      if (profiles[0]) {
-        await sr.entities.AffiliateProfile.update(profiles[0].id, {
-          total_earned: parseFloat(((profiles[0].total_earned || 0) + commissionAmount).toFixed(2)),
-          total_pending: parseFloat(((profiles[0].total_pending || 0) + commissionAmount).toFixed(2)),
-          total_purchase_commissions: parseFloat(((profiles[0].total_purchase_commissions || 0) + commissionAmount).toFixed(2)),
+      if (affProfile) {
+        await sr.entities.AffiliateProfile.update(affProfile.id, {
+          total_earned: parseFloat(((affProfile.total_earned || 0) + commissionAmount).toFixed(2)),
+          total_pending: parseFloat(((affProfile.total_pending || 0) + commissionAmount).toFixed(2)),
+          total_purchase_commissions: parseFloat(((affProfile.total_purchase_commissions || 0) + commissionAmount).toFixed(2)),
+          conversions: (affProfile.conversions || 0) + 1,
         });
       }
       created++;
     }
 
-    return Response.json({ success: true, commissions_created: created, levels: RATES.map(r => r.level) });
+    console.log(`[createAffiliateCommissions] Created ${created} commissions for order_id=${order_id}`);
+    return Response.json({ success: true, commissions_created: created, levels: chain.map(c => c.level) });
   } catch (error) {
     console.error('createAffiliateCommissions error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });

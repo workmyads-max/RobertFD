@@ -105,6 +105,44 @@ export default function Dashboard() {
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
+  // ── Google signup referral attribution ──────────────────────────────────
+  useEffect(() => {
+    if (!user?.email) return;
+    const pendingRef = sessionStorage.getItem('xf_pending_ref');
+    if (!pendingRef) return;
+    sessionStorage.removeItem('xf_pending_ref');
+    
+    // Process affiliate attribution for Google signup
+    (async () => {
+      try {
+        // Check if user already has an affiliate profile
+        const existingProfiles = await base44.entities.AffiliateProfile.filter({ user_email: user.email });
+        if (existingProfiles.length > 0) return; // Already attributed
+        
+        const referrers = await base44.entities.AffiliateProfile.filter({ referral_code: pendingRef });
+        if (referrers.length > 0) {
+          const referrer = referrers[0];
+          const newCode = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
+          await base44.entities.AffiliateProfile.create({
+            user_email: user.email,
+            referral_code: newCode,
+            referred_by_code: pendingRef,
+            referred_by_email: referrer.user_email,
+            tier: 'standard',
+            total_earned: 0, total_pending: 0, total_paid: 0,
+            referral_clicks: 0, total_referrals: 0, conversions: 0,
+            active_funded_traders: 0, is_active: true, is_frozen: false,
+          });
+          await base44.entities.AffiliateProfile.update(referrer.id, {
+            total_referrals: (referrer.total_referrals || 0) + 1,
+          });
+        }
+      } catch (e) {
+        console.error('[Dashboard] Affiliate attribution error (non-blocking):', e);
+      }
+    })();
+  }, [user?.email]);
+
   const { data: rawNotifications = [] } = useQuery({
     queryKey: ['notifications', user?.email],
     queryFn: () => base44.entities.Notification.filter({ is_active: true }),
