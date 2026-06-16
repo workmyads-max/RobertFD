@@ -22,22 +22,34 @@ const CERT_TYPES = {
 // ── PDF Download ────────────────────────────────────────────────────────────
 async function downloadPDF(cert, setLoading) {
   setLoading(true);
+  const W = 1400;
+  const H = Math.round(W / 1.414); // ≈ 990 — landscape
+
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;z-index:-1;';
+  container.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;z-index:-1;`;
   document.body.appendChild(container);
 
   const { createRoot } = await import('react-dom/client');
   const root = createRoot(container);
-  await new Promise(r => { root.render(React.createElement(CertificateDocument, { cert, forCapture: true })); setTimeout(r, 400); });
-
-  const canvas = await html2canvas(container.firstChild, {
-    scale: 2, useCORS: true, backgroundColor: '#05060a', logging: false,
+  await new Promise(r => {
+    root.render(React.createElement(CertificateDocument, { cert, forCapture: true }));
+    setTimeout(r, 500);
   });
-  root.unmount(); document.body.removeChild(container);
+
+  // Target the rendered certificate div directly (skip React comment nodes)
+  const certEl = container.querySelector('div');
+  const canvas = await html2canvas(certEl, {
+    scale: 2, useCORS: true, backgroundColor: '#05060a', logging: false,
+    width: W, height: H,
+  });
+  root.unmount();
+  document.body.removeChild(container);
 
   const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
-  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+  const pdfW = canvas.width / 2;
+  const pdfH = canvas.height / 2;
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [pdfW, pdfH] });
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
   pdf.save(`XFunded-Certificate-${cert.certificate_id || Date.now()}.pdf`);
   setLoading(false);
 }

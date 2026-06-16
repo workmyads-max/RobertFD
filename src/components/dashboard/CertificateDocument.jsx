@@ -160,7 +160,8 @@ export default function CertificateDocument({ cert, forCapture = false }) {
   return (
     <div style={{
       width: forCapture ? '1400px' : '100%',
-      aspectRatio: '1.414 / 1',
+      height: forCapture ? '990px' : undefined,
+      aspectRatio: forCapture ? undefined : '1.414 / 1',
       background: T.bg,
       position: 'relative',
       overflow: 'hidden',
