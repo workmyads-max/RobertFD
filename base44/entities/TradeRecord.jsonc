@@ -2,14 +2,14 @@
   "name": "TradeRecord",
   "type": "object",
   "permissions": {
-    "read": "owner",
+    "read": "authenticated",
     "create": "admin",
     "update": "admin",
     "delete": "admin"
   },
   "rls": {
     "read": {
-      "created_by_id": "{{user.id}}"
+      "user_email": "{{user.email}}"
     }
   },
   "properties": {
