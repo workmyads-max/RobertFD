@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info, Shield, Bell } from 'lucide-react';
+import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Bell } from 'lucide-react';
 import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -230,13 +230,15 @@ export default function Withdrawals({ user }) {
 
       {/* No funded accounts warning */}
       {fundedAccounts.length === 0 && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl mb-5"
-          style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
-          <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="text-sm font-bold text-blue-400 mb-1">No Funded Accounts</div>
-            <div className="text-xs text-muted-foreground">Withdrawals are only available for live funded accounts. Complete your challenge to unlock payouts.</div>
-          </div>
+        <div className="flex justify-center mb-5">
+          <AlertCard
+            isVisible={true}
+            title="No Funded Accounts"
+            description="Withdrawals are only available for live funded accounts. Complete your challenge to unlock payouts."
+            buttonText="Buy Challenge"
+            onButtonClick={() => { /* navigate to challenges */ }}
+            icon={<Bell className="h-6 w-6 text-white" />}
+          />
         </div>
       )}
 
@@ -275,19 +277,15 @@ export default function Withdrawals({ user }) {
       )}
 
       {/* Profit split info banner */}
-      <div className="rounded-2xl p-4 sm:p-5 mb-6"
-        style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.2)' }}>
-        <div className="flex items-center justify-between mb-2 gap-4">
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-primary flex-shrink-0" />
-            <div className="text-sm font-bold text-foreground">80/20 Profit Split</div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <div className="text-lg font-black text-emerald-400">${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            <div className="text-[10px] font-mono text-muted-foreground">Available Profit</div>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground">You keep <span className="text-emerald-400 font-bold">80%</span> of all profits. XFunded Trader retains <span className="text-red-400 font-bold">20%</span>. A $25 processing fee and any applicable affiliate rewards are deducted from your 80% share before payout.</div>
+      <div className="flex justify-center mb-6">
+        <AlertCard
+          isVisible={true}
+          title={`80/20 Profit Split`}
+          description={`$${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit. You keep 80% of all profits — a $25 fee and affiliate rewards are deducted from your share.`}
+          buttonText="Learn More"
+          onButtonClick={() => {}}
+          icon={<DollarSign className="h-6 w-6 text-white" />}
+        />
       </div>
 
       {/* Withdrawal list */}
