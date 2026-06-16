@@ -1092,9 +1092,6 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
 
-      {/* Progress Timeline — adapts per challenge type */}
-      <AccountTimeline account={account} closedTrades={closedTrades} />
-
       {/* Current Results */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
 
@@ -1104,8 +1101,11 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       {/* Closed Trades — fetched live from MT5 deal history */}
       <ClosedTradesSection account={account} />
 
-      {/* Performance Metrics */}
-      <AccountPerformanceMetrics account={account} stats={stats} />
+      {/* Performance Metrics + Progress Timeline */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AccountPerformanceMetrics account={account} stats={stats} />
+        <AccountTimeline account={account} closedTrades={closedTrades} />
+      </div>
 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
