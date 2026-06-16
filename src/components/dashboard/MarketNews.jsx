@@ -25,6 +25,7 @@ async function fetchRealNews(category = 'all') {
     tags (array of 2-3 ticker symbols or keywords), url (if known, else null).
     Only include real news from today. Be precise and institutional in tone.`,
     add_context_from_internet: true,
+    model: 'gemini_3_flash',
     response_json_schema: {
       type: 'object',
       properties: {

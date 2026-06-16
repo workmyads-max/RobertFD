@@ -44,6 +44,7 @@ async function fetchRealCalendar() {
     event name, impact (high/medium/low), forecast value (or null), previous value (or null), actual value if already released (or null), category (forex/crypto/stocks).
     Be precise with actual values if the event already happened today. Use real scheduled events only.`,
     add_context_from_internet: true,
+    model: 'gemini_3_flash',
     response_json_schema: {
       type: 'object',
       properties: {
@@ -78,6 +79,7 @@ async function fetchSentiment() {
     prompt: `What is the current market sentiment for USD, EUR, Bitcoin, and overall market fear/greed index as of today? 
     Provide a bullish/bearish/neutral rating and a percentage score (0-100) for each.`,
     add_context_from_internet: true,
+    model: 'gemini_3_flash',
     response_json_schema: {
       type: 'object',
       properties: {
