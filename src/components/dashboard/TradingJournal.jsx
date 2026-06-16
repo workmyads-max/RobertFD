@@ -142,6 +142,12 @@ function DailyPnLTab({ trades }) {
           </div>
         ))}
       </div>
+      {tradingDays === 0 && (
+        <div className="mt-4 text-center">
+          <p className="text-sm text-muted-foreground">No closed trades this month</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Once you close positions, your daily PnL will appear here</p>
+        </div>
+      )}
       <div className="mt-3 text-center text-xs" style={{ color: '#60a5fa' }}>
         The trades are in the platform time which might differ from CE(S)T
       </div>
@@ -572,11 +578,25 @@ export default function TradingJournal({ user }) {
 
   const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
 
+  // Fetch closed trades directly from MT5 API (TradeRecord entity is not populated)
   const { data: trades = [], isLoading } = useQuery({
-    queryKey: ['trade-records-journal', account?.account_id, userEmail],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
-    enabled: !!account?.account_id && !!userEmail,
-    refetchInterval: 30000,
+    queryKey: ['closed-trades-journal', account?.account_id],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke('getClosedTrades', {
+          account_id: account.account_id,
+          page_size: 200,
+        });
+        const rawTrades = res?.data?.trades || [];
+        // getClosedTrades already returns: trade_id, symbol, type, lots, entry, close, pnl, pips, open_time, close_time, status:'closed'
+        // Just add `id` for React key compatibility
+        return rawTrades.map(t => ({ ...t, id: t.trade_id }));
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!account?.account_id,
+    refetchInterval: 60000,
   });
 
   // ── Actual journal entries (TradingJournalEntry entity) ──────────────────
