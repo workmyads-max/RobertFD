@@ -1,6 +1,12 @@
 {
   "name": "DeviceLog",
   "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
   "properties": {
     "user_email": {
       "type": "string"
@@ -21,6 +27,27 @@
     "os": {
       "type": "string"
     },
+    "screen_resolution": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "country_from_ip": {
+      "type": "string"
+    },
+    "is_vpn": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_proxy": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_datacenter": {
+      "type": "boolean",
+      "default": false
+    },
     "last_login": {
       "type": "string",
       "format": "date-time"
@@ -30,6 +57,10 @@
       "default": false
     },
     "is_blocked": {
+      "type": "boolean",
+      "default": false
+    },
+    "trade_executed": {
       "type": "boolean",
       "default": false
     }

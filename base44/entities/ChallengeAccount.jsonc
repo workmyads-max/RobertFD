@@ -226,6 +226,72 @@
           "type": "number"
         }
       }
+    },
+    "risk_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Risk score 0-100 calculated by risk engine"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "low",
+      "description": "Risk level based on score"
+    },
+    "risk_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Array of active risk flag types"
+    },
+    "last_risk_scan": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last risk score calculation"
+    },
+    "hft_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "arbitrage_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "ea_bot_detected": {
+      "type": "boolean",
+      "default": false
+    },
+    "ea_bot_score": {
+      "type": "number",
+      "default": 0
+    },
+    "ea_bot_evidence": {
+      "type": "object",
+      "description": "JSON evidence of bot detection"
+    },
+    "account_passing_suspected": {
+      "type": "boolean",
+      "default": false
+    },
+    "behavioral_fingerprint": {
+      "type": "object",
+      "description": "Behavioral analytics data"
+    },
+    "consistency_score": {
+      "type": "number",
+      "default": 0
+    },
+    "can_trade": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether account is allowed to trade (false if risk suspended)"
     }
   },
   "required": [

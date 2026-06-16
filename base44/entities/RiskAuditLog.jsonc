@@ -1,0 +1,61 @@
+{
+  "name": "RiskAuditLog",
+  "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "admin_email": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "action_category": {
+      "type": "string",
+      "enum": [
+        "risk_scan",
+        "hft_detection",
+        "bot_detection",
+        "arbitrage_detection",
+        "ip_tracking",
+        "behavioral_analysis",
+        "kyc_review",
+        "account_suspension",
+        "account_termination",
+        "trade_void",
+        "withdrawal_block"
+      ]
+    },
+    "target_account": {
+      "type": "string"
+    },
+    "target_user_email": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "details": {
+      "type": "object"
+    },
+    "risk_score_before": {
+      "type": "number"
+    },
+    "risk_score_after": {
+      "type": "number"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "admin_email",
+    "action",
+    "action_category"
+  ]
+}

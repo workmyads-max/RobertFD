@@ -1,0 +1,36 @@
+{
+  "name": "IPBlacklist",
+  "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "ip_address": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "blocked_by_admin": {
+      "type": "string"
+    },
+    "blocked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "ip_address",
+    "reason"
+  ]
+}

@@ -154,7 +154,10 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               </div>
             )}
             {collapsed && <div className="my-2 mx-2 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />}
-            {[{ id: 'admin-visibility', label: 'Platform Visibility', icon: Zap, permission: 'manage_settings' }].filter(item => isAdminLevel || hasPermission(item.permission)).map(item => {
+            {[
+              { id: 'admin-risk-center', label: 'Risk System', icon: Shield, permission: 'manage_settings' },
+              { id: 'admin-visibility', label: 'Platform Visibility', icon: Zap, permission: 'manage_settings' }
+            ].filter(item => isAdminLevel || hasPermission(item.permission)).map(item => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (
