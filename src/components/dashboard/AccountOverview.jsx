@@ -15,6 +15,7 @@ import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
+import AccountTimeline from '../overview/AccountTimeline';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1090,6 +1091,9 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
+
+      {/* Progress Timeline — adapts per challenge type */}
+      <AccountTimeline account={account} closedTrades={closedTrades} />
 
       {/* Current Results */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
