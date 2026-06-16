@@ -138,7 +138,8 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const accountSize = account.account_size || 0;
   const challengeTypeLabel = account.challenge_type === 'two-step' ? '2-STEP'
     : account.challenge_type === 'instant' ? 'INSTANT' : 'INST. LIGHT';
-  const phaseLabel = (account.phase || 'phase1').replace('phase', 'PH ');
+  const isTwoStep = account.challenge_type === 'two-step';
+  const phaseLabel = isTwoStep ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
   const modelLabel = (account.account_type || 'standard').charAt(0).toUpperCase() + (account.account_type || 'standard').slice(1);
   const statusLabel = account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Funded' : account.status;
@@ -158,8 +159,10 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
-          <span className="text-white/20 text-xs">·</span>
-          <span className="text-xs font-semibold tracking-wide text-white/50">{phaseLabel}</span>
+          {isTwoStep && <>
+            <span className="text-white/20 text-xs">·</span>
+            <span className="text-xs font-semibold tracking-wide text-white/50">{phaseLabel}</span>
+          </>}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusColor }} />
@@ -228,7 +231,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
           { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
           { label: 'TYPE', value: challengeTypeLabel === '2-STEP' ? 'Two-Step' : challengeTypeLabel === 'INSTANT' ? 'Instant' : 'Inst. Light' },
           { label: 'MODEL', value: modelLabel, highlight: true },
-          { label: 'PHASE', value: phaseLabel.replace('PH ', 'Phase ') },
+          { label: 'PHASE', value: isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
         ].map((item, i) => (
           <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
