@@ -1,24 +1,8 @@
 import React, { useEffect } from 'react';
-import { ArrowRight, Clock, BarChart3, Zap, Unlock } from 'lucide-react';
-
-const COMING_SOON = [
-  { id: 'match_trader', name: 'Match Trader', subtitle: 'Institutional Platform', icon: BarChart3 },
-  { id: 'xtrading', name: 'XTrading', subtitle: 'Built-in Terminal', icon: Zap },
-  { id: 'tradelocker', name: 'TradeLocker', subtitle: 'Next-Gen Platform', icon: Unlock },
-];
-
-function MT5Icon() {
-  return (
-    <img
-      src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
-      alt="MT5" width={32} height={32} className="object-contain"
-    />
-  );
-}
+import { ArrowRight } from 'lucide-react';
+import PlatformSelectCard from './PlatformSelectCard';
 
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
-  const selected = order.platform || 'mt5';
-
   useEffect(() => {
     if (!order.platform) updateOrder({ platform: 'mt5' });
   }, []);
@@ -26,19 +10,7 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   return (
     <div className="grid lg:grid-cols-5 gap-8">
       <div className="lg:col-span-3">
-        {/* Header */}
-        <h3 className="text-lg font-bold text-white mb-3">Platform</h3>
-        <div className="border-b border-white/8 mb-5" />
-
-        {/* MT5 Button */}
-        <button
-          onClick={() => updateOrder({ platform: 'mt5' })}
-          className="w-full rounded-xl flex items-center gap-3 px-5 py-4 transition-all hover:opacity-90 active:scale-[0.99]"
-          style={{ background: '#2563eb', color: 'white' }}
-        >
-          <MT5Icon />
-          <span className="text-base font-semibold">MetaTrader 5</span>
-        </button>
+        <PlatformSelectCard selected={true} />
       </div>
 
       {/* Right: Order Summary */}

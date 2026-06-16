@@ -4,6 +4,7 @@ import { ArrowRight, Check, TrendingUp, Clock, BarChart2, Zap, Shield, Loader2 }
 import Navbar from '../components/landing/Navbar';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import PlatformSelectCard from '../components/checkout/PlatformSelectCard';
 
 const ACCOUNT_TYPES = {
   standard: {
@@ -101,6 +102,11 @@ export default function ChallengeSelect() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Platform Section */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <PlatformSelectCard selected={true} />
         </div>
 
         {/* Account type selector */}
