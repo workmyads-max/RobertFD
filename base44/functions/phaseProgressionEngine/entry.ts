@@ -296,6 +296,7 @@ Deno.serve(async (req) => {
       }
 
       await sr.entities.Notification.create({
+        user_email: account.user_email,
         title: '🎉 Phase 1 Passed! Phase 2 Activated',
         message: `Congratulations! Your Phase 1 challenge is complete. Your Phase 2 account is now active.`,
         type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
@@ -350,6 +351,7 @@ Deno.serve(async (req) => {
       }
 
       await sr.entities.Notification.create({
+        user_email: account.user_email,
         title: '⏳ Phase 2 Complete — Under Risk Review',
         message: `Your Phase 2 challenge is complete. Your account is now under review by our risk management team. Please allow 48–96 hours.`,
         type: 'system', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
@@ -440,6 +442,7 @@ Deno.serve(async (req) => {
       });
 
       await sr.entities.Notification.create({
+        user_email: account.user_email,
         title: '🏆 Funded Account Approved!',
         message: `Congratulations! You have been approved as a Funded Trader. Your live funded account credentials are now available in your dashboard.`,
         type: 'payout', priority: 'critical', display_mode: 'popup', is_active: true, target: 'funded',

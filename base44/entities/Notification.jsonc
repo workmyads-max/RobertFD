@@ -2,6 +2,10 @@
   "name": "Notification",
   "type": "object",
   "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Target user email \u2014 if set, only this user sees it. If null, visible to all matching target."
+    },
     "title": {
       "type": "string",
       "description": "Notification title"

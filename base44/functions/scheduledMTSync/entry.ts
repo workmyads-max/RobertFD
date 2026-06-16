@@ -468,6 +468,7 @@ Deno.serve(async (req) => {
               });
               // Notify trader — non-blocking
               base44.asServiceRole.entities.Notification.create({
+                user_email: acc.user_email,
                 title: '🎉 Phase 1 Passed — Under Review',
                 message: 'Congratulations! You have passed Phase 1. Your account is under review. Phase 2 credentials will be issued after approval.',
                 type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
@@ -517,6 +518,7 @@ Deno.serve(async (req) => {
               }
               // Notify trader — non-blocking
               base44.asServiceRole.entities.Notification.create({
+                user_email: acc.user_email,
                 title: '🎉 Phase 2 Passed — Under Review',
                 message: 'Congratulations! You have passed Phase 2. Your funded account is under review. Expected processing time: 3–5 business days.',
                 type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',

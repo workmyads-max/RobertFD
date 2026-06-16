@@ -142,7 +142,11 @@ export default function Dashboard() {
 
   const { data: rawNotifications = [] } = useQuery({
     queryKey: ['notifications', user?.email],
-    queryFn: () => base44.entities.Notification.filter({ is_active: true }),
+    queryFn: async () => {
+      const all = await base44.entities.Notification.filter({ is_active: true });
+      // Only show notifications targeting this user OR global notifications (user_email is null)
+      return all.filter(n => !n.user_email || n.user_email === user?.email);
+    },
     refetchInterval: 30000,
     enabled: !!user,
   });
