@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Download, Star, Trophy, Zap, Eye, Loader2, ExternalLink, Flag, Percent, Layers } from 'lucide-react';
+import { Award, Download, Star, Trophy, Zap, Eye, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
@@ -20,14 +20,6 @@ const CERT_TYPES = {
   consistency:   { label: 'Consistency', color: '#a78bfa', icon: Star, tier: 5 },
   special:       { label: 'Special', color: '#f59e0b', icon: Award, tier: 6 },
 };
-
-const TIERS = [
-  { tier: 1, label: 'Phase 1', target: 'Pass Phase 1' },
-  { tier: 2, label: 'Phase 2', target: 'Pass Phase 2' },
-  { tier: 3, label: 'Funded', target: 'Get Funded' },
-  { tier: 4, label: 'Withdrawal', target: 'First Payout' },
-  { tier: 5, label: 'Consistency', target: 'Consistent Trading' },
-];
 
 // ── PDF Download ────────────────────────────────────────────────────────────
 async function downloadPDF(cert, setLoading) {
@@ -103,71 +95,6 @@ function HourglassIcon({ size = 48 }) {
       <line x1="32" y1="14" x2="32" y2="28" stroke="#1a1a1a" strokeWidth="1" opacity="0.5" />
       <line x1="32" y1="36" x2="32" y2="50" stroke="#1a1a1a" strokeWidth="1" opacity="0.5" />
     </svg>
-  );
-}
-
-// ── Tier Progress Bar ───────────────────────────────────────────────────────
-function TierProgress({ achievedTiers }) {
-  const maxTier = Math.max(...achievedTiers, 0);
-  const nextTier = TIERS.find(t => t.tier > maxTier) || TIERS[TIERS.length - 1];
-
-  return (
-    <div style={{ background: '#121212', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', marginBottom: '20px' }}>
-      {/* Progress bar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span style={{ background: ACCENT, color: '#000', fontWeight: 800, fontSize: '11px', padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.05em' }}>
-            TIER {maxTier || 1}
-          </span>
-          <span className="text-white/40 text-xs">{achievedTiers.length} Achieved</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-white/30 text-xs">{TIERS.length} Total</span>
-          <span style={{ background: '#1a1a1a', color: '#666', fontWeight: 700, fontSize: '11px', padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.05em', border: '1px solid rgba(255,255,255,0.08)' }}>
-            TIER {TIERS.length}
-          </span>
-        </div>
-      </div>
-
-      {/* Progress line */}
-      <div className="relative h-2 rounded-full mb-3" style={{ background: '#1a1a1a' }}>
-        <motion.div
-          className="absolute inset-y-0 left-0 rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${(maxTier / TIERS.length) * 100}%` }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          style={{ background: ACCENT }}
-        />
-        {TIERS.map((t) => (
-          <div
-            key={t.tier}
-            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 transition-all"
-            style={{
-              left: `${(t.tier / TIERS.length) * 100}%`,
-              background: t.tier <= maxTier ? ACCENT : '#1a1a1a',
-              borderColor: t.tier <= maxTier ? ACCENT : 'rgba(255,255,255,0.15)',
-              marginLeft: '-5px',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Benefits pills */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-white/60 text-xs font-semibold">Benefits</span>
-        {[
-          { icon: Flag, label: 'Phase Pass 15% Off' },
-          { icon: Percent, label: 'Funded Bonus 5%' },
-          { icon: Layers, label: 'Payout Priority' },
-        ].map((b, i) => (
-          <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs"
-            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#999' }}>
-            <b.icon className="w-3 h-3" style={{ color: ACCENT }} />
-            {b.label}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -294,11 +221,6 @@ export default function Certificates({ user }) {
     enabled: !!user?.email,
   });
 
-  const achievedTiers = [...new Set(certs.map(c => {
-    const ct = CERT_TYPES[c.type];
-    return ct?.tier || 0;
-  }).filter(Boolean))];
-
   const phaseCerts = certs.filter(c => c.type === 'phase1_passed' || c.type === 'phase2_passed');
   const fundedCerts = certs.filter(c => c.type === 'funded');
   const payoutCerts = certs.filter(c => c.type === 'first_payout');
@@ -311,15 +233,8 @@ export default function Certificates({ user }) {
           <h1 className="text-2xl font-black text-white mb-1">Certificates</h1>
           <p className="text-xs text-white/30">Your achievement record from {FIRM.name}</p>
         </div>
-        <button
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-black transition-all hover:opacity-90"
-          style={{ background: ACCENT }}>
-          View All Tiers <ExternalLink className="w-3 h-3" />
-        </button>
+        <span className="text-xs text-white/20">{FIRM.name}</span>
       </div>
-
-      {/* Tier Progress */}
-      <TierProgress achievedTiers={achievedTiers} />
 
       {/* Performance Overview */}
       <div className="mb-3">
