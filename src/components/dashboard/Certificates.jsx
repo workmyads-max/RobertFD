@@ -31,7 +31,7 @@ async function downloadPDF(cert, setLoading) {
   await new Promise(r => { root.render(React.createElement(CertificateDocument, { cert, forCapture: true })); setTimeout(r, 400); });
 
   const canvas = await html2canvas(container.firstChild, {
-    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+    scale: 2, useCORS: true, backgroundColor: '#05060a', logging: false,
   });
   root.unmount(); document.body.removeChild(container);
 
