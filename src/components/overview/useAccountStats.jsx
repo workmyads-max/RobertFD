@@ -64,11 +64,11 @@ export function useAccountStats(account, trades = []) {
 
     const avgProfit = wins > 0 ? totalProfit / wins : 0;
     const avgLoss = losses > 0 ? totalLoss / losses : 0;
-    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0;
-    const expectancy = totalTrades > 0
+    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 999 : 0;
+    const expectancy = totalTrades > 0 && closedTrades.length > 0
       ? ((computedWinRate / 100) * avgProfit) - ((1 - computedWinRate / 100) * avgLoss)
       : 0;
-    const rrr = avgLoss > 0 ? avgProfit / avgLoss : 0;
+    const rrr = avgLoss > 0 && isFinite(avgProfit / avgLoss) ? avgProfit / avgLoss : 0;
 
     // Drawdown percentage relative to account size
     const dailyDDPct = dailyDD > 0 ? dailyDD : Math.abs(dailyPnl / size) * 100;

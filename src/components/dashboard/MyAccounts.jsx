@@ -261,8 +261,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
   );
 }
 
-export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
@@ -329,7 +328,7 @@ export default function MyAccounts({ onStartChallenge, onOpenTerminal, onOpenAna
 
 
 
-      {isLoading ? (
+      {isLoading || !user ? (
         <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-4 mt-8">
