@@ -22,6 +22,7 @@ import AdminPaymentControl from '../components/admin/AdminPaymentControl';
 import ChallengeMarketplace from '../components/dashboard/ChallengeMarketplace';
 import DashboardCheckout from '../components/dashboard/DashboardCheckout';
 import AdminDashboard from '../components/admin/AdminDashboard';
+import AdminDashboardFull from '../components/admin/AdminDashboardFull';
 import AdminOrders from '../components/admin/AdminOrders';
 import AdminAccounts from '../components/admin/AdminAccounts';
 import AdminPlatformSettings from '../components/admin/AdminPlatformSettings';
@@ -237,6 +238,7 @@ export default function Dashboard() {
       case 'settings': return <DashboardSettings user={user} />;
       case 'notifications': return <NotificationCenter notifications={notifications} />;
       case 'admin-overview': return isAdmin ? <AdminDashboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-dashboard': return isAdmin ? <AdminDashboardFull onNavigate={setActivePage} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-orders': return isAdmin ? <AdminOrders /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-accounts': return isAdmin ? <AdminAccounts /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-withdrawals': return isAdmin ? <AdminWithdrawals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;

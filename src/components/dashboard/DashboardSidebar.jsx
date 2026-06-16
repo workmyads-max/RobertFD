@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -144,6 +144,25 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         {/* Admin only */}
         {isAdmin && (
           <>
+            {/* Admin Toggle Button */}
+            {!collapsed && (
+              <button
+                onClick={() => handleNav('admin-dashboard')}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-bold mb-2 transition-all hover:scale-[1.02]"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.1))',
+                  border: '1.5px solid rgba(255,92,0,0.4)',
+                  boxShadow: '0 0 12px rgba(255,92,0,0.15)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutDashboard className="w-4 h-4 text-primary" />
+                  <span className="text-white">Admin Dashboard</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-primary" />
+              </button>
+            )}
+
             {!collapsed && (
               <div className="pt-3 pb-1 px-3">
                 <div className="flex items-center gap-2">
