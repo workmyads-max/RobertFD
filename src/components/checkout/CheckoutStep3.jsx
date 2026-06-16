@@ -50,7 +50,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      const orderId = `RF-${Date.now().toString(36).toUpperCase()}`;
+      const orderId = `XFT-${Date.now().toString(36).toUpperCase()}`;
 
       // Check if order already exists (prevent duplicates on re-render)
       if (order.order_id) {
