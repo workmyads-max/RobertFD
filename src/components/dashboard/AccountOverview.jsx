@@ -15,7 +15,6 @@ import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
-import AccountTimeline from '../overview/AccountTimeline';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1102,10 +1101,7 @@ export default function AccountOverview({ onStartChallenge, onNavigate }) {
       <ClosedTradesSection account={account} />
 
       {/* Performance Metrics + Progress Timeline */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <AccountPerformanceMetrics account={account} stats={stats} />
-        <AccountTimeline account={account} closedTrades={closedTrades} />
-      </div>
+      <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} />
 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
