@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info, Shield } from 'lucide-react';
+import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Info, Shield, Bell } from 'lucide-react';
+import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -137,6 +138,7 @@ function WithdrawalCard({ w, i }) {
 
 export default function Withdrawals({ user }) {
   const [showForm, setShowForm] = useState(false);
+  const [showKycAlert, setShowKycAlert] = useState(true);
   const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '', account_id: '' });
   const qc = useQueryClient();
 
@@ -208,20 +210,21 @@ export default function Withdrawals({ user }) {
       </div>
 
       {/* KYC Gate */}
-      {!kycApproved && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl mb-5"
-          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <div className="text-sm font-bold text-yellow-400 mb-1">KYC Verification Required</div>
-            <div className="text-xs text-muted-foreground">
-              {!kyc || kyc.status === 'not_submitted'
-                ? 'You must complete identity verification before requesting payouts. Go to KYC section to submit your documents.'
-                : kyc.status === 'pending'
-                ? 'Your KYC submission is under review (24-48 hours). You cannot request payouts until approved.'
-                : 'Your KYC was rejected. Please resubmit your documents with the correct information.'}
-            </div>
-          </div>
+      {!kycApproved && showKycAlert && (
+        <div className="flex justify-center mb-5">
+          <AlertCard
+            isVisible={showKycAlert}
+            title="KYC Required"
+            description={!kyc || kyc.status === 'not_submitted'
+              ? 'Complete identity verification before requesting payouts. Submit your documents in the KYC section.'
+              : kyc.status === 'pending'
+              ? 'KYC under review (24-48 hours). Payouts unavailable until approved.'
+              : 'KYC was rejected. Please resubmit correct documents.'}
+            buttonText="Okay, I Understand"
+            onButtonClick={() => setShowKycAlert(false)}
+            onDismiss={() => setShowKycAlert(false)}
+            icon={<Bell className="h-6 w-6 text-white" />}
+          />
         </div>
       )}
 
