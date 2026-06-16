@@ -7,10 +7,10 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 const FIRM = {
-  name: 'XTRADING CAPITAL',
+  name: 'XFUNDED TRADER',
   tagline: 'ELITE PROPRIETARY TRADING FIRM',
-  website: 'xtrading.com',
-  verifyUrl: 'xtrading.com/verify',
+  website: 'xfundedtrader.com',
+  verifyUrl: 'xfundedtrader.com/verify',
   address: 'Dubai International Financial Centre, UAE',
 };
 
@@ -150,7 +150,7 @@ function CertificateDocument({ cert, forCapture = false }) {
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70px', background: `linear-gradient(90deg, ${cfg.color}08, rgba(0,0,0,0) 50%, ${cfg.color}05)`, borderTop: `1px solid ${cfg.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
         <div>
           <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', letterSpacing: '0.1em' }}>CERTIFICATE ID</div>
-          <div style={{ color: cfg.color, fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>{cert.certificate_id || `XTC-${Date.now()}`}</div>
+          <div style={{ color: cfg.color, fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>{cert.certificate_id || `XFT-${Date.now()}`}</div>
           <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: '8px', marginTop: '1px' }}>Verify at: {FIRM.verifyUrl}</div>
         </div>
 
@@ -293,7 +293,7 @@ function CertCard({ cert, index, onPreview }) {
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
             { label: 'Account ID', value: cert.account_id || '—' },
-            { label: 'Firm', value: 'XTRADING' },
+            { label: 'Firm', value: 'XFUNDED' },
             { label: 'Cert #', value: cert.certificate_id ? `#${cert.certificate_id.slice(0, 8)}` : '—' },
           ].map(item => (
             <div key={item.label} className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>

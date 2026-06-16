@@ -56,7 +56,7 @@ export default function Support() {
       {/* Quick contact */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Email Support', value: 'support@xfunded.com', icon: '✉️' },
+          { label: 'Email Support', value: 'support@xfundedtrader.com', icon: '✉️' },
           { label: 'Live Chat', value: 'Available 24/7', icon: '💬' },
           { label: 'Response Time', value: 'Avg ~15 minutes', icon: '⚡' },
         ].map(s => (

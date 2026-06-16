@@ -61,7 +61,7 @@ function generateInvoicePDF(order, user, account) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text('Institutional Proprietary Trading Firm', 15, 28);
-  doc.text('support@xfunded.com  |  www.xfunded.com', 15, 35);
+  doc.text('support@xfundedtrader.com  |  www.xfundedtrader.com', 15, 35);
 
   // Invoice label
   doc.setFontSize(13);
@@ -125,8 +125,8 @@ function generateInvoicePDF(order, user, account) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(170, 170, 185);
-  doc.text('support@xfunded.com', 118, 89);
-  doc.text('www.xfunded.com', 118, 96);
+  doc.text('support@xfundedtrader.com', 118, 89);
+  doc.text('www.xfundedtrader.com', 118, 96);
 
   // ── Line items table ────────────────────────────────────────────────────────
   // Header
@@ -278,7 +278,7 @@ function generateInvoicePDF(order, user, account) {
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.text('This invoice is auto-generated and serves as official proof of purchase. Challenges are non-refundable once the MT5 account', 15, noteY + 7);
-  doc.text('is activated. For disputes or queries, contact support@xfunded.com within 48 hours of purchase.', 15, noteY + 13);
+  doc.text('is activated. For disputes or queries, contact support@xfundedtrader.com within 48 hours of purchase.', 15, noteY + 13);
 
   // ── Footer ──────────────────────────────────────────────────────────────────
   doc.setFillColor(255, 92, 0);
@@ -290,7 +290,7 @@ function generateInvoicePDF(order, user, account) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.text(`Generated: ${new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}  |  Invoice # ${orderId}`, 105, 287, { align: 'center' });
-  doc.text('www.xfunded.com  |  support@xfunded.com', 105, 293, { align: 'center' });
+  doc.text('www.xfundedtrader.com  |  support@xfundedtrader.com', 105, 293, { align: 'center' });
 
   doc.save(`XFunded-Invoice-${orderId}.pdf`);
 }
@@ -341,7 +341,7 @@ function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
             <div>
               <div className="text-white font-black text-xl tracking-tight">XFUNDED</div>
               <div className="text-white/80 text-xs mt-0.5">Institutional Proprietary Trading Firm</div>
-              <div className="text-white/70 text-xs">www.xfunded.com  ·  support@xfunded.com</div>
+              <div className="text-white/70 text-xs">www.xfundedtrader.com  ·  support@xfundedtrader.com</div>
             </div>
             <div className="text-right">
               <div className="text-white font-bold text-sm">INVOICE</div>
@@ -358,7 +358,7 @@ function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
           <div className="grid grid-cols-2 gap-4">
             {[
               { title: 'BILL TO', name: order.full_name || user?.full_name || 'Trader', email: order.email || user?.email, extra: [order.phone, [order.city, order.country].filter(Boolean).join(', ')].filter(Boolean) },
-              { title: 'FROM', name: 'XFunded Ltd.', email: 'support@xfunded.com', extra: ['www.xfunded.com'] },
+              { title: 'FROM', name: 'XFunded Ltd.', email: 'support@xfundedtrader.com', extra: ['www.xfundedtrader.com'] },
             ].map(col => (
               <div key={col.title} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: '3px solid #FF5C00' }}>
                 <div className="text-[10px] font-bold text-primary mb-2">{col.title}</div>
@@ -439,7 +439,7 @@ function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
 
           {/* Terms note */}
           <div className="rounded-xl px-5 py-3 text-xs text-muted-foreground" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            This invoice is auto-generated and serves as official proof of purchase. Challenges are non-refundable once the MT5 account is activated. For disputes, contact support@xfunded.com within 48 hours.
+            This invoice is auto-generated and serves as official proof of purchase. Challenges are non-refundable once the MT5 account is activated. For disputes, contact support@xfundedtrader.com within 48 hours.
           </div>
         </div>
       </div>
