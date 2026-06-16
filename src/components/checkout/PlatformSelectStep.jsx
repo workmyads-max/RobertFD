@@ -7,7 +7,21 @@ const COMING_SOON = [
   { id: 'tradelocker', name: 'TradeLocker', subtitle: 'Next-Gen Platform', icon: Unlock },
 ];
 
+function MT5Icon() {
+  return (
+    <img
+      src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
+      alt="MT5"
+      width={44}
+      height={44}
+      className="object-contain"
+    />
+  );
+}
+
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
+  const selected = order.platform || 'mt5';
+
   useEffect(() => {
     if (!order.platform) updateOrder({ platform: 'mt5' });
   }, []);
@@ -15,79 +29,61 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   return (
     <div className="grid lg:grid-cols-5 gap-8">
       <div className="lg:col-span-3">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/20">
-            <Monitor className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">Select Trading Platform</h2>
-            <p className="text-sm text-white/35 mt-0.5">Choose where you'll trade. This is permanently assigned to your account.</p>
-          </div>
+        {/* Section title */}
+        <div className="flex items-center gap-3 mb-5">
+          <Monitor className="w-5 h-5 text-primary" />
+          <span className="text-[13px] font-semibold text-white/70 uppercase tracking-[0.15em]">Trading Platform</span>
         </div>
 
-        {/* MT5 Platform Hero */}
-        <div className="rounded-2xl overflow-hidden mb-6"
-          style={{ border: '1px solid rgba(37,99,235,0.25)', background: '#0f172a' }}>
-
-          {/* Top bar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <img
-                src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
-                alt="MT5" width={28} height={28} className="object-contain"
-              />
-              <span className="text-sm font-semibold text-white">MetaTrader 5</span>
+        {/* MT5 Card */}
+        <button
+          onClick={() => updateOrder({ platform: 'mt5' })}
+          className="w-full rounded-xl text-left transition-all duration-200 hover:border-primary/50"
+          style={{
+            background: 'rgba(255,92,0,0.03)',
+            border: `1.5px solid ${selected === 'mt5' ? 'rgba(255,92,0,0.45)' : 'rgba(255,255,255,0.08)'}`,
+          }}
+        >
+          <div className="flex items-center gap-4 px-5 py-4">
+            {/* MT5 Logo */}
+            <div className="flex-shrink-0">
+              <MT5Icon />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">
-                Available
-              </span>
-              <CheckCircle2 className="w-5 h-5 text-blue-500" />
+
+            {/* Title + Subtitle */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-base font-bold text-white">MetaTrader 5</span>
+                {selected === 'mt5' && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+                    style={{ background: 'rgba(255,92,0,0.15)', color: '#FF8A3D' }}>
+                    Selected
+                  </span>
+                )}
+              </div>
+              <span className="text-xs font-medium text-primary/80">Industry standard platform</span>
+            </div>
+
+            {/* Features */}
+            <div className="hidden sm:flex items-center gap-5 text-[10px] text-white/25 font-medium">
+              <span>Expert Advisors</span>
+              <span>Advanced charting</span>
+              <span>Algorithmic trading</span>
+            </div>
+
+            {/* Check */}
+            <div className="flex-shrink-0">
+              {selected === 'mt5' ? (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              ) : (
+                <div className="w-5 h-5 rounded-full border-2 border-white/15" />
+              )}
             </div>
           </div>
-
-          {/* Body */}
-          <div className="p-6">
-            <div className="text-[13px] text-white/50 leading-relaxed mb-6">
-              The industry-leading platform for professional traders. Advanced charting tools, Expert Advisors, multi-timeframe analysis, and one-click trading — all in one place.
-            </div>
-
-            {/* Feature grid */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {[
-                { title: 'Expert Advisors', desc: 'Automated trading bots & custom indicators' },
-                { title: 'Advanced Charting', desc: '21 timeframes, 80+ technical indicators' },
-                { title: 'Algorithmic Trading', desc: 'MQL5 language for custom strategies' },
-                { title: 'Multi-Asset Class', desc: 'Forex, indices, commodities & crypto' },
-              ].map(f => (
-                <div key={f.title} className="flex gap-3 p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ background: 'rgba(37,99,235,0.1)' }}>
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-white/80">{f.title}</div>
-                    <div className="text-[11px] text-white/35 mt-0.5 leading-snug">{f.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom info */}
-            <div className="flex items-center gap-4 text-[11px] text-white/30">
-              <span>Windows · macOS · iOS · Android</span>
-              <span>·</span>
-              <span>Free download</span>
-              <span>·</span>
-              <span>Permanently assigned</span>
-            </div>
-          </div>
-        </div>
+        </button>
 
         {/* Coming Soon */}
-        <div>
+        <div className="mt-6">
           <div className="text-[10px] text-white/15 font-semibold uppercase tracking-[0.25em] mb-3 px-1">Coming Soon</div>
           <div className="grid grid-cols-3 gap-3">
             {COMING_SOON.map(({ id, name, subtitle, icon: Icon }) => (
