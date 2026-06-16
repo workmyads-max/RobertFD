@@ -15,8 +15,8 @@ const CATEGORIES = ['billing', 'technical', 'account', 'withdrawal', 'other'];
 
 const FAQS = [
   { q: 'How long does account delivery take?', a: 'Funded account credentials are delivered within 1-24 hours after payment confirmation.' },
-  { q: 'What platforms does Robert Funds support?', a: 'Currently RF XTrading (our native platform). MT5 and TradeLocker are coming soon.' },
-  { q: 'What is the profit split?', a: 'Robert Funds offers an 80/20 profit split — 80% goes to you.' },
+  { q: 'What platforms does XFunded Trader support?', a: 'Currently XFunded Trader (our native platform). MT5 and TradeLocker are coming soon.' },
+  { q: 'What is the profit split?', a: 'XFunded Trader offers an 80/20 profit split — 80% goes to you.' },
   { q: 'Can I trade news events?', a: 'Swing accounts allow news trading. Standard accounts restrict trading during major news events.' },
   { q: 'How do I request a payout?', a: 'Navigate to Withdrawals in your dashboard and click "Request Payout". Payouts are processed within 24 hours.' },
 ];
@@ -44,7 +44,7 @@ export default function Support() {
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <HeadphonesIcon className="w-6 h-6 text-primary" /> Support Center
           </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Get help from the Robert Funds team</p>
+          <p className="text-sm text-muted-foreground font-mono mt-1">Get help from the XFunded Trader team</p>
         </div>
         <button onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
@@ -56,7 +56,7 @@ export default function Support() {
       {/* Quick contact */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Email Support', value: 'support@robertfunds.com', icon: '✉️' },
+          { label: 'Email Support', value: 'support@xfunded.com', icon: '✉️' },
           { label: 'Live Chat', value: 'Available 24/7', icon: '💬' },
           { label: 'Response Time', value: 'Avg ~15 minutes', icon: '⚡' },
         ].map(s => (

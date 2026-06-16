@@ -291,7 +291,7 @@ export default function Withdrawals({ user }) {
             <div className="text-[10px] font-mono text-muted-foreground">Available Profit</div>
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">You keep <span className="text-emerald-400 font-bold">80%</span> of all profits. Robert Funds retains <span className="text-red-400 font-bold">20%</span>. A $25 processing fee and any applicable affiliate rewards are deducted from your 80% share before payout.</div>
+        <div className="text-xs text-muted-foreground">You keep <span className="text-emerald-400 font-bold">80%</span> of all profits. XFunded Trader retains <span className="text-red-400 font-bold">20%</span>. A $25 processing fee and any applicable affiliate rewards are deducted from your 80% share before payout.</div>
       </div>
 
       {/* Withdrawal list */}

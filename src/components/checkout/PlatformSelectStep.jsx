@@ -7,7 +7,7 @@ const PLATFORMS = [
     id: 'mt5',
     name: 'MetaTrader 5',
     subtitle: 'Industry Standard',
-    description: "The world's most popular trading platform with advanced charting, Expert Advisors, and algorithmic trading support.",
+    description: 'The world\'s most popular trading platform with advanced charting, Expert Advisors, and algorithmic trading support.',
     features: ['Expert Advisors (EAs)', 'Advanced charting & indicators', 'Algorithmic trading support', 'Multi-asset trading'],
     available: true,
   },
@@ -37,8 +37,7 @@ const PLATFORMS = [
   },
 ];
 
-// MT5 official logo
-function MT5Logo({ size = 56 }) {
+function MT5Logo({ size = 52 }) {
   return (
     <img
       src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/8cf56f3aa_image.png"
@@ -46,7 +45,6 @@ function MT5Logo({ size = 56 }) {
       width={size}
       height={size}
       className="object-contain"
-      style={{ filter: 'drop-shadow(0 2px 8px rgba(0,122,255,0.3))' }}
     />
   );
 }
@@ -54,7 +52,6 @@ function MT5Logo({ size = 56 }) {
 export default function PlatformSelectStep({ order, updateOrder, onNext }) {
   const selected = order.platform || '';
 
-  // Auto-select MT5 if nothing selected
   useEffect(() => {
     if (!selected) updateOrder({ platform: 'mt5' });
   }, []);
@@ -64,61 +61,57 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
       <div className="lg:col-span-3 space-y-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,0,0.15)' }}>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
               <Monitor className="w-4 h-4 text-primary" />
             </div>
-            <h2 className="text-xl font-black text-foreground">Select Trading Platform</h2>
+            <h2 className="text-2xl font-bold text-white">Select Trading Platform</h2>
           </div>
-          <p className="text-sm text-muted-foreground ml-11">Choose where you'll trade. This is permanently assigned to your account.</p>
+          <p className="text-sm text-white/40 ml-12">Choose where you'll trade. This is permanently assigned to your account.</p>
         </div>
 
-        {/* MT5 — premium featured card */}
+        {/* MT5 Card */}
         <motion.button
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.015 }}
-          whileTap={{ scale: 0.985 }}
+          whileHover={{ scale: 1.005 }}
+          whileTap={{ scale: 0.995 }}
           onClick={() => updateOrder({ platform: 'mt5' })}
-          className="relative w-full rounded-2xl p-6 text-left transition-all"
+          className="relative w-full rounded-xl p-6 text-left transition-all duration-200"
           style={{
             background: selected === 'mt5'
-              ? 'linear-gradient(135deg, rgba(0,80,180,0.18) 0%, rgba(0,40,100,0.22) 100%)'
-              : 'linear-gradient(135deg, rgba(0,60,140,0.1) 0%, rgba(0,30,80,0.14) 100%)',
-            border: `1.5px solid ${selected === 'mt5' ? 'rgba(0,122,255,0.6)' : 'rgba(0,100,200,0.3)'}`,
-            boxShadow: selected === 'mt5'
-              ? '0 0 40px rgba(0,102,204,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
-              : '0 0 20px rgba(0,80,160,0.08)',
+              ? 'rgba(0,80,180,0.08)'
+              : 'rgba(255,255,255,0.02)',
+            border: `1.5px solid ${selected === 'mt5' ? 'rgba(37,99,235,0.45)' : 'rgba(255,255,255,0.08)'}`,
           }}
         >
-          {/* Selected checkmark */}
-          {selected === 'mt5' && (
-            <div className="absolute top-4 right-4">
-              <CheckCircle2 className="w-5 h-5 text-blue-400" />
-            </div>
-          )}
-
-          {/* "Available" badge */}
-          <div className="absolute top-4 left-4">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black"
-              style={{ background: 'rgba(0,122,255,0.2)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.4)' }}>
-              ✓ Available Now
+          {/* Badges */}
+          <div className="flex items-center gap-2 absolute top-5 left-5">
+            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
+              style={{ background: 'rgba(37,99,235,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
+              Available
             </span>
           </div>
 
-          <div className="flex items-start gap-5 mt-8">
-            <div className="flex-shrink-0">
-              <MT5Logo size={56} />
+          {selected === 'mt5' && (
+            <div className="absolute top-5 right-5">
+              <CheckCircle2 className="w-5 h-5 text-blue-500" />
+            </div>
+          )}
+
+          <div className="flex items-start gap-5 mt-9">
+            <div className="flex-shrink-0 mt-1">
+              <MT5Logo size={52} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-lg font-black text-white mb-0.5">MetaTrader 5</div>
-              <div className="text-xs font-mono mb-3" style={{ color: 'rgba(147,197,253,0.7)' }}>Industry Standard Platform</div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              <div className="text-lg font-bold text-white mb-1">MetaTrader 5</div>
+              <div className="text-xs text-blue-300/70 mb-4 font-medium">Industry Standard Platform</div>
+              <p className="text-sm text-white/45 leading-relaxed mb-4">
                 The world's most popular trading platform with advanced charting, Expert Advisors, and full algorithmic trading support.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {['Expert Advisors (EAs)', 'Advanced charting', 'Algorithmic trading', 'Multi-asset support'].map(f => (
-                  <div key={f} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(147,197,253,0.8)' }}>
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-blue-400" />
+                  <div key={f} className="flex items-center gap-2.5 text-xs text-white/50 font-medium">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-blue-500/60" />
                     {f}
                   </div>
                 ))}
@@ -127,38 +120,35 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
           </div>
         </motion.button>
 
-        {/* Coming soon platforms — 3 in a row */}
+        {/* Coming Soon */}
         <div>
-          <div className="text-xs font-mono text-muted-foreground/50 uppercase tracking-widest mb-3">Coming Soon</div>
+          <div className="text-[11px] text-white/20 font-semibold uppercase tracking-widest mb-3">Coming Soon</div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {PLATFORMS.filter(p => !p.available).map((p, i) => (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.06 }}
-                className="relative rounded-xl p-4 text-left"
+                className="relative rounded-lg p-4 text-left opacity-45 pointer-events-none"
                 style={{
-                  background: 'rgba(255,255,255,0.025)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  opacity: 0.5,
-                  cursor: 'not-allowed',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
-                <div className="absolute top-2.5 right-2.5">
-                  <span className="px-2 py-0.5 rounded-full text-[8px] font-black"
-                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    Coming Soon
+                <div className="absolute top-3 right-3">
+                  <span className="px-2 py-0.5 rounded text-[9px] font-semibold text-white/30 border border-white/10">
+                    Soon
                   </span>
                 </div>
                 <div className="text-lg mb-2 mt-1">
                   {p.id === 'match_trader' ? '📊' : p.id === 'xtrading' ? '⚡' : '🔓'}
                 </div>
-                <div className="text-xs font-bold text-foreground/50 mb-0.5">{p.name}</div>
-                <div className="text-[9px] font-mono text-muted-foreground/40 mb-2">{p.subtitle}</div>
+                <div className="text-xs font-semibold text-white/40 mb-0.5">{p.name}</div>
+                <div className="text-[10px] text-white/25 mb-2">{p.subtitle}</div>
                 <div className="flex items-center gap-1 mt-2">
-                  <Clock className="w-3 h-3 text-muted-foreground/30" />
-                  <span className="text-[9px] font-mono text-muted-foreground/30">In Development</span>
+                  <Clock className="w-3 h-3 text-white/20" />
+                  <span className="text-[9px] text-white/20">In Development</span>
                 </div>
               </motion.div>
             ))}
@@ -166,13 +156,13 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
         </div>
       </div>
 
-      {/* RIGHT summary + CTA */}
+      {/* RIGHT: Summary */}
       <div className="lg:col-span-2">
         <div className="sticky top-6 space-y-4">
-          <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div className="px-5 py-3.5 border-b border-white/5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Order Summary</span>
+          <div className="rounded-xl overflow-hidden"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="px-5 py-3.5 border-b border-white/5 bg-white/[0.01]">
+              <span className="text-[10px] font-semibold text-white/30 uppercase tracking-wider">Order Summary</span>
             </div>
             <div className="p-5 space-y-3">
               {[
@@ -183,32 +173,29 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 { label: 'Platform', value: 'MetaTrader 5', highlight: true },
               ].map(({ label, value, highlight }) => (
                 <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                  <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</span>
+                  <span className="text-xs text-white/35">{label}</span>
+                  <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-white/80'}`}>{value}</span>
                 </div>
               ))}
-              <div className="border-t border-white/10 pt-3 mt-1">
+              <div className="border-t border-white/8 pt-3 mt-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold">Total</span>
-                  <span className="text-3xl font-black text-primary">${order.price}</span>
+                  <span className="text-sm font-semibold text-white">Total</span>
+                  <span className="text-2xl font-bold text-primary">${order.price}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <motion.button
+          <button
             onClick={onNext}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
             style={{
               background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
-              boxShadow: '0 4px 24px rgba(255,92,0,0.35)',
               color: 'white',
             }}
           >
             Continue <ArrowRight className="w-4 h-4" />
-          </motion.button>
+          </button>
         </div>
       </div>
     </div>
