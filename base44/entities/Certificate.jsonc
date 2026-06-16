@@ -38,6 +38,10 @@
     "account_size": {
       "type": "number"
     },
+    "withdrawal_amount": {
+      "type": "number",
+      "description": "Withdrawal amount for payout certificates"
+    },
     "challenge_type": {
       "type": "string"
     },
