@@ -7,9 +7,6 @@ import FundedDashboard from '../components/overview/FundedDashboard';
 import MyAccounts from '../components/dashboard/MyAccounts';
 
 import Analytics from '../components/dashboard/Analytics';
-import EconomicCalendar from '../components/dashboard/EconomicCalendar';
-import MarketNews from '../components/dashboard/MarketNews';
-import CalendarNews from '../components/dashboard/CalendarNews';
 import Leaderboard from '../components/dashboard/Leaderboard';
 import TradingJournal from '../components/dashboard/TradingJournal';
 import Billing from '../components/dashboard/Billing';
@@ -220,9 +217,6 @@ export default function Dashboard() {
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;
-      case 'calendar': return <CalendarNews />;
-      case 'news': return <CalendarNews />;
-      case 'calendar-news': return <CalendarNews />;
       case 'leaderboard': return <Leaderboard />;
       case 'journal': return <TradingJournal user={user} />;
       case 'billing': return <Billing />;
