@@ -280,7 +280,7 @@ export default function Dashboard() {
   const isOverview  = activePage === 'overview';
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
       {/* Clean dark background — no animated overlays */}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
@@ -293,7 +293,7 @@ export default function Dashboard() {
       <DDBreachModal breach={ddBreach} onAcknowledge={() => { setDdBreach(null); setActivePage('accounts'); }} />
 
 
-      <div className="flex flex-1 overflow-hidden relative z-10">
+      <div className="flex flex-1 overflow-hidden relative z-10 h-0">
         <DashboardSidebar
           activePage={activePage}
           setActivePage={setActivePage}
