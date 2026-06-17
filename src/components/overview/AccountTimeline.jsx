@@ -162,7 +162,9 @@ function useTimelineSteps(account, closedTrades = []) {
     const isPhase2Done = phase === 'funded' || status === 'funded';
     const isPhase2UnderReview = (phase === 'phase2' && status === 'passed' && phase2ReviewStatus === 'pending_review') ||
                                 (phase === 'funded' && status === 'passed');
-    const isPhase2Active = phase === 'phase2' && status === 'active';
+    // Phase 2 is only "active" if admin has approved Phase 1 review and issued Phase 2 credentials
+    // i.e. the account's phase is actually 'phase2' AND status is 'active' (not still pending_review on phase1)
+    const isPhase2Active = phase === 'phase2' && status === 'active' && phase1ReviewStatus !== 'pending_review';
 
     return [
       {
