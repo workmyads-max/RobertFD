@@ -343,18 +343,18 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
               className="relative rounded-2xl overflow-hidden"
               style={{
                 backgroundColor: '#0e131f',
-                boxShadow: '0 -6px 60px 6px rgba(255,92,0,0.12), 0 0 10px 0 rgba(0,0,0,0.5)',
+                boxShadow: '0 -6px 60px 6px rgba(204,255,0,0.1), 0 0 10px 0 rgba(0,0,0,0.5)',
               }}>
 
-              {/* Bottom orange glow */}
-              <div className="absolute bottom-0 left-0 right-0 h-2/3 pointer-events-none" style={{ background: 'radial-gradient(ellipse at bottom center, rgba(255,92,0,0.18) -10%, rgba(255,92,0,0) 65%)', filter: 'blur(20px)', zIndex: 0 }} />
+              {/* Bottom lime glow */}
+              <div className="absolute bottom-0 left-0 right-0 h-2/3 pointer-events-none" style={{ background: 'radial-gradient(ellipse at bottom center, rgba(204,255,0,0.14) -10%, rgba(204,255,0,0) 65%)', filter: 'blur(20px)', zIndex: 0 }} />
 
               {/* Bottom glowing border line */}
-              <div className="absolute bottom-0 left-0 right-0 h-[1.5px] pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(255,92,0,0.05) 0%, rgba(255,92,0,0.7) 50%, rgba(255,92,0,0.05) 100%)', boxShadow: '0 0 12px 2px rgba(255,92,0,0.5)', zIndex: 2 }} />
+              <div className="absolute bottom-0 left-0 right-0 h-[1.5px] pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(204,255,0,0.05) 0%, rgba(204,255,0,0.7) 50%, rgba(204,255,0,0.05) 100%)', boxShadow: '0 0 12px 2px rgba(204,255,0,0.4)', zIndex: 2 }} />
               {/* Left corner glow */}
-              <div className="absolute bottom-0 left-0 h-1/4 w-[1px] pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(255,92,0,0.6) 0%, rgba(255,92,0,0) 100%)', boxShadow: '0 0 8px 2px rgba(255,92,0,0.4)', zIndex: 2 }} />
+              <div className="absolute bottom-0 left-0 h-1/4 w-[1px] pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(204,255,0,0.5) 0%, rgba(204,255,0,0) 100%)', boxShadow: '0 0 8px 2px rgba(204,255,0,0.3)', zIndex: 2 }} />
               {/* Right corner glow */}
-              <div className="absolute bottom-0 right-0 h-1/4 w-[1px] pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(255,92,0,0.6) 0%, rgba(255,92,0,0) 100%)', boxShadow: '0 0 8px 2px rgba(255,92,0,0.4)', zIndex: 2 }} />
+              <div className="absolute bottom-0 right-0 h-1/4 w-[1px] pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(204,255,0,0.5) 0%, rgba(204,255,0,0) 100%)', boxShadow: '0 0 8px 2px rgba(204,255,0,0.3)', zIndex: 2 }} />
 
               {/* Glass reflection overlay */}
               <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.02) 100%)', zIndex: 1 }} />
@@ -364,14 +364,14 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)' }}>
-                      <Clock className="w-5 h-5" style={{ color: '#FF5C00' }} />
+                      style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.25)' }}>
+                      <Clock className="w-5 h-5" style={{ color: '#CCFF00' }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5 flex-wrap">
                         <span className="text-sm font-black text-white font-mono">{o.order_id || `Order #${o.id?.slice(0,8)}`}</span>
                         <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                          style={{ background: 'rgba(255,92,0,0.12)', border: '1px solid rgba(255,92,0,0.35)', color: '#FF5C00' }}>
+                          style={{ background: 'rgba(204,255,0,0.1)', border: '1px solid rgba(204,255,0,0.35)', color: '#CCFF00' }}>
                           <Clock className="w-2.5 h-2.5" /> Pending Admin Approval
                         </span>
                       </div>
@@ -403,8 +403,8 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
 
                 {/* Info bar */}
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                  style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.18)' }}>
-                  <Shield className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#FF5C00' }} />
+                  style={{ background: 'rgba(204,255,0,0.05)', border: '1px solid rgba(204,255,0,0.18)' }}>
+                  <Shield className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#CCFF00' }} />
                   <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     Your payment is being reviewed. Account credentials will be delivered within <span className="font-semibold text-white">1–24 hours</span> after confirmation.
                   </span>
