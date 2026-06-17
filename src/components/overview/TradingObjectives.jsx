@@ -206,14 +206,21 @@ export default function TradingObjectives({ account, rules, stats }) {
             {phase.replace('phase', 'Phase ')} · {challengeLabel} · ${accountSize.toLocaleString()}
           </p>
         </div>
-        <div className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold capitalize"
-          style={{
-            background: account?.status === 'active' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)',
-            color: account?.status === 'active' ? '#10b981' : '#FF5C00',
-            border: `1px solid ${account?.status === 'active' ? 'rgba(16,185,129,0.2)' : 'rgba(255,92,0,0.2)'}`,
-          }}>
-          {account?.status || 'active'}
-        </div>
+        {(() => {
+          const st = account?.status || 'active';
+          const reviewStatus = account?.phase_review_status;
+          const fundedReviewStatus = account?.funded_review_status;
+          const isUnderReview = (st === 'passed' && (reviewStatus === 'pending_review' || fundedReviewStatus === 'pending_review'));
+          const label = isUnderReview ? 'Passed — Under Review' : st;
+          const bg = isUnderReview ? 'rgba(96,165,250,0.1)' : st === 'active' ? 'rgba(16,185,129,0.1)' : st === 'passed' ? 'rgba(96,165,250,0.1)' : 'rgba(255,92,0,0.1)';
+          const color = isUnderReview ? '#60a5fa' : st === 'active' ? '#10b981' : st === 'passed' ? '#60a5fa' : '#FF5C00';
+          return (
+            <div className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold capitalize"
+              style={{ background: bg, color, border: `1px solid ${color}30` }}>
+              {label}
+            </div>
+          );
+        })()}
       </div>
       <div className="space-y-5">
         {objectives.map((obj, i) => <ObjectiveRow key={obj.label} {...obj} i={i} />)}

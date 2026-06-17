@@ -10,10 +10,11 @@ function daysSince(dateStr) {
 }
 
 // ─── timeline step ─────────────────────────────────────────────────────────────
-function TimelineStep({ icon: Icon, label, desc, status, isLast, index }) {
+function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge }) {
   const config = {
     done:    { line: 'rgba(16,185,129,0.15)',  ring: 'rgba(16,185,129,0.25)',  bg: 'rgba(16,185,129,0.06)', color: '#10b981' },
     active:  { line: 'rgba(255,92,0,0.15)',    ring: 'rgba(255,92,0,0.35)',    bg: 'rgba(255,92,0,0.07)',   color: '#FF5C00' },
+    review:  { line: 'rgba(96,165,250,0.15)',  ring: 'rgba(96,165,250,0.35)',  bg: 'rgba(96,165,250,0.07)', color: '#60a5fa' },
     pending: { line: 'rgba(255,255,255,0.04)',  ring: 'rgba(255,255,255,0.06)',  bg: 'rgba(255,255,255,0.015)', color: 'rgba(255,255,255,0.18)' },
     failed:  { line: 'rgba(239,68,68,0.12)',    ring: 'rgba(239,68,68,0.25)',    bg: 'rgba(239,68,68,0.06)',  color: '#ef4444' },
   };
@@ -29,7 +30,7 @@ function TimelineStep({ icon: Icon, label, desc, status, isLast, index }) {
           transition={{ delay: index * 0.06, type: 'spring', stiffness: 180 }}
           className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 relative"
           style={{ background: cfg.bg, border: `1px solid ${cfg.ring}` }}>
-          {status === 'active' && (
+          {(status === 'active' || status === 'review') && (
             <motion.div
               animate={{ scale: [1, 1.6, 1], opacity: [0.25, 0, 0.25] }}
               transition={{ duration: 2.5, repeat: Infinity }}
@@ -57,6 +58,21 @@ function TimelineStep({ icon: Icon, label, desc, status, isLast, index }) {
               style={{ background: `${cfg.color}12`, color: cfg.color, border: `1px solid ${cfg.color}25` }}>
               Active
             </motion.span>
+          )}
+          {status === 'review' && (
+            <motion.span
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+              className="text-[8px] font-mono px-1.5 py-0.5 rounded-full font-bold uppercase"
+              style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+              Under Review
+            </motion.span>
+          )}
+          {badge && (
+            <span className="text-[8px] font-mono px-1.5 py-0.5 rounded-full font-bold uppercase"
+              style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}>
+              {badge}
+            </span>
           )}
         </div>
         <div className="text-[10px] font-mono leading-relaxed" style={{ color: status === 'pending' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
@@ -134,9 +150,18 @@ function useTimelineSteps(account, closedTrades = []) {
     const minDays = ruleSnapshot.min_trading_days ?? 4;
     const dailyDd = ruleSnapshot.daily_dd_limit ?? 5;
 
-    const isPhase1Done = phase !== 'phase1' || status === 'passed' || status === 'funded';
-    const isPhase2Done = phase === 'funded' || status === 'funded';
+    const phase1ReviewStatus = account.phase_review_status || 'none';
+    const phase2ReviewStatus = account.funded_review_status || 'none';
+
+    // Phase 1 is "done" (fully approved) only when review is approved OR phase advanced past it
+    const isPhase1Passed = (phase === 'phase1' && status === 'passed') || phase !== 'phase1' || status === 'funded';
+    const isPhase1UnderReview = phase === 'phase1' && status === 'passed' && phase1ReviewStatus === 'pending_review';
     const isPhase1Active = phase === 'phase1' && status === 'active';
+    const isPhase1Done = isPhase1Passed && !isPhase1UnderReview;
+
+    const isPhase2Done = phase === 'funded' || status === 'funded';
+    const isPhase2UnderReview = (phase === 'phase2' && status === 'passed' && phase2ReviewStatus === 'pending_review') ||
+                                (phase === 'funded' && status === 'passed');
     const isPhase2Active = phase === 'phase2' && status === 'active';
 
     return [
@@ -149,26 +174,34 @@ function useTimelineSteps(account, closedTrades = []) {
       {
         icon: Zap,
         label: 'Phase 1',
-        desc: isPhase1Done
-          ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
-          : `${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`,
-        status: isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending',
+        desc: isPhase1UnderReview
+          ? `✓ ${phase1Target}% target met — XFT Team review in progress`
+          : isPhase1Done
+            ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
+            : `${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`,
+        status: isPhase1UnderReview ? 'review' : isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending',
       },
       {
         icon: Zap,
         label: 'Phase 2',
-        desc: isPhase2Done
-          ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
-          : `${phase2Target}% profit · ${dailyDd}% daily DD`,
-        status: isPhase2Done ? 'done' : isPhase2Active ? 'active' : (isPhase1Done ? 'active' : 'pending'),
+        desc: isPhase2UnderReview
+          ? `✓ ${phase2Target}% target met — XFT Team review in progress`
+          : isPhase2Done
+            ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
+            : isPhase1UnderReview
+              ? 'Pending Phase 1 approval by XFT Trader Team'
+              : `${phase2Target}% profit · ${dailyDd}% daily DD`,
+        status: isPhase2UnderReview ? 'review' : isPhase2Done ? 'done' : isPhase2Active ? 'active' : 'pending',
       },
       {
         icon: DollarSign,
         label: 'Funded Account',
         desc: isFunded
           ? `Live capital · ${profitSplit}% profit split`
-          : 'Pending Phase 2 completion',
-        status: isFunded ? 'done' : (isPhase2Done ? 'active' : 'pending'),
+          : isPhase2UnderReview
+            ? 'Pending funded account approval by XFT Trader Team'
+            : 'Pending Phase 2 completion',
+        status: isFunded ? 'done' : (isPhase2UnderReview ? 'review' : 'pending'),
       },
       {
         icon: Clock,

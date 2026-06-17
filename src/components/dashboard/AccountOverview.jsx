@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, RefreshCw, ChevronRight,
   Plus, BarChart3, Key, CalendarDays, Info, Check, X,
   TrendingUp, TrendingDown, Activity, Shield, Target, Clock,
-  Zap, Award
+  Zap, Award, CheckCircle2
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -141,11 +141,15 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const isTwoStep = account.challenge_type === 'two-step';
   const phaseLabel = isTwoStep ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
   const modelLabel = (account.account_type || 'standard').charAt(0).toUpperCase() + (account.account_type || 'standard').slice(1);
-  const statusLabel = account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
+  const isUnderPhase1Review = account.status === 'passed' && account.phase === 'phase1' && account.phase_review_status === 'pending_review';
+  const isUnderFundedReview = account.status === 'passed' && account.funded_review_status === 'pending_review';
+  const statusLabel = isUnderPhase1Review ? 'Phase 1 Passed — Under Review'
+    : isUnderFundedReview ? 'Phase 2 Passed — Funded Review'
+    : account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Funded' : account.status;
   const isActive = account.status === 'active';
   const isFunded = account.status === 'funded';
-  const statusColor = isActive ? '#10b981' : isFunded ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
+  const statusColor = (isUnderPhase1Review || isUnderFundedReview) ? '#60a5fa' : isActive ? '#10b981' : isFunded ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
   const profitTargetPct = account.rule_snapshot?.phase1_target ?? 10;
   const progressPct = Math.min((account.profit_target_progress || 0) / profitTargetPct * 100, 100);
   const totalPnl = balance - accountSize;
@@ -1088,6 +1092,41 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
+
+      {/* Phase passed / under review banners */}
+      {account?.status === 'passed' && account?.phase === 'phase1' && account?.phase_review_status === 'pending_review' && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl px-5 py-4 flex items-start gap-4"
+          style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.3)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)' }}>
+            <CheckCircle2 className="w-4.5 h-4.5 text-blue-400" style={{ width: 18, height: 18 }} />
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-bold text-blue-400 mb-1">🎉 Phase 1 Target Met — Under Review</div>
+            <div className="text-[12px] text-white/55 leading-relaxed">
+              Congratulations! You have successfully met the Phase 1 profit target. The <span className="text-white/80 font-semibold">XFunded Trader Team</span> is currently reviewing your account. Once approved, your Phase 2 account credentials will be issued automatically. Expected processing time: <span className="text-white/80 font-semibold">1–3 business days</span>.
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {account?.status === 'passed' && (account?.phase === 'phase2' || account?.phase === 'funded') && account?.funded_review_status === 'pending_review' && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl px-5 py-4 flex items-start gap-4"
+          style={{ background: 'rgba(255,92,0,0.07)', border: '1px solid rgba(255,92,0,0.3)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
+            <CheckCircle2 className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-bold text-primary mb-1">🏆 Phase 2 Complete — Funded Account Review</div>
+            <div className="text-[12px] text-white/55 leading-relaxed">
+              Outstanding! You have passed Phase 2. The <span className="text-white/80 font-semibold">XFunded Trader Team</span> is conducting a risk review before issuing your live funded account. Expected processing time: <span className="text-white/80 font-semibold">3–5 business days</span>.
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Current Results */}
       <AccountCurrentResults account={account} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} />
