@@ -339,62 +339,55 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
 
           {/* Pending approval orders */}
           {pendingOrders.map((o, i) => (
-            <motion.div key={o.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="relative rounded-2xl overflow-hidden"
-              style={{
-                background: '#CCFF00',
-                boxShadow: '0 20px 60px rgba(204,255,0,0.25)',
-              }}>
+            <motion.div key={o.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+              className="relative rounded-xl overflow-hidden flex"
+              style={{ background: '#13161f', border: '1px solid rgba(255,255,255,0.07)' }}>
 
-              <div className="relative p-5">
-                {/* Header row */}
-                <div className="flex items-start justify-between mb-4">
+              {/* Lime left accent bar */}
+              <div className="w-1 flex-shrink-0" style={{ background: '#CCFF00' }} />
+
+              <div className="flex-1 px-5 py-4">
+                {/* Top row */}
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(0,0,0,0.1)' }}>
-                      <Clock className="w-5 h-5 text-black" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="text-sm font-black text-black font-mono">{o.order_id || `Order #${o.id?.slice(0,8)}`}</span>
-                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                          style={{ background: 'rgba(0,0,0,0.12)', color: '#000' }}>
-                          <Clock className="w-2.5 h-2.5" /> Pending Admin Approval
-                        </span>
-                      </div>
-                      <div className="text-xs font-mono mt-1 text-black/60">
-                        {o.challenge_type === 'two-step' ? 'Two-Step Challenge' : o.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant Funding'} · ${(o.account_size||0).toLocaleString()} · {o.account_type} · {o.leverage || '1:100'}
-                      </div>
-                    </div>
+                    <span className="text-sm font-bold text-white tracking-wide font-mono">{o.order_id || `Order #${o.id?.slice(0,8)}`}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide"
+                      style={{ background: 'rgba(204,255,0,0.12)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.2)' }}>
+                      PENDING REVIEW
+                    </span>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-lg font-black text-black">${(o.price || o.account_size || 0).toLocaleString()}</div>
-                    <div className="text-[10px] font-mono text-black/50">Order Total</div>
+                  <div className="text-right">
+                    <div className="text-base font-bold text-white">${(o.price || 0).toLocaleString()}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">Order Total</div>
                   </div>
                 </div>
 
-                {/* Stat chips */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                {/* Subtitle */}
+                <div className="text-xs text-white/40 mb-4 font-mono">
+                  {o.challenge_type === 'two-step' ? 'Two-Step Challenge' : o.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant Funding'}
+                  {' · '}${(o.account_size||0).toLocaleString()}
+                  {' · '}{o.account_type}
+                  {' · '}{o.leverage || '1:100'}
+                </div>
+
+                {/* Stats row */}
+                <div className="flex gap-6 mb-4">
                   {[
                     { label: 'Account Size', value: `$${(o.account_size||0).toLocaleString()}` },
-                    { label: 'Payment', value: o.payment_method?.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Crypto' },
+                    { label: 'Payment Method', value: o.payment_method?.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Crypto' },
                     { label: 'Status', value: 'Under Review' },
                   ].map(s => (
-                    <div key={s.label} className="rounded-xl p-2.5 text-center"
-                      style={{ background: 'rgba(0,0,0,0.1)' }}>
-                      <div className="text-[9px] font-mono uppercase mb-1 tracking-wider text-black/50">{s.label}</div>
-                      <div className="text-xs font-bold text-black">{s.value}</div>
+                    <div key={s.label}>
+                      <div className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">{s.label}</div>
+                      <div className="text-sm font-semibold text-white">{s.value}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Info bar */}
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                  style={{ background: 'rgba(0,0,0,0.1)' }}>
-                  <Shield className="w-3.5 h-3.5 flex-shrink-0 text-black" />
-                  <span className="text-[11px] text-black/70">
-                    Your payment is being reviewed. Account credentials will be delivered within <span className="font-semibold text-black">1–24 hours</span> after confirmation.
-                  </span>
+                {/* Footer notice */}
+                <div className="flex items-center gap-2 text-[11px] text-white/35 border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#CCFF00' }} />
+                  Payment under review — credentials delivered within <span className="text-white/60 font-medium mx-1">1–24 hours</span> of confirmation.
                 </div>
               </div>
             </motion.div>
