@@ -524,7 +524,12 @@ function DisciplinePanel({ account, closedTrades = [] }) {
   const dailyStartBalance = account?.daily_start_balance || accountSize;
   const dailyLossAmt = equity - dailyStartBalance;
 
-  const profitTargetPct = account?.profit_target_progress ?? Math.max(0, ((equity - accountSize) / accountSize) * 100);
+  // For passed/under-review accounts: use stored profit_target_progress as ground truth.
+  // Only fall back to live equity calc for active accounts.
+  const isPassedOrUnderReview = account?.status === 'passed' || account?.status === 'funded';
+  const profitTargetPct = account?.profit_target_progress != null
+    ? account.profit_target_progress
+    : Math.max(0, ((equity - accountSize) / accountSize) * 100);
   const dailyAllowance = dailyStartBalance * (dailyDDLimit / 100);
   const dailyLossUsedAmt = Math.max(0, dailyStartBalance - equity);
   const todayPermittedLossRemaining = Math.max(0, dailyAllowance - dailyLossUsedAmt);
@@ -536,14 +541,14 @@ function DisciplinePanel({ account, closedTrades = [] }) {
     { label: `Min ${minDays} Trading Days`, result: `${tradingDays} / ${minDays}`, pass: tradingDays >= minDays, pct: Math.min((tradingDays / minDays) * 100, 100), icon: CalendarDays },
     { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: false, danger: dailyDDUsed >= dailyDDLimit, forceRed: true, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
     { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: false, danger: maxDDUsed >= maxDDLimit, forceRed: true, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
-    { label: `Profit Target`, result: `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
+    { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
   ];
 
   const scores = [
     tradingDays >= minDays ? 100 : Math.round((tradingDays / minDays) * 60),
     dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
     maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
-    profitTargetPct >= profitTarget ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
+    (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
   ];
   const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
 
