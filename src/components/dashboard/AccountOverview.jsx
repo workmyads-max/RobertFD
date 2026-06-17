@@ -24,11 +24,18 @@ function useClosedTrades(account) {
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (!account?.account_id) { setTrades([]); return; }
-    setLoading(true);
-    base44.functions.invoke('getClosedTrades', { account_id: account.account_id, page_size: 500 })
-      .then(res => setTrades(res?.data?.trades || []))
-      .catch(() => setTrades([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const fetch = () => {
+      setLoading(true);
+      base44.functions.invoke('getClosedTrades', { account_id: account.account_id, page_size: 500 })
+        .then(res => { if (!cancelled) setTrades(res?.data?.trades || []); })
+        .catch(() => { if (!cancelled) setTrades([]); })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    };
+    fetch();
+    // Re-poll every 30s so data doesn't go stale for passed/under-review accounts
+    const iv = setInterval(fetch, 30000);
+    return () => { cancelled = true; clearInterval(iv); };
   }, [account?.account_id]);
   return { trades, loading };
 }
@@ -384,7 +391,7 @@ function StatisticsPanel({ account, closedTrades = [] }) {
 }
 
 // ─── Daily Summary ────────────────────────────────────────────────────────────
-function DailySummaryPanel({ closedTrades = [] }) {
+function DailySummaryPanel({ closedTrades = [], account }) {
   const rows = useMemo(() => {
     const byDay = {};
     closedTrades.filter(t => t.close_time).forEach(t => {
@@ -399,6 +406,9 @@ function DailySummaryPanel({ closedTrades = [] }) {
       .map(([day, d]) => ({ day, trades: d.trades, lots: d.lots.toFixed(2), pnl: d.pnl }));
   }, [closedTrades]);
 
+  // Account has trades but closedTrades still loading from MT5
+  const isLoadingMT5 = rows.length === 0 && (account?.total_trades || 0) > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -411,7 +421,16 @@ function DailySummaryPanel({ closedTrades = [] }) {
         <SectionLabel>From MT5 records</SectionLabel>
       </CardHeader>
       {rows.length === 0 ? (
-        <div className="py-12 text-center text-sm text-white/30">No closed trades yet</div>
+        <div className="py-12 text-center">
+          {isLoadingMT5 ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-white/30">Loading trade history from MT5…</span>
+            </div>
+          ) : (
+            <span className="text-sm text-white/30">No closed trades yet</span>
+          )}
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -507,7 +526,9 @@ function DisciplinePanel({ account, closedTrades = [] }) {
     const localDate = new Date(d.getTime() + (bangkokOffset + d.getTimezoneOffset()) * 60000);
     tradingDaySet.add(localDate.toISOString().split('T')[0]);
   });
-  const tradingDays = tradingDaySet.size;
+  // For passed/under-review accounts where closedTrades may be empty (still loading),
+  // fall back to the stored trading_days on the entity which is always authoritative.
+  const tradingDays = tradingDaySet.size > 0 ? tradingDaySet.size : (account?.trading_days || 0);
 
   const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
   const todayStr = nowBangkok.toISOString().split('T')[0];
@@ -537,15 +558,20 @@ function DisciplinePanel({ account, closedTrades = [] }) {
   const maxLossUsedAmt = Math.max(0, accountSize - equity);
   const maxPermittedLossRemaining = Math.max(0, maxDDAllowance - maxLossUsedAmt);
 
+  // For passed accounts, trading days objective is always complete
+  const effectiveTradingDays = isPassedOrUnderReview && tradingDays < minDays
+    ? (account?.trading_days || tradingDays)
+    : tradingDays;
+
   const objectives = [
-    { label: `Min ${minDays} Trading Days`, result: `${tradingDays} / ${minDays}`, pass: tradingDays >= minDays, pct: Math.min((tradingDays / minDays) * 100, 100), icon: CalendarDays },
+    { label: `Min ${minDays} Trading Days`, result: isPassedOrUnderReview ? `✓ ${effectiveTradingDays} / ${minDays} — Met` : `${effectiveTradingDays} / ${minDays}`, pass: effectiveTradingDays >= minDays || isPassedOrUnderReview, pct: isPassedOrUnderReview ? 100 : Math.min((effectiveTradingDays / minDays) * 100, 100), icon: CalendarDays },
     { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: false, danger: dailyDDUsed >= dailyDDLimit, forceRed: true, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
     { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: false, danger: maxDDUsed >= maxDDLimit, forceRed: true, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
     { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
   ];
 
   const scores = [
-    tradingDays >= minDays ? 100 : Math.round((tradingDays / minDays) * 60),
+    (effectiveTradingDays >= minDays || isPassedOrUnderReview) ? 100 : Math.round((effectiveTradingDays / minDays) * 60),
     dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
     maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
     (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
@@ -1152,7 +1178,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StatisticsPanel account={account} closedTrades={closedTrades} />
-        <DailySummaryPanel closedTrades={closedTrades} />
+        <DailySummaryPanel closedTrades={closedTrades} account={account} />
       </div>
 
       {/* Discipline + Objectives */}
