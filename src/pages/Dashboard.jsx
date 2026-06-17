@@ -181,12 +181,13 @@ export default function Dashboard() {
   });
 
   const bannerNotification = notifications.find(n =>
-    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all')
+    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all') && n.type !== 'system'
   );
   // Find the most recent active popup notification that hasn't been dismissed this session
+  // Exclude 'system' type — those are breach/internal alerts shown via DDBreachModal, not popups
   const [dismissedPopupIds, setDismissedPopupIds] = useState(new Set());
   const popupNotification = notifications
-    .filter(n => n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all'))
+    .filter(n => n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all') && n.type !== 'system')
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
     .find(n => !dismissedPopupIds.has(n.id)) || null;
 
@@ -285,7 +286,7 @@ export default function Dashboard() {
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {popupNotification && <DashboardPopupNotification notification={popupNotification} onClose={() => setDismissedPopupIds(prev => new Set([...prev, popupNotification.id]))} />}
-      {user && <UserWarningPanel user={user} />}
+      {user && <UserWarningPanel userEmail={user.email} />}
       {user && <PaymentApprovalNotification user={user} />}
 
       {/* Live DD Guard — runs every 15s when trader has dashboard open */}
