@@ -167,13 +167,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       )}
 
       {/* Content */}
-      <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 max-w-[1440px] mx-auto w-full mt-14 sm:mt-6 min-h-[60vh]">
+      <div className="relative z-10 px-4 sm:px-6 md:px-8 lg:px-12 pb-8 sm:pb-10 max-w-[1920px] mx-auto w-full mt-14 sm:mt-6 min-h-[60vh]">
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
         {/* Main content area with proper spacing */}
-        <div className="space-y-6 mt-6 min-h-[40vh]">
+        <div className="space-y-8 mt-8 min-h-[40vh]">
           {/* First-Time Promo Banner — ALWAYS SHOWN */}
           <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
