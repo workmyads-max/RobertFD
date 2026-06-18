@@ -47,10 +47,48 @@ Deno.serve(async (req) => {
     if (!isAuthorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
-    const { account_id, order_id, user_email, challenge_type, account_type, account_size, leverage, rule_snapshot } = body;
+    const { account_id, order_id, user_email, challenge_type, account_type, account_size, leverage } = body;
+    let { rule_snapshot } = body;
 
     if (!user_email || !account_size) {
       return Response.json({ error: 'user_email and account_size are required' }, { status: 400 });
+    }
+
+    // ── BUILD rule_snapshot FROM ChallengePlan IF NOT PROVIDED ────────────────
+    // This is the single authoritative place where rule_snapshot is guaranteed.
+    // All 4 payment webhooks pass order.rule_snapshot which is always null at
+    // order-creation time, so we look up the live plan and build it here.
+    if (!rule_snapshot) {
+      try {
+        const plans = await base44.asServiceRole.entities.ChallengePlan.filter({
+          type: challenge_type,
+          size: account_size,
+          is_active: true,
+        });
+        const plan = plans[0];
+        if (plan) {
+          rule_snapshot = {
+            daily_dd_limit:    plan.daily_dd ?? 5,
+            max_dd_limit:      plan.max_dd ?? 10,
+            trailing_dd:       challenge_type === 'instant_light',
+            phase1_target:     plan.phase1_target ?? 10,
+            phase2_target:     plan.phase2_target ?? 5,
+            min_trading_days:  plan.min_trading_days ?? 1,
+            leverage:          leverage || '1:100',
+            max_lots:          plan.max_lots ?? 20,
+            weekend_holding:   plan.weekend_holding ?? false,
+            overnight_holding: plan.overnight_holding ?? false,
+            news_trading:      plan.news_trading ?? false,
+            hedging:           plan.hedging ?? false,
+            profit_split:      plan.profit_split ?? 80,
+          };
+          console.log(`[provisionMT5Account] ✅ rule_snapshot built from plan "${plan.name}" (min_trading_days=${rule_snapshot.min_trading_days})`);
+        } else {
+          console.warn(`[provisionMT5Account] No matching ChallengePlan for type=${challenge_type} size=${account_size} — rule_snapshot will be null`);
+        }
+      } catch (e) {
+        console.warn('[provisionMT5Account] Could not fetch ChallengePlan for rule_snapshot:', e.message);
+      }
     }
 
     // Load MT5 credentials from TradingPlatformProvider
