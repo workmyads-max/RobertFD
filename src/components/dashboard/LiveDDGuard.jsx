@@ -48,12 +48,12 @@ export default function LiveDDGuard({ onBreach }) {
   });
 
   // Only monitor active, non-breached, MT5 accounts belonging to this user
+  // NOTE: platform field may be 'mt5', 'xtrading', or other legacy values — all use MT5
   const monitorableAccounts = allAccounts.filter(a =>
     currentUser?.email &&
     a.user_email === currentUser.email &&
-    a.mt_login &&
+    a.mt_login && // must have MT5 login
     ['active', 'funded', 'passed'].includes(a.status) &&
-    a.platform === 'mt5' &&
     !a.dd_breach_detected &&
     a.status !== 'failed' &&
     !breachedRef.current.has(a.account_id)
@@ -93,13 +93,18 @@ export default function LiveDDGuard({ onBreach }) {
           }
 
         } else if (!data.skipped) {
-          // ── NO BREACH: update local cache with live equity for display ───
+          // ── NO BREACH: update local cache with live equity + live DD values for display ───
           queryClient.setQueryData(['challenge-accounts', currentUser.email], (old) => {
             if (!Array.isArray(old)) return old;
-            return old.map(a => a.account_id === acc.account_id
-              ? { ...a, balance: data.balance, equity: data.equity }
-              : a
-            );
+            return old.map(a => {
+              if (a.account_id !== acc.account_id) return a;
+              const updates = { ...a, balance: data.balance, equity: data.equity };
+              // Update live DD values so Trading Objectives reflect real-time data
+              if (data.live_daily_dd != null) updates.daily_drawdown_used = data.live_daily_dd;
+              if (data.live_overall_dd != null) updates.max_drawdown_used = Math.max(a.max_drawdown_used || 0, data.live_overall_dd);
+              if (data.profit_target_progress != null) updates.profit_target_progress = data.profit_target_progress;
+              return updates;
+            });
           });
         }
 

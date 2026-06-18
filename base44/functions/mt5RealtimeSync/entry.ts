@@ -211,16 +211,17 @@ Deno.serve(async (req) => {
     // ── SERVER-SIDE BREACH DETECTION ──────────────────────────────────────────
     const accountSize = acc.account_size || 100000;
 
-    // Safety: skip breach detection if rule_snapshot is missing (can't enforce unknown rules)
+    // If rule_snapshot is missing, inject safe defaults so breach can still be enforced.
+    // Missing snapshot = old account before the snapshot system — use standard 5%/10% limits.
     if (!acc.rule_snapshot) {
-      return Response.json({
-        success: true,
-        breach_detected: false,
-        skipped: true,
-        reason: 'no_rule_snapshot',
-        balance,
-        equity,
-      });
+      acc.rule_snapshot = {
+        daily_dd_limit: 5,
+        max_dd_limit: 10,
+        trailing_dd: acc.challenge_type === 'instant_light',
+        phase1_target: 10,
+        phase2_target: 5,
+      };
+      console.warn(`[mt5RealtimeSync] ${account_id} has no rule_snapshot — using default 5%/10% DD limits`);
     }
 
     // Glitch: balance < 1% of account size = API error
