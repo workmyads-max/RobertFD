@@ -344,9 +344,10 @@ Deno.serve(async (req) => {
             }).catch(() => null)
           ));
 
-          // Create Notification for hard fails
+          // Create Notification for hard fails — scoped to user_email to prevent leakage
           if (hardFails.length > 0) {
             await sr.entities.Notification.create({
+              user_email: acc.user_email,
               title: '🚫 Challenge Rule Violation — Account Failed',
               message: `Account ${acc.account_id} failed: ${hardFails[0].description}`,
               type: 'market_alert', priority: 'critical',
@@ -354,9 +355,10 @@ Deno.serve(async (req) => {
             }).catch(() => null);
           }
 
-          // Create Notification for warnings (non-failing)
+          // Create Notification for warnings — scoped to user_email to prevent leakage
           if (warnings.length > 0) {
             await sr.entities.Notification.create({
+              user_email: acc.user_email,
               title: '⚠️ Challenge Rule Warning',
               message: `Account ${acc.account_id}: ${warnings[0].description}`,
               type: 'market_alert', priority: 'high',

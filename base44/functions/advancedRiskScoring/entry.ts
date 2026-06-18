@@ -217,6 +217,9 @@ Deno.serve(async (req) => {
         const existingFlagTypes = new Set(existingFlagsList.map(f => f.flag_type));
 
         const newFlags = [];
+        // AUDIT ONLY: Create RiskFlag records for admin review.
+        // NO user notifications, NO account status changes, NO can_trade writes.
+        // Admin must manually review flags and decide on any action.
         const flagCreatePromises = violations
           .filter(v => !existingFlagTypes.has(v.type))
           .map(async v => {
@@ -230,19 +233,7 @@ Deno.serve(async (req) => {
               triggered_at: analysisTime,
             });
             newFlags.push(flag);
-
-            if (v.severity === 'high' || v.severity === 'critical') {
-              await sr.entities.Notification.create({
-                user_email: account.user_email,
-                title: `⚠️ Risk Warning — ${v.type.replace(/_/g, ' ').toUpperCase()}`,
-                message: `A risk violation has been detected on your account (${account.account_id}). ${v.detail}. Please review your trading activity.`,
-                type: 'market_alert',
-                priority: v.severity === 'critical' ? 'critical' : 'high',
-                display_mode: 'sidebar',
-                is_active: true,
-                target: 'challenge',
-              });
-            }
+            // NOTE: No user-facing notifications from risk scans — admin audit only
           });
 
         await Promise.all(flagCreatePromises);

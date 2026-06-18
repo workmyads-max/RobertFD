@@ -89,7 +89,9 @@ async function scanAccount(account, base44) {
   else if (riskScore >= 61) riskLevel = 'high';
   else if (riskScore >= 31) riskLevel = 'medium';
 
-  // Update account
+  // AUDIT ONLY: Update non-breach analytics fields for admin visibility.
+  // NEVER set can_trade, status, or any breach fields — those are exclusively
+  // controlled by mt5RealtimeSync and scheduledMTSync based on challenge rules.
   await base44.asServiceRole.entities.ChallengeAccount.update(account.id, {
     risk_score: riskScore,
     risk_level: riskLevel,
@@ -102,18 +104,27 @@ async function scanAccount(account, base44) {
     ea_bot_evidence: bot.evidence || null,
     behavioral_fingerprint: evidence,
     consistency_score: consistency.score || 0,
-    can_trade: riskLevel !== 'critical'
+    // NOTE: can_trade intentionally NOT written here — admin must manually act
   });
 
-  // Auto-suspend if critical
-  if (riskLevel === 'critical') {
-    try {
-      const userSettings = await base44.asServiceRole.entities.UserFeatureSettings.filter({ user_email: account.user_email });
-      if (userSettings.length > 0) {
-        await base44.asServiceRole.entities.UserFeatureSettings.update(userSettings[0].id, { can_trade: false });
+  // Create RiskFlag records for admin audit trail (does NOT affect account status)
+  if (riskFlags.length > 0) {
+    const existingFlags = await base44.asServiceRole.entities.RiskFlag.filter({
+      account_id: account.account_id, status: 'active'
+    });
+    const existingTypes = new Set(existingFlags.map(f => f.flag_type));
+    for (const flagType of riskFlags) {
+      if (!existingTypes.has(flagType)) {
+        await base44.asServiceRole.entities.RiskFlag.create({
+          user_email: account.user_email,
+          account_id: account.account_id,
+          flag_type: flagType,
+          severity: riskLevel,
+          description: `Risk scan detected: ${flagType.replace(/_/g, ' ')}`,
+          status: 'active',
+          triggered_at: new Date().toISOString(),
+        }).catch(() => {});
       }
-    } catch (e) {
-      console.error('Failed to suspend user:', e);
     }
   }
 
