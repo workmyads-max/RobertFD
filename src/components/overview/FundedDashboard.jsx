@@ -78,7 +78,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
     staleTime: 30000,
   });
 
-  const { data: accounts = [], isLoading, refetch } = useQuery({
+  const { data: accounts = [], isLoading, isFetching, refetch } = useQuery({
     // CRITICAL: Same email-scoped key as LiveDDGuard and all other account queries
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
@@ -87,6 +87,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
     },
     enabled: !!user?.email,
     refetchInterval: 5000,
+    staleTime: 10000,
+    placeholderData: (prev) => prev, // Keep previous data while refetching — prevents empty state flash
   });
 
   // Load KYC for welcome header
@@ -124,7 +126,8 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
 
   const stats = useAccountStats(derivedSelected, trades);
 
-  if (isLoading) {
+  // Only show full-page spinner on the very first load (no cached data yet)
+  if (isLoading && accounts.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
