@@ -48,10 +48,15 @@ export default function UserWarningPanel({ userEmail }) {
     refetchInterval: 30000,
   });
 
-  if (allFlags.length === 0) return null;
+  // Don't show flags for accounts that are already failed — breach modal handles that
+  const failedAccountIds = new Set(accounts.filter(a => a.status === 'failed').map(a => a.account_id));
+  const activeFlags = allFlags.filter(f => !failedAccountIds.has(f.account_id));
 
-  const criticalCount = allFlags.filter(f => f.severity === 'critical').length;
-  const highCount = allFlags.filter(f => f.severity === 'high').length;
+  if (activeFlags.length === 0) return null;
+
+  const allFlagsDisplay = activeFlags;
+  const criticalCount = activeFlags.filter(f => f.severity === 'critical').length;
+  const highCount = activeFlags.filter(f => f.severity === 'high').length;
 
   return (
     <AnimatePresence>
@@ -66,7 +71,7 @@ export default function UserWarningPanel({ userEmail }) {
           <div className="flex-1">
             <div className="text-sm font-bold text-white">⚠️ Risk Warning — Account Under Review</div>
             <div className="text-xs text-white/40 mt-0.5">
-              {allFlags.length} active violation{allFlags.length !== 1 ? 's' : ''} detected
+              {activeFlags.length} active violation{activeFlags.length !== 1 ? 's' : ''} detected
               {criticalCount > 0 && ` · ${criticalCount} critical`}
               {highCount > 0 && ` · ${highCount} high severity`}
             </div>
@@ -79,7 +84,7 @@ export default function UserWarningPanel({ userEmail }) {
 
         {/* Flag list */}
         <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          {allFlags.slice(0, 5).map((flag, i) => {
+          {activeFlags.slice(0, 5).map((flag, i) => {
             const cfg = SEVERITY_CONFIG[flag.severity] || SEVERITY_CONFIG.low;
             const Icon = cfg.icon;
             return (
