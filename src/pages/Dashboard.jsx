@@ -204,6 +204,40 @@ export default function Dashboard() {
     setDdBreach(breach);
   };
 
+  // On load: check if any account is already breached (e.g. breach happened via scheduledMTSync
+  // while user was offline, or LiveDDGuard missed it). Show modal once per breach event.
+  // Uses localStorage to avoid re-showing after the user has already acknowledged.
+  useEffect(() => {
+    if (!allAccounts.length || isAdmin || ddBreach) return;
+    const STORAGE_KEY = `xft_breach_ack_${user?.email}`;
+    const acknowledged = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const now = Date.now();
+    const SHOW_WINDOW_MS = 24 * 60 * 60 * 1000; // show modal for breaches within last 24h
+
+    const unacknowledgedBreach = allAccounts.find(a => {
+      if (a.status !== 'failed') return false;
+      if (acknowledged[a.account_id]) return false;
+      // Show if we have explicit breach data with a recent timestamp
+      if (a.dd_breach_detected && a.dd_breach_time) {
+        return (now - new Date(a.dd_breach_time).getTime()) < SHOW_WINDOW_MS;
+      }
+      // Fallback: account was recently set to failed (within 24h), show modal even without explicit breach flags
+      const failedRecently = a.updated_date && (now - new Date(a.updated_date).getTime()) < SHOW_WINDOW_MS;
+      return failedRecently;
+    });
+
+    if (unacknowledgedBreach) {
+      setDdBreach({
+        account_id:   unacknowledgedBreach.account_id,
+        account_size: unacknowledgedBreach.account_size,
+        breach_type:  unacknowledgedBreach.dd_breach_type || 'overall',
+        breach_value: unacknowledgedBreach.dd_breach_value || unacknowledgedBreach.max_drawdown_used,
+        equity:       unacknowledgedBreach.equity,
+        balance:      unacknowledgedBreach.balance,
+      });
+    }
+  }, [allAccounts, isAdmin]);
+
   // Navigate to in-dashboard marketplace instead of external page
   const goToChallenge = () => setActivePage('marketplace');
 
@@ -294,7 +328,17 @@ export default function Dashboard() {
 
       {/* Live DD Guard — runs every 15s when trader has dashboard open */}
       {user && !isAdmin && <LiveDDGuard onBreach={handleDDBreach} />}
-      <DDBreachModal breach={ddBreach} onAcknowledge={() => { setDdBreach(null); setActivePage('accounts'); }} />
+      <DDBreachModal breach={ddBreach} onAcknowledge={() => {
+        // Save acknowledgement so modal doesn't re-appear for this breach
+        if (ddBreach?.account_id && user?.email) {
+          const STORAGE_KEY = `xft_breach_ack_${user.email}`;
+          const acked = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          acked[ddBreach.account_id] = Date.now();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(acked));
+        }
+        setDdBreach(null);
+        setActivePage('accounts');
+      }} />
 
 
       <div className="flex flex-1 overflow-hidden relative z-10 h-0">
