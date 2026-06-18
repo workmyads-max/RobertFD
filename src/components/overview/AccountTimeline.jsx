@@ -228,8 +228,9 @@ export default function AccountTimeline({ account, closedTrades = [] }) {
   return (
     <div className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(10,11,20,0.98)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
       }}>
       {/* Header */}
       <div className="flex items-center px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
