@@ -5,24 +5,26 @@ import { base44 } from '@/api/base44Client';
 
 export default function PaymentApprovalNotification({ user, onDismiss }) {
   const [isVisible, setIsVisible] = useState(false);
-  const hasChecked = React.useRef(false);
+  const hasChecked = useRef(false);
 
   useEffect(() => {
-    if (!user?.email) return;
-    // Guard: only ever run once per mount, no matter how many re-renders
+    const email = user?.email;
+    if (!email) return;
+    // Already ran (guards against strict mode double-invoke and re-renders)
     if (hasChecked.current) return;
+    // Already dismissed in a previous session — never make an API call
+    if (localStorage.getItem(`payment_approval_seen_${email}`)) return;
+
     hasChecked.current = true;
 
-    // If already dismissed in a previous session, skip the API call entirely
-    const hasSeen = localStorage.getItem(`payment_approval_seen_${user.email}`);
-    if (hasSeen) return;
-
-    const checkAndShow = async () => {
+    // Small delay so the dashboard doesn't hammer the API during the initial
+    // burst of parallel queries on mount
+    const timer = setTimeout(async () => {
       const notifications = await base44.entities.Notification.filter({
-        user_email: user.email,
+        user_email: email,
         type: 'system',
         is_active: true,
-      }, '-created_date', 10);
+      }, '-created_date', 5);
 
       const paymentApproval = notifications.find(n =>
         n.title?.includes('Payment Approved') || n.message?.includes('provisioned')
@@ -31,9 +33,9 @@ export default function PaymentApprovalNotification({ user, onDismiss }) {
       if (paymentApproval) {
         setIsVisible(true);
       }
-    };
+    }, 3000); // wait 3 s after mount before querying
 
-    checkAndShow();
+    return () => clearTimeout(timer);
   }, [user?.email]);
 
   const handleClose = () => {
