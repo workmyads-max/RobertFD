@@ -413,10 +413,13 @@ Deno.serve(async (req) => {
       const fundedId = `FUNDED-${Date.now()}`;
 
       // funded_review_status=approved marks the funded provisioning as complete
+      // IMPORTANT: account_id is NOT overwritten — it must stay stable so all
+      // MT5 sync, trade records, and queries continue to match correctly.
+      // funded_account_id is a separate reference field for bookkeeping only.
       await sr.entities.ChallengeAccount.update(account.id, {
         status: 'funded',
         funded_review_status: 'approved',
-        account_id: fundedId,
+        funded_account_id: fundedId,   // ← separate field, does NOT replace account_id
         ...(fundedCredentials || {}),
         login_credentials: fundedCredentials
           ? `Login: ${fundedCredentials.mt_login} | Password: ${fundedCredentials.mt_password} | Server: ${fundedCredentials.mt_server}`

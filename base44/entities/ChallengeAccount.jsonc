@@ -79,6 +79,10 @@
       ],
       "default": "none"
     },
+    "funded_account_id": {
+      "type": "string",
+      "description": "Separate bookkeeping ID assigned at funded approval \u2014 does NOT replace account_id"
+    },
     "balance": {
       "type": "number",
       "default": 0
