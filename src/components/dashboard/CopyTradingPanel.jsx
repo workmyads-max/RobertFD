@@ -128,6 +128,7 @@ export default function CopyTradingPanel({ user }) {
   const [copySLTP, setCopySLTP]               = useState(true);
   const [syncLog, setSyncLog]                 = useState([]);
   const [isSyncing, setIsSyncing]             = useState(false);
+  const [brokerError, setBrokerError]         = useState(null);
   const syncIntervalRef = useRef(null);
 
   const { data: accounts = [] } = useQuery({
@@ -156,6 +157,13 @@ export default function CopyTradingPanel({ user }) {
       try {
         const res = await base44.functions.invoke('mt5CopySync', { action: 'sync' });
         const data = res?.data;
+        // Broker doesn't support execution — stop polling immediately
+        if (data?.execution_supported === false) {
+          setBrokerError(data.message);
+          clearInterval(syncIntervalRef.current);
+          setIsSyncing(false);
+          return;
+        }
         if (data?.actions_taken?.length > 0) {
           setSyncLog(prev => [...data.actions_taken.map(a => ({
             ...a,
@@ -269,6 +277,23 @@ export default function CopyTradingPanel({ user }) {
           </button>
         </div>
       </div>
+
+      {/* Broker capability error */}
+      {brokerError && (
+        <div className="rounded-xl px-4 py-4 flex items-start gap-3"
+          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-bold text-red-400 mb-1">Broker API Does Not Support Trade Execution</div>
+            <p className="text-xs text-white/50 leading-relaxed">
+              The Tritech API bridge connected to this platform does not expose trade execution endpoints (<code className="text-red-300/70">/api/v1/deal/open</code> returns 404). Copy trading requires the <strong className="text-white/70">Manager API</strong> order placement to be enabled by your broker.
+            </p>
+            <p className="text-xs text-white/40 mt-2">
+              ✉️ Contact <strong className="text-white/60">Tritech support</strong> and request enabling deal/order execution on your Manager API bridge. Once enabled, copy trading will work automatically.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Warning banner */}
       <div className="rounded-xl px-4 py-3 flex items-start gap-3"

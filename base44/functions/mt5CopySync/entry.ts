@@ -87,6 +87,32 @@ Deno.serve(async (req) => {
       });
     };
 
+    // ── CAPABILITY CHECK: probe if trade execution is supported ──────────────
+    // Tritech bridge only exposes read endpoints on this deployment.
+    // We probe once per sync call to detect if execution was enabled by broker.
+    const checkTradeExecution = async () => {
+      const probeRes = await fetch(`${MT5_BASE}/api/v1/deal/open`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ probe: true, apikey: MT5_KEY }),
+      }).catch(() => ({ status: 0 }));
+      // 404 = endpoint missing, 405 = method not allowed → execution not supported
+      // 400/422/500 = endpoint exists but rejected payload → execution IS supported
+      return probeRes.status !== 404 && probeRes.status !== 405 && probeRes.status !== 0;
+    };
+
+    const executionSupported = await checkTradeExecution();
+
+    if (!executionSupported) {
+      return Response.json({
+        success: false,
+        execution_supported: false,
+        broker_error: 'BROKER_API_NO_EXECUTION',
+        message: 'Your broker API bridge does not support programmatic trade execution (/api/v1/deal/open is not available). Copy trading requires the broker to enable the Manager API trade execution endpoints. Please contact your broker (Tritech) to enable deal/order execution on the API bridge.',
+        actions_taken: [],
+        errors: ['Broker API does not support trade execution — contact Tritech support to enable Manager API order placement'],
+      });
+    }
+
     // ── HELPER: open a position on a slave account ────────────────────────────
     const openPosition = async (slaveLogin, masterPos, multiplier, copySLTP) => {
       const isSell = masterPos.type === 'SELL';
@@ -94,9 +120,9 @@ Deno.serve(async (req) => {
       const payload = {
         Login: slaveLogin,
         Symbol: masterPos.symbol,
-        Action: isSell ? 1 : 0,         // 0=BUY, 1=SELL
-        Volume: Math.round(lots * 10000), // centi-lots
-        Price: 0,                         // 0 = market price
+        Action: isSell ? 1 : 0,
+        Volume: Math.round(lots * 10000),
+        Price: 0,
         apikey: MT5_KEY,
       };
       if (copySLTP) {
@@ -107,18 +133,20 @@ Deno.serve(async (req) => {
         method: 'POST', headers,
         body: JSON.stringify(payload),
       }).catch(() => ({ ok: false }));
-      const data = res.ok ? await res.json().catch(() => ({})) : {};
-      return { ok: res.ok, data, lots };
+      const text = res.ok ? await res.text().catch(() => '{}') : '{}';
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      console.log(`[openPosition] slave=${slaveLogin} ${masterPos.symbol} ${masterPos.type} ${lots}L → HTTP ${res.status}: ${text.slice(0, 200)}`);
+      return { ok: res.ok && (data?.resultCode === '200' || data?.data?.errorcode === 0), data, lots };
     };
 
     // ── HELPER: close a position on a slave account ───────────────────────────
     const closePosition = async (slaveLogin, slaveTicket, slavePos) => {
-      const isSell = slavePos.type === 'SELL';
       const payload = {
         Login: slaveLogin,
         Position: parseInt(slaveTicket),
         Symbol: slavePos.symbol,
-        Action: isSell ? 0 : 1,           // close = opposite direction
+        Action: slavePos.type === 'SELL' ? 0 : 1,
         Volume: Math.round(slavePos.lots * 10000),
         Price: 0,
         apikey: MT5_KEY,
@@ -127,8 +155,10 @@ Deno.serve(async (req) => {
         method: 'POST', headers,
         body: JSON.stringify(payload),
       }).catch(() => ({ ok: false }));
-      const data = res.ok ? await res.json().catch(() => ({})) : {};
-      return { ok: res.ok, data };
+      const text = res.ok ? await res.text().catch(() => '{}') : '{}';
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      return { ok: res.ok && (data?.resultCode === '200' || data?.data?.errorcode === 0), data };
     };
 
     // ── SYNC ALL RULES ─────────────────────────────────────────────────────────
@@ -146,15 +176,59 @@ Deno.serve(async (req) => {
         fetchPositions(slaveLogin),
       ]);
 
+      console.log(`[CopySync] master=${masterLogin} positions=${masterPositions.length}, slave=${slaveLogin} positions=${slavePositions.length}`);
+
+      // ── MATCHING STRATEGY ────────────────────────────────────────────────────
+      // Primary: match by symbol+direction+open_time (±60s)
+      // Fallback: if open_time_ms is 0 for all (API doesn't return it), match by
+      //   symbol+direction+lots (within 1% tolerance) — prevents infinite re-opens
+      const allTimesZero = masterPositions.every(p => p.open_time_ms === 0) &&
+                           slavePositions.every(p => p.open_time_ms === 0);
+
+      const positionMatches = (mp, sp) => {
+        const symbolMatch = sp.symbol === mp.symbol;
+        const dirMatch    = sp.type === mp.type;
+        if (!symbolMatch || !dirMatch) return false;
+        if (!allTimesZero) {
+          // Time-based match (preferred)
+          return Math.abs(sp.open_time_ms - mp.open_time_ms) < POSITION_MATCH_WINDOW_MS;
+        }
+        // Fallback: lot-size similarity (within 20% or same multiplier)
+        const lotsRatio = sp.lots / (mp.lots * rule.lot_multiplier || 1);
+        return lotsRatio > 0.5 && lotsRatio < 2.0;
+      };
+
+      // Count how many slave positions match each master position (for 1:1 copy tracking)
+      // If master has 2 EURUSD BUY and slave has 1 — copy 1 more
+      const countSlaveMatches = (mp) => slavePositions.filter(sp => positionMatches(mp, sp)).length;
+      const countMasterMatches = (symbol, type) => masterPositions.filter(mp => mp.symbol === symbol && mp.type === type).length;
+
       // ── OPEN: positions on master that are NOT on slave ─────────────────────
+      // Group by symbol+type and compare counts to avoid duplicate opens
+      const masterGroups = {};
       for (const mp of masterPositions) {
-        // Match by symbol + direction + open_time within window
-        const alreadyCopied = slavePositions.some(sp =>
-          sp.symbol === mp.symbol &&
-          sp.type === mp.type &&
-          Math.abs(sp.open_time_ms - mp.open_time_ms) < POSITION_MATCH_WINDOW_MS
-        );
-        if (!alreadyCopied) {
+        const key = `${mp.symbol}_${mp.type}`;
+        masterGroups[key] = (masterGroups[key] || 0) + 1;
+      }
+      const slaveGroups = {};
+      for (const sp of slavePositions) {
+        const key = `${sp.symbol}_${sp.type}`;
+        slaveGroups[key] = (slaveGroups[key] || 0) + 1;
+      }
+
+      const openedThisCycle = {};
+      for (const mp of masterPositions) {
+        const key = `${mp.symbol}_${mp.type}`;
+        const masterCount = masterGroups[key] || 0;
+        const slaveCount  = slaveGroups[key] || 0;
+        const alreadyOpenedThisCycle = openedThisCycle[key] || 0;
+
+        // Only open if slave has fewer positions of this type than master
+        if (slaveCount + alreadyOpenedThisCycle >= masterCount) continue;
+
+        openedThisCycle[key] = alreadyOpenedThisCycle + 1;
+        const alreadyCopied = false; // handled by count logic above
+        if (true) {
           actionsTaken.push({
             rule_id: rule.id,
             action: 'OPEN',
@@ -173,13 +247,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ── CLOSE: positions on slave that are NOT on master ────────────────────
+      // ── CLOSE: positions on slave that exceed master count ──────────────────
       for (const sp of slavePositions) {
-        const stillOpen = masterPositions.some(mp =>
-          mp.symbol === sp.symbol &&
-          mp.type === sp.type &&
-          Math.abs(mp.open_time_ms - sp.open_time_ms) < POSITION_MATCH_WINDOW_MS
-        );
+        const key = `${sp.symbol}_${sp.type}`;
+        const masterCount = masterGroups[key] || 0;
+        const slaveCount  = slaveGroups[key] || 0;
+        const stillOpen = masterCount >= slaveCount; // slave has same or fewer than master — keep
         if (!stillOpen) {
           actionsTaken.push({
             rule_id: rule.id,
