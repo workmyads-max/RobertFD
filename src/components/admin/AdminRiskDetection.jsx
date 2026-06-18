@@ -63,6 +63,31 @@ export default function AdminRiskDetection() {
   const [hftRunning, setHftRunning] = useState(false);
   const [newsRunning, setNewsRunning] = useState(false);
   const [weekendResult, setWeekendResult] = useState(null);
+  const queryClient = useQueryClient();
+
+  const { data: settingsList = [] } = useQuery({
+    queryKey: ['risk-detection-setting'],
+    queryFn: () => base44.entities.PlatformSettings.filter({ setting_key: 'risk_detection_enabled' }),
+  });
+  const setting = settingsList[0];
+  const isEnabled = setting ? setting.is_enabled : false;
+
+  const toggleEnabled = useMutation({
+    mutationFn: async (newVal) => {
+      if (setting) {
+        return base44.entities.PlatformSettings.update(setting.id, { is_enabled: newVal });
+      } else {
+        return base44.entities.PlatformSettings.create({
+          setting_key: 'risk_detection_enabled',
+          label: 'Risk Detection & Enforcement',
+          is_enabled: newVal,
+          category: 'system',
+          description: 'Controls whether automated risk detection scans can be run.',
+        });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['risk-detection-setting'] }),
+  });
 
   const { data: riskFlags = [], refetch } = useQuery({
     queryKey: ['risk-flags'],
@@ -77,20 +102,14 @@ export default function AdminRiskDetection() {
   const runHFTDetection = useMutation({
     mutationFn: (params) => base44.functions.invoke('detectHFTAndArbitrage', params || {}),
     onMutate: () => setHftRunning(true),
-    onSuccess: () => {
-      refetch();
-      setHftRunning(false);
-    },
+    onSuccess: () => { refetch(); setHftRunning(false); },
     onError: () => setHftRunning(false),
   });
 
   const runNewsDetection = useMutation({
     mutationFn: (params) => base44.functions.invoke('detectNewsTrading', params || {}),
     onMutate: () => setNewsRunning(true),
-    onSuccess: () => {
-      refetch();
-      setNewsRunning(false);
-    },
+    onSuccess: () => { refetch(); setNewsRunning(false); },
     onError: () => setNewsRunning(false),
   });
 
@@ -118,7 +137,33 @@ export default function AdminRiskDetection() {
           </h1>
           <p className="text-sm text-white/30 font-mono mt-1">HFT, arbitrage, news trading, and weekend holding violations</p>
         </div>
+
+        {/* Master Enable/Disable Toggle */}
+        <button
+          onClick={() => toggleEnabled.mutate(!isEnabled)}
+          disabled={toggleEnabled.isPending}
+          className="flex items-center gap-3 px-5 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          style={isEnabled
+            ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981' }
+            : { background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#ef4444' }
+          }
+        >
+          {isEnabled ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+          {isEnabled ? 'ENABLED — Click to Disable' : 'DISABLED — Click to Enable'}
+        </button>
       </div>
+
+      {/* Disabled Warning Banner */}
+      {!isEnabled && (
+        <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <PowerOff className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-bold text-red-400">Risk Detection is DISABLED</div>
+            <div className="text-xs text-white/40 mt-0.5">All detection scans are blocked. Enable the feature above before running any scan.</div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
