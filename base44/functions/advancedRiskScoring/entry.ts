@@ -158,12 +158,15 @@ Deno.serve(async (req) => {
         // ── 8. UNUSUAL DD BEHAVIOR ────────────────────────────────────────────
         {
           const ddUsed = account.max_drawdown_used || 0;
-          if (ddUsed > 9) {
-            violations.push({ type: 'unusual_dd_behavior', severity: 'critical', detail: `Max DD used: ${ddUsed.toFixed(1)}% (approaching limit)` });
-            totalRiskScore += 30;
-          } else if (ddUsed > 7) {
-            violations.push({ type: 'unusual_dd_behavior', severity: 'high', detail: `Max DD used: ${ddUsed.toFixed(1)}%` });
-            totalRiskScore += 15;
+          // Only flag if account has real trade history AND drawdown data is populated
+          if (closedTrades.length >= 3 && account.last_synced_at) {
+            if (ddUsed > 9) {
+              violations.push({ type: 'unusual_dd_behavior', severity: 'critical', detail: `Max DD used: ${ddUsed.toFixed(1)}% (approaching limit)` });
+              totalRiskScore += 30;
+            } else if (ddUsed > 7) {
+              violations.push({ type: 'unusual_dd_behavior', severity: 'high', detail: `Max DD used: ${ddUsed.toFixed(1)}%` });
+              totalRiskScore += 15;
+            }
           }
         }
 
@@ -230,11 +233,12 @@ Deno.serve(async (req) => {
 
             if (v.severity === 'high' || v.severity === 'critical') {
               await sr.entities.Notification.create({
+                user_email: account.user_email,
                 title: `⚠️ Risk Warning — ${v.type.replace(/_/g, ' ').toUpperCase()}`,
                 message: `A risk violation has been detected on your account (${account.account_id}). ${v.detail}. Please review your trading activity.`,
                 type: 'market_alert',
                 priority: v.severity === 'critical' ? 'critical' : 'high',
-                display_mode: 'popup',
+                display_mode: 'sidebar',
                 is_active: true,
                 target: 'challenge',
               });
