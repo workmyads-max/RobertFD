@@ -45,7 +45,6 @@ import AdminKYC from '../components/admin/AdminKYC';
 import AdminLiveChat from '../components/admin/AdminLiveChat';
 import AdminUserManagement from '../components/admin/AdminUserManagement';
 import PlatformVisibilityControl from '../components/admin/PlatformVisibilityControl';
-import DashboardPopupNotification from '../components/dashboard/DashboardPopupNotification';
 import PaymentApprovalNotification from '../components/dashboard/PaymentApprovalNotification';
 import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
@@ -145,12 +144,22 @@ export default function Dashboard() {
   const { data: rawNotifications = [] } = useQuery({
     queryKey: ['notifications', user?.email],
     queryFn: async () => {
-      const all = await base44.entities.Notification.filter({ is_active: true });
-      // Only show notifications targeting this user OR global notifications (user_email is null)
-      return all.filter(n => !n.user_email || n.user_email === user?.email);
+      if (!user?.email) return [];
+      // Fetch global notifications (no user_email set) + user-specific ones separately
+      const [globalNotifs, userNotifs] = await Promise.all([
+        base44.entities.Notification.filter({ is_active: true, target: 'all' }),
+        base44.entities.Notification.filter({ is_active: true, user_email: user.email }),
+      ]);
+      // Deduplicate by id
+      const seen = new Set();
+      return [...globalNotifs, ...userNotifs].filter(n => {
+        if (seen.has(n.id)) return false;
+        seen.add(n.id);
+        return true;
+      });
     },
     refetchInterval: 30000,
-    enabled: !!user,
+    enabled: !!user?.email,
   });
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
@@ -183,13 +192,6 @@ export default function Dashboard() {
   const bannerNotification = notifications.find(n =>
     n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all') && n.type !== 'system'
   );
-  // Find the most recent active popup notification that hasn't been dismissed this session
-  // Exclude 'system' type — those are breach/internal alerts shown via DDBreachModal, not popups
-  const [dismissedPopupIds, setDismissedPopupIds] = useState(new Set());
-  const popupNotification = notifications
-    .filter(n => n.is_active && (n.display_mode === 'popup' || n.display_mode === 'all') && n.type !== 'system')
-    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-    .find(n => !dismissedPopupIds.has(n.id)) || null;
 
   const [activeAccount, setActiveAccount] = useState(null);
   const [checkoutOrder, setCheckoutOrder] = useState(null);
@@ -285,7 +287,6 @@ export default function Dashboard() {
       {/* Clean dark background — no animated overlays */}
 
       {bannerNotification && <NotificationBanner notification={bannerNotification} />}
-      {popupNotification && <DashboardPopupNotification notification={popupNotification} onClose={() => setDismissedPopupIds(prev => new Set([...prev, popupNotification.id]))} />}
       {user && <UserWarningPanel userEmail={user.email} />}
       {user && <PaymentApprovalNotification user={user} />}
 
