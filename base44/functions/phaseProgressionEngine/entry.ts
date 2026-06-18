@@ -159,7 +159,9 @@ async function provisionMT5Account(creds, userEmail, groupName, leverageInt, bal
       let depJson;
       try { depJson = JSON.parse(depText); } catch { return { success: false, error: `Deposit returned invalid JSON: ${depText.slice(0, 120)}`, mt_login: String(mtLogin) }; }
       const depErr = depJson?.data?.errorcode ?? depJson?.errorcode;
-      if (depErr != null && Number(depErr) !== 0) {
+      // Tritech success codes: 0 = MT_RET_OK, 10009 = MT_RET_REQUEST_DONE (both indicate success)
+      const TRITECH_SUCCESS_CODES = new Set([0, 10009]);
+      if (depErr != null && !TRITECH_SUCCESS_CODES.has(Number(depErr))) {
         return { success: false, error: `Deposit rejected by MT5 (errorcode=${depErr}, msg=${depJson?.data?.errormsg ?? depJson?.errormsg ?? 'n/a'})`, mt_login: String(mtLogin) };
       }
       console.log(`[phaseProgressionEngine] ✅ Deposit confirmed for login=${mtLogin} (amount=${balance})`);
