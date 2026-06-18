@@ -239,6 +239,7 @@ function useTimelineSteps(account, closedTrades = []) {
 export default function AccountTimeline({ account, closedTrades = [], onNavigate }) {
   const steps = useTimelineSteps(account, closedTrades);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [showNotEligible, setShowNotEligible] = useState(false);
 
   if (!account || steps.length === 0) return null;
 
@@ -273,7 +274,7 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
             <span className="text-sm font-bold text-foreground">Progress Timeline</span>
           </div>
           <button
-            onClick={() => isEligible ? setShowWithdraw(true) : alert('Not yet eligible for withdrawal. Complete 14 trading days on your funded account first.')}
+            onClick={() => isEligible ? setShowWithdraw(true) : setShowNotEligible(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 active:scale-95"
             style={{ background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.4)', letterSpacing: '0.01em' }}
           >
@@ -300,6 +301,64 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
           onClose={() => setShowWithdraw(false)}
           onSuccess={() => onNavigate?.('withdrawals')}
         />
+      )}
+
+      {/* Not Eligible Popup */}
+      {showNotEligible && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(14px)' }}
+          onClick={() => setShowNotEligible(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 24 }} animate={{ scale: 1, y: 0 }}
+            className="w-full max-w-sm rounded-2xl overflow-hidden"
+            style={{ background: '#0e0f18', border: '1px solid rgba(255,92,0,0.25)', boxShadow: '0 0 60px rgba(255,92,0,0.12)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Top accent bar */}
+            <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }} />
+            <div className="p-6 flex flex-col items-center text-center gap-4">
+              {/* Icon */}
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.3)' }}>
+                <Clock className="w-7 h-7" style={{ color: '#FF5C00' }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-foreground mb-1">Not Yet Eligible</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Withdrawals are unlocked after <span className="text-white font-semibold">14 trading days</span> on your funded account.
+                  Keep trading to reach your first payout.
+                </p>
+              </div>
+              {/* Requirement chips */}
+              <div className="w-full rounded-xl p-4 space-y-2.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                {[
+                  { label: 'Funded account status', met: account?.status === 'funded' },
+                  { label: '14 trading days completed', met: false },
+                  { label: 'KYC verification approved', met: false },
+                ].map((req, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: req.met ? 'rgba(16,185,129,0.15)' : 'rgba(255,92,0,0.1)', border: `1px solid ${req.met ? 'rgba(16,185,129,0.4)' : 'rgba(255,92,0,0.3)'}` }}>
+                      {req.met
+                        ? <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                        : <Clock className="w-2 h-2" style={{ color: '#FF5C00' }} />}
+                    </div>
+                    <span className="text-xs font-mono" style={{ color: req.met ? '#10b981' : 'rgba(255,255,255,0.5)' }}>{req.label}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowNotEligible(false)}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+                Got It
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </>
   );
