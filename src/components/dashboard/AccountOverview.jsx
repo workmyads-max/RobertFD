@@ -525,13 +525,15 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const tradingDaySet = new Set();
   closedTrades.filter(t => t.close_time).forEach(t => {
     const d = new Date(t.close_time);
-    const bangkokOffset = 7 * 60;
-    const localDate = new Date(d.getTime() + (bangkokOffset + d.getTimezoneOffset()) * 60000);
-    tradingDaySet.add(localDate.toISOString().split('T')[0]);
+    // Use UTC date — avoids timezone shifts causing off-by-one day counting
+    tradingDaySet.add(d.toISOString().split('T')[0]);
   });
-  // For passed/under-review accounts where closedTrades may be empty (still loading),
-  // fall back to the stored trading_days on the entity which is always authoritative.
-  const tradingDays = tradingDaySet.size > 0 ? tradingDaySet.size : (account?.trading_days || 0);
+  // CRITICAL: Only count days from actual closed trades.
+  // NEVER fall back to account.trading_days — scheduledMTSync can write a non-zero
+  // value (e.g. 1) on first sync even before any real trades are closed, producing
+  // phantom "Day 1 complete" status for brand-new accounts.
+  // If closedTrades haven't loaded yet (empty array), show 0 — don't use entity field.
+  const tradingDays = tradingDaySet.size;
 
   const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
   const todayStr = nowBangkok.toISOString().split('T')[0];
@@ -561,9 +563,11 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const maxLossUsedAmt = Math.max(0, accountSize - equity);
   const maxPermittedLossRemaining = Math.max(0, maxDDAllowance - maxLossUsedAmt);
 
-  // For passed accounts, trading days objective is always complete
-  const effectiveTradingDays = isPassedOrUnderReview && tradingDays < minDays
-    ? (account?.trading_days || tradingDays)
+  // For passed/funded accounts that have already met the requirement,
+  // trust account.trading_days as ground truth (the account already passed review).
+  // For active accounts, ONLY count days from actual closed trades.
+  const effectiveTradingDays = isPassedOrUnderReview
+    ? Math.max(tradingDays, account?.trading_days || 0)
     : tradingDays;
 
   const objectives = [
@@ -573,10 +577,12 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
   ];
 
+  const hasAnyTrades = closedTrades.length > 0 || (account?.total_trades || 0) > 0;
   const scores = [
     (effectiveTradingDays >= minDays || isPassedOrUnderReview) ? 100 : Math.round((effectiveTradingDays / minDays) * 60),
-    dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
-    maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
+    // DD scores: only show 100% if account has actual trading activity
+    !hasAnyTrades ? 0 : dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
+    !hasAnyTrades ? 0 : maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
     (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
   ];
   const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);

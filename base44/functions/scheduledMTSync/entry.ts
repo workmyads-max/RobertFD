@@ -294,6 +294,23 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+          // ── TRADING DAYS — counted from actual closed deal dates (UTC) ─────
+          // CRITICAL: Only count unique dates that have at least one closed deal.
+          // NEVER fall back to a hardcoded value — 0 is correct when there are no trades.
+          const tradingDaySet = new Set();
+          const parseTime = (t) => {
+            if (!t) return null;
+            if (typeof t === 'string' && t.includes('T')) return new Date(t);
+            return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1));
+          };
+          for (const d of closedTrades) {
+            const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
+            if (closeT && !isNaN(closeT.getTime())) {
+              tradingDaySet.add(closeT.toISOString().split('T')[0]);
+            }
+          }
+          const computedTradingDays = tradingDaySet.size;
+
           // ── DAILY RESET at 00:00 UTC (midnight UTC) — single canonical reset ──
           // Idempotent per UTC date. Uses BALANCE (not equity) as baseline — FTMO standard.
           // Also initialises daily_start_balance for new accounts that have never reset.
@@ -393,6 +410,9 @@ Deno.serve(async (req) => {
             pnl: parseFloat((balance - accountSize).toFixed(2)),
             win_rate: parseFloat(winRate.toFixed(1)),
             total_trades: closedTrades.length,
+            // AUTHORITATIVE: trading_days computed from actual closed deal dates (UTC).
+            // Only update if MT5 returned real deals; otherwise keep existing DB value.
+            ...(deals.length > 0 && { trading_days: computedTradingDays }),
             max_drawdown_used: persistentOverallDD,
             // Daily DD stored as % of accountSize used (for UI display)
             daily_drawdown_used: dailyCalc.dailyLossUsedPct,
@@ -473,12 +493,12 @@ Deno.serve(async (req) => {
             const phase1Target = acc.rule_snapshot?.phase1_target ?? 10;
             // FTMO: phase pass gated on BALANCE-based progress only (closed trades)
             const currentProgress = updates.profit_target_progress;
-            const meetsMinDays = (acc.trading_days || 0) >= minTradingDays;
+            const meetsMinDays = computedTradingDays >= minTradingDays;
             if (currentProgress >= phase1Target && !meetsMinDays) {
-              console.log(`[PHASE1-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${acc.trading_days || 0}/${minTradingDays} trading days`);
+              console.log(`[PHASE1-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${computedTradingDays}/${minTradingDays} trading days`);
             }
             if (currentProgress >= phase1Target && meetsMinDays) {
-              console.log(`[PHASE1-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase1Target}%, trading_days=${acc.trading_days || 0}/${minTradingDays}`);
+              console.log(`[PHASE1-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase1Target}%, trading_days=${computedTradingDays}/${minTradingDays}`);
               await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
                 status: 'passed',
                 phase_review_status: 'pending_review',
@@ -504,12 +524,12 @@ Deno.serve(async (req) => {
           ) {
             const phase2Target = acc.rule_snapshot?.phase2_target ?? 5;
             const currentProgress = updates.profit_target_progress;
-            const meetsMinDays2 = (acc.trading_days || 0) >= minTradingDays;
+            const meetsMinDays2 = computedTradingDays >= minTradingDays;
             if (currentProgress >= phase2Target && !meetsMinDays2) {
-              console.log(`[PHASE2-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${acc.trading_days || 0}/${minTradingDays} trading days`);
+              console.log(`[PHASE2-PENDING] ${acc.account_id} — profit target met (${currentProgress.toFixed(2)}%) but only ${computedTradingDays}/${minTradingDays} trading days`);
             }
             if (currentProgress >= phase2Target && meetsMinDays2) {
-              console.log(`[PHASE2-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase2Target}%, trading_days=${acc.trading_days || 0}/${minTradingDays}`);
+              console.log(`[PHASE2-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${phase2Target}%, trading_days=${computedTradingDays}/${minTradingDays}`);
               await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
                 status: 'passed',
                 funded_review_status: 'pending_review',
@@ -529,7 +549,7 @@ Deno.serve(async (req) => {
                   total_trades: updates.total_trades,
                   win_rate: updates.win_rate,
                   max_dd_used: persistentOverallDD,
-                  trading_days: acc.trading_days || 0,
+                  trading_days: computedTradingDays,
                   gross_pnl: updates.pnl,
                 });
                 console.log(`[PHASE2-PASS] FundedAccountReview created for ${acc.account_id}`);
@@ -564,7 +584,7 @@ Deno.serve(async (req) => {
               const action = d.action ?? d.Action ?? 0;
               const isSell = action === 1 || action === 'SELL' || d.type === 'SELL';
               // openTime/closeTime may be ISO strings or Unix timestamps
-              const parseTime = (t) => {
+              const parseDealTime = (t) => {
                 if (!t) return new Date().toISOString();
                 if (typeof t === 'string' && t.includes('T')) return t;
                 return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1)).toISOString();
@@ -585,8 +605,8 @@ Deno.serve(async (req) => {
                pnl,
                status: 'closed',
                close_reason: d.comment ?? d.Comment ?? 'close',
-               open_time: parseTime(d.openTime ?? d.Time),
-               close_time: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time),
+               open_time: parseDealTime(d.openTime ?? d.Time),
+               close_time: parseDealTime(d.closeTime ?? d.TimeMsc ?? d.Time),
               }).catch(() => null);
             }));
             console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);
