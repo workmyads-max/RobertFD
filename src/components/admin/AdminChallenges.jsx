@@ -33,6 +33,7 @@ const EMPTY_FORM = {
   is_visible: true,
   is_popular: false,
   sort_order: 0,
+  min_trading_days: 4,
 };
 
 export default function AdminChallenges() {
@@ -332,6 +333,7 @@ function ChallengeForm({ formData, setFormData, onSave, onCancel, isPending }) {
         {field('Max DD (%)', 'max_dd', 'number')}
         {field('Profit Split (%)', 'profit_split', 'number')}
         {field('Max Lots', 'max_lots', 'number')}
+        {field('Min Trading Days', 'min_trading_days', 'number')}
         {field('Sort Order', 'sort_order', 'number')}
       </div>
 
