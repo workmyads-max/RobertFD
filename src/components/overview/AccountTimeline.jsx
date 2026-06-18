@@ -79,21 +79,7 @@ function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge, a
         <div className="text-[10px] font-mono leading-relaxed" style={{ color: status === 'pending' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
           {desc}
         </div>
-        {action && (
-          <button
-            onClick={action.onClick}
-            disabled={action.disabled}
-            title={action.disabled ? 'Not yet eligible for withdrawal' : undefined}
-            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
-            style={action.disabled
-              ? { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed' }
-              : { background: 'linear-gradient(90deg,#10b981,#059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.3)', cursor: 'pointer' }
-            }
-          >
-            <DollarSign className="w-3 h-3" />
-            {action.disabled ? 'Not Yet Eligible' : action.label}
-          </button>
-        )}
+
       </div>
     </div>
   );
