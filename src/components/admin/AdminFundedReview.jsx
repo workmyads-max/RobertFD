@@ -180,71 +180,70 @@ function ReviewCard({ review, onAction }) {
 
 // ── Phase 1 Review Card ───────────────────────────────────────────────────────
 function Phase1ReviewCard({ account, onApprove, onReject, loading }) {
-  const [expanded, setExpanded] = useState(false);
   const size = (account.account_size || 0).toLocaleString();
   const cLabel = account.challenge_type === 'two-step' ? '2-Step' : account.challenge_type === 'instant' ? 'Instant' : 'Inst.Light';
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl overflow-hidden"
-      style={{ border: '1px solid rgba(96,165,250,0.25)', background: 'rgba(255,255,255,0.02)' }}>
-      <div className="flex items-center justify-between p-5 cursor-pointer" onClick={() => setExpanded(!expanded)}>
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+      style={{ border: '1px solid rgba(96,165,250,0.3)', background: 'rgba(96,165,250,0.04)' }}>
+
+      {/* Header row */}
+      <div className="flex items-start justify-between p-5 gap-4">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)' }}>
+            style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.35)' }}>
             <Layers className="w-5 h-5 text-blue-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-white truncate">{account.user_email}</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono text-blue-400"
-                style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)' }}>
-                Phase 1 Passed
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="text-sm font-black text-white">{account.user_email}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold text-blue-400"
+                style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.35)' }}>
+                ✓ PHASE 1 PASSED
               </span>
             </div>
-            <div className="text-[11px] text-white/40 font-mono mt-0.5">
-              {account.account_id} · ${size} · {cLabel} · Progress: {(account.profit_target_progress || 0).toFixed(1)}%
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1 text-[11px] font-mono mt-2">
+              <div><span className="text-white/35">Account ID:</span> <span className="text-white/70 font-bold">{account.account_id}</span></div>
+              <div><span className="text-white/35">MT5 Login:</span> <span className="text-white/70 font-bold">{account.mt_login || '—'}</span></div>
+              <div><span className="text-white/35">Server:</span> <span className="text-white/70">{account.mt_server || account.server || '—'}</span></div>
+              <div><span className="text-white/35">Size:</span> <span className="text-white/70 font-bold">${size}</span></div>
+              <div><span className="text-white/35">Type:</span> <span className="text-white/70">{cLabel}</span></div>
+              <div><span className="text-white/35">Progress:</span> <span className="text-emerald-400 font-bold">{(account.profit_target_progress || 0).toFixed(1)}%</span></div>
             </div>
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform flex-shrink-0 ml-4 ${expanded ? 'rotate-180' : ''}`} />
       </div>
 
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="p-5 space-y-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Size', value: `$${size}` },
-                  { label: 'Balance', value: `$${(account.balance || 0).toLocaleString()}` },
-                  { label: 'Trading Days', value: account.trading_days || 0 },
-                  { label: 'Win Rate', value: `${(account.win_rate || 0).toFixed(1)}%` },
-                ].map(s => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <div className="text-xs font-bold text-white">{s.value}</div>
-                    <div className="text-[9px] font-mono text-white/30 mt-0.5">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => onApprove(account.account_id)} disabled={loading}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
-                  style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
-                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                  Approve → Provision Phase 2 MT5 Account
-                </button>
-                <button onClick={() => onReject(account.id)} disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
-                  style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
-                  <XCircle className="w-3.5 h-3.5" /> Reject
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Stats strip */}
+      <div className="grid grid-cols-4 gap-px border-t border-b" style={{ borderColor: 'rgba(96,165,250,0.15)' }}>
+        {[
+          { label: 'Balance', value: `$${(account.balance || account.account_size || 0).toLocaleString()}` },
+          { label: 'Trading Days', value: account.trading_days || 0 },
+          { label: 'Win Rate', value: `${(account.win_rate || 0).toFixed(1)}%` },
+          { label: 'Total Trades', value: account.total_trades || 0 },
+        ].map(s => (
+          <div key={s.label} className="px-4 py-3 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="text-[9px] font-mono text-white/30 uppercase mb-1">{s.label}</div>
+            <div className="text-sm font-bold text-white">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-2 p-4">
+        <button onClick={() => onApprove(account.account_id)} disabled={loading}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 transition-all hover:opacity-90"
+          style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)' }}>
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
+          Approve → Provision Phase 2 MT5 Account
+        </button>
+        <button onClick={() => onReject(account.id)} disabled={loading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 transition-all hover:opacity-90"
+          style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <XCircle className="w-3.5 h-3.5" /> Reject
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -254,9 +253,17 @@ export default function AdminFundedReview() {
   const [statusFilter, setStatusFilter] = useState('pending_review');
 
   // Phase 1 accounts waiting for admin to provision Phase 2
+  // Fetch ALL passed accounts — then filter client-side for pending_review to catch edge cases
   const { data: phase1Pending = [], refetch: refetchP1 } = useQuery({
     queryKey: ['phase1-pending-review'],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ phase_review_status: 'pending_review' }),
+    queryFn: async () => {
+      const all = await base44.entities.ChallengeAccount.filter({ status: 'passed' }, '-created_date', 200);
+      // Include any that are phase1/pending_review OR phase1/none (phase passed but review not yet set)
+      return all.filter(a =>
+        a.phase === 'phase1' &&
+        (a.phase_review_status === 'pending_review' || a.phase_review_status === 'none' || !a.phase_review_status)
+      );
+    },
     refetchInterval: 15000,
   });
 

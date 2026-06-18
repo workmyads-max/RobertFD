@@ -247,7 +247,7 @@ export default function Dashboard() {
       case 'admin-accounts': return isAdmin ? <AdminAccounts /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-withdrawals': return isAdmin ? <AdminWithdrawals /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-support': return isAdmin ? <AdminSupport /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-users': return isAdmin ? <AdminUsers /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-users': return isAdmin ? <AdminUserManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-notifications': return isAdmin ? <AdminNotifications /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-wallets': return isAdmin ? <AdminPaymentControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-payment-review': return isAdmin ? <AdminPaymentReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;

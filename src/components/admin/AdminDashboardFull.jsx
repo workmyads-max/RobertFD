@@ -98,6 +98,24 @@ export default function AdminDashboard({ onNavigate }) {
     refetchInterval: 30000,
   });
 
+  const { data: pendingPhase1 = [] } = useQuery({
+    queryKey: ['admin-pending-phase1-count'],
+    queryFn: async () => {
+      const all = await base44.entities.ChallengeAccount.filter({ status: 'passed' }, '-created_date', 200);
+      return all.filter(a =>
+        a.phase === 'phase1' &&
+        (a.phase_review_status === 'pending_review' || a.phase_review_status === 'none' || !a.phase_review_status)
+      );
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: pendingFundedReviews = [] } = useQuery({
+    queryKey: ['admin-pending-funded-count'],
+    queryFn: () => base44.entities.FundedAccountReview.filter({ status: 'pending_review' }),
+    refetchInterval: 30000,
+  });
+
   const filteredSections = ADMIN_SECTIONS.map(section => ({
     ...section,
     items: section.items.filter(item => 
@@ -118,6 +136,44 @@ export default function AdminDashboard({ onNavigate }) {
             <p className="text-sm text-white/30 mt-1">Complete platform management dashboard</p>
           </div>
         </div>
+
+        {/* Pending Review Alert Cards */}
+        {(pendingPhase1.length > 0 || pendingFundedReviews.length > 0) && (
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            {pendingPhase1.length > 0 && (
+              <button onClick={() => onNavigate?.('admin-funded-review')}
+                className="flex-1 flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'rgba(96,165,250,0.08)', border: '2px solid rgba(96,165,250,0.35)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(96,165,250,0.2)' }}>
+                  <ShieldCheck className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-black text-blue-400">Phase 1 Approvals Pending</div>
+                  <div className="text-[11px] text-white/40 mt-0.5">{pendingPhase1.length} account{pendingPhase1.length !== 1 ? 's' : ''} waiting for Phase 2 provisioning</div>
+                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black"
+                  style={{ background: '#3b82f6', color: '#fff' }}>{pendingPhase1.length}</div>
+              </button>
+            )}
+            {pendingFundedReviews.length > 0 && (
+              <button onClick={() => onNavigate?.('admin-funded-review')}
+                className="flex-1 flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'rgba(16,185,129,0.08)', border: '2px solid rgba(16,185,129,0.35)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(16,185,129,0.2)' }}>
+                  <Shield className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-black text-emerald-400">Funded Reviews Pending</div>
+                  <div className="text-[11px] text-white/40 mt-0.5">{pendingFundedReviews.length} trader{pendingFundedReviews.length !== 1 ? 's' : ''} awaiting funded account approval</div>
+                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black"
+                  style={{ background: '#10b981', color: '#fff' }}>{pendingFundedReviews.length}</div>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
