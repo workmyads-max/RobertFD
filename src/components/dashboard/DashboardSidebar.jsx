@@ -54,7 +54,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Logo - Increased Spacing */}
       <div className={`flex items-center border-b flex-shrink-0 ${collapsed ? 'justify-center px-3 py-6' : 'px-6 py-10'}`}
         style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
@@ -67,7 +67,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </div>
 
       {/* Nav */}
-      <nav className={`flex-1 py-4 sm:py-5 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -205,12 +205,13 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile toggle — z-[60] to always sit above banners/modals */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl glass flex items-center justify-center shadow-lg"
+        className="fixed top-3 left-3 sm:top-4 sm:left-4 md:hidden w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+        style={{ zIndex: 60, background: 'rgba(7,8,14,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
       >
-        {isOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
+        {isOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
       </button>
 
       {/* Desktop sidebar */}
@@ -225,14 +226,15 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/60 md:hidden"
+              className="fixed inset-0 bg-black/70 md:hidden"
+              style={{ zIndex: 58 }}
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 bottom-0 z-50 w-[280px] sm:w-72 md:hidden border-r border-white/5 safe-area-inset-left"
-              style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)' }}
+              initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+              className="fixed left-0 top-0 bottom-0 md:hidden border-r border-white/5"
+              style={{ zIndex: 59, width: '280px', background: 'rgba(7,8,14,0.99)', backdropFilter: 'blur(60px)', overflowY: 'auto' }}
             >
               <SidebarContent />
             </motion.div>
