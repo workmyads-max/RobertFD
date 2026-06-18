@@ -208,6 +208,18 @@ Deno.serve(async (req) => {
     // ── SERVER-SIDE BREACH DETECTION ──────────────────────────────────────────
     const accountSize = acc.account_size || 100000;
 
+    // Safety: skip breach detection if rule_snapshot is missing (can't enforce unknown rules)
+    if (!acc.rule_snapshot) {
+      return Response.json({
+        success: true,
+        breach_detected: false,
+        skipped: true,
+        reason: 'no_rule_snapshot',
+        balance,
+        equity,
+      });
+    }
+
     // Glitch: balance < 1% of account size = API error
     if (balance > 0 && balance < accountSize * 0.01) {
       return Response.json({
@@ -284,13 +296,14 @@ Deno.serve(async (req) => {
         triggered_at: breachTime,
       }).catch(() => {});
 
-      // Notification (non-blocking)
+      // Notification (non-blocking) — MUST be user-scoped to prevent cross-user leakage
       sr.entities.Notification.create({
+        user_email:   acc.user_email,
         title:        '🚫 Challenge Account Failed',
         message:      `Account ${account_id} breached: ${breachLabels[breachType]}. DD reached ${breachValue.toFixed(2)}%. Account has been automatically closed.`,
         type:         'market_alert',
         priority:     'critical',
-        display_mode: 'popup',
+        display_mode: 'sidebar',
         is_active:    true,
         target:       'challenge',
       }).catch(() => {});
