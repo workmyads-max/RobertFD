@@ -15,6 +15,7 @@ import AccountSwitcher      from './AccountSwitcher.jsx';
 import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 import AccountTimeline      from './AccountTimeline.jsx';
+import NotificationBanner   from '../dashboard/NotificationBanner.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -66,7 +67,7 @@ function AccountInfoStrip({ account }) {
 
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function FundedDashboard({ user, onStartChallenge, onNavigate }) {
+export default function FundedDashboard({ user, onStartChallenge, onNavigate, bannerNotification }) {
   // Refetch user to get latest avatar_url/profile_photo_url
   const { data: currentUser = user } = useQuery({
     queryKey: ['current-user'],
@@ -96,7 +97,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   });
   const kyc = kycList[0] || null;
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
+  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending'].includes(a.status));
 
   const [selectedAccount, setSelectedAccount] = useState(null);
 
@@ -171,6 +172,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
 
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
+
+        {/* Promotion Banner — below welcome header */}
+        {bannerNotification && (
+          <div className="mt-4 rounded-xl overflow-hidden">
+            <NotificationBanner notification={bannerNotification} />
+          </div>
+        )}
 
         {/* Main content area with proper spacing */}
         <div className="space-y-8 mt-8 min-h-[40vh]">

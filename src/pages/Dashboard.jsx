@@ -225,7 +225,7 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
       case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
@@ -286,7 +286,6 @@ export default function Dashboard() {
     <div className="h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
       {/* Clean dark background — no animated overlays */}
 
-      {bannerNotification && <NotificationBanner notification={bannerNotification} />}
       {user && <UserWarningPanel userEmail={user.email} />}
       {user && <PaymentApprovalNotification user={user} />}
 
