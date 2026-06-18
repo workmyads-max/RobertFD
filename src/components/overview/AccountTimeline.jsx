@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight } from 'lucide-react';
+import QuickWithdrawModal from './QuickWithdrawModal';
 
 function fmt(n) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
@@ -10,7 +11,7 @@ function daysSince(dateStr) {
 }
 
 // ─── timeline step ─────────────────────────────────────────────────────────────
-function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge }) {
+function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge, action }) {
   const config = {
     done:    { line: 'rgba(16,185,129,0.15)',  ring: 'rgba(16,185,129,0.25)',  bg: 'rgba(16,185,129,0.06)', color: '#10b981' },
     active:  { line: 'rgba(255,92,0,0.15)',    ring: 'rgba(255,92,0,0.35)',    bg: 'rgba(255,92,0,0.07)',   color: '#FF5C00' },
@@ -78,6 +79,16 @@ function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge })
         <div className="text-[10px] font-mono leading-relaxed" style={{ color: status === 'pending' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
           {desc}
         </div>
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(90deg,#10b981,#059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}
+          >
+            <DollarSign className="w-3 h-3" />
+            {action.label}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -220,37 +231,62 @@ function useTimelineSteps(account, closedTrades = []) {
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────────
-export default function AccountTimeline({ account, closedTrades = [] }) {
+export default function AccountTimeline({ account, closedTrades = [], onNavigate }) {
   const steps = useTimelineSteps(account, closedTrades);
+  const [showWithdraw, setShowWithdraw] = useState(false);
 
   if (!account || steps.length === 0) return null;
 
+  // Determine which step is "Withdrawal Eligible" and if it's active/eligible
+  const stepsWithActions = steps.map(step => {
+    if (step.label === 'Withdrawal Eligible' && step.status === 'active') {
+      return {
+        ...step,
+        action: {
+          label: 'Request Withdraw',
+          onClick: () => setShowWithdraw(true),
+        },
+      };
+    }
+    return step;
+  });
+
   return (
-    <div className="rounded-2xl overflow-hidden"
-      style={{
-        background: 'rgba(10,11,20,0.98)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-      }}>
-      {/* Header */}
-      <div className="flex items-center px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-2.5">
-          <ArrowRight className="w-3.5 h-3.5 text-primary" />
-          <span className="text-sm font-bold text-foreground">Progress Timeline</span>
+    <>
+      <div className="rounded-2xl overflow-hidden"
+        style={{
+          background: 'rgba(10,11,20,0.98)',
+          border: '1px solid rgba(255,255,255,0.09)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        }}>
+        {/* Header */}
+        <div className="flex items-center px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2.5">
+            <ArrowRight className="w-3.5 h-3.5 text-primary" />
+            <span className="text-sm font-bold text-foreground">Progress Timeline</span>
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="px-5 py-4">
+          {stepsWithActions.map((step, i) => (
+            <TimelineStep
+              key={step.label}
+              {...step}
+              index={i}
+              isLast={i === stepsWithActions.length - 1}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Steps */}
-      <div className="px-5 py-4">
-        {steps.map((step, i) => (
-          <TimelineStep
-            key={step.label}
-            {...step}
-            index={i}
-            isLast={i === steps.length - 1}
-          />
-        ))}
-      </div>
-    </div>
+      {showWithdraw && (
+        <QuickWithdrawModal
+          account={account}
+          onClose={() => setShowWithdraw(false)}
+          onSuccess={() => onNavigate?.('withdrawals')}
+        />
+      )}
+    </>
   );
 }

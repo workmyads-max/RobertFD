@@ -206,7 +206,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   {/* Info strip */}
                   <AccountInfoStrip account={derivedSelected} />
                   {/* Progress Timeline */}
-                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} />
+                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} onNavigate={onNavigate} />
                 </motion.div>
               )}
             </>
