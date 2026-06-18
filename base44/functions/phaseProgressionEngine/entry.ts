@@ -11,10 +11,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 function genPassword() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+  // MT5 password policy: must contain uppercase, lowercase, digit, special char
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$%';
+  const all = upper + lower + digits + special;
+  // Guarantee at least one of each required type
   let p = '';
-  for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
-  return p;
+  p += upper[Math.floor(Math.random() * upper.length)];
+  p += lower[Math.floor(Math.random() * lower.length)];
+  p += digits[Math.floor(Math.random() * digits.length)];
+  p += special[Math.floor(Math.random() * special.length)];
+  // Fill remaining 8 chars from all
+  for (let i = 0; i < 8; i++) p += all[Math.floor(Math.random() * all.length)];
+  // Shuffle
+  return p.split('').sort(() => Math.random() - 0.5).join('');
 }
 
 async function sendEmail(sr, to, type, data) {
@@ -227,19 +239,22 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      // Prevent double-approval
-      if (account.phase_review_status === 'approved') {
+      // Prevent double-approval ONLY if Phase 2 was actually provisioned (has new credentials + active status)
+      if (account.phase_review_status === 'approved' && account.status === 'active' && account.phase === 'phase2' && account.mt_login) {
         return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.' }, { status: 409 });
       }
 
       // Mark review approved + advance to phase2 (reset progress for new phase)
-      await sr.entities.ChallengeAccount.update(account.id, {
-        status: 'passed',
-        phase: 'phase2',
-        phase_review_status: 'approved',
-        phase_passed_at: account.phase_passed_at || new Date().toISOString(),
-        profit_target_progress: 0,
-      });
+      // Only update status/phase if not already in phase2 (idempotent retry support)
+      if (account.phase !== 'phase2') {
+        await sr.entities.ChallengeAccount.update(account.id, {
+          status: 'passed',
+          phase: 'phase2',
+          phase_review_status: 'approved',
+          phase_passed_at: account.phase_passed_at || new Date().toISOString(),
+          profit_target_progress: 0,
+        });
+      }
 
       const platform = account.platform || 'xtrading';
       const isMT5 = platform === 'mt5';
