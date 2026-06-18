@@ -97,29 +97,31 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   const kyc = kycList[0] || null;
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
+
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Auto-select first account on load and when accounts change
+  // Keep selectedAccount in sync: set on first data arrival, clear if it disappears
+  const selectedId = selectedAccount?.id;
+  const derivedSelected = activeAccounts.length > 0
+    ? (activeAccounts.find(a => a.id === selectedId) ?? activeAccounts[0])
+    : null;
+
+  // Only call setState when the derived value actually changes to avoid re-render loops
   useEffect(() => {
-    if (activeAccounts.length > 0) {
-      // If no selection yet, or current selection doesn't exist anymore
-      if (!selectedAccount || !activeAccounts.find(a => a.id === selectedAccount?.id)) {
-        setSelectedAccount(activeAccounts[0]);
-      }
-    } else {
-      setSelectedAccount(null);
+    if (derivedSelected?.id !== selectedId) {
+      setSelectedAccount(derivedSelected ?? null);
     }
-  }, [activeAccounts]);
+  }, [derivedSelected?.id]);
 
   // Load trade records scoped to this account's MT5 account_id
   const { data: trades = [] } = useQuery({
-    queryKey: ['trade-records', selectedAccount?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: selectedAccount.account_id }),
-    enabled: !!selectedAccount?.account_id,
+    queryKey: ['trade-records', derivedSelected?.account_id],
+    queryFn: () => base44.entities.TradeRecord.filter({ account_id: derivedSelected.account_id }),
+    enabled: !!derivedSelected?.account_id,
     refetchInterval: 5000,
   });
 
-  const stats = useAccountStats(selectedAccount, trades);
+  const stats = useAccountStats(derivedSelected, trades);
 
   if (isLoading) {
     return (
@@ -133,9 +135,9 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
   // Derive open trades for floating P&L widget
   const openTrades = trades.filter(t => t.status === 'open');
   const floatPnl = openTrades.reduce((s, t) => s + (t.pnl || 0), 0);
-  const accountSize = selectedAccount?.account_size || 100000;
-  const balance = selectedAccount?.balance || accountSize;
-  const rules = getAccountRules(selectedAccount);
+  const accountSize = derivedSelected?.account_size || 100000;
+  const balance = derivedSelected?.balance || accountSize;
+  const rules = getAccountRules(derivedSelected);
 
   return (
     <div className="relative min-h-screen flex flex-col bg-background overflow-hidden">
@@ -148,12 +150,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
       <ParticleBackground />
 
       {/* Floating Daily P&L — shown when open positions exist */}
-      {selectedAccount && openTrades.length > 0 && (
+      {derivedSelected && openTrades.length > 0 && (
         <div className="fixed z-50" style={{ pointerEvents: 'none' }}>
           <div style={{ pointerEvents: 'auto' }}>
             <FloatingDailyPnL
               floatPnl={floatPnl}
-              dailyClosedPnl={selectedAccount?.daily_pnl || 0}
+              dailyClosedPnl={derivedSelected?.daily_pnl || 0}
               accountSize={accountSize}
               dailyDDLimit={rules?.dailyDDLimit || 5}
               dailyOpenBalance={balance}
@@ -190,21 +192,21 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                     <RefreshCw className="w-3 h-3" /> Sync
                   </button>
                 </div>
-                <AccountSwitcher accounts={activeAccounts} selectedId={selectedAccount?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
+                <AccountSwitcher accounts={activeAccounts} selectedId={derivedSelected?.id} onSelect={setSelectedAccount} onNavigate={onNavigate} />
               </div>
 
               {/* Per-account content */}
-              {selectedAccount && (
+              {derivedSelected && (
                 <motion.div
-                  key={selectedAccount.id}
+                  key={derivedSelected.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                   className="space-y-4">
                   {/* Info strip */}
-                  <AccountInfoStrip account={selectedAccount} />
+                  <AccountInfoStrip account={derivedSelected} />
                   {/* Progress Timeline */}
-                  <AccountTimeline account={selectedAccount} closedTrades={trades.filter(t => t.status === 'closed')} />
+                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} />
                 </motion.div>
               )}
             </>
