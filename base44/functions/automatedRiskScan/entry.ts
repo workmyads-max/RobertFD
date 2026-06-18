@@ -9,6 +9,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
+    // Check if risk detection is enabled
+    const settings = await base44.asServiceRole.entities.PlatformSettings.filter({ setting_key: 'risk_detection_enabled' });
+    if (settings.length > 0 && settings[0].is_enabled === false) {
+      return Response.json({ error: 'Risk Detection is disabled. Enable it from Admin > Risk Detection before running scans.' }, { status: 403 });
+    }
+
     const { account_id } = await req.json();
     
     if (!account_id) {

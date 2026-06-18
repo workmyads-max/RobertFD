@@ -208,7 +208,7 @@ export default function AdminRiskDetection() {
       <div className="grid lg:grid-cols-3 gap-4">
         {/* HFT Detection */}
         <div className="rounded-2xl p-5 space-y-4"
-          style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', opacity: isEnabled ? 1 : 0.45 }}>
           <div className="flex items-center gap-3">
             <TrendingDown className="w-5 h-5 text-red-400" />
             <h3 className="text-sm font-black text-white">HFT/Arbitrage Detection</h3>
@@ -218,18 +218,18 @@ export default function AdminRiskDetection() {
           </p>
           <button
             onClick={() => runHFTDetection.mutate({})}
-            disabled={hftRunning}
-            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            disabled={hftRunning || !isEnabled}
+            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)' }}
           >
             {hftRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {hftRunning ? 'Scanning...' : 'Run Detection'}
+            {hftRunning ? 'Scanning...' : isEnabled ? 'Run Detection' : 'Detection Disabled'}
           </button>
         </div>
 
         {/* News Trading Detection */}
         <div className="rounded-2xl p-5 space-y-4"
-          style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+          style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)', opacity: isEnabled ? 1 : 0.45 }}>
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-amber-400" />
             <h3 className="text-sm font-black text-white">News Trading Detection</h3>
@@ -239,18 +239,18 @@ export default function AdminRiskDetection() {
           </p>
           <button
             onClick={() => runNewsDetection.mutate({})}
-            disabled={newsRunning}
-            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            disabled={newsRunning || !isEnabled}
+            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)' }}
           >
             {newsRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {newsRunning ? 'Scanning...' : 'Run Detection'}
+            {newsRunning ? 'Scanning...' : isEnabled ? 'Run Detection' : 'Detection Disabled'}
           </button>
         </div>
 
         {/* Weekend Close */}
         <div className="rounded-2xl p-5 space-y-4"
-          style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
+          style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', opacity: isEnabled ? 1 : 0.45 }}>
           <div className="flex items-center gap-3">
             <Clock className="w-5 h-5 text-blue-400" />
             <h3 className="text-sm font-black text-white">Weekend Auto-Close</h3>
@@ -260,12 +260,12 @@ export default function AdminRiskDetection() {
           </p>
           <button
             onClick={() => runWeekendClose.mutate()}
-            disabled={runWeekendClose.isPending}
-            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            disabled={runWeekendClose.isPending || !isEnabled}
+            className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.3)' }}
           >
             {runWeekendClose.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {runWeekendClose.isPending ? 'Closing...' : 'Trigger Weekend Close'}
+            {runWeekendClose.isPending ? 'Closing...' : isEnabled ? 'Trigger Weekend Close' : 'Detection Disabled'}
           </button>
           {weekendResult && (
             <div className="text-[10px] font-mono text-emerald-400">
