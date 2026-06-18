@@ -61,7 +61,6 @@ import DDBreachModal from '../components/dashboard/DDBreachModal';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
-import CopyTradingPanel from '../components/dashboard/CopyTradingPanel';
 
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -230,7 +229,6 @@ export default function Dashboard() {
       case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
-      case 'copy-trading': return isEnabled('copy_trading') ? <CopyTradingPanel user={user} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;
       case 'leaderboard': return <Leaderboard />;
