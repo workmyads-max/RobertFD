@@ -129,8 +129,8 @@ export function getAccountRules(account, adminSettings = null) {
     maxDDLimit:     10,
     // Profit target
     profitTarget:   (isInstant || isInstantLight) ? 0 : phase === 'phase2' ? 5 : 10,
-    // Min trading days: 4 for phase1/phase2, 0 for instant types
-    minTradingDays: (isInstant || isInstantLight) ? 0 : 4,
+    // Min trading days: read from rule_snapshot first (admin-configured), fallback to 1
+    minTradingDays: (isInstant || isInstantLight) ? 0 : (account?.rule_snapshot?.min_trading_days ?? 1),
     // Account type rules
     newsTrading:      isSwing,
     overnightHolding: isSwing,
