@@ -267,11 +267,23 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
         }}>
         {/* Header */}
-        <div className="flex items-center px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-2.5">
             <ArrowRight className="w-3.5 h-3.5 text-primary" />
             <span className="text-sm font-bold text-foreground">Progress Timeline</span>
           </div>
+          <button
+            onClick={() => isEligible ? setShowWithdraw(true) : null}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+            style={isEligible
+              ? { background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.35)' }
+              : { background: 'rgba(255,92,0,0.12)', color: 'rgba(255,92,0,0.45)', border: '1px solid rgba(255,92,0,0.2)', cursor: 'not-allowed' }
+            }
+            title={!isEligible ? 'Not yet eligible for withdrawal' : undefined}
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            {isEligible ? 'Request Withdraw' : 'Not Yet Eligible'}
+          </button>
         </div>
 
         {/* Steps */}
