@@ -273,16 +273,11 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
             <span className="text-sm font-bold text-foreground">Progress Timeline</span>
           </div>
           <button
-            onClick={() => isEligible ? setShowWithdraw(true) : null}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-            style={isEligible
-              ? { background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.35)' }
-              : { background: 'rgba(255,92,0,0.12)', color: 'rgba(255,92,0,0.45)', border: '1px solid rgba(255,92,0,0.2)', cursor: 'not-allowed' }
-            }
-            title={!isEligible ? 'Not yet eligible for withdrawal' : undefined}
+            onClick={() => isEligible ? setShowWithdraw(true) : alert('Not yet eligible for withdrawal. Complete 14 trading days on your funded account first.')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 active:scale-95"
+            style={{ background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.4)', letterSpacing: '0.01em' }}
           >
-            <DollarSign className="w-3.5 h-3.5" />
-            {isEligible ? 'Request Withdraw' : 'Not Yet Eligible'}
+            Request Withdrawal <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
