@@ -21,7 +21,7 @@ const STATUS_CONFIG = {
   pending: { line: 'rgba(255,255,255,0.04)', ring: 'rgba(255,255,255,0.06)', bg: 'rgba(255,255,255,0.015)', color: 'rgba(255,255,255,0.18)', label: null },
 };
 
-function buildTimelineSteps(account, closedTrades = []) {
+function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
   const challengeType = account?.challenge_type || 'two-step';
   const phase = account?.phase || 'phase1';
   const status = account?.status || 'active';
@@ -64,7 +64,8 @@ function buildTimelineSteps(account, closedTrades = []) {
   const phase1Target = snap.phase1_target ?? 10;
   const phase2Target = snap.phase2_target ?? 5;
   const dailyDd = snap.daily_dd_limit ?? 5;
-  const minDays = snap.min_trading_days ?? 4;
+  // Use livePlan.min_trading_days if available (admin can update it); fall back to rule_snapshot
+  const minDays = livePlan?.min_trading_days ?? snap.min_trading_days ?? 4;
 
   const isPhase1Done = phase !== 'phase1' || status === 'passed' || status === 'funded';
   const isPhase2Done = phase === 'funded' || status === 'funded';
@@ -99,8 +100,8 @@ function buildTimelineSteps(account, closedTrades = []) {
   ];
 }
 
-function ProgressTimeline({ account, closedTrades }) {
-  const steps = useMemo(() => buildTimelineSteps(account, closedTrades), [account, closedTrades]);
+function ProgressTimeline({ account, closedTrades, livePlan }) {
+  const steps = useMemo(() => buildTimelineSteps(account, closedTrades, livePlan), [account, closedTrades, livePlan]);
 
   if (!account) return null;
 
@@ -212,11 +213,11 @@ function PerformanceMetrics({ stats }) {
 }
 
 // ─── Export combined panel ─────────────────────────────────────────────────────
-export default function AccountPerformanceMetrics({ account, stats, closedTrades = [] }) {
+export default function AccountPerformanceMetrics({ account, stats, closedTrades = [], livePlan = null }) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       <PerformanceMetrics stats={stats} />
-      <ProgressTimeline account={account} closedTrades={closedTrades} />
+      <ProgressTimeline account={account} closedTrades={closedTrades} livePlan={livePlan} />
     </div>
   );
 }

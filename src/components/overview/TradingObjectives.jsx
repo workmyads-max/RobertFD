@@ -133,7 +133,7 @@ export default function TradingObjectives({ account, rules, stats }) {
   const { profitTargetPct, dailyDDPct, maxDDPct, tradingDays } = stats;
   const phase = account?.phase || 'phase1';
   const accountSize = account?.account_size || 100000;
-  const minDays = rules?.minTradingDays || 4;
+  const minDays = rules?.minTradingDays ?? 4;
 
   // Convert % to USD based on account size
   const profitTargetUsd = (profitTargetPct / 100) * accountSize;

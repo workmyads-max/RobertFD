@@ -508,7 +508,7 @@ function DisciplineGauge({ score }) {
   );
 }
 
-function DisciplinePanel({ account, closedTrades = [] }) {
+function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const snap = account?.rule_snapshot || {};
   const accountSize = account?.account_size || 100000;
   const balance = account?.balance || accountSize;
@@ -517,7 +517,10 @@ function DisciplinePanel({ account, closedTrades = [] }) {
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
   const maxDDLimit = snap.max_dd_limit ?? 10;
   const profitTarget = account?.phase === 'phase2' ? (snap.phase2_target ?? 5) : (snap.phase1_target ?? 10);
-  const minDays = snap.min_trading_days ?? 4;
+  // Read from rule_snapshot first, then fall back to account field, then 4
+  // rule_snapshot is updated when admin changes the challenge plan via repair
+  // CRITICAL: Use live plan min_trading_days first (admin can change it), fall back to rule_snapshot, then 4
+  const minDays = livePlan?.min_trading_days ?? snap.min_trading_days ?? 4;
 
   const tradingDaySet = new Set();
   closedTrades.filter(t => t.close_time).forEach(t => {
@@ -1036,6 +1039,22 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
     : (activeAccounts[0] || null);
 
+  // Fetch live ChallengePlan to get current min_trading_days (not stale rule_snapshot)
+  const { data: livePlan } = useQuery({
+    queryKey: ['challenge-plan-live', account?.challenge_type, account?.account_size],
+    queryFn: async () => {
+      if (!account?.challenge_type || !account?.account_size) return null;
+      const plans = await base44.entities.ChallengePlan.filter({
+        type: account.challenge_type,
+        size: account.account_size,
+        is_active: true,
+      });
+      return plans[0] || null;
+    },
+    enabled: !!account?.challenge_type && !!account?.account_size,
+    staleTime: 30000,
+  });
+
   const { data: tradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
     queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
@@ -1173,7 +1192,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       <ClosedTradesSection account={account} />
 
       {/* Performance Metrics + Progress Timeline */}
-      <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} />
+      <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} livePlan={livePlan} />
 
       {/* Stats + Daily Summary side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1182,7 +1201,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       </div>
 
       {/* Discipline + Objectives */}
-      <DisciplinePanel account={account} closedTrades={closedTrades} />
+      <DisciplinePanel account={account} closedTrades={closedTrades} livePlan={livePlan} />
 
       {/* Account History */}
       <AccountHistorySection accounts={accounts} />

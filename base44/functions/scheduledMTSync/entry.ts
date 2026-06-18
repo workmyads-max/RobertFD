@@ -450,8 +450,19 @@ Deno.serve(async (req) => {
           // Sets status=passed and review_status=pending_review.
           // NEVER provisions MT5 credentials — that requires admin approval.
           // Idempotent: skips if already passed or already in review.
-          // MIN TRADING DAYS: gated here using acc.trading_days (updated by enforceChallengeTradingRules).
-          const minTradingDays = acc.rule_snapshot?.min_trading_days ?? 4;
+          // MIN TRADING DAYS: always read from live ChallengePlan (admin can change it);
+          // fall back to rule_snapshot then 4 only if plan not found.
+          let minTradingDays = acc.rule_snapshot?.min_trading_days ?? 4;
+          try {
+            const planResults = await base44.asServiceRole.entities.ChallengePlan.filter({
+              type: acc.challenge_type,
+              size: acc.account_size,
+              is_active: true,
+            });
+            if (planResults[0]?.min_trading_days != null) {
+              minTradingDays = planResults[0].min_trading_days;
+            }
+          } catch (_) { /* keep fallback */ }
 
           if (
             !breachDetected &&
