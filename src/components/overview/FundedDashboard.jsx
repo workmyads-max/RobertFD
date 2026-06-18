@@ -14,6 +14,7 @@ import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
 import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
+import AccountTimeline      from './AccountTimeline.jsx';
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ onStartChallenge }) {
@@ -198,9 +199,12 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate }) 
                   key={selectedAccount.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}>
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-4">
                   {/* Info strip */}
                   <AccountInfoStrip account={selectedAccount} />
+                  {/* Progress Timeline */}
+                  <AccountTimeline account={selectedAccount} closedTrades={trades.filter(t => t.status === 'closed')} />
                 </motion.div>
               )}
             </>
