@@ -82,11 +82,16 @@ function TimelineStep({ icon: Icon, label, desc, status, isLast, index, badge, a
         {action && (
           <button
             onClick={action.onClick}
-            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(90deg,#10b981,#059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}
+            disabled={action.disabled}
+            title={action.disabled ? 'Not yet eligible for withdrawal' : undefined}
+            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+            style={action.disabled
+              ? { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed' }
+              : { background: 'linear-gradient(90deg,#10b981,#059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.3)', cursor: 'pointer' }
+            }
           >
             <DollarSign className="w-3 h-3" />
-            {action.label}
+            {action.disabled ? 'Not Yet Eligible' : action.label}
           </button>
         )}
       </div>
@@ -237,14 +242,16 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
 
   if (!account || steps.length === 0) return null;
 
-  // Determine which step is "Withdrawal Eligible" and if it's active/eligible
+  // Always show "Request Withdraw" on the Withdrawal Eligible step
+  const isEligible = steps.find(s => s.label === 'Withdrawal Eligible')?.status === 'active';
   const stepsWithActions = steps.map(step => {
-    if (step.label === 'Withdrawal Eligible' && step.status === 'active') {
+    if (step.label === 'Withdrawal Eligible') {
       return {
         ...step,
         action: {
           label: 'Request Withdraw',
-          onClick: () => setShowWithdraw(true),
+          onClick: () => isEligible ? setShowWithdraw(true) : null,
+          disabled: !isEligible,
         },
       };
     }
