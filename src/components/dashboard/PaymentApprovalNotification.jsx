@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 export default function PaymentApprovalNotification({ user, onDismiss }) {
   const [isVisible, setIsVisible] = useState(false);
   const hasChecked = useRef(false);
+  const rateLimitRef = useRef(false);
 
   useEffect(() => {
     const email = user?.email;
@@ -14,26 +15,36 @@ export default function PaymentApprovalNotification({ user, onDismiss }) {
     if (hasChecked.current) return;
     // Already dismissed in a previous session — never make an API call
     if (localStorage.getItem(`payment_approval_seen_${email}`)) return;
+    // Rate limit guard - only check once per session
+    if (rateLimitRef.current) return;
 
     hasChecked.current = true;
+    rateLimitRef.current = true;
 
     // Small delay so the dashboard doesn't hammer the API during the initial
     // burst of parallel queries on mount
     const timer = setTimeout(async () => {
-      const notifications = await base44.entities.Notification.filter({
-        user_email: email,
-        type: 'system',
-        is_active: true,
-      }, '-created_date', 5);
+      try {
+        const notifications = await base44.entities.Notification.filter({
+          user_email: email,
+          type: 'system',
+          is_active: true,
+        }, '-created_date', 5);
 
-      const paymentApproval = notifications.find(n =>
-        n.title?.includes('Payment Approved') || n.message?.includes('provisioned')
-      );
+        const paymentApproval = notifications.find(n =>
+          n.title?.includes('Payment Approved') || n.message?.includes('provisioned')
+        );
 
-      if (paymentApproval) {
-        setIsVisible(true);
+        if (paymentApproval) {
+          setIsVisible(true);
+        }
+      } catch (error) {
+        // Silently fail on rate limit or network errors
+        if (error.message?.includes('Rate limit')) {
+          console.warn('PaymentApprovalNotification: Rate limited, skipping check');
+        }
       }
-    }, 3000); // wait 3 s after mount before querying
+    }, 5000); // wait 5 s after mount before querying
 
     return () => clearTimeout(timer);
   }, [user?.email]);
