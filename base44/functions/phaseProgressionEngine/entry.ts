@@ -50,16 +50,19 @@ async function loadMT5Creds(sr) {
       apiKey: p.api_key,
       apiBase: p.server_url || Deno.env.get('MT5_API_BASE_URL'),
       serverName: p.server_name || Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
+      managerLogin: p.manager_login,
+      managerPassword: p.manager_password,
     };
   }
-  // Fallback to env vars
+  // Fallback to env vars (manager creds only exist in the provider entity, so an
+  // env-only fallback cannot provision new accounts — disable/read calls still work)
   const apiKey = Deno.env.get('MT5_API_KEY');
   const apiBase = Deno.env.get('MT5_API_BASE_URL');
   if (!apiKey || !apiBase) {
     console.error('[phaseProgressionEngine] MT5 credentials not configured in DB or env vars');
     return null;
   }
-  return { apiKey, apiBase, serverName: Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server' };
+  return { apiKey, apiBase, serverName: Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server', managerLogin: null, managerPassword: null };
 }
 
 /**
@@ -75,17 +78,36 @@ function mt5Headers(apiKey) {
 }
 
 /**
- * Provision a new MT5 account via broker REST API.
- * Returns { mt_login, mt_password, mt_server, mt_group } or null on failure.
+ * Provision a new MT5 account via broker REST API — IDENTICAL workflow to functions/provisionMT5Account.
+ * Uses manager-authenticated headers (ApiKey + ManagerLogin + ManagerPassword) and the
+ * { profit, type: 2 } deposit structure. BOTH account creation AND deposit are validated;
+ * returns { success:false, error } if either step fails so the caller can roll back.
+ * On success returns { success:true, mt_login, mt_password, mt_server, mt_group }.
  */
-async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, groupName, leverage, balance, accountName) {
+async function provisionMT5Account(creds, userEmail, groupName, leverageInt, balance, accountName) {
+  const { apiBase, apiKey, serverName, managerLogin, managerPassword } = creds || {};
+  if (!apiBase || !apiKey || !managerLogin || !managerPassword) {
+    return { success: false, error: 'MT5 credentials incomplete (missing apiBase/apiKey/managerLogin/managerPassword)' };
+  }
+  if (!groupName) {
+    return { success: false, error: 'MT5 group not configured' };
+  }
+
   const masterPassword = genPassword();
   const investorPassword = genPassword();
+  // Manager-authenticated headers — IDENTICAL to functions/provisionMT5Account
+  const headers = {
+    'Content-Type': 'application/json',
+    'ApiKey': apiKey,
+    'ManagerLogin': managerLogin,
+    'ManagerPassword': managerPassword,
+  };
+
   try {
-    // Tritech API: POST /api/v1/user/useradd
+    // ── 1. CREATE ACCOUNT ── POST /api/v1/user/useradd
     const createRes = await fetch(`${apiBase}/api/v1/user/useradd`, {
       method: 'POST',
-      headers: mt5Headers(apiKey),
+      headers,
       body: JSON.stringify({
         Login: 0,            // 0 = auto-assign
         MasterPassword: masterPassword,
@@ -93,51 +115,66 @@ async function provisionMT5Account(apiBase, apiKey, serverName, userEmail, group
         Name: accountName || userEmail.split('@')[0],
         Email: userEmail,
         Group: groupName,
-        Leverage: leverage,
+        Leverage: leverageInt,
         Country: 'AE',
-        Comment: `XFunded ${groupName}`,
+        Comment: `${groupName} ${balance}`,
         Status: 0,
-        apikey: apiKey,      // Tritech requires apikey in body
+        apikey: apiKey,
       }),
     });
-
-    const responseText = await createRes.text();
-    console.log(`[Tritech/useradd] Status ${createRes.status}: ${responseText.slice(0, 200)}`);
-
+    const createText = await createRes.text();
+    console.log(`[phaseProgressionEngine/useradd] Status ${createRes.status}: ${createText.slice(0, 300)}`);
     if (!createRes.ok) {
-      console.error('[Tritech/useradd] Account creation failed:', responseText);
-      return null;
+      return { success: false, error: `useradd failed (${createRes.status}): ${createText.slice(0, 200)}` };
     }
-
-    const result = JSON.parse(responseText);
-    // Tritech response: { data: { login: 12345, ... }, resultCode: "200" }
-    const mtLogin = result?.data?.login || result?.User?.Login || result?.Login || result?.login;
-
+    let createJson;
+    try { createJson = JSON.parse(createText); } catch { return { success: false, error: `useradd returned invalid JSON: ${createText.slice(0, 120)}` }; }
+    const mtLogin = createJson?.data?.login;
     if (!mtLogin || parseInt(mtLogin) === 0) {
-      console.error('[Tritech/useradd] No Login in response:', result);
-      return null;
+      return { success: false, error: `useradd returned no Login: ${createText.slice(0, 200)}` };
     }
+    console.log(`[phaseProgressionEngine] ✅ MT5 account created: login=${mtLogin}`);
 
-    // Set initial balance
+    // ── 2. DEPOSIT (MANDATORY + VALIDATED) ── POST /api/v1/user/depositwithbal
     if (balance > 0) {
       const depRes = await fetch(`${apiBase}/api/v1/user/depositwithbal`, {
         method: 'POST',
-        headers: mt5Headers(apiKey),
-        body: JSON.stringify({ Login: parseInt(mtLogin), Balance: balance, Comment: 'Initial challenge deposit', apikey: apiKey }),
+        headers,
+        body: JSON.stringify({
+          Login: parseInt(mtLogin),
+          profit: balance,
+          type: 2,
+          comment: 'Initial deposit',
+          apikey: apiKey,
+        }),
       });
       const depText = await depRes.text();
-      console.log(`[Tritech/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 100)}`);
+      console.log(`[phaseProgressionEngine/depositwithbal] Login ${mtLogin}: ${depRes.status} — ${depText.slice(0, 200)}`);
+
+      // Validate HTTP status
+      if (!depRes.ok) {
+        return { success: false, error: `Deposit HTTP failed (${depRes.status}): ${depText.slice(0, 200)}`, mt_login: String(mtLogin) };
+      }
+      // Validate MT5 error code in the response body
+      let depJson;
+      try { depJson = JSON.parse(depText); } catch { return { success: false, error: `Deposit returned invalid JSON: ${depText.slice(0, 120)}`, mt_login: String(mtLogin) }; }
+      const depErr = depJson?.data?.errorcode ?? depJson?.errorcode;
+      if (depErr != null && Number(depErr) !== 0) {
+        return { success: false, error: `Deposit rejected by MT5 (errorcode=${depErr}, msg=${depJson?.data?.errormsg ?? depJson?.errormsg ?? 'n/a'})`, mt_login: String(mtLogin) };
+      }
+      console.log(`[phaseProgressionEngine] ✅ Deposit confirmed for login=${mtLogin} (amount=${balance})`);
     }
 
     return {
+      success: true,
       mt_login: String(mtLogin),
       mt_password: masterPassword,
       mt_server: serverName,
       mt_group: groupName,
     };
   } catch (e) {
-    console.error('[Tritech/useradd] error:', e.message);
-    return null;
+    console.error('[phaseProgressionEngine/provisionMT5Account] error:', e.message);
+    return { success: false, error: e.message };
   }
 }
 
@@ -239,77 +276,67 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      // Prevent double-approval ONLY if Phase 2 was actually provisioned (has new credentials + active status)
-      if (account.phase_review_status === 'approved' && account.status === 'active' && account.phase === 'phase2' && account.mt_login) {
-        return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.' }, { status: 409 });
+      // ── IDEMPOTENCY GUARD #1 — already fully provisioned to Phase 2 ──
+      if (account.phase === 'phase2' && account.mt_login && account.status === 'active') {
+        return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.', already_done: true }, { status: 409 });
+      }
+      // ── IDEMPOTENCY GUARD #2 — provisioning already claimed/in-progress ──
+      // The claim below sets phase_review_status='approved' BEFORE the multi-second MT5 calls,
+      // so a second click / refresh that arrives mid-flight is rejected here.
+      if (account.phase_review_status === 'approved' && account.phase === 'phase1') {
+        return Response.json({ error: 'Phase 2 provisioning is already in progress for this account.' }, { status: 409 });
       }
 
-      // Mark review approved + advance to phase2 (reset progress for new phase)
-      // Only update status/phase if not already in phase2 (idempotent retry support)
-      if (account.phase !== 'phase2') {
-        await sr.entities.ChallengeAccount.update(account.id, {
-          status: 'passed',
-          phase: 'phase2',
-          phase_review_status: 'approved',
-          phase_passed_at: account.phase_passed_at || new Date().toISOString(),
-          profit_target_progress: 0,
-        });
+      // ── CLAIM — mark approved BEFORE provisioning. Do NOT advance phase/status/credentials yet. ──
+      await sr.entities.ChallengeAccount.update(account.id, {
+        phase_review_status: 'approved',
+        phase_passed_at: account.phase_passed_at || new Date().toISOString(),
+      });
+
+      // ── PROVISION PHASE 2 MT5 (create + deposit, BOTH validated) ──
+      // All accounts use MT5 (Tritech) regardless of platform field value.
+      const creds = await loadMT5Creds(sr);
+      const groupName = Deno.env.get('MT5_PHASE2_GROUP') || '';
+      if (!creds || !creds.apiKey || !creds.apiBase || !groupName) {
+        // Revert claim — NO partial transition. Admin can retry once config is fixed.
+        await sr.entities.ChallengeAccount.update(account.id, { phase_review_status: 'pending_review' });
+        console.error('[approve_phase1] MT5 credentials or MT5_PHASE2_GROUP not configured');
+        return Response.json({ error: 'MT5 credentials or MT5_PHASE2_GROUP not configured. No changes applied.' }, { status: 500 });
+      }
+      const leverage = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
+      const sizeLabel = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
+      const phase2Name = `${sizeLabel} Phase 2 XFunded Trader 2-Step`;
+
+      const result = await provisionMT5Account(creds, account.user_email, groupName, leverage, account.account_size, phase2Name);
+
+      if (!result.success) {
+        // ── ROLLBACK — no partial transition. Account stays phase1/passed, review back to pending. ──
+        await sr.entities.ChallengeAccount.update(account.id, { phase_review_status: 'pending_review' });
+        console.error('[approve_phase1] Phase 2 provisioning failed, rolled back:', result.error);
+        return Response.json({ success: false, error: `Phase 2 provisioning failed: ${result.error}. No changes applied — please retry.` }, { status: 500 });
       }
 
-      // IMPORTANT: All accounts use MT5 (Tritech) regardless of platform field value
-      // platform field may be 'xtrading', 'mt5', or other legacy values — always provision MT5
-      const isMT5 = true;
-      let phase2Credentials = null;
-
-      if (isMT5) {
-        // ── CREDENTIALS FROM ADMIN > PLATFORMS API (single source of truth) ────
-        const creds = await loadMT5Creds(sr);
-        if (creds && creds.apiKey && creds.apiBase) {
-          // Use env var MT5_PHASE2_GROUP directly — do NOT construct group names
-          const groupName = Deno.env.get('MT5_PHASE2_GROUP') || '';
-          if (!groupName) {
-            console.error('[approve_phase1] MT5_PHASE2_GROUP env var not set — cannot provision Phase 2 account');
-          }
-          const leverage = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
-
-          // Build Phase 2 account name: "100K Phase 2 XFunded Trader 2-Step"
-          const sizeLabel = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
-          const phase2Name = `${sizeLabel} Phase 2 XFunded Trader 2-Step`;
-
-          phase2Credentials = await provisionMT5Account(
-            creds.apiBase, creds.apiKey, creds.serverName,
-            account.user_email, groupName, leverage, account.account_size,
-            phase2Name
-          );
-
-          if (phase2Credentials) {
-            // Phase 2 MT5 account provisioned — activate, advance phase, clear Phase 1 review flags
-            await sr.entities.ChallengeAccount.update(account.id, {
-              status: 'active',
-              phase: 'phase2',
-              phase_review_status: 'approved',
-              funded_review_status: 'none', // reset funded review for the new phase
-              mt_login: phase2Credentials.mt_login,
-              mt_password: phase2Credentials.mt_password,
-              mt_server: phase2Credentials.mt_server,
-              mt_group: phase2Credentials.mt_group,
-              login_credentials: `Login: ${phase2Credentials.mt_login} | Password: ${phase2Credentials.mt_password} | Server: ${phase2Credentials.mt_server}`,
-              server: phase2Credentials.mt_server,
-              provisioned_at: new Date().toISOString(),
-              balance: 0, pnl: 0, daily_pnl: 0,
-              daily_drawdown_used: 0, max_drawdown_used: 0,
-              high_water_mark: account.account_size,
-            });
-          } else {
-            console.error('[approve_phase1] MT5 Phase 2 provisioning returned null — account stays passed, admin must retry');
-          }
-        } else {
-          console.error('[Phase1Passed] MT5 credentials not configured in Admin > Platforms API');
-        }
-      } else {
-        // Non-MT5 platform — just activate
-        await sr.entities.ChallengeAccount.update(account.id, { status: 'active' });
-      }
+      // ── SUCCESS — MT5 account + deposit BOTH confirmed. Advance everything in one write. ──
+      await sr.entities.ChallengeAccount.update(account.id, {
+        status: 'active',
+        phase: 'phase2',
+        phase_review_status: 'approved',
+        funded_review_status: 'none', // reset funded review for the new phase
+        mt_login: result.mt_login,
+        mt_password: result.mt_password,
+        mt_server: result.mt_server,
+        mt_group: result.mt_group,
+        login_credentials: `Login: ${result.mt_login} | Password: ${result.mt_password} | Server: ${result.mt_server}`,
+        server: result.mt_server,
+        provisioned_at: new Date().toISOString(),
+        balance: account.account_size,
+        equity: account.account_size,
+        high_water_mark: account.account_size,
+        daily_start_balance: account.account_size,
+        pnl: 0, daily_pnl: 0,
+        daily_drawdown_used: 0, max_drawdown_used: 0,
+        profit_target_progress: 0,
+      });
 
       await sr.entities.Notification.create({
         user_email: account.user_email,
@@ -321,10 +348,10 @@ Deno.serve(async (req) => {
       await sendEmail(sr, account.user_email, 'phase1_passed', {
         name: account.user_email,
         account_size: account.account_size,
-        phase2_credentials: phase2Credentials,
+        phase2_credentials: result,
       });
 
-      return Response.json({ success: true, phase: 'phase2', credentials: phase2Credentials });
+      return Response.json({ success: true, phase: 'phase2', credentials: result });
     }
 
     // ── MANUALLY MARK PHASE 2 PASSED → PENDING FUNDED REVIEW (admin/legacy) ──
@@ -395,55 +422,49 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      // IMPORTANT: All accounts use MT5 (Tritech) regardless of platform field value
-      const isMT5 = true;
-      let fundedCredentials = null;
-
-      if (isMT5) {
-        // ── CREDENTIALS FROM ADMIN > PLATFORMS API (single source of truth) ────
-        const creds = await loadMT5Creds(sr);
-        if (creds && creds.apiKey && creds.apiBase) {
-          // Use env var MT5_FUNDED_GROUP directly — do NOT construct group names
-          const groupName = Deno.env.get('MT5_FUNDED_GROUP') || '';
-          if (!groupName) {
-            console.error('[approve_funded] MT5_FUNDED_GROUP env var not set — cannot provision funded account');
-          }
-          // Use leverage from rule_snapshot (set at purchase). Fallback to account.leverage then 100.
-          const fundedLeverage = parseInt(
-            ((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1])
-          ) || 100;
-          fundedCredentials = await provisionMT5Account(
-            creds.apiBase, creds.apiKey, creds.serverName,
-            account.user_email, groupName, fundedLeverage, account.account_size
-          );
-        } else {
-          console.error('[ApproveFunded] MT5 credentials not configured in Admin > Platforms API');
-        }
-      }
-
-      // Guard: prevent double-funded provisioning
+      // ── IDEMPOTENCY GUARD FIRST — prevent double-funded provisioning ──
       if (account.status === 'funded') {
         return Response.json({ error: 'Account is already funded — cannot approve again.' }, { status: 409 });
       }
 
+      // ── PROVISION FUNDED MT5 (create + deposit, BOTH validated) — abort on failure ──
+      // All accounts use MT5 (Tritech) regardless of platform field value.
+      const creds = await loadMT5Creds(sr);
+      const groupName = Deno.env.get('MT5_FUNDED_GROUP') || '';
+      if (!creds || !creds.apiKey || !creds.apiBase || !groupName) {
+        return Response.json({ error: 'MT5 credentials or MT5_FUNDED_GROUP not configured. No changes applied.' }, { status: 500 });
+      }
+      const fundedLeverage = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
+      const sizeLabelF = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
+      const fundedResult = await provisionMT5Account(creds, account.user_email, groupName, fundedLeverage, account.account_size, `${sizeLabelF} Funded XFunded Trader`);
+      if (!fundedResult.success) {
+        console.error('[approve_funded] Funded provisioning failed:', fundedResult.error);
+        return Response.json({ success: false, error: `Funded provisioning failed: ${fundedResult.error}. No changes applied — please retry.` }, { status: 500 });
+      }
+      const fundedCredentials = {
+        mt_login: fundedResult.mt_login,
+        mt_password: fundedResult.mt_password,
+        mt_server: fundedResult.mt_server,
+        mt_group: fundedResult.mt_group,
+      };
+
       const fundedId = `FUNDED-${Date.now()}`;
 
-      // funded_review_status=approved marks the funded provisioning as complete
+      // funded_review_status=approved marks the funded provisioning as complete.
       // IMPORTANT: account_id is NOT overwritten — it must stay stable so all
       // MT5 sync, trade records, and queries continue to match correctly.
-      // funded_account_id is a separate reference field for bookkeeping only.
       await sr.entities.ChallengeAccount.update(account.id, {
         status: 'funded',
         funded_review_status: 'approved',
         funded_account_id: fundedId,   // ← separate field, does NOT replace account_id
-        ...(fundedCredentials || {}),
-        login_credentials: fundedCredentials
-          ? `Login: ${fundedCredentials.mt_login} | Password: ${fundedCredentials.mt_password} | Server: ${fundedCredentials.mt_server}`
-          : account.login_credentials,
+        ...fundedCredentials,
+        login_credentials: `Login: ${fundedCredentials.mt_login} | Password: ${fundedCredentials.mt_password} | Server: ${fundedCredentials.mt_server}`,
+        server: fundedCredentials.mt_server,
         provisioned_at: new Date().toISOString(),
         balance: account.account_size,
         equity: account.account_size,
         high_water_mark: account.account_size,
+        daily_start_balance: account.account_size,
         pnl: 0, daily_pnl: 0,
       });
 
