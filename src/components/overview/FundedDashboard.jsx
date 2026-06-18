@@ -97,7 +97,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
   });
   const kyc = kycList[0] || null;
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending'].includes(a.status));
+  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending', 'failed'].includes(a.status));
 
   const [selectedAccount, setSelectedAccount] = useState(null);
 
