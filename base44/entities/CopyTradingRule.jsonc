@@ -1,0 +1,61 @@
+{
+  "name": "CopyTradingRule",
+  "type": "object",
+  "permissions": {
+    "read": "owner",
+    "create": "authenticated",
+    "update": "authenticated",
+    "delete": "authenticated"
+  },
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "master_account_id": {
+      "type": "string",
+      "description": "account_id of the source MT5 account"
+    },
+    "master_mt_login": {
+      "type": "string",
+      "description": "MT5 login of source account"
+    },
+    "slave_account_id": {
+      "type": "string",
+      "description": "account_id of the target MT5 account"
+    },
+    "slave_mt_login": {
+      "type": "string",
+      "description": "MT5 login of target account"
+    },
+    "lot_multiplier": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Lot size multiplier applied on slave (e.g. 0.5 = half size)"
+    },
+    "copy_sl_tp": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to copy SL/TP to slave"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_synced_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_trades_copied": {
+      "type": "number",
+      "default": 0
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "master_account_id",
+    "slave_account_id"
+  ]
+}

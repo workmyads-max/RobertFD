@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard, Copy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -28,6 +28,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'certificates', label: 'Certificates', icon: Award },
     { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign },
     { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'copy-trading', label: 'Copy Trading', icon: Copy },
     { id: 'kyc', label: 'KYC', icon: ShieldCheck },
     { id: 'support', label: 'Support', icon: HeadphonesIcon },
     { id: 'settings', label: 'Settings', icon: Sliders },
@@ -45,6 +46,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       'support': 'support',
       'notifications': 'notifications',
       'kyc': 'kyc',
+      'copy-trading': 'copy_trading',
     };
 
     return navItems.filter(item => {

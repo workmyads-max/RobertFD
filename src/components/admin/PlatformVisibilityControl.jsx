@@ -18,6 +18,7 @@ const FEATURE_LIST = [
   { key: 'notifications', label: 'Notifications', category: 'system', icon: '🔔' },
   { key: 'kyc', label: 'KYC Verification', category: 'user_management', icon: '🪪' },
   { key: 'live_chat', label: 'Live Chat', category: 'support', icon: '💬' },
+  { key: 'copy_trading', label: 'Copy Trading', category: 'trading', icon: '🔁' },
 ];
 
 export default function PlatformVisibilityControl() {
