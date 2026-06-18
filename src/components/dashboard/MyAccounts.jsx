@@ -275,9 +275,7 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
         platform: 'mt5'
       }, '-created_date', 100);
       
-      // Filter out failed accounts (they go to Trash)
-      const activeAccounts = allAccounts.filter(a => a.status !== 'failed');
-      return activeAccounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      return allAccounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
     refetchInterval: 15000,
@@ -291,8 +289,8 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
 
   const pendingOrders = myOrders.filter(o => o.payment_status === 'awaiting_confirmation' || o.payment_status === 'pending');
 
-  // Only show active/funded/passed/pending accounts — failed ones go to Trash
-  const displayAccounts = accounts;
+  const displayAccounts = accounts.filter(a => a.status !== 'failed');
+  const failedAccounts = accounts.filter(a => a.status === 'failed');
 
   return (
     <div>
@@ -316,7 +314,7 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
           { label: 'Active', count: displayAccounts.filter(a => a.status === 'active').length, color: '#10b981' },
           { label: 'Funded', count: displayAccounts.filter(a => a.status === 'funded').length, color: '#FF5C00' },
           { label: 'Passed', count: displayAccounts.filter(a => a.status === 'passed').length, color: '#60a5fa' },
-          { label: 'Failed', count: displayAccounts.filter(a => a.status === 'failed').length, color: '#ef4444' },
+          { label: 'Failed', count: failedAccounts.length, color: '#ef4444' },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4 text-center"
             style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${s.color}20` }}>
@@ -398,8 +396,52 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
             <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} />
           ))}
 
+          {/* Failed Accounts Section */}
+          {failedAccounts.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-wider">Failed Accounts ({failedAccounts.length})</span>
+              </div>
+              <div className="space-y-3">
+                {failedAccounts.map((acc) => (
+                  <div key={acc.id} className="rounded-xl overflow-hidden flex"
+                    style={{ background: '#13161f', border: '1px solid rgba(239,68,68,0.25)' }}>
+                    <div className="w-1 flex-shrink-0 bg-red-500" />
+                    <div className="flex-1 px-5 py-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-bold text-white font-mono">{acc.account_id}</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide"
+                              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+                              FAILED
+                            </span>
+                            {acc.dd_breach_type && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-mono text-white/40"
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                {acc.dd_breach_type.toUpperCase()} BREACH
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-white/40 font-mono">
+                            {acc.challenge_type} · ${(acc.account_size||0).toLocaleString()} · {acc.phase} · MT5: {acc.mt_login || 'N/A'}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-red-400">${(acc.balance||0).toLocaleString()}</div>
+                          <div className="text-[10px] text-white/30 font-mono mt-0.5">Final Balance</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Empty state */}
-          {displayAccounts.length === 0 && pendingOrders.length === 0 && (
+          {displayAccounts.length === 0 && pendingOrders.length === 0 && failedAccounts.length === 0 && (
             <div className="rounded-2xl p-12 text-center"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)' }}>
               <div className="text-4xl mb-4">📊</div>
