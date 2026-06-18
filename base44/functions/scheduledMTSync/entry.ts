@@ -133,8 +133,9 @@ Deno.serve(async (req) => {
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
       a.user_email && // CRITICAL: Skip any orphaned accounts with no owner
-      ['active', 'funded', 'passed', 'pending'].includes(a.status) &&
-      a.platform === 'mt5'
+      ['active', 'funded', 'passed', 'pending'].includes(a.status)
+      // NOTE: platform check removed — all accounts use MT5 (Tritech) regardless of platform field value
+      // platform field may be 'xtrading', 'mt5', or other legacy values
     );
 
     // Pre-fetch MT5 credentials directly from entity (avoids function auth chain issues)
@@ -307,8 +308,14 @@ Deno.serve(async (req) => {
             : null;
           const todayDateStr = `${nowUtc.getUTCFullYear()}-${pad(nowUtc.getUTCMonth()+1)}-${pad(nowUtc.getUTCDate())}`;
           const needsDailyReset = isResetWindow && lastResetDateStr !== todayDateStr;
-          // First-time init: new accounts that have never had a daily reset
-          const needsInit = !acc.daily_start_balance && !apiReturnedZero && balance > 0;
+          // First-time init: new accounts that have never had a proper daily reset
+          // SANITY CHECK: daily_start_balance must be within 20% of account_size (catches corrupt values)
+          const existingDSB = acc.daily_start_balance || 0;
+          const dsb_is_corrupt = existingDSB > 0 && Math.abs(existingDSB - accountSize) / accountSize > 0.5;
+          const needsInit = (!acc.daily_start_balance || dsb_is_corrupt) && !apiReturnedZero && balance > 0;
+          if (dsb_is_corrupt) {
+            console.warn(`[DAILY-INIT] ${acc.account_id} — daily_start_balance=${existingDSB} is corrupt (account_size=${accountSize}), reinitializing`);
+          }
 
           if ((needsDailyReset || needsInit) && !apiReturnedZero && balance > 0) {
             // Snapshot BALANCE (not equity) as the daily baseline — FTMO/industry standard
@@ -410,7 +417,7 @@ Deno.serve(async (req) => {
             console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
 
             // ── BROKER-SIDE DISABLE — non-blocking ─────────────────────────────
-            if (acc.platform === 'mt5' && acc.mt_login) {
+            if (acc.mt_login) {
               const disableReason = `DD breach: ${breachType} at ${breachValue?.toFixed(2)}%`;
               (async () => {
                 try {

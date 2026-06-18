@@ -265,7 +265,8 @@ export default function AdminFundedReview() {
       const all = await base44.entities.ChallengeAccount.filter({ status: 'passed' }, '-created_date', 200);
       return all.filter(a =>
         a.phase === 'phase1' &&
-        (a.phase_review_status === 'pending_review' || a.phase_review_status === 'none' || !a.phase_review_status)
+        (a.phase_review_status === 'pending_review' || a.phase_review_status === 'none' || !a.phase_review_status) &&
+        a.challenge_type === 'two-step' // Only two-step challenges need phase1 review; instant/instant_light go straight to funded
       );
     },
     refetchInterval: 15000,

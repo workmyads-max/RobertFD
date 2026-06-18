@@ -92,7 +92,10 @@ function calcOverallDD(acc, equity, hwm) {
  */
 function calcDailyDD(acc, balance, equity) {
   const accountSize       = acc.account_size || 100000;
-  const dailyStartBalance = acc.daily_start_balance || accountSize;
+  // SANITY: if daily_start_balance is corrupt (>50% off from account_size), use account_size
+  const rawDSB = acc.daily_start_balance || 0;
+  const dsbIsCorrupt = rawDSB > 0 && Math.abs(rawDSB - accountSize) / accountSize > 0.5;
+  const dailyStartBalance = (rawDSB > 0 && !dsbIsCorrupt) ? rawDSB : accountSize;
   const fixedDailyLimitPct = (acc.rule_snapshot?.daily_dd_limit ?? 5);
   const fixedDailyLimit$   = accountSize * (fixedDailyLimitPct / 100);
 

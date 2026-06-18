@@ -39,14 +39,12 @@ export default function UserWarningPanel({ userEmail }) {
   const { data: allFlags = [] } = useQuery({
     queryKey: ['user-risk-flags', userEmail],
     queryFn: async () => {
-      const allFlagsData = [];
-      for (const accId of accountIds) {
-        const flags = await base44.entities.RiskFlag.filter({ account_id: accId, status: 'active' });
-        allFlagsData.push(...flags);
-      }
-      return allFlagsData;
+      // SECURITY: Filter by user_email directly — never rely on account_id loop
+      // which can match flags belonging to other users
+      const flags = await base44.entities.RiskFlag.filter({ user_email: userEmail, status: 'active' });
+      return flags;
     },
-    enabled: accountIds.length > 0,
+    enabled: !!userEmail,
     refetchInterval: 30000,
   });
 

@@ -256,8 +256,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      const platform = account.platform || 'xtrading';
-      const isMT5 = platform === 'mt5';
+      // IMPORTANT: All accounts use MT5 (Tritech) regardless of platform field value
+      // platform field may be 'xtrading', 'mt5', or other legacy values — always provision MT5
+      const isMT5 = true;
       let phase2Credentials = null;
 
       if (isMT5) {
@@ -394,8 +395,8 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      const platform = account.platform || 'xtrading';
-      const isMT5 = platform === 'mt5';
+      // IMPORTANT: All accounts use MT5 (Tritech) regardless of platform field value
+      const isMT5 = true;
       let fundedCredentials = null;
 
       if (isMT5) {
