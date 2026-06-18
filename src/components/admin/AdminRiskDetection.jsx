@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { 
   Shield, AlertTriangle, CheckCircle2, Clock, Activity, 
   TrendingDown, Calendar, Zap, BarChart3, RefreshCw, Play,
-  XCircle, AlertOctagon, TrendingUp
+  XCircle, AlertOctagon, TrendingUp, Power, PowerOff
 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 function ViolationCard({ violation, onDismiss }) {
