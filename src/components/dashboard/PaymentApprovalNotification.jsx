@@ -1,31 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function PaymentApprovalNotification({ user, onDismiss }) {
   const [isVisible, setIsVisible] = useState(false);
+  const hasChecked = React.useRef(false);
 
   useEffect(() => {
     if (!user?.email) return;
+    // Guard: only ever run once per mount, no matter how many re-renders
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
+    // If already dismissed in a previous session, skip the API call entirely
+    const hasSeen = localStorage.getItem(`payment_approval_seen_${user.email}`);
+    if (hasSeen) return;
 
     const checkAndShow = async () => {
-      // Check if user has already seen this notification
-      const hasSeen = localStorage.getItem(`payment_approval_seen_${user.email}`);
-      if (hasSeen) return;
-
-      // Check for pending payment approval notifications (popup or all display modes)
       const notifications = await base44.entities.Notification.filter({
         user_email: user.email,
         type: 'system',
         is_active: true,
       }, '-created_date', 10);
 
-      const paymentApproval = notifications.find(n => 
+      const paymentApproval = notifications.find(n =>
         n.title?.includes('Payment Approved') || n.message?.includes('provisioned')
       );
 
-      if (paymentApproval && !hasSeen) {
+      if (paymentApproval) {
         setIsVisible(true);
       }
     };
