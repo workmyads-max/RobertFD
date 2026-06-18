@@ -46,6 +46,7 @@ import AdminLiveChat from '../components/admin/AdminLiveChat';
 import AdminUserManagement from '../components/admin/AdminUserManagement';
 import PlatformVisibilityControl from '../components/admin/PlatformVisibilityControl';
 import PaymentApprovalNotification from '../components/dashboard/PaymentApprovalNotification';
+// DashboardPopupNotification intentionally removed — corner popups disabled globally
 import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
 import AdminCoupons from '../components/admin/AdminCoupons';
@@ -182,6 +183,8 @@ export default function Dashboard() {
   const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
   const hasChallengeAccount = allAccounts.some(a => ['active', 'passed', 'pending'].includes(a.status));
   const notifications = rawNotifications.filter(n => {
+    // market_alert and system notifications MUST be user-scoped — never show globally
+    if ((n.type === 'market_alert' || n.type === 'system') && n.user_email !== user?.email) return false;
     if (n.target === 'all') return true;
     if (n.target === 'admin') return isAdmin;
     if (n.target === 'funded') return hasFundedAccount;
@@ -190,7 +193,7 @@ export default function Dashboard() {
   });
 
   const bannerNotification = notifications.find(n =>
-    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all') && n.type !== 'system'
+    n.is_active && (n.display_mode === 'banner' || n.display_mode === 'all') && n.type !== 'system' && n.type !== 'market_alert'
   );
 
   const [activeAccount, setActiveAccount] = useState(null);
