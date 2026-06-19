@@ -62,7 +62,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'A pending withdrawal already exists for this account' }, { status: 409 });
     }
 
-    // 5. Amount <= available profit
+    // 5. Minimum 1 trading day on the funded account (counted from actual closed trades in TradeRecord)
+    const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
+    const tradingDaySet = new Set();
+    for (const t of tradeRecords) {
+      const closeTime = t.close_time;
+      if (closeTime) {
+        const d = new Date(closeTime);
+        if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
+      }
+    }
+    const tradingDaysCompleted = tradingDaySet.size;
+    if (tradingDaysCompleted < 1) {
+      return Response.json({
+        error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s).`,
+      }, { status: 400 });
+    }
+
+    // 7. Amount <= available profit
     const availableProfit = Math.max(0, account.pnl || 0);
     if (gross > availableProfit) {
       return Response.json({
