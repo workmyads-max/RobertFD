@@ -106,7 +106,7 @@ function useTimelineSteps(account, closedTrades = []) {
     const daysSinceFirstTrade = daysSince(firstTradeDate);
 
     const isFunded = status === 'funded';
-    const withdrawalEligible = isFunded && daysSinceFirstTrade !== null && daysSinceFirstTrade >= 14;
+    const withdrawalEligible = isFunded && daysSinceFirstTrade !== null && daysSinceFirstTrade >= 1;
 
     if (challengeType === 'instant' || challengeType === 'instant_light') {
       const typeLabel = challengeType === 'instant_light' ? 'Instant Light' : 'Instant';
@@ -139,7 +139,7 @@ function useTimelineSteps(account, closedTrades = []) {
           desc: withdrawalEligible
             ? '✓ Eligible for withdrawals'
             : isFunded
-              ? `${14 - daysSinceFirstTrade} days remaining`
+              ? `${1 - daysSinceFirstTrade} days remaining`
               : 'First payout available after funded status',
           status: withdrawalEligible ? 'active' : 'pending',
         },
@@ -213,12 +213,12 @@ function useTimelineSteps(account, closedTrades = []) {
         desc: withdrawalEligible
           ? '✓ Eligible for withdrawals'
           : isFunded
-            ? `${14 - daysSinceFirstTrade} days remaining`
-            : 'First payout available after funded status',
-        status: withdrawalEligible ? 'active' : 'pending',
-      },
-    ];
-  }, [account, closedTrades]);
+            ? `${1 - daysSinceFirstTrade} days remaining`
+                      : 'First payout available after funded status',
+                    status: withdrawalEligible ? 'active' : 'pending',
+                  },
+                ];
+              }, [account, closedTrades]);
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────────
@@ -314,7 +314,7 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
               <div>
                 <h3 className="text-lg font-black text-foreground mb-1">Not Yet Eligible</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Withdrawals are unlocked after <span className="text-white font-semibold">14 trading days</span> on your funded account.
+                  Withdrawals are unlocked after <span className="text-white font-semibold">1 trading day</span> on your funded account.
                   Keep trading to reach your first payout.
                 </p>
               </div>
@@ -322,7 +322,7 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
               <div className="w-full rounded-xl p-4 space-y-2.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 {[
                   { label: 'Funded account status', met: account?.status === 'funded' },
-                  { label: '14 trading days completed', met: false },
+                  { label: '1 trading day completed', met: false },
                   { label: 'KYC verification approved', met: false },
                 ].map((req, i) => (
                   <div key={i} className="flex items-center gap-2.5">
