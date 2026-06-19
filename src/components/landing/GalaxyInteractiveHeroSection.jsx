@@ -7,12 +7,23 @@ import { ArrowRight, Play } from 'lucide-react';
 
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
-function HeroSplineBackground() {
-  const splineContainerRef = useRef<HTMLDivElement>(null);
+function SplineWrapper() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  if (!mounted) return null;
+  
+  return (
+    <Spline scene="https://prod.spline.design/us3ALejTXl6usHZ7/scene.splinecode" />
+  );
+}
 
+function HeroSplineBackground() {
   return (
     <div
-      ref={splineContainerRef}
       style={{
         position: 'absolute',
         top: 0,
@@ -30,9 +41,9 @@ function HeroSplineBackground() {
           pointerEvents: 'auto',
         }}
       >
-        <Spline
-          scene="https://prod.spline.design/us3ALejTXl6usHZ7/scene.splinecode"
-        />
+        <Suspense fallback={null}>
+          <SplineWrapper />
+        </Suspense>
       </div>
       <div
         style={{
