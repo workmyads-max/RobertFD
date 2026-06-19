@@ -175,7 +175,7 @@ export default function DashboardPreview() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-xs text-muted-foreground">Good evening</div>
-                <div className="text-sm font-semibold text-foreground">Yify</div>
+                <div className="text-sm font-semibold text-foreground">XFunded Trader</div>
               </div>
               <div
                 className="px-2.5 py-1 rounded-md text-[10px] font-medium"
