@@ -4,11 +4,11 @@ import LivePriceTicker from './LivePriceTicker';
 import LiveFundedAccountCard from './LiveFundedAccountCard';
 
 const stats = [
-  { label: 'Traders worldwide', value: '14,200+', icon: Users },
-  { label: 'Total payouts', value: '$742M+', icon: DollarSign },
-  { label: 'Funded accounts', value: '8,450+', icon: TrendingUp },
-  { label: 'Daily volume', value: '$2.4B+', icon: BarChart3 },
-];
+{ label: 'Traders worldwide', value: '14,200+', icon: Users },
+{ label: 'Total payouts', value: '$742M+', icon: DollarSign },
+{ label: 'Funded accounts', value: '8,450+', icon: TrendingUp },
+{ label: 'Daily volume', value: '$2.4B+', icon: BarChart3 }];
+
 
 export default function HeroSection({ heroImage }) {
   return (
@@ -24,7 +24,7 @@ export default function HeroSection({ heroImage }) {
           {/* Left Content */}
           <div className="space-y-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-6" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-6 hidden" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span className="text-xs text-muted-foreground">XFunded Trader — Dubai</span>
               </div>
@@ -43,28 +43,28 @@ export default function HeroSection({ heroImage }) {
               <a
                 href="/challenges"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white rounded-md transition-colors"
-                style={{ background: 'hsl(var(--primary))' }}
-              >
+                style={{ background: 'hsl(var(--primary))' }}>
+                
                 Start Challenge
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
                 href="/challenges?type=instant"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium rounded-md transition-colors"
-                style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}
-              >
+                style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
+                
                 Get Instant Funding
               </a>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-6 pt-8">
-              {stats.map((stat) => (
-                <div key={stat.label}>
+              {stats.map((stat) =>
+              <div key={stat.label}>
                   <div className="text-3xl font-semibold text-foreground mb-1">{stat.value}</div>
                   <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -76,6 +76,6 @@ export default function HeroSection({ heroImage }) {
       </div>
 
       <LivePriceTicker />
-    </section>
-  );
+    </section>);
+
 }
