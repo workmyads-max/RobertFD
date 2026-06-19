@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
 import ShaderBackground from '@/components/ui/shader-background';
-import RotatingEarth from '@/components/ui/wireframe-dotted-globe';
+import HeroFuturistic from '@/components/ui/hero-futuristic';
 
 const stats = [
   { label: 'Traders Worldwide', value: 14202, prefix: '', suffix: '+', icon: Users },
@@ -239,23 +239,22 @@ export default function HeroSection({ heroImage }) {
             </motion.div>
           </div>
 
-          {/* Right - Rotating Globe */}
+          {/* Right - WebGPU Futuristic Hero */}
           <div className="relative hidden lg:flex items-center justify-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
+              className="relative w-full"
+              style={{ height: '520px' }}
             >
-              {/* Glow ring behind globe */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-[380px] h-[380px] rounded-full blur-[60px] opacity-20"
+              {/* Orange glow behind */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
+                <div className="w-[400px] h-[400px] rounded-full blur-[80px] opacity-15"
                   style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
               </div>
-              <RotatingEarth width={520} height={480} />
-              {/* Drag hint */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono text-muted-foreground/50 whitespace-nowrap">
-                Drag to rotate
+              <div className="relative w-full h-full rounded-2xl overflow-hidden" style={{ zIndex: 1 }}>
+                <HeroFuturistic className="rounded-2xl" />
               </div>
             </motion.div>
           </div>
