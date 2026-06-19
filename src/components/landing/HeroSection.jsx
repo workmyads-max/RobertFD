@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
+import ShaderBackground from '@/components/ui/shader-background';
 
 const stats = [
   { label: 'Traders Worldwide', value: 14202, prefix: '', suffix: '+', icon: Users },
@@ -71,9 +72,9 @@ export default function HeroSection({ heroImage }) {
     <section className="relative min-h-screen flex items-center overflow-hidden pt-24 pb-12">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={heroImage} alt="Trading floor" className="w-full h-full object-cover opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+        <ShaderBackground opacity={0.18} />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
       </div>
 
       {/* Decorative large text */}
