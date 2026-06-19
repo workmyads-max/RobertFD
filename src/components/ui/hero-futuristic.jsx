@@ -1,118 +1,113 @@
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { TextureLoader } from 'three';
-
-const TEXTUREMAP = 'https://i.postimg.cc/XYwvXN8D/img-4.png';
-const DEPTHMAP = 'https://i.postimg.cc/2SHKQh2q/raw-4.webp';
-
-function Scene() {
-  const meshRef = useRef(null);
-  const [opacity, setOpacity] = useState(0);
-
-  const [rawMap, depthMap] = useLoader(TextureLoader, [TEXTUREMAP, DEPTHMAP]);
-
-  useEffect(() => {
-    if (rawMap && depthMap) {
-      const t = setTimeout(() => setOpacity(0.92), 100);
-      return () => clearTimeout(t);
-    }
-  }, [rawMap, depthMap]);
-
-  useFrame(({ clock, pointer }) => {
-    if (!meshRef.current) return;
-    meshRef.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.15) * 0.04 + pointer.x * 0.03;
-    meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.1) * 0.02 - pointer.y * 0.02;
-    const mat = meshRef.current.material;
-    if (mat) mat.opacity = THREE.MathUtils.lerp(mat.opacity, opacity, 0.06);
-  });
-
-  return (
-    <mesh ref={meshRef} scale={[2.4, 2.4, 1]}>
-      <planeGeometry />
-      <meshBasicMaterial map={rawMap} transparent opacity={0} />
-    </mesh>
-  );
-}
-
-function Particles() {
-  const points = useRef(null);
-  const count = 150;
-
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 7;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 7;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 3;
-    }
-    return arr;
-  }, []);
-
-  useFrame(({ clock }) => {
-    if (points.current) {
-      points.current.rotation.y = clock.getElapsedTime() * 0.04;
-      points.current.rotation.x = clock.getElapsedTime() * 0.015;
-    }
-  });
-
-  return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.018} color="#FF5C00" transparent opacity={0.55} sizeAttenuation />
-    </points>
-  );
-}
-
-function SceneWithSuspense() {
-  return (
-    <>
-      <Scene />
-      <Particles />
-    </>
-  );
-}
-
-function FallbackParticles() {
-  const points = useRef(null);
-  const count = 150;
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 7;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 7;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 3;
-    }
-    return arr;
-  }, []);
-  useFrame(({ clock }) => {
-    if (points.current) {
-      points.current.rotation.y = clock.getElapsedTime() * 0.04;
-    }
-  });
-  return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.018} color="#FF5C00" transparent opacity={0.55} sizeAttenuation />
-    </points>
-  );
-}
 
 export default function HeroFuturistic({ className = '' }) {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const el = mountRef.current;
+    if (!el) return;
+
+    const width = el.clientWidth || 600;
+    const height = el.clientHeight || 500;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0);
+    el.appendChild(renderer.domElement);
+
+    // Scene + Camera
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.z = 2.5;
+
+    // Texture image plane
+    const loader = new THREE.TextureLoader();
+    let planeMesh = null;
+    loader.load(
+      'https://i.postimg.cc/XYwvXN8D/img-4.png',
+      (tex) => {
+        const geo = new THREE.PlaneGeometry(1, 1);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0 });
+        planeMesh = new THREE.Mesh(geo, mat);
+        planeMesh.scale.set(2.4, 2.4, 1);
+        scene.add(planeMesh);
+      },
+      undefined,
+      () => {} // silently ignore load errors
+    );
+
+    // Particles
+    const count = 180;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 7;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 7;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+    }
+    const pgeo = new THREE.BufferGeometry();
+    pgeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const pmat = new THREE.PointsMaterial({ size: 0.018, color: 0xff5c00, transparent: true, opacity: 0.55, sizeAttenuation: true });
+    const particles = new THREE.Points(pgeo, pmat);
+    scene.add(particles);
+
+    // Mouse tracking
+    let mx = 0, my = 0;
+    const onMouse = (e) => {
+      const rect = el.getBoundingClientRect();
+      mx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      my = -((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    };
+    el.addEventListener('mousemove', onMouse);
+
+    // Resize
+    const onResize = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', onResize);
+
+    // Animate
+    let frameId;
+    const clock = new THREE.Clock();
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      particles.rotation.y = t * 0.04;
+      particles.rotation.x = t * 0.015;
+
+      if (planeMesh) {
+        planeMesh.rotation.y = Math.sin(t * 0.15) * 0.04 + mx * 0.03;
+        planeMesh.rotation.x = Math.sin(t * 0.1) * 0.02 - my * 0.02;
+        planeMesh.material.opacity = Math.min(planeMesh.material.opacity + 0.005, 0.92);
+      }
+
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      el.removeEventListener('mousemove', onMouse);
+      window.removeEventListener('resize', onResize);
+      renderer.dispose();
+      if (renderer.domElement.parentNode === el) {
+        el.removeChild(renderer.domElement);
+      }
+    };
+  }, []);
+
   return (
-    <div className={`w-full h-full ${className}`}>
-      <Canvas
-        camera={{ position: [0, 0, 2.5], fov: 45 }}
-        style={{ width: '100%', height: '100%' }}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <ambientLight intensity={0.4} />
-        <SceneWithSuspense />
-      </Canvas>
-    </div>
+    <div
+      ref={mountRef}
+      className={`w-full h-full ${className}`}
+      style={{ minHeight: '100%' }}
+    />
   );
 }
