@@ -53,26 +53,26 @@ function MiniSidebar() {
 }
 
 function NotificationCard({ title, amount, position, delay }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: position === 'right' ? 20 : -20, y: position === 'right' ? -10 : 10 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
-      className="absolute rounded-xl p-3 shadow-lg hidden"
-      style={{
-        background: '#16181d',
-        border: '1px solid rgba(255,255,255,0.08)',
-        top: position === 'right' ? '20%' : 'auto',
-        bottom: position === 'left' ? '15%' : 'auto',
-        right: position === 'right' ? '-12px' : 'auto',
-        left: position === 'left' ? '-12px' : 'auto',
-        zIndex: 0
-      }}>
-      
-      <div className="text-[9px] text-muted-foreground mb-0.5 hidden">{title}</div>
-      {amount && <div className="text-xs font-semibold text-emerald-400">{amount}</div>}
-      {!amount && <div className="text-xs font-semibold text-foreground">✓ Verified</div>}
-    </motion.div>);
+  return null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 
@@ -161,127 +161,127 @@ export default function DashboardPreview() {
       className="relative w-full max-w-[520px] mx-auto">
       
       {/* Browser Frame */}
-      <div
-        className="rounded-[14px] overflow-hidden shadow-2xl hidden"
-        style={{
-          background: '#16181d',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
-        }}>
-        
-        {/* Browser Top Bar */}
-        <div
-          className="flex items-center px-4 py-2.5 hidden"
-          style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          
-          {/* Window Dots */}
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f57' }} />
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#febc2e' }} />
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#28c840' }} />
-          </div>
-          {/* URL Pill */}
-          <div
-            className="flex-1 mx-4 px-3 py-1 rounded-md text-[10px] font-mono text-center"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)' }}>
-            
-            app.xfundedtrader.com
-          </div>
-        </div>
+      
 
-        {/* Dashboard Content */}
-        <div className="flex hidden">
-          <MiniSidebar />
 
-          {/* Main Content */}
-          <div className="flex-1 p-4 min-w-0 hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-xs text-muted-foreground">Good evening</div>
-                <div className="text-sm font-semibold text-foreground">XFunded Trader</div>
-              </div>
-              <div
-                className="px-2.5 py-1 rounded-md text-[10px] font-medium"
-                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}>
-                
-                $200K Funded
-              </div>
-            </div>
 
-            {/* Account Card */}
-            <div
-              className="rounded-xl p-4 mb-4"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
-                <span className="text-[10px] text-muted-foreground">Funded account · Phase 2</span>
-              </div>
-              <div className="text-2xl font-semibold text-foreground mb-1">
-                $<AnimatedNumber value={184250} duration={2.5} />
-              </div>
-              <div className="text-xs font-semibold text-emerald-400 mb-3">
-                +<AnimatedNumber value={84.25} duration={2} suffix="%" />
-              </div>
-              <EquityChart />
-            </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {[
-              { label: 'Profit', value: '+84%', color: 'text-emerald-400' },
-              { label: 'Win rate', value: '73%' },
-              { label: 'Trades', value: '247' }].
-              map((stat) =>
-              <div
-                key={stat.label}
-                className="rounded-lg p-2.5 text-center"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                
-                  <div className="text-[9px] text-muted-foreground mb-1">{stat.label}</div>
-                  <div className={`text-xs font-semibold ${stat.color || 'text-foreground'}`}>{stat.value}</div>
-                </div>
-              )}
-            </div>
 
-            {/* Account Rows */}
-            <div className="space-y-2">
-              {[
-              { id: 'XFT-MQK9', size: 200000, status: 'Active' },
-              { id: 'XFT-PL72', size: 100000, status: 'Phase 2' }].
-              map((acc) =>
-              <div
-                key={acc.id}
-                className="flex items-center justify-between px-3 py-2 rounded-lg"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ background: 'rgba(255,92,0,0.1)' }}>
-                      <Wallet className="w-3 h-3" style={{ color: '#FF5C00' }} />
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-mono font-medium text-foreground">{acc.id}</div>
-                      <div className="text-[9px] text-muted-foreground">${acc.size.toLocaleString()}</div>
-                    </div>
-                  </div>
-                  <div
-                  className="text-[9px] font-medium px-2 py-0.5 rounded"
-                  style={{
-                    background: acc.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,92,0,0.1)',
-                    color: acc.status === 'Active' ? '#10b981' : '#FF5C00',
-                    border: `1px solid ${acc.status === 'Active' ? 'rgba(16,185,129,0.2)' : 'rgba(255,92,0,0.2)'}`
-                  }}>
-                  
-                    {acc.status}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
 
       {/* Floating Notification Cards */}
       <NotificationCard
