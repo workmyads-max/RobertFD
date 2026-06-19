@@ -100,45 +100,45 @@ export default function AboutSection({ aboutImage }) {
                 </div>
 
                 {/* XFT Brand badge */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4, type: 'spring' }}
-                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30 hidden">
-                  
-                  <div className="text-xs font-mono text-primary mb-1">XFT</div>
-                  <div className="text-sm font-black gradient-text">XfundedTrader</div>
-                </motion.div>
+                
+
+
+
+
+
+
+
+
+                
 
                 {/* Floating elements */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30 hidden">
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs font-mono text-emerald-400">LIVE</span>
-                  </div>
-                </motion.div>
+                
+
+
+
+
+
+
+
+
+
+
+                
               </div>
             </div>
 
             {/* Floating stats card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs border border-primary/20 hidden">
-              
-              <div className="text-xs font-mono text-primary mb-2 hidden">ESTABLISHED</div>
-              <div className="text-2xl font-black hidden">Since 2026</div>
-              <div className="text-sm text-muted-foreground mt-1 hidden">Dubai, UAE</div>
-            </motion.div>
+            
+
+
+
+
+
+
+
+
+
+            
 
             {/* Decorative glow elements */}
             <motion.div
@@ -147,11 +147,11 @@ export default function AboutSection({ aboutImage }) {
               animate={{ scale: [1, 1.3, 1], opacity: [0.25, 0.4, 0.25] }}
               transition={{ duration: 4, repeat: Infinity }} />
             
-            <motion.div
-              className="absolute -bottom-4 -right-4 w-40 h-40 rounded-full blur-3xl opacity-20 hidden"
-              style={{ background: '#8b5cf6' }}
-              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
-              transition={{ duration: 5, repeat: Infinity, delay: 1 }} />
+            
+
+
+
+            
             
           </motion.div>
 

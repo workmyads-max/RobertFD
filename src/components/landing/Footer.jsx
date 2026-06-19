@@ -185,10 +185,10 @@ export default function Footer() {
               )}
             </ul>
             {/* Response time badge */}
-            <div className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground hidden">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-              Avg. response under 4 hours
-            </div>
+            
+
+
+            
           </div>
         </div>
 

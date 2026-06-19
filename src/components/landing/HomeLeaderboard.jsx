@@ -161,7 +161,7 @@ export default function HomeLeaderboard() {
         <div className="flex items-center justify-center gap-3 mb-3">
           <Trophy className="w-8 h-8 text-yellow-400" />
           <h2 className="text-4xl font-black text-white">Live Leaderboard</h2>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse hidden" />
+          
         </div>
         <p className="text-white/50 font-mono text-sm">Top funded traders ranked by profit performance</p>
       </motion.div>

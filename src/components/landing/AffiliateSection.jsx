@@ -298,11 +298,11 @@ export default function AffiliateSection() {
         {/* CTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
         className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 hidden"
-          style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.2)' }}>
-            <Shield className="w-3 h-3" style={{ color: '#CCFF00' }} />
-            <span className="text-[11px] font-mono" style={{ color: '#CCFF00' }}>Instant dashboard access · Real-time tracking · Automated payouts</span>
-          </div>
+          
+
+
+
+          
           <h3 className="text-3xl font-black text-foreground mb-4">
             Join the <span className="text-primary">Partner Network</span>
           </h3>
