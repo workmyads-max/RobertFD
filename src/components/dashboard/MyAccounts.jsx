@@ -104,13 +104,15 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono">
-              <span className="capitalize">{account.challenge_type === 'two-step' ? 'Two-Step' : 'Instant'}</span>
+              <span className="capitalize">{account.status === 'funded' ? 'Funded Live' : account.challenge_type === 'two-step' ? 'Two-Step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
               <span>•</span>
               <span className="capitalize">{account.account_type}</span>
               <span>•</span>
               <span>{account.leverage}</span>
-              <span>•</span>
-              <span className="capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
+              {account.status !== 'funded' && <>
+                <span>•</span>
+                <span className="capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
+              </>}
             </div>
             {/* Rule snapshot display - shows DD limits from challenge rules */}
             {account.rule_snapshot && (

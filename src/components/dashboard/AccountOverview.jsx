@@ -33,8 +33,8 @@ function useClosedTrades(account) {
         .finally(() => { if (!cancelled) setLoading(false); });
     };
     fetch();
-    // Re-poll every 30s so data doesn't go stale for passed/under-review accounts
-    const iv = setInterval(fetch, 30000);
+    // Re-poll every 60s — avoid rate limits (multiple components shared this data)
+    const iv = setInterval(fetch, 60000);
     return () => { cancelled = true; clearInterval(iv); };
   }, [account?.account_id]);
   return { trades, loading };
@@ -143,10 +143,13 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const unrealizedPnl = liveUnrealizedPnl ?? (equity - balance);
   const todayPnl = account.daily_pnl ?? 0;
   const accountSize = account.account_size || 0;
-  const challengeTypeLabel = account.challenge_type === 'two-step' ? '2-STEP'
+  const isFundedLive = account.status === 'funded';
+  const challengeTypeLabel = isFundedLive ? 'FUNDED'
+    : account.challenge_type === 'two-step' ? '2-STEP'
     : account.challenge_type === 'instant' ? 'INSTANT' : 'INST. LIGHT';
   const isTwoStep = account.challenge_type === 'two-step';
-  const phaseLabel = isTwoStep ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
+  // Don't show phase label for funded live accounts
+  const phaseLabel = (!isFundedLive && isTwoStep) ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
   const modelLabel = (account.account_type || 'standard').charAt(0).toUpperCase() + (account.account_type || 'standard').slice(1);
   const isUnderPhase1Review = account.status === 'passed' && account.phase === 'phase1' && account.phase_review_status === 'pending_review';
   const isUnderFundedReview = account.status === 'passed' && account.funded_review_status === 'pending_review';
@@ -170,7 +173,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
-          {isTwoStep && <>
+          {!isFundedLive && isTwoStep && phaseLabel && <>
             <span className="text-white/20 text-xs">·</span>
             <span className="text-xs font-semibold tracking-wide text-white/50">{phaseLabel}</span>
           </>}
@@ -240,9 +243,9 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="grid grid-cols-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
         {[
           { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
-          { label: 'TYPE', value: challengeTypeLabel === '2-STEP' ? 'Two-Step' : challengeTypeLabel === 'INSTANT' ? 'Instant' : 'Inst. Light' },
+          { label: 'TYPE', value: isFundedLive ? 'Funded Live' : challengeTypeLabel === '2-STEP' ? 'Two-Step' : challengeTypeLabel === 'INSTANT' ? 'Instant' : 'Inst. Light' },
           { label: 'MODEL', value: modelLabel, highlight: true },
-          { label: 'PHASE', value: isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
+          { label: 'PHASE', value: isFundedLive ? 'Funded' : isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
         ].map((item, i) => (
           <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
@@ -1086,8 +1089,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
   const stats = useAccountStats(account, tradeRecords);
 
-  // Live closed trades from MT5 — used by Statistics, Daily Summary, Discipline panels
-  const { trades: closedTrades } = useClosedTrades(account);
+  // Live closed trades from MT5 — used by Statistics, Daily Summary, Discipline panels + ClosedTradesSection
+  // Single fetch point — passed down to all children to avoid duplicate calls causing rate limits
+  const { trades: closedTrades, loading: closedTradesLoading } = useClosedTrades(account);
 
   const showLoader = isLoading || !currentUser;
   if (showLoader) return (
@@ -1194,8 +1198,8 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Live Open Trades */}
       <OpenTradesPanel account={account} initialPositions={livePositions} tradeRecords={tradeRecords} />
 
-      {/* Closed Trades — fetched live from MT5 deal history */}
-      <ClosedTradesSection account={account} />
+      {/* Closed Trades — pass pre-fetched trades to avoid duplicate MT5 calls */}
+      <ClosedTradesSection account={account} trades={closedTrades} loading={closedTradesLoading} />
 
       {/* Performance Metrics + Progress Timeline */}
       <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} livePlan={livePlan} />

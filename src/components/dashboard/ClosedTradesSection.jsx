@@ -78,31 +78,37 @@ function TradeDetailDrawer({ trade, onClose }) {
 
 const PAGE_SIZE = 12;
 
-export default function ClosedTradesSection({ account }) {
-  const [trades, setTrades] = useState([]);
-  const [loading, setLoading] = useState(true);
+// Accept pre-fetched trades from parent (AccountOverview) to avoid duplicate MT5 calls.
+// Falls back to self-fetch only when used standalone (no trades prop passed).
+export default function ClosedTradesSection({ account, trades: propTrades, loading: propLoading }) {
+  const [selfTrades, setSelfTrades] = useState([]);
+  const [selfLoading, setSelfLoading] = useState(!propTrades);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [page, setPage] = useState(1);
 
+  const isControlled = propTrades !== undefined;
+  const trades = isControlled ? propTrades : selfTrades;
+  const loading = isControlled ? (propLoading ?? false) : selfLoading;
+
   const fetchTrades = async () => {
-    if (!account?.account_id) return;
-    setLoading(true);
+    if (isControlled || !account?.account_id) return;
+    setSelfLoading(true);
     try {
       const res = await base44.functions.invoke('getClosedTrades', {
         account_id: account.account_id,
         page_size: 100,
       });
-      setTrades(res?.data?.trades || []);
+      setSelfTrades(res?.data?.trades || []);
     } catch (e) {
       console.error('ClosedTradesSection fetch error', e);
     } finally {
-      setLoading(false);
+      setSelfLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTrades();
-  }, [account?.account_id]);
+    if (!isControlled) fetchTrades();
+  }, [account?.account_id, isControlled]);
 
   const totalPnl = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const winCount = trades.filter(t => (t.pnl || 0) > 0).length;
@@ -121,10 +127,12 @@ export default function ClosedTradesSection({ account }) {
                 {totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}
               </span>
             )}
-            <button onClick={fetchTrades} disabled={loading}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors">
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            {!isControlled && (
+              <button onClick={fetchTrades} disabled={loading}
+                className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors">
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
           </div>
         </div>
 
