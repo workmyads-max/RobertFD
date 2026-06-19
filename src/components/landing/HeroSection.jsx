@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
+import LiveFundedAccountCard from './LiveFundedAccountCard';
 
 const stats = [
   { label: 'Traders worldwide', value: '14,200+', icon: Users },
@@ -18,7 +19,7 @@ export default function HeroSection({ heroImage }) {
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-8">
@@ -65,6 +66,11 @@ export default function HeroSection({ heroImage }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Right Content - Animated Funded Account Card */}
+          <div className="hidden lg:block">
+            <LiveFundedAccountCard />
           </div>
         </div>
       </div>
