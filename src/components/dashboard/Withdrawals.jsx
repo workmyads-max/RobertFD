@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Bell, Wallet, ExternalLink } from 'lucide-react';
 import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,53 +19,18 @@ const METHODS = [
   { id: 'bank_wire', label: 'Bank Wire', icon: '🏦' },
 ];
 
-const DISPLAY_PROFIT_SPLIT = 0.80;
-const DISPLAY_WITHDRAWAL_FEE = 25;
-
-function PayoutBreakdown({ amount, affiliateReward = 0 }) {
-  const gross = parseFloat(amount) || 0;
-  const traderShare = gross * DISPLAY_PROFIT_SPLIT;
-  const companyShare = gross * 0.2;
-  const finalAmount = traderShare - DISPLAY_WITHDRAWAL_FEE;
-
-  const rows = [
-    { label: 'Requested Amount', value: `$${gross.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: 'text-foreground', bold: false },
-    { label: 'Company Share (20%)', value: `-$${companyShare.toFixed(2)}`, color: 'text-red-400', bold: false },
-    { label: 'Your Share (80%)', value: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400', bold: true },
-    { label: 'Sponsor Affiliate Reward (~9%)', value: `-$${(traderShare * 0.09).toFixed(2)}`, color: 'text-yellow-400', bold: false },
-    { label: 'Withdrawal Processing Fee', value: `-$${DISPLAY_WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground', bold: false },
-    { label: 'Est. Payout (preview only)', value: `$${Math.max(0, finalAmount - traderShare * 0.09).toFixed(2)}`, color: 'text-primary', bold: true, divider: true },
-  ];
-
-  return (
-    <div className="rounded-xl overflow-hidden mt-4" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-      <div className="px-4 py-2.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest"
-        style={{ background: 'rgba(255,255,255,0.03)' }}>
-        Payout Breakdown
-      </div>
-      {rows.map((row, i) => (
-        <div key={i}>
-          {row.divider && <div className="border-t border-white/10 mx-4 my-1" />}
-          <div className="flex items-center justify-between px-4 py-2">
-            <span className="text-xs text-muted-foreground">{row.label}</span>
-            <span className={`text-xs font-mono ${row.bold ? 'font-black' : ''} ${row.color}`}>{row.value}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+// Fee is 5% of trader's 80% share — no affiliate deduction
+const FEE_PCT = 0.05;
 
 function WithdrawalCard({ w, i }) {
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CFG[w.status] || STATUS_CFG.pending;
   const Icon = cfg.icon;
 
-  const traderShare = (w.amount || 0) * (w.profit_split_pct / 100 || 0.8);
+  const traderShare = w.trader_share || (w.amount || 0) * ((w.profit_split_pct || 80) / 100);
   const companyShare = (w.amount || 0) - traderShare;
-  const affiliateReward = w.affiliate_reward || (traderShare * 0.09);
-  const fee = w.withdrawal_fee || DISPLAY_WITHDRAWAL_FEE;
-  const final = w.final_amount || Math.max(0, traderShare - affiliateReward - fee);
+  const fee = w.withdrawal_fee || (traderShare * FEE_PCT);
+  const final = w.final_amount || Math.max(0, traderShare - fee);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -77,7 +42,7 @@ function WithdrawalCard({ w, i }) {
           <div>
             <div className="text-base font-black text-foreground">${(w.amount || 0).toLocaleString()}</div>
             <div className="text-xs text-muted-foreground font-mono mt-0.5">
-              {METHODS.find(m => m.id === w.method)?.label} • Account: {w.account_id} • {new Date(w.created_date).toLocaleDateString()}
+              {METHODS.find(m => m.id === w.method)?.label || w.method} • Account: {w.account_id} • {new Date(w.created_date).toLocaleDateString()}
             </div>
           </div>
           <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
@@ -90,11 +55,11 @@ function WithdrawalCard({ w, i }) {
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="text-xs font-bold text-emerald-400">${traderShare.toFixed(2)}</div>
-            <div className="text-[9px] font-mono text-muted-foreground">Your 80%</div>
+            <div className="text-[9px] font-mono text-muted-foreground">Your {w.profit_split_pct || 80}%</div>
           </div>
           <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div className="text-xs font-bold text-yellow-400">-${affiliateReward.toFixed(2)}</div>
-            <div className="text-[9px] font-mono text-muted-foreground">Affiliate</div>
+            <div className="text-xs font-bold text-yellow-400">-${fee.toFixed(2)}</div>
+            <div className="text-[9px] font-mono text-muted-foreground">Fee (5%)</div>
           </div>
           <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="text-xs font-bold text-primary">${final.toFixed(2)}</div>
@@ -111,11 +76,10 @@ function WithdrawalCard({ w, i }) {
         {expanded && (
           <div className="mt-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
             {[
-              { label: 'Gross Amount', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
+              { label: 'Gross Profit', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
               { label: `Company Share (${100 - (w.profit_split_pct||80)}%)`, val: `-$${companyShare.toFixed(2)}`, color: 'text-red-400' },
               { label: `Trader Share (${w.profit_split_pct||80}%)`, val: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400' },
-              { label: 'Sponsor Reward (~9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
-              { label: 'Processing Fee', val: `-$${fee.toFixed(2)}`, color: 'text-muted-foreground' },
+              { label: 'Processing Fee (5%)', val: `-$${fee.toFixed(2)}`, color: 'text-yellow-400' },
               { label: 'Final Processed', val: `$${final.toFixed(2)}`, color: 'text-primary', bold: true },
             ].map((row, i) => (
               <div key={i} className="flex items-center justify-between px-4 py-2 border-b border-white/[0.04] last:border-0">
@@ -138,8 +102,10 @@ function WithdrawalCard({ w, i }) {
 
 export default function Withdrawals({ user, onNavigate }) {
   const [showForm, setShowForm] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState('');
   const [showKycAlert, setShowKycAlert] = useState(true);
-  const [form, setForm] = useState({ amount: '', method: 'usdt_trc20', wallet_address: '', account_id: '' });
+  const [method, setMethod] = useState('usdt_trc20');
+  const [submitError, setSubmitError] = useState('');
   const qc = useQueryClient();
 
   const { data: accounts = [] } = useQuery({
@@ -152,7 +118,6 @@ export default function Withdrawals({ user, onNavigate }) {
   });
 
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
-  const eligiblePnl = fundedAccounts.reduce((s, a) => s + Math.max(0, a.pnl || 0), 0);
 
   const { data: kycList = [] } = useQuery({
     queryKey: ['kyc', user?.email],
@@ -168,29 +133,47 @@ export default function Withdrawals({ user, onNavigate }) {
     enabled: !!user?.email,
   });
 
+  // Load saved wallet address from user profile
+  const savedWalletAddress = user?.payout_wallet_address || user?.usdt_trc20 || user?.bitcoin || '';
+  const savedWalletType = user?.payout_wallet_type || 'usdt_trc20';
+
+  // Selected account for withdrawal form
+  const selectedAccount = fundedAccounts.find(a => a.account_id === selectedAccountId) || fundedAccounts[0];
+  const selectedProfit = Math.max(0, selectedAccount?.pnl || 0);
+  const profitSplitPct = selectedAccount?.rule_snapshot?.profit_split ?? 80;
+  const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2)); // 80% share is the withdrawal amount
+  const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
+  const youReceive = Math.max(0, autoAmount - fee5pct);
+
+  const openForm = (accId) => {
+    setSelectedAccountId(accId || fundedAccounts[0]?.account_id || '');
+    setMethod(savedWalletType || 'usdt_trc20');
+    setSubmitError('');
+    setShowForm(true);
+  };
+
   const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const selectedAcc = fundedAccounts.find(a => a.account_id === data.account_id) || fundedAccounts[0];
-      if (!selectedAcc) throw new Error('No funded account selected');
+    mutationFn: async () => {
+      if (!selectedAccount) throw new Error('No funded account selected');
+      if (!savedWalletAddress) throw new Error('Please save your payout wallet address in Settings → Payout Wallets first.');
       const res = await base44.functions.invoke('requestTraderWithdrawal', {
-        account_id: selectedAcc.account_id,
-        amount: parseFloat(data.amount),
-        method: data.method,
-        wallet_address: data.wallet_address,
+        account_id: selectedAccount.account_id,
+        amount: selectedProfit, // Send gross profit — backend calculates split
+        method,
+        wallet_address: savedWalletAddress,
       });
+      if (res.data?.error) throw new Error(res.data.error);
       return res.data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['withdrawals'] });
       setShowForm(false);
-      setForm({ amount: '', method: 'usdt_trc20', wallet_address: '' });
+      setSubmitError('');
+    },
+    onError: (err) => {
+      setSubmitError(err.message || 'Submission failed. Please try again.');
     },
   });
-
-  const grossAmount = parseFloat(form.amount) || 0;
-  const traderShare = grossAmount * DISPLAY_PROFIT_SPLIT;
-  const affiliateReward = traderShare * 0.09;
-  const finalAmount = Math.max(0, traderShare - affiliateReward - DISPLAY_WITHDRAWAL_FEE);
 
   return (
     <div>
@@ -201,7 +184,7 @@ export default function Withdrawals({ user, onNavigate }) {
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">Profit payouts — Funded accounts only</p>
         </div>
-        <button onClick={() => setShowForm(true)}
+        <button onClick={() => openForm('')}
           disabled={!kycApproved || fundedAccounts.length === 0}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
@@ -229,7 +212,7 @@ export default function Withdrawals({ user, onNavigate }) {
       )}
 
       {/* No funded accounts warning */}
-      {fundedAccounts.length === 0 && (
+      {kycApproved && fundedAccounts.length === 0 && (
         <div className="flex justify-center mb-5">
           <AlertCard
             isVisible={true}
@@ -242,17 +225,20 @@ export default function Withdrawals({ user, onNavigate }) {
         </div>
       )}
 
-      {/* Per-account funded breakdown */}
+      {/* Per-account funded breakdown — click to open withdrawal form */}
       {fundedAccounts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {fundedAccounts.map(acc => {
             const profit = Math.max(0, acc.pnl || 0);
-            const traderShare = profit * 0.8;
-            const firmShare = profit * 0.2;
+            const split = acc.rule_snapshot?.profit_split ?? 80;
+            const traderShare = profit * (split / 100);
+            const firmShare = profit * ((100 - split) / 100);
+            const hasPending = withdrawals.some(w => w.account_id === acc.account_id && w.status === 'pending');
             return (
-              <div key={acc.id} className="rounded-2xl p-5"
-                style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <div className="flex items-center justify-between mb-3">
+              <div key={acc.id} className="rounded-2xl p-5 cursor-pointer transition-all hover:border-primary/40"
+                onClick={() => kycApproved && !hasPending && openForm(acc.account_id)}
+                style={{ background: 'rgba(16,185,129,0.04)', border: `1px solid ${hasPending ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.2)'}` }}>
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-mono text-muted-foreground">Account</span>
                   <span className="text-xs font-bold font-mono text-foreground">{acc.account_id}</span>
                 </div>
@@ -260,16 +246,23 @@ export default function Withdrawals({ user, onNavigate }) {
                   <span className="text-xs font-mono text-muted-foreground">Total Profit</span>
                   <span className="text-sm font-black text-emerald-400">${profit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(16,185,129,0.08)' }}>
-                    <div className="text-xs font-bold text-emerald-400">${traderShare.toFixed(2)}</div>
-                    <div className="text-[9px] font-mono text-muted-foreground">Your 80%</div>
+                    <div className="text-sm font-black text-emerald-400">${traderShare.toFixed(2)}</div>
+                    <div className="text-[9px] font-mono text-muted-foreground">Your {split}%</div>
                   </div>
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <div className="text-xs font-bold text-muted-foreground">${firmShare.toFixed(2)}</div>
-                    <div className="text-[9px] font-mono text-muted-foreground">Firm 20%</div>
+                    <div className="text-sm font-black text-muted-foreground">${firmShare.toFixed(2)}</div>
+                    <div className="text-[9px] font-mono text-muted-foreground">Firm {100 - split}%</div>
                   </div>
                 </div>
+                {hasPending ? (
+                  <div className="text-center text-[10px] font-mono text-yellow-400 py-1">⏳ Withdrawal Pending</div>
+                ) : kycApproved && profit > 0 ? (
+                  <div className="text-center text-[10px] font-mono text-primary py-1 flex items-center justify-center gap-1">
+                    <Plus className="w-3 h-3" /> Click to Request Withdrawal
+                  </div>
+                ) : null}
               </div>
             );
           })}
@@ -277,15 +270,16 @@ export default function Withdrawals({ user, onNavigate }) {
       )}
 
       {/* Profit split info banner */}
-      <div className="flex justify-center mb-6">
-        <AlertCard
-          isVisible={true}
-          title={`80/20 Profit Split`}
-          description={`$${eligiblePnl.toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit. You keep 80% of all profits — a $25 fee and affiliate rewards are deducted from your share.`}
-          buttonText="Learn More"
-          onButtonClick={() => onNavigate?.('billing')}
-          icon={<DollarSign className="h-6 w-6 text-white" />}
-        />
+      <div className="rounded-2xl p-5 mb-6 flex items-center justify-between gap-4"
+        style={{ background: 'linear-gradient(135deg,rgba(255,92,0,0.12),rgba(255,92,0,0.05))', border: '1px solid rgba(255,92,0,0.25)' }}>
+        <div>
+          <div className="text-base font-black text-foreground mb-1">80/20 Profit Split</div>
+          <div className="text-sm text-muted-foreground">
+            ${fundedAccounts.reduce((s, a) => s + Math.max(0, a.pnl || 0), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit.
+            You keep 80% — only a 5% processing fee is deducted from your share. No affiliate deductions.
+          </div>
+        </div>
+        <DollarSign className="w-8 h-8 text-primary flex-shrink-0" />
       </div>
 
       {/* Withdrawal list */}
@@ -313,42 +307,87 @@ export default function Withdrawals({ user, onNavigate }) {
                 <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground text-xl">×</button>
               </div>
               <div className="p-5 space-y-4">
+
+                {/* Account selector */}
+                {fundedAccounts.length > 1 && (
+                  <div>
+                    <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase">Select Account</label>
+                    <div className="space-y-2">
+                      {fundedAccounts.map(acc => {
+                        const profit = Math.max(0, acc.pnl || 0);
+                        const split = acc.rule_snapshot?.profit_split ?? 80;
+                        const share = (profit * (split / 100)).toFixed(2);
+                        return (
+                          <button key={acc.account_id} onClick={() => setSelectedAccountId(acc.account_id)}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all"
+                            style={{
+                              background: selectedAccountId === acc.account_id ? 'rgba(255,92,0,0.12)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${selectedAccountId === acc.account_id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <span className="font-mono font-bold text-foreground">{acc.account_id}</span>
+                            <span className="text-emerald-400 font-bold">${share} (your {split}%)</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fixed amount — read only */}
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Profit Amount (USD)</label>
-                  <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-                    placeholder="Enter gross profit amount"
-                    className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Withdrawal Amount (Your {profitSplitPct}% Share)</label>
+                  <div className="w-full rounded-xl px-4 py-3 text-sm font-black text-emerald-400 cursor-not-allowed"
+                    style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                    ${autoAmount.toFixed(2)}
+                    <span className="text-xs font-normal text-muted-foreground ml-2">(fixed — 80% of ${selectedProfit.toFixed(2)} profit)</span>
+                  </div>
                 </div>
+
+                {/* Payment method */}
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase">Payment Method</label>
                   <div className="grid grid-cols-3 gap-2">
                     {METHODS.map(m => (
-                      <button key={m.id} onClick={() => setForm(f => ({ ...f, method: m.id }))}
+                      <button key={m.id} onClick={() => setMethod(m.id)}
                         className="py-2.5 rounded-xl text-xs font-semibold transition-all"
-                        style={{ background: form.method === m.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${form.method === m.id ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`, color: form.method === m.id ? '#FF5C00' : '#666' }}>
+                        style={{ background: method === m.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${method === m.id ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`, color: method === m.id ? '#FF5C00' : '#666' }}>
                         {m.icon} {m.label}
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Wallet address — from settings */}
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Wallet / Bank Address</label>
-                  <input value={form.wallet_address} onChange={e => setForm(f => ({ ...f, wallet_address: e.target.value }))}
-                    placeholder="Your withdrawal address"
-                    className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Payout Wallet Address</label>
+                  {savedWalletAddress ? (
+                    <div className="w-full rounded-xl px-4 py-3 text-sm font-mono text-foreground cursor-not-allowed break-all"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.25)', color: '#94a3b8' }}>
+                      {savedWalletAddress}
+                      <div className="text-[10px] text-emerald-400 mt-1">✓ From your saved payout wallet settings</div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                      <Wallet className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
+                      <p className="text-xs text-yellow-400 font-semibold mb-1">No wallet address saved</p>
+                      <p className="text-[11px] text-muted-foreground mb-3">Go to Settings → Payout Wallets to save your primary wallet address.</p>
+                      <button onClick={() => { setShowForm(false); onNavigate?.('settings'); }}
+                        className="flex items-center gap-1.5 mx-auto text-xs font-bold text-primary hover:underline">
+                        <ExternalLink className="w-3 h-3" /> Open Settings
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {grossAmount > 0 && (
+                {/* Payout breakdown */}
+                {autoAmount > 0 && (
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase bg-white/[0.02]">Payout Breakdown</div>
                     {[
-                      { label: 'Gross Profit', val: `$${grossAmount.toFixed(2)}`, color: 'text-foreground' },
-                      { label: 'Company Share (20%)', val: `-$${(grossAmount * 0.2).toFixed(2)}`, color: 'text-red-400' },
-                      { label: 'Your Share (80%)', val: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400' },
-                      { label: 'Sponsor Reward (~9%)', val: `-$${affiliateReward.toFixed(2)}`, color: 'text-yellow-400' },
-                      { label: 'Processing Fee (est.)', val: `-$${DISPLAY_WITHDRAWAL_FEE.toFixed(2)}`, color: 'text-muted-foreground' },
+                      { label: 'Gross Profit', val: `$${selectedProfit.toFixed(2)}`, color: 'text-foreground' },
+                      { label: `Company Share (${100 - profitSplitPct}%)`, val: `-$${(selectedProfit * ((100 - profitSplitPct) / 100)).toFixed(2)}`, color: 'text-red-400' },
+                      { label: `Your Share (${profitSplitPct}%)`, val: `$${autoAmount.toFixed(2)}`, color: 'text-emerald-400' },
+                      { label: 'Processing Fee (5% of your share)', val: `-$${fee5pct.toFixed(2)}`, color: 'text-yellow-400' },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between px-4 py-2 border-b border-white/[0.04]">
                         <span className="text-xs text-muted-foreground">{row.label}</span>
@@ -358,16 +397,23 @@ export default function Withdrawals({ user, onNavigate }) {
                     <div className="flex justify-between px-4 py-2.5 border-t border-white/10"
                       style={{ background: 'rgba(255,92,0,0.06)' }}>
                       <span className="text-xs font-bold text-foreground">You Receive</span>
-                      <span className="text-sm font-black text-primary">${finalAmount.toFixed(2)}</span>
+                      <span className="text-sm font-black text-primary">${youReceive.toFixed(2)}</span>
                     </div>
+                  </div>
+                )}
+
+                {/* Error message */}
+                {submitError && (
+                  <div className="rounded-xl px-4 py-3 text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                    {submitError}
                   </div>
                 )}
 
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
                     style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
-                  <button onClick={() => createMutation.mutate(form)}
-                    disabled={!form.amount || !form.wallet_address || createMutation.isPending || finalAmount <= 0}
+                  <button onClick={() => createMutation.mutate()}
+                    disabled={!savedWalletAddress || createMutation.isPending || autoAmount <= 0}
                     className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40"
                     style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
                     {createMutation.isPending ? 'Submitting...' : 'Submit Request'}

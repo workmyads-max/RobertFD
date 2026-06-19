@@ -263,7 +263,7 @@ export default function Dashboard() {
   const renderPage = () => {
     switch (activePage) {
       case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
-      case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} />;
+      case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} onNavigate={setActivePage} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;

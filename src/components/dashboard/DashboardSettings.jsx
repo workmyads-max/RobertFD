@@ -168,6 +168,29 @@ const COUNTRY_CODES = [
   { code: '+377', country: 'Monaco', flag: '🇲🇨' },
 ];
 
+const ALL_COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria',
+  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan',
+  'Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia',
+  'Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo','Costa Rica',
+  'Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt',
+  'El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon',
+  'Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana',
+  'Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel',
+  'Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kosovo','Kuwait','Kyrgyzstan',
+  'Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar',
+  'Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Micronesia',
+  'Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal',
+  'Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan',
+  'Palau','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar',
+  'Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia',
+  'Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa',
+  'South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan',
+  'Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan',
+  'Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Vanuatu','Vatican City',
+  'Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+];
+
 const WALLET_TYPES = [
   { value: 'usdt_trc20', label: 'USDT TRC20', network: 'Tron', placeholder: 'T...' },
   { value: 'usdt_bep20', label: 'USDT BEP20', network: 'BSC', placeholder: '0x...' },
@@ -378,13 +401,90 @@ export default function DashboardSettings({ user }) {
               {/* ── PROFILE ── */}
               {activeTab === 'profile' && (
                 <>
+                  {/* Profile Photo */}
+                  <Card title="Profile Photo" subtitle="Upload a profile picture">
+                    <div className="flex items-center gap-5">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center"
+                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                          {profilePhoto
+                            ? <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                            : <User className="w-8 h-8 text-white/30" />}
+                        </div>
+                        {uploadLoading && (
+                          <div className="absolute inset-0 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                            <RefreshCw className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-white/60 mb-3">JPG, PNG or WEBP. Max 5MB.</p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                              alert('Please upload JPG, PNG, or WEBP only');
+                              return;
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('Image must be under 5MB');
+                              return;
+                            }
+                            setUploadLoading(true);
+                            try {
+                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                              setProfilePhoto(file_url);
+                              await base44.auth.updateMe({ avatar_url: file_url, profile_photo_url: file_url });
+                            } catch (err) {
+                              alert('Upload failed: ' + err.message);
+                            } finally {
+                              setUploadLoading(false);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadLoading}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+                          style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
+                          <Upload className="w-4 h-4" />
+                          {uploadLoading ? 'Uploading...' : 'Upload Photo'}
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+
                   <Card title="Personal Information" subtitle="Update your profile and contact details">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InputField label="Full Name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="John Doe" />
                       <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed" />
                       <InputField label="Phone" value={profile.phone || user?.phone || ''} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+1234567890" />
                       <InputField label="Username" value={profile.username || ''} onChange={e => setProfile(p => ({ ...p, username: e.target.value }))} placeholder="trader_john" />
-                      <InputField label="Country" value={profile.country || user?.country || ''} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} placeholder="United States" />
+                      {/* Country — searchable dropdown */}
+                      <div>
+                        <label className="text-sm font-bold text-white/45 mb-2.5 block uppercase tracking-wide">Country</label>
+                        <div className="relative">
+                          <select
+                            value={profile.country || user?.country || ''}
+                            onChange={e => setProfile(p => ({ ...p, country: e.target.value }))}
+                            className="w-full rounded-xl px-4 py-3 text-base text-white outline-none appearance-none"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
+                            onFocus={e => e.currentTarget.style.borderColor = 'rgba(255,92,0,0.4)'}
+                            onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'}>
+                            <option value="">Select Country</option>
+                            {ALL_COUNTRIES.map(c => (
+                              <option key={c} value={c} style={{ background: '#0c0c0f' }}>{c}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+                        </div>
+                      </div>
                       <InputField label="City" value={profile.city || user?.city || ''} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} placeholder="New York" />
                       <InputField label="Address" value={profile.address || user?.address || ''} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder="123 Main St" />
                       <InputField label="Postal Code" value={profile.postal_code || user?.postal_code || ''} onChange={e => setProfile(p => ({ ...p, postal_code: e.target.value }))} placeholder="10001" />

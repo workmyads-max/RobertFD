@@ -62,7 +62,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'A pending withdrawal already exists for this account' }, { status: 409 });
     }
 
-    // 5. Minimum 1 trading day on the funded account (counted from actual closed trades in TradeRecord)
+    // 5. Minimum 1 trading day on the funded account
+    // Check both TradeRecord entity AND account.trading_days field (set by scheduledMTSync)
     const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
     const tradingDaySet = new Set();
     for (const t of tradeRecords) {
@@ -72,10 +73,13 @@ Deno.serve(async (req) => {
         if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
       }
     }
-    const tradingDaysCompleted = tradingDaySet.size;
+    // Use whichever is higher: TradeRecord count or account.trading_days (from MT5 sync)
+    const tradingDaysFromRecords = tradingDaySet.size;
+    const tradingDaysFromAccount = account.trading_days || 0;
+    const tradingDaysCompleted = Math.max(tradingDaysFromRecords, tradingDaysFromAccount);
     if (tradingDaysCompleted < 1) {
       return Response.json({
-        error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s).`,
+        error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s). Please complete at least 1 trading day on your funded account first.`,
       }, { status: 400 });
     }
 
@@ -92,30 +96,17 @@ Deno.serve(async (req) => {
     const traderShare = gross * (profitSplitPct / 100);
     const companyShare = gross - traderShare;
 
-    // 7. Withdrawal fee from AffiliateSettings entity
-    let withdrawalFee = 25; // fallback only
-    const settingsList = await base44.asServiceRole.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
-    if (settingsList[0]?.withdrawal_fee !== undefined && settingsList[0].withdrawal_fee !== null) {
-      withdrawalFee = settingsList[0].withdrawal_fee;
-    }
+    // 7. Withdrawal fee: 5% of trader's share — no affiliate deduction
+    const withdrawalFee = parseFloat((traderShare * 0.05).toFixed(2));
+    const affiliateReward = 0; // No affiliate deduction on payouts
 
-    // 8. Affiliate payout reward (sponsor gets % of trader share)
-    // Check if trader has a sponsor
-    const affiliateProfiles = await base44.asServiceRole.entities.AffiliateProfile.filter({ user_email: user.email });
-    const traderProfile = affiliateProfiles[0];
-    const hasAffiliateSponsor = !!(traderProfile?.referred_by_email);
-
-    // Payout reward rate from settings or fallback
-    const payoutRewardRate = settingsList[0]?.payout_tier_0_rate ?? 9;
-    const affiliateReward = hasAffiliateSponsor ? parseFloat((traderShare * (payoutRewardRate / 100)).toFixed(2)) : 0;
-
-    const finalAmount = Math.max(0, parseFloat((traderShare - affiliateReward - withdrawalFee).toFixed(2)));
+    const finalAmount = Math.max(0, parseFloat((traderShare - withdrawalFee).toFixed(2)));
 
     if (finalAmount <= 0) {
       return Response.json({ error: 'Final payout amount is zero or negative after fees' }, { status: 400 });
     }
 
-    // 9. Create withdrawal request
+    // 8. Create withdrawal request
     const withdrawalId = `WD-${Date.now().toString(36).toUpperCase()}`;
     const withdrawal = await base44.asServiceRole.entities.WithdrawalRequest.create({
       withdrawal_id: withdrawalId,
@@ -128,10 +119,10 @@ Deno.serve(async (req) => {
       profit_split_pct: profitSplitPct,
       company_share: parseFloat(companyShare.toFixed(2)),
       trader_share: parseFloat(traderShare.toFixed(2)),
-      affiliate_reward: affiliateReward,
+      affiliate_reward: 0,
       withdrawal_fee: withdrawalFee,
       final_amount: finalAmount,
-      notes: `Backend-validated withdrawal. Profit split: ${profitSplitPct}% from rule_snapshot. Fee: $${withdrawalFee}.`,
+      notes: `Backend-validated withdrawal. Profit split: ${profitSplitPct}% from rule_snapshot. Fee: 5% of trader share ($${withdrawalFee}).`,
     });
 
     return Response.json({
@@ -142,13 +133,9 @@ Deno.serve(async (req) => {
         profit_split_pct: profitSplitPct,
         trader_share: parseFloat(traderShare.toFixed(2)),
         company_share: parseFloat(companyShare.toFixed(2)),
-        affiliate_reward: affiliateReward,
+        affiliate_reward: 0,
         withdrawal_fee: withdrawalFee,
         final_amount: finalAmount,
-        source: {
-          profit_split: 'account.rule_snapshot.profit_split',
-          withdrawal_fee: settingsList[0] ? 'AffiliateSettings.global_config' : 'fallback_25',
-        },
       },
     });
   } catch (error) {

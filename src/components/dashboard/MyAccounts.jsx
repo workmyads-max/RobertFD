@@ -68,7 +68,7 @@ function CredentialsModal({ account, onClose }) {
   );
 }
 
-function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
+function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate }) {
   const [expanded, setExpanded] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
@@ -240,7 +240,8 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
             <BarChart3 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Analytics</span><span className="sm:hidden">Stats</span>
           </button>
           {account.status === 'funded' && (
-            <button className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-emerald-500/10 flex-1 sm:flex-none justify-center"
+            <button onClick={() => onNavigate?.('withdrawals')}
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-emerald-500/10 flex-1 sm:flex-none justify-center"
               style={{ border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}>
               <DollarSign className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Withdraw</span><span className="sm:hidden">Cash Out</span>
             </button>
@@ -269,7 +270,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
   );
 }
 
-export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onOpenAnalytics }) {
+export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate }) {
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
@@ -401,7 +402,7 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
 
           {/* Active accounts */}
           {displayAccounts.map((acc) => (
-            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} />
+            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} onNavigate={onNavigate} />
           ))}
 
           {/* Failed Accounts Section */}
