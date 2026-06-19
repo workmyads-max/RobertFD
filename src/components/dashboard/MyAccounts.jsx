@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, TrendingUp, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, Copy, X, Loader2, Shield } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, Copy, X, Loader2, Shield, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import QuickWithdrawModal from '../overview/QuickWithdrawModal';
@@ -77,8 +77,9 @@ function CredentialsModal({ account, onClose }) {
   );
 }
 
-function AccountCard({ account, onNavigate }) {
+function AccountCard({ account, onNavigate, onWithdraw }) {
   const [showCreds, setShowCreds] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
   const isPnlPos = (account.pnl || 0) >= 0;
   const snap = account.rule_snapshot || {};
@@ -216,11 +217,20 @@ function AccountCard({ account, onNavigate }) {
               <BarChart3 className="w-3.5 h-3.5" /> Analytics
             </button>
             {account.status === 'funded' && (
-              <button onClick={() => onNavigate?.('withdrawals')}
+              <button onClick={() => setShowWithdrawModal(true)}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors"
                 style={{ border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' }}>
                 <DollarSign className="w-3.5 h-3.5" /> Withdraw
               </button>
+            )}
+            
+            {showWithdrawModal && (
+              <QuickWithdrawModal
+                account={account}
+                onClose={() => setShowWithdrawModal(false)}
+                onSuccess={() => { setShowWithdrawModal(false); onNavigate?.('withdrawals'); }}
+                onNavigateSettings={() => { setShowWithdrawModal(false); onNavigate?.('settings'); }}
+              />
             )}
             <button onClick={() => setShowCreds(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors"
@@ -242,7 +252,6 @@ function AccountCard({ account, onNavigate }) {
 }
 
 export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
@@ -343,15 +352,6 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
         </div>
       )}
 
-      {showWithdrawModal && (
-        <QuickWithdrawModal
-          accounts={accounts.filter(a => a.status === 'funded')}
-          user={user}
-          onClose={() => setShowWithdrawModal(false)}
-          onSuccess={() => { setShowWithdrawModal(false); onNavigate?.('withdrawals'); }}
-          onNavigateSettings={() => onNavigate?.('settings')}
-        />
-      )}
     </div>
   );
 }

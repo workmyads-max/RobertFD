@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, X, Wallet, ExternalLink } from 'lucide-react';
+import { DollarSign, X, Wallet, ExternalLink, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 
@@ -30,6 +30,21 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
   const youReceive = Math.max(0, autoAmount - fee);
 
   const savedWalletAddress = user?.payout_wallet_address || user?.usdt_trc20 || user?.bitcoin || '';
+  
+  // Eligibility checks
+  const isFunded = selectedAccount?.status === 'funded';
+  const hasProfit = selectedProfit > 0;
+  const tradingDays = selectedAccount?.trading_days || 0;
+  const hasMinTradingDays = tradingDays >= 1;
+  const kycApproved = user?.kyc_status === 'approved';
+  const isEligible = isFunded && hasProfit && hasMinTradingDays && kycApproved && savedWalletAddress;
+  
+  const requirements = [];
+  if (!isFunded) requirements.push('Account must be in funded status');
+  if (!hasProfit) requirements.push('No withdrawable profit available');
+  if (!hasMinTradingDays) requirements.push(`Minimum 1 trading day required (${tradingDays}/1)`);
+  if (!kycApproved) requirements.push('KYC verification must be approved');
+  if (!savedWalletAddress) requirements.push('Payout wallet address required');
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -174,6 +189,21 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
               </div>
             )}
 
+            {/* Eligibility Requirements */}
+            {!isEligible && requirements.length > 0 && (
+              <div className="rounded-xl p-4" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                <div className="text-xs font-bold text-red-400 mb-2">Withdrawal Requirements Not Met</div>
+                <div className="space-y-1">
+                  {requirements.map((req, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-red-300">
+                      <XCircle className="w-3 h-3" />
+                      {req}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {submitError && (
               <div className="rounded-xl px-4 py-3 text-sm text-red-400"
                 style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
@@ -188,7 +218,7 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
                 Cancel
               </button>
               <button onClick={() => createMutation.mutate()}
-                disabled={!savedWalletAddress || createMutation.isPending || autoAmount <= 0}
+                disabled={!isEligible || createMutation.isPending || autoAmount <= 0}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40"
                 style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
                 {createMutation.isPending ? 'Submitting...' : 'Submit Request'}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, XCircle } from 'lucide-react';
 function fmt(n) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 // ─── timeline step ─────────────────────────────────────────────────────────────
@@ -227,6 +227,14 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
   const tradingDays = Math.max(tradingDaysFromTrades, account?.trading_days || 0);
   const isEligible = isFunded && kycApproved && tradingDays >= 1;
 
+  // Build eligibility requirements list
+  const requirements = [];
+  if (!isFunded) requirements.push({ label: 'Funded account status', met: false });
+  if (isFunded && !kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
+  if (isFunded && kycApproved && tradingDays < 1) requirements.push({ label: `Minimum 1 trading day (${tradingDays}/1)`, met: false });
+  
+  const hasRequirements = requirements.length > 0 && !isEligible;
+
   const handleWithdrawClick = () => {
     if (onRequestWithdrawal) {
       onRequestWithdrawal();
@@ -249,16 +257,37 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
             <ArrowRight className="w-3.5 h-3.5 text-primary" />
             <span className="text-sm font-bold text-foreground">Progress Timeline</span>
           </div>
-          {isFunded && (
-            <button
-              onClick={handleWithdrawClick}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 active:scale-95"
-              style={{ background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.4)', letterSpacing: '0.01em' }}
-            >
-              Request Withdrawal <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <button
+            onClick={handleWithdrawClick}
+            disabled={!isEligible}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              isEligible ? 'hover:opacity-90 active:scale-95' : 'opacity-50 cursor-not-allowed'
+            }`}
+            style={{ 
+              background: isEligible ? '#FF5C00' : 'rgba(255,255,255,0.08)',
+              color: isEligible ? '#fff' : 'rgba(255,255,255,0.3)',
+              boxShadow: isEligible ? '0 2px 14px rgba(255,92,0,0.4)' : 'none',
+              letterSpacing: '0.01em'
+            }}
+          >
+            Request Withdrawal <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
+
+        {/* Eligibility Requirements (when not eligible) */}
+        {hasRequirements && (
+          <div className="px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+            <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">Withdrawal Requirements</div>
+            <div className="space-y-1.5">
+              {requirements.map((req, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
+                  <span className="text-muted-foreground">{req.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Steps */}
         <div className="px-5 py-4">
