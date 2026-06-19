@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Wallet, Clock, CheckCircle2, XCircle, Send, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { DollarSign, Wallet, Clock, CheckCircle2, XCircle, Send, AlertTriangle, ArrowUpRight, ExternalLink } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 
 const ACCENT = '#FF5C00';
+const FEE_PCT = 0.05;
 
 const METHODS = [
   { id: 'usdt_trc20', label: 'USDT TRC-20', icon: '💎', fee: 0 },
@@ -20,24 +21,38 @@ const STATUS_CONFIG = {
   rejected: { color: '#ef4444', icon: XCircle, label: 'Rejected' },
 };
 
-export default function AffiliateWithdrawal({ profile, commissions = [], withdrawals = [] }) {
+export default function AffiliateWithdrawal({ profile, commissions = [], withdrawals = [], user }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('usdt_trc20');
-  const [wallet, setWallet] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const qc = useQueryClient();
 
+  // Fetch current user to get saved wallet address
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      try { return await base44.auth.me(); } catch { return null; }
+    },
+    enabled: !user,
+  });
+  const currentUserData = user || currentUser;
+
+  const savedWalletAddress = currentUserData?.payout_wallet_address || currentUserData?.usdt_trc20 || currentUserData?.bitcoin || '';
+
   const available = commissions.filter(c => c.status === 'approved').reduce((s, c) => s + (c.commission_amount || 0), 0);
   const pendingTotal = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amount || 0), 0);
   const MIN_WITHDRAWAL = 50;
-  const canSubmit = parseFloat(amount) >= MIN_WITHDRAWAL && parseFloat(amount) <= available && wallet.trim().length > 5;
+  const FEE_PCT = 0.05;
+  const fee = amount ? parseFloat((parseFloat(amount) * FEE_PCT).toFixed(2)) : 0;
+  const youReceive = amount ? parseFloat((parseFloat(amount) - fee).toFixed(2)) : 0;
+  const canSubmit = parseFloat(amount) >= MIN_WITHDRAWAL && parseFloat(amount) <= available && savedWalletAddress;
 
   const submitMutation = useMutation({
     mutationFn: async () => {
       setSubmitError('');
       const res = await base44.functions.invoke('requestAffiliateWithdrawal', {
-        amount: parseFloat(amount), method, wallet_address: wallet,
+        amount: parseFloat(amount), method, wallet_address: savedWalletAddress,
       });
       if (res.data?.error) throw new Error(res.data.error);
       return res.data;
@@ -152,13 +167,43 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                   ))}
                 </div>
               </div>
+              {/* Wallet address from settings */}
               <div>
-                <label className="text-[10px] font-mono text-white/25 uppercase tracking-widest block mb-2">Wallet / Bank Details</label>
-                <input value={wallet} onChange={e => setWallet(e.target.value)}
-                  placeholder={method === 'bank_wire' ? 'IBAN / Account Number' : 'Wallet address'}
-                  className="w-full px-4 py-3 rounded-xl text-sm font-mono text-white outline-none placeholder:text-white/15"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                <label className="text-[10px] font-mono text-white/25 uppercase tracking-widest block mb-2">Payout Wallet Address</label>
+                {savedWalletAddress ? (
+                  <div className="w-full rounded-xl px-4 py-3 text-sm font-mono break-all"
+                    style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)', color: '#94a3b8' }}>
+                    {savedWalletAddress}
+                    <div className="text-[10px] text-emerald-400 mt-1">✓ From your saved payout wallet settings</div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                    <Wallet className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
+                    <p className="text-xs text-yellow-400 font-semibold mb-1">No wallet address saved</p>
+                    <p className="text-[11px] text-muted-foreground mb-3">Go to Settings → Payout Wallets to save your primary wallet address.</p>
+                  </div>
+                )}
               </div>
+              {/* Payout breakdown */}
+              {parseFloat(amount) > 0 && (
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase bg-white/[0.02]">Payout Breakdown</div>
+                  {[
+                    { label: 'Withdrawal Amount', val: `$${parseFloat(amount).toFixed(2)}`, color: 'text-foreground' },
+                    { label: 'Processing Fee (5%)', val: `-$${fee.toFixed(2)}`, color: 'text-yellow-400' },
+                  ].map((row, i) => (
+                    <div key={i} className="flex justify-between px-4 py-2 border-b border-white/[0.04]">
+                      <span className="text-xs text-muted-foreground">{row.label}</span>
+                      <span className={`text-xs font-mono ${row.color}`}>{row.val}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between px-4 py-2.5 border-t border-white/10"
+                    style={{ background: 'rgba(255,92,0,0.06)' }}>
+                    <span className="text-xs font-bold text-foreground">You Receive</span>
+                    <span className="text-sm font-black text-primary">${youReceive.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
               {submitError && (
                 <div className="text-xs text-red-400 px-4 py-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>{submitError}</div>
               )}

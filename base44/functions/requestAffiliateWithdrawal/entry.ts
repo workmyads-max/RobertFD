@@ -47,6 +47,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'KYC verification required before affiliate withdrawal' }, { status: 400 });
     }
 
+    // 2b. Verify wallet address saved in user settings
+    if (!user.payout_wallet_address && !user.usdt_trc20 && !user.bitcoin) {
+      return Response.json({ error: 'Please save your payout wallet address in Settings → Payout Wallets first.' }, { status: 400 });
+    }
+    const savedWallet = user.payout_wallet_address || user.usdt_trc20 || user.bitcoin;
+
     // 3. Read min_withdrawal from AffiliateSettings
     const settingsList = await base44.asServiceRole.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
     const settings = settingsList[0];
@@ -78,17 +84,21 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // 6. Create withdrawal
+    // 6. Calculate 5% fee and create withdrawal
+    const withdrawalFee = parseFloat((requestedAmount * 0.05).toFixed(2));
+    const netAmount = parseFloat((requestedAmount - withdrawalFee).toFixed(2));
     const withdrawalId = `AFF-WD-${Date.now().toString(36).toUpperCase()}`;
     await base44.asServiceRole.entities.WithdrawalRequest.create({
       withdrawal_id: withdrawalId,
       user_email: user.email,
       account_id: 'affiliate',
       amount: requestedAmount,
+      withdrawal_fee: withdrawalFee,
+      net_payout: netAmount,
       method,
-      wallet_address: wallet_address.trim(),
+      wallet_address: savedWallet.trim(),
       status: 'pending',
-      notes: `Affiliate commission withdrawal. Approved balance at submission: $${approvedBalance.toFixed(2)}.`,
+      notes: `Affiliate commission withdrawal. Approved balance: $${approvedBalance.toFixed(2)}. Fee (5%): $${withdrawalFee.toFixed(2)}. Net: $${netAmount.toFixed(2)}.`,
     });
 
     return Response.json({
