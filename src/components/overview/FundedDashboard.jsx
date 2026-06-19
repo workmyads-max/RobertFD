@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import QuickWithdrawModal from './QuickWithdrawModal';
 import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -102,6 +103,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending'].includes(a.status));
 
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   // Keep selectedAccount in sync: set on first data arrival, clear if it disappears
   const selectedId = selectedAccount?.id;
@@ -217,7 +219,13 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
                   {/* Info strip */}
                   <AccountInfoStrip account={derivedSelected} />
                   {/* Progress Timeline */}
-                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} onNavigate={onNavigate} kycApproved={kyc?.status === 'approved'} />
+                  <AccountTimeline
+                    account={derivedSelected}
+                    closedTrades={trades.filter(t => t.status === 'closed')}
+                    onNavigate={onNavigate}
+                    onRequestWithdrawal={() => setShowWithdrawModal(true)}
+                    kycApproved={kyc?.status === 'approved'}
+                  />
                 </motion.div>
               )}
             </>
@@ -233,6 +241,17 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
           <Footer />
         </div>
       </div>
+
+      {/* Quick Withdraw Modal */}
+      {showWithdrawModal && (
+        <QuickWithdrawModal
+          accounts={activeAccounts.filter(a => a.status === 'funded')}
+          user={currentUser}
+          onClose={() => setShowWithdrawModal(false)}
+          onSuccess={() => { setShowWithdrawModal(false); onNavigate?.('withdrawals'); }}
+          onNavigateSettings={() => { setShowWithdrawModal(false); onNavigate?.('settings'); }}
+        />
+      )}
     </div>
   );
 }

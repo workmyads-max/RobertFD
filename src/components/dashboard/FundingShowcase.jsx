@@ -107,13 +107,14 @@ function AnimatedCounter({ value, prefix = '', suffix = '', decimals = 0 }) {
   );
 }
 
-export default function FundingShowcase({ account }) {
+export default function FundingShowcase({ account, allFundedAccounts = [], user, onRequestWithdrawal, onViewPayoutHistory }) {
   if (!account || account.status !== 'funded') return null;
 
   const fundedAmount = account.account_size;
   const currentBalance = account.balance;
   const totalEarnings = (account.pnl || 0);
-  const profitShare = totalEarnings * 0.8;
+  const profitSplit = account.rule_snapshot?.profit_split ?? 80;
+  const profitShare = totalEarnings * (profitSplit / 100);
 
   const stats = [
     { 
@@ -135,7 +136,7 @@ export default function FundingShowcase({ account }) {
       value: `${profitShare >= 0 ? '+' : ''}$${profitShare.toFixed(2)}`, 
       icon: Award, 
       color: '#CCFF00',
-      subtext: '80% profit split'
+      subtext: `${profitSplit}% profit split`
     },
     { 
       label: 'Next Withdrawal', 
@@ -314,6 +315,7 @@ export default function FundingShowcase({ account }) {
         {/* Call to action with enhanced effects */}
         <div className="flex gap-3">
           <motion.button
+            onClick={onRequestWithdrawal}
             whileHover={{ 
               scale: 1.05,
               boxShadow: '0 12px 40px rgba(255,92,0,0.4)',
@@ -324,12 +326,9 @@ export default function FundingShowcase({ account }) {
               background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
               boxShadow: '0 8px 24px rgba(255,92,0,0.3)',
             }}>
-            {/* Shine effect */}
             <motion.div
               className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-              }}
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
               animate={{ x: ['-100%', '100%'] }}
               transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
             />
@@ -337,6 +336,7 @@ export default function FundingShowcase({ account }) {
           </motion.button>
           
           <motion.button
+            onClick={onViewPayoutHistory}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 py-3 rounded-xl font-bold transition-all"

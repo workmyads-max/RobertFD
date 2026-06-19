@@ -4,6 +4,7 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
+import QuickWithdrawModal from '../overview/QuickWithdrawModal';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -271,6 +272,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate }) {
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
@@ -341,8 +343,25 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
         <div className="space-y-4 mt-8">
           {/* Funding showcase */}
           {displayAccounts.filter(a => a.status === 'funded').map(fundedAcc => (
-            <FundingShowcase key={fundedAcc.id} account={fundedAcc} />
+            <FundingShowcase
+              key={fundedAcc.id}
+              account={fundedAcc}
+              allFundedAccounts={displayAccounts.filter(a => a.status === 'funded')}
+              user={user}
+              onRequestWithdrawal={() => setShowWithdrawModal(true)}
+              onViewPayoutHistory={() => onNavigate?.('withdrawals')}
+            />
           ))}
+
+          {showWithdrawModal && (
+            <QuickWithdrawModal
+              accounts={displayAccounts.filter(a => a.status === 'funded')}
+              user={user}
+              onClose={() => setShowWithdrawModal(false)}
+              onSuccess={() => { setShowWithdrawModal(false); onNavigate?.('withdrawals'); }}
+              onNavigateSettings={() => onNavigate?.('settings')}
+            />
+          )}
 
           {/* Pending approval orders */}
           {pendingOrders.map((o, i) => (

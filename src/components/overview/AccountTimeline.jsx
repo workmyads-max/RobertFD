@@ -214,7 +214,7 @@ function useTimelineSteps(account, closedTrades = []) {
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────────
-export default function AccountTimeline({ account, closedTrades = [], onNavigate, kycApproved = false }) {
+export default function AccountTimeline({ account, closedTrades = [], onNavigate, onRequestWithdrawal, kycApproved = false }) {
   const steps = useTimelineSteps(account, closedTrades);
 
   if (!account || steps.length === 0) return null;
@@ -228,8 +228,11 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
   const isEligible = isFunded && kycApproved && tradingDays >= 1;
 
   const handleWithdrawClick = () => {
-    // Always navigate directly to withdrawals section — let that page handle validation
-    onNavigate?.('withdrawals');
+    if (onRequestWithdrawal) {
+      onRequestWithdrawal();
+    } else {
+      onNavigate?.('withdrawals');
+    }
   };
 
   return (
