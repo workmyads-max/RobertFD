@@ -29,27 +29,27 @@ function AnimatedNumber({ value, duration = 2, suffix = '' }) {
 
 function MiniSidebar() {
   const items = [
-    { icon: Wallet, active: true },
-    { icon: TrendingUp, active: false },
-    { icon: CheckCircle2, active: false },
-  ];
+  { icon: Wallet, active: true },
+  { icon: TrendingUp, active: false },
+  { icon: CheckCircle2, active: false }];
+
 
   return (
     <div className="w-12 border-r border-white/[0.04] py-4 flex flex-col items-center gap-3">
-      {items.map((Item, i) => (
-        <div
-          key={i}
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{
-            background: Item.active ? 'rgba(255,92,0,0.1)' : 'transparent',
-            border: Item.active ? '1px solid rgba(255,92,0,0.25)' : '1px solid transparent',
-          }}
-        >
+      {items.map((Item, i) =>
+      <div
+        key={i}
+        className="w-8 h-8 rounded-lg flex items-center justify-center"
+        style={{
+          background: Item.active ? 'rgba(255,92,0,0.1)' : 'transparent',
+          border: Item.active ? '1px solid rgba(255,92,0,0.25)' : '1px solid transparent'
+        }}>
+        
           <Item.icon className="w-4 h-4" style={{ color: Item.active ? '#FF5C00' : 'rgba(255,255,255,0.3)' }} />
         </div>
-      ))}
-    </div>
-  );
+      )}
+    </div>);
+
 }
 
 function NotificationCard({ title, amount, position, delay }) {
@@ -58,7 +58,7 @@ function NotificationCard({ title, amount, position, delay }) {
       initial={{ opacity: 0, x: position === 'right' ? 20 : -20, y: position === 'right' ? -10 : 10 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="absolute rounded-xl p-3 shadow-lg"
+      className="absolute rounded-xl p-3 shadow-lg hidden"
       style={{
         background: '#16181d',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -66,14 +66,14 @@ function NotificationCard({ title, amount, position, delay }) {
         bottom: position === 'left' ? '15%' : 'auto',
         right: position === 'right' ? '-12px' : 'auto',
         left: position === 'left' ? '-12px' : 'auto',
-        zIndex: 0,
-      }}
-    >
-      <div className="text-[9px] text-muted-foreground mb-0.5">{title}</div>
+        zIndex: 0
+      }}>
+      
+      <div className="text-[9px] text-muted-foreground mb-0.5 hidden">{title}</div>
       {amount && <div className="text-xs font-semibold text-emerald-400">{amount}</div>}
       {!amount && <div className="text-xs font-semibold text-foreground">✓ Verified</div>}
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 function EquityChart() {
@@ -91,7 +91,7 @@ function EquityChart() {
 
   const pathD = points.map((p, i) => {
     const x = i * stepX;
-    const y = height - (p / 100) * height;
+    const y = height - p / 100 * height;
     return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
   }).join(' ');
 
@@ -122,8 +122,8 @@ function EquityChart() {
         fill="url(#chartGradient)"
         initial={{ opacity: 0 }}
         animate={{ opacity: animated ? 1 : 0 }}
-        transition={{ duration: 1.5, delay: 0.3 }}
-      />
+        transition={{ duration: 1.5, delay: 0.3 }} />
+      
       <motion.path
         d={pathD}
         fill="none"
@@ -134,21 +134,21 @@ function EquityChart() {
         filter="url(#glow)"
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: animated ? 1 : 0, opacity: animated ? 1 : 0 }}
-        transition={{ duration: 2.5, delay: 0.2, ease: 'easeOut' }}
-      />
+        transition={{ duration: 2.5, delay: 0.2, ease: 'easeOut' }} />
+      
       {/* Animated dot at the end */}
       <motion.circle
         cx={width}
-        cy={height - (100 / 100) * height}
+        cy={height - 100 / 100 * height}
         r="3"
         fill="#34d399"
         filter="url(#glow)"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: animated ? 1 : 0, scale: animated ? 1 : 0 }}
-        transition={{ delay: 2.2, duration: 0.3 }}
-      />
-    </svg>
-  );
+        transition={{ delay: 2.2, duration: 0.3 }} />
+      
+    </svg>);
+
 }
 
 export default function DashboardPreview() {
@@ -158,22 +158,22 @@ export default function DashboardPreview() {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
-      className="relative w-full max-w-[520px] mx-auto"
-    >
+      className="relative w-full max-w-[520px] mx-auto">
+      
       {/* Browser Frame */}
       <div
         className="rounded-[14px] overflow-hidden shadow-2xl"
         style={{
           background: '#16181d',
           border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-        }}
-      >
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
+        }}>
+        
         {/* Browser Top Bar */}
         <div
-          className="flex items-center px-4 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-        >
+          className="flex items-center px-4 py-2.5 hidden"
+          style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          
           {/* Window Dots */}
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f57' }} />
@@ -183,18 +183,18 @@ export default function DashboardPreview() {
           {/* URL Pill */}
           <div
             className="flex-1 mx-4 px-3 py-1 rounded-md text-[10px] font-mono text-center"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)' }}
-          >
+            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)' }}>
+            
             app.xfundedtrader.com
           </div>
         </div>
 
         {/* Dashboard Content */}
-        <div className="flex">
+        <div className="flex hidden">
           <MiniSidebar />
 
           {/* Main Content */}
-          <div className="flex-1 p-4 min-w-0">
+          <div className="flex-1 p-4 min-w-0 hidden">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -203,8 +203,8 @@ export default function DashboardPreview() {
               </div>
               <div
                 className="px-2.5 py-1 rounded-md text-[10px] font-medium"
-                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}
-              >
+                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}>
+                
                 $200K Funded
               </div>
             </div>
@@ -212,8 +212,8 @@ export default function DashboardPreview() {
             {/* Account Card */}
             <div
               className="rounded-xl p-4 mb-4"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
                 <span className="text-[10px] text-muted-foreground">Funded account · Phase 2</span>
@@ -230,35 +230,35 @@ export default function DashboardPreview() {
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               {[
-                { label: 'Profit', value: '+84%', color: 'text-emerald-400' },
-                { label: 'Win rate', value: '73%' },
-                { label: 'Trades', value: '247' },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-lg p-2.5 text-center"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
-                >
+              { label: 'Profit', value: '+84%', color: 'text-emerald-400' },
+              { label: 'Win rate', value: '73%' },
+              { label: 'Trades', value: '247' }].
+              map((stat) =>
+              <div
+                key={stat.label}
+                className="rounded-lg p-2.5 text-center"
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                
                   <div className="text-[9px] text-muted-foreground mb-1">{stat.label}</div>
                   <div className={`text-xs font-semibold ${stat.color || 'text-foreground'}`}>{stat.value}</div>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Account Rows */}
             <div className="space-y-2">
               {[
-                { id: 'XFT-MQK9', size: 200000, status: 'Active' },
-                { id: 'XFT-PL72', size: 100000, status: 'Phase 2' },
-              ].map((acc) => (
-                <div
-                  key={acc.id}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
-                >
+              { id: 'XFT-MQK9', size: 200000, status: 'Active' },
+              { id: 'XFT-PL72', size: 100000, status: 'Phase 2' }].
+              map((acc) =>
+              <div
+                key={acc.id}
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-md flex items-center justify-center"
-                      style={{ background: 'rgba(255,92,0,0.1)' }}>
+                  style={{ background: 'rgba(255,92,0,0.1)' }}>
                       <Wallet className="w-3 h-3" style={{ color: '#FF5C00' }} />
                     </div>
                     <div>
@@ -267,17 +267,17 @@ export default function DashboardPreview() {
                     </div>
                   </div>
                   <div
-                    className="text-[9px] font-medium px-2 py-0.5 rounded"
-                    style={{
-                      background: acc.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,92,0,0.1)',
-                      color: acc.status === 'Active' ? '#10b981' : '#FF5C00',
-                      border: `1px solid ${acc.status === 'Active' ? 'rgba(16,185,129,0.2)' : 'rgba(255,92,0,0.2)'}`,
-                    }}
-                  >
+                  className="text-[9px] font-medium px-2 py-0.5 rounded"
+                  style={{
+                    background: acc.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,92,0,0.1)',
+                    color: acc.status === 'Active' ? '#10b981' : '#FF5C00',
+                    border: `1px solid ${acc.status === 'Active' ? 'rgba(16,185,129,0.2)' : 'rgba(255,92,0,0.2)'}`
+                  }}>
+                  
                     {acc.status}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -288,21 +288,21 @@ export default function DashboardPreview() {
         title="Payout approved"
         amount="$4,200"
         position="right"
-        delay={0.6}
-      />
+        delay={0.6} />
+      
       <NotificationCard
         title="Phase 2 passed"
         position="left"
-        delay={0.8}
-      />
+        delay={0.8} />
+      
 
       {/* Gentle Float Animation */}
       <motion.div
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: -1 }}
-      />
-    </motion.div>
-  );
+        style={{ zIndex: -1 }} />
+      
+    </motion.div>);
+
 }
