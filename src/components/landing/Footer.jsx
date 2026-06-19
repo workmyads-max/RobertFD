@@ -4,42 +4,42 @@ import XFLogo from '@/components/shared/XFLogo';
 import { Mail, MapPin, Phone, ExternalLink, Twitter, MessageCircle, Send, Instagram, Linkedin } from 'lucide-react';
 
 const PRODUCT_LINKS = [
-  { label: 'Start Challenge', href: '/challenges' },
-  { label: 'Instant Funding', href: '/challenges' },
-  { label: 'Pricing', href: '/#pricing' },
-  { label: 'Platforms', href: '/#platforms' },
-  { label: 'Leaderboard', href: '/dashboard' },
-];
+{ label: 'Start Challenge', href: '/challenges' },
+{ label: 'Instant Funding', href: '/challenges' },
+{ label: 'Pricing', href: '/#pricing' },
+{ label: 'Platforms', href: '/#platforms' },
+{ label: 'Leaderboard', href: '/dashboard' }];
+
 
 const COMPANY_LINKS = [
-  { label: 'About Us', href: '/#about' },
-  { label: 'Careers', href: 'mailto:careers@xfundedtrader.com' },
-  { label: 'Press Kit', href: 'mailto:press@xfundedtrader.com' },
-  { label: 'Blog', href: '#' },
-  { label: 'Contact', href: 'mailto:support@xfundedtrader.com' },
-];
+{ label: 'About Us', href: '/#about' },
+{ label: 'Careers', href: 'mailto:careers@xfundedtrader.com' },
+{ label: 'Press Kit', href: 'mailto:press@xfundedtrader.com' },
+{ label: 'Blog', href: '#' },
+{ label: 'Contact', href: 'mailto:support@xfundedtrader.com' }];
+
 
 const LEGAL_LINKS = [
-  { label: 'Terms & Conditions', href: '/terms' },
-  { label: 'Privacy Policy', href: '/privacy' },
-  { label: 'Risk Disclosure', href: '/risk-disclosure' },
-  { label: 'AML Policy', href: '/aml-policy' },
-];
+{ label: 'Terms & Conditions', href: '/terms' },
+{ label: 'Privacy Policy', href: '/privacy' },
+{ label: 'Risk Disclosure', href: '/risk-disclosure' },
+{ label: 'AML Policy', href: '/aml-policy' }];
+
 
 const SUPPORT_LINKS = [
-  { label: 'Help Center', href: '#faq' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Live Chat', href: '#', isChat: true },
-  { label: 'Email Support', href: 'mailto:support@xfundedtrader.com', isMail: true },
-];
+{ label: 'Help Center', href: '#faq' },
+{ label: 'FAQ', href: '#faq' },
+{ label: 'Live Chat', href: '#', isChat: true },
+{ label: 'Email Support', href: 'mailto:support@xfundedtrader.com', isMail: true }];
+
 
 const SOCIALS = [
-  { label: 'Twitter / X', icon: Twitter, href: '#' },
-  { label: 'Discord', icon: MessageCircle, href: '#' },
-  { label: 'Telegram', icon: Send, href: '#' },
-  { label: 'Instagram', icon: Instagram, href: '#' },
-  { label: 'LinkedIn', icon: Linkedin, href: '#' },
-];
+{ label: 'Twitter / X', icon: Twitter, href: '#' },
+{ label: 'Discord', icon: MessageCircle, href: '#' },
+{ label: 'Telegram', icon: Send, href: '#' },
+{ label: 'Instagram', icon: Instagram, href: '#' },
+{ label: 'LinkedIn', icon: Linkedin, href: '#' }];
+
 
 function FooterLink({ item }) {
   const cls = "text-sm text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1 group";
@@ -53,11 +53,11 @@ function FooterLink({ item }) {
           const chatBtn = document.querySelector('[data-livechat]') || document.querySelector('.live-chat-trigger');
           if (chatBtn) chatBtn.click();
         }}
-        className={cls}
-      >
+        className={cls}>
+        
         {item.label}
-      </button>
-    );
+      </button>);
+
   }
 
   if (isExternal) {
@@ -65,15 +65,15 @@ function FooterLink({ item }) {
       <a href={item.href} className={cls} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
         {item.label}
         {item.href.startsWith('http') && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />}
-      </a>
-    );
+      </a>);
+
   }
 
   return (
     <Link to={item.href} className={cls}>
       {item.label}
-    </Link>
-  );
+    </Link>);
+
 }
 
 export default function Footer() {
@@ -106,7 +106,7 @@ export default function Footer() {
 
             {/* Company registration */}
             <div className="mb-5 p-3 rounded-xl text-xs font-mono space-y-1"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="text-primary/80 font-semibold mb-1 uppercase tracking-widest text-[10px]">Company Info</div>
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0 text-primary/60" />
@@ -129,15 +129,15 @@ export default function Footer() {
 
             {/* Social icons */}
             <div className="flex items-center gap-3 flex-wrap">
-              {SOCIALS.map(s => {
+              {SOCIALS.map((s) => {
                 const Icon = s.icon;
                 return (
                   <a key={s.label} href={s.href} title={s.label} target="_blank" rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     <Icon className="w-3.5 h-3.5" />
-                  </a>
-                );
+                  </a>);
+
               })}
             </div>
           </div>
@@ -145,47 +145,47 @@ export default function Footer() {
           {/* Product */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-foreground mb-4"
-              style={{ color: 'rgba(255,92,0,0.9)' }}>Product</h4>
+            style={{ color: 'rgba(255,92,0,0.9)' }}>Product</h4>
             <ul className="space-y-3">
-              {PRODUCT_LINKS.map(item => (
-                <li key={item.label}><FooterLink item={item} /></li>
-              ))}
+              {PRODUCT_LINKS.map((item) =>
+              <li key={item.label}><FooterLink item={item} /></li>
+              )}
             </ul>
           </div>
 
           {/* Company */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'rgba(255,92,0,0.9)' }}>Company</h4>
+            style={{ color: 'rgba(255,92,0,0.9)' }}>Company</h4>
             <ul className="space-y-3">
-              {COMPANY_LINKS.map(item => (
-                <li key={item.label}><FooterLink item={item} /></li>
-              ))}
+              {COMPANY_LINKS.map((item) =>
+              <li key={item.label}><FooterLink item={item} /></li>
+              )}
             </ul>
           </div>
 
           {/* Legal */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'rgba(255,92,0,0.9)' }}>Legal</h4>
+            style={{ color: 'rgba(255,92,0,0.9)' }}>Legal</h4>
             <ul className="space-y-3">
-              {LEGAL_LINKS.map(item => (
-                <li key={item.label}><FooterLink item={item} /></li>
-              ))}
+              {LEGAL_LINKS.map((item) =>
+              <li key={item.label}><FooterLink item={item} /></li>
+              )}
             </ul>
           </div>
 
           {/* Support */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest mb-4"
-              style={{ color: 'rgba(255,92,0,0.9)' }}>Support</h4>
+            style={{ color: 'rgba(255,92,0,0.9)' }}>Support</h4>
             <ul className="space-y-3">
-              {SUPPORT_LINKS.map(item => (
-                <li key={item.label}><FooterLink item={item} /></li>
-              ))}
+              {SUPPORT_LINKS.map((item) =>
+              <li key={item.label}><FooterLink item={item} /></li>
+              )}
             </ul>
             {/* Response time badge */}
-            <div className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground hidden">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
               Avg. response under 4 hours
             </div>
@@ -194,7 +194,7 @@ export default function Footer() {
 
         {/* Risk Disclosure Block */}
         <div className="rounded-2xl p-6 mb-0"
-          style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-start gap-4">
             <div className="w-1.5 flex-shrink-0 self-stretch rounded-full bg-primary/40 mt-1" />
             <div>
@@ -220,18 +220,18 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             {[
-              { label: 'Terms', href: '/terms' },
-              { label: 'Privacy', href: '/privacy' },
-              { label: 'Risk Disclosure', href: '/risk-disclosure' },
-            ].map(link => (
-              <Link key={link.label} to={link.href}
-                className="text-xs text-muted-foreground/60 hover:text-primary transition-colors whitespace-nowrap">
+            { label: 'Terms', href: '/terms' },
+            { label: 'Privacy', href: '/privacy' },
+            { label: 'Risk Disclosure', href: '/risk-disclosure' }].
+            map((link) =>
+            <Link key={link.label} to={link.href}
+            className="text-xs text-muted-foreground/60 hover:text-primary transition-colors whitespace-nowrap">
                 {link.label}
               </Link>
-            ))}
+            )}
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>);
+
 }

@@ -4,10 +4,10 @@ import { MapPin, Users, Shield, Globe } from 'lucide-react';
 
 const highlights = [
 { icon: MapPin, label: 'Headquartered', value: 'Dubai' },
-  { icon: Users, label: 'Team Members', value: '120+' },
-  { icon: Shield, label: 'Regulated', value: 'Compliant' },
-  { icon: Globe, label: 'Countries Served', value: '150+' },
-];
+{ icon: Users, label: 'Team Members', value: '120+' },
+{ icon: Shield, label: 'Regulated', value: 'Compliant' },
+{ icon: Globe, label: 'Countries Served', value: '150+' }];
+
 
 export default function AboutSection({ aboutImage }) {
   return (
@@ -19,14 +19,14 @@ export default function AboutSection({ aboutImage }) {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="relative h-[450px] flex items-center justify-center"
-          >
+            className="relative h-[450px] flex items-center justify-center">
+            
             <div className="glass rounded-2xl overflow-hidden relative w-full h-full flex items-center justify-center">
               {/* Background trading pattern */}
-              <div className="absolute inset-0 opacity-10" style={{ 
-                  backgroundImage: 'linear-gradient(rgba(255,92,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.1) 1px, transparent 1px)',
-                  backgroundSize: '30px 30px'
-                }} />
+              <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: 'linear-gradient(rgba(255,92,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,92,0,0.1) 1px, transparent 1px)',
+                backgroundSize: '30px 30px'
+              }} />
 
               {/* Main trading visualization */}
               <div className="relative w-full h-full p-8">
@@ -78,8 +78,8 @@ export default function AboutSection({ aboutImage }) {
                     <rect x="320" y="80" width="20" height="30" fill="#00f5a0" rx="2" />
                     
                     {/* Trend line */}
-                    <polyline points="50,150 90,180 130,165 170,125 210,150 250,125 290,100 330,90" 
-                              fill="none" stroke="#CCFF00" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
+                    <polyline points="50,150 90,180 130,165 170,125 210,150 250,125 290,100 330,90"
+                    fill="none" stroke="#CCFF00" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
                   </svg>
                 </div>
 
@@ -100,25 +100,25 @@ export default function AboutSection({ aboutImage }) {
                 </div>
 
                 {/* XFT Brand badge */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4, type: 'spring' }}
-                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30"
-                >
+                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30">
+                  
                   <div className="text-xs font-mono text-primary mb-1">XFT</div>
                   <div className="text-sm font-black gradient-text">XfundedTrader</div>
                 </motion.div>
 
                 {/* Floating elements */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.2 }}
-                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30"
-                >
+                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30">
+                  
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-xs font-mono text-emerald-400">LIVE</span>
@@ -128,39 +128,39 @@ export default function AboutSection({ aboutImage }) {
             </div>
 
             {/* Floating stats card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs border border-primary/20"
-            >
-              <div className="text-xs font-mono text-primary mb-2">ESTABLISHED</div>
-              <div className="text-2xl font-black">Since 2026</div>
-              <div className="text-sm text-muted-foreground mt-1">Dubai, UAE</div>
+              className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs border border-primary/20">
+              
+              <div className="text-xs font-mono text-primary mb-2 hidden">ESTABLISHED</div>
+              <div className="text-2xl font-black hidden">Since 2026</div>
+              <div className="text-sm text-muted-foreground mt-1 hidden">Dubai, UAE</div>
             </motion.div>
 
             {/* Decorative glow elements */}
-            <motion.div 
+            <motion.div
               className="absolute -top-4 -left-4 w-32 h-32 rounded-full blur-3xl opacity-25"
               style={{ background: '#FF5C00' }}
               animate={{ scale: [1, 1.3, 1], opacity: [0.25, 0.4, 0.25] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            />
-            <motion.div 
-              className="absolute -bottom-4 -right-4 w-40 h-40 rounded-full blur-3xl opacity-20"
+              transition={{ duration: 4, repeat: Infinity }} />
+            
+            <motion.div
+              className="absolute -bottom-4 -right-4 w-40 h-40 rounded-full blur-3xl opacity-20 hidden"
               style={{ background: '#8b5cf6' }}
               animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
-              transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-            />
+              transition={{ duration: 5, repeat: Infinity, delay: 1 }} />
+            
           </motion.div>
 
           {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
+            viewport={{ once: true }}>
+            
             <span className="text-xs font-mono text-primary uppercase tracking-widest">About XFunded Trader</span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mt-4 mb-6">
               The Future of Prop Trading
@@ -186,13 +186,13 @@ export default function AboutSection({ aboutImage }) {
                       <div className="text-sm text-muted-foreground">{h.label}</div>
                       <div className="text-lg font-bold">{h.value}</div>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </div>
           </motion.div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
