@@ -160,8 +160,11 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const isActive = account.status === 'active';
   const isFunded = account.status === 'funded';
   const statusColor = (isUnderPhase1Review || isUnderFundedReview) ? '#60a5fa' : isActive ? '#10b981' : isFunded ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
-  const profitTargetPct = account.rule_snapshot?.phase1_target ?? 10;
-  const progressPct = Math.min((account.profit_target_progress || 0) / profitTargetPct * 100, 100);
+  const snap = account.rule_snapshot || {};
+  const profitTargetPct = isFundedLive ? null
+    : account.phase === 'phase2' ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? 10);
+  const progressPct = profitTargetPct ? Math.min((account.profit_target_progress || 0) / profitTargetPct * 100, 100) : 0;
   const totalPnl = balance - accountSize;
 
   return (
@@ -203,20 +206,22 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
           </div>
         </div>
 
-        {/* Profit Target Progress */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between text-[11px] mb-2">
-            <span className="text-white/35 font-medium tracking-wide">PROFIT TARGET</span>
-            <span className="font-semibold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
+        {/* Profit Target Progress — hidden for funded live accounts */}
+        {!isFundedLive && profitTargetPct && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-[11px] mb-2">
+              <span className="text-white/35 font-medium tracking-wide">PROFIT TARGET</span>
+              <span className="font-semibold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+              <motion.div className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
+            </div>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-            <motion.div className="h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              style={{ background: 'linear-gradient(90deg, #FF5C00, #FF8A3D)' }} />
-          </div>
-        </div>
+        )}
 
         {/* Today's P&L highlight */}
         <div className="flex items-center gap-2 mb-6">
@@ -519,7 +524,11 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
 
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
   const maxDDLimit = snap.max_dd_limit ?? 10;
-  const profitTarget = account?.phase === 'phase2' ? (snap.phase2_target ?? 5) : (snap.phase1_target ?? 10);
+  const isFundedAccount = account?.status === 'funded';
+  // Funded live accounts have no profit target — only challenge accounts do
+  const profitTarget = isFundedAccount ? null
+    : account?.phase === 'phase2' ? (snap.phase2_target ?? 5)
+    : (snap.phase1_target ?? 10);
   // Read from rule_snapshot first, then fall back to account field, then 4
   // rule_snapshot is updated when admin changes the challenge plan via repair
   // CRITICAL: Use live plan min_trading_days first (admin can change it), fall back to rule_snapshot, then 4
@@ -577,7 +586,9 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     { label: `Min ${minDays} Trading Days`, result: isPassedOrUnderReview ? `✓ ${effectiveTradingDays} / ${minDays} — Met` : `${effectiveTradingDays} / ${minDays}`, pass: effectiveTradingDays >= minDays || isPassedOrUnderReview, pct: isPassedOrUnderReview ? 100 : Math.min((effectiveTradingDays / minDays) * 100, 100), icon: CalendarDays },
     { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: false, danger: dailyDDUsed >= dailyDDLimit, forceRed: true, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
     { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: false, danger: maxDDUsed >= maxDDLimit, forceRed: true, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
-    { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / profitTarget) * 100, 100), icon: Target },
+    ...(!isFundedAccount ? [
+      { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / (profitTarget || 1)) * 100, 100), icon: Target },
+    ] : []),
   ];
 
   const hasAnyTrades = closedTrades.length > 0 || (account?.total_trades || 0) > 0;
@@ -586,7 +597,8 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     // DD scores: only show 100% if account has actual trading activity
     !hasAnyTrades ? 0 : dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
     !hasAnyTrades ? 0 : maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
-    (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / profitTarget) * 60),
+    // Funded live accounts: no profit target — treat as 100 (they already passed)
+    isFundedAccount ? 100 : (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / (profitTarget || 1)) * 60),
   ];
   const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
 

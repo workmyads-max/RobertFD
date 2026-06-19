@@ -75,9 +75,11 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
   const StatusIcon = statusCfg.icon;
   const isPnlPos = (account.pnl || 0) >= 0;
   // Read from rule_snapshot — NOT hardcoded
+  // Funded live accounts have NO profit target — hide the progress bar for them
   const snap = account.rule_snapshot || {};
-  const profitTarget = account.phase === 'phase2'
-    ? (snap.phase2_target ?? 5)
+  const isFundedLive = account.status === 'funded';
+  const profitTarget = isFundedLive ? null
+    : account.phase === 'phase2' ? (snap.phase2_target ?? 5)
     : (snap.phase1_target ?? (account.challenge_type === 'two-step' ? 10 : 8));
 
   return (
@@ -123,9 +125,11 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
                 <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF5C00' }}>
                   Max DD: {account.rule_snapshot.max_dd_limit}%
                 </span>
-                <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
-                  Target: {account.phase === 'phase2' ? account.rule_snapshot.phase2_target : account.rule_snapshot.phase1_target}%
-                </span>
+                {!isFundedLive && (
+                  <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
+                    Target: {account.phase === 'phase2' ? account.rule_snapshot.phase2_target : account.rule_snapshot.phase1_target}%
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -153,26 +157,28 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
           ))}
         </div>
 
-        {/* Progress bar */}
-        <div className="mb-5 relative z-10">
-          <div className="flex justify-between text-xs font-mono mb-2">
-            <span className="text-muted-foreground">Profit Target Progress</span>
-            <motion.span className="text-primary font-bold"
-              key={account.profit_target_progress}
-              initial={{ scale: 1.2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}>
-              {account.profit_target_progress?.toFixed(1) || 0}% / {profitTarget}%
-            </motion.span>
+        {/* Progress bar — hidden for funded live accounts (no profit target) */}
+        {!isFundedLive && profitTarget && (
+          <div className="mb-5 relative z-10">
+            <div className="flex justify-between text-xs font-mono mb-2">
+              <span className="text-muted-foreground">Profit Target Progress</span>
+              <motion.span className="text-primary font-bold"
+                key={account.profit_target_progress}
+                initial={{ scale: 1.2, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}>
+                {account.profit_target_progress?.toFixed(1) || 0}% / {profitTarget}%
+              </motion.span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(((account.profit_target_progress || 0) / profitTarget) * 100, 100)}%` }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full rounded-full"
+                style={{ background: '#FF5C00' }} />
+            </div>
           </div>
-          <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(((account.profit_target_progress || 0) / profitTarget) * 100, 100)}%` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full rounded-full"
-              style={{ background: '#FF5C00' }} />
-          </div>
-        </div>
+        )}
 
         {/* Phase 1 passed — awaiting admin approval for Phase 2 provisioning */}
         {account.status === 'passed' && account.phase === 'phase2' && account.phase_review_status === 'pending_review' && (
