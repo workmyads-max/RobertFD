@@ -105,7 +105,7 @@ export default function AboutSection({ aboutImage }) {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4, type: 'spring' }}
-                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30">
+                  className="absolute bottom-4 right-4 glass rounded-xl p-3 border border-primary/30 hidden">
                   
                   <div className="text-xs font-mono text-primary mb-1">XFT</div>
                   <div className="text-sm font-black gradient-text">XfundedTrader</div>
@@ -117,7 +117,7 @@ export default function AboutSection({ aboutImage }) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.2 }}
-                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30">
+                  className="absolute bottom-4 left-4 glass rounded-lg p-2 border border-emerald-500/30 hidden">
                   
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -133,7 +133,7 @@ export default function AboutSection({ aboutImage }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs border border-primary/20">
+              className="absolute -bottom-6 -right-6 glass rounded-2xl p-6 max-w-xs border border-primary/20 hidden">
               
               <div className="text-xs font-mono text-primary mb-2 hidden">ESTABLISHED</div>
               <div className="text-2xl font-black hidden">Since 2026</div>
