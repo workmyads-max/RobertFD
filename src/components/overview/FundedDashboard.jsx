@@ -44,9 +44,9 @@ function AccountInfoStrip({ account }) {
   if (!account) return null;
   const items = [
     { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type',     value: account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
+    { label: 'Type',     value: account.status === 'funded' ? 'Funded Live' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
     { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase',    value: (account.phase || 'phase1').replace('phase', 'Phase ') },
+    { label: 'Phase',    value: account.status === 'funded' ? 'Funded' : (account.phase || 'phase1').replace('phase', 'Phase ') },
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Platform', value: account.platform || 'MT5' },
   ];

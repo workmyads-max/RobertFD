@@ -84,9 +84,11 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
   const progress = Math.min(100, Math.max(0, account.profit_target_progress || 0));
   const profitTargetPct = account.rule_snapshot?.phase1_target ?? 10;
 
-  const challengeType = account.challenge_type === 'instant' ? 'INSTANT'
+  const isFundedLive = account.status === 'funded';
+  const challengeType = isFundedLive ? 'FUNDED'
+    : account.challenge_type === 'instant' ? 'INSTANT'
     : account.challenge_type === 'instant_light' ? 'INST. LIGHT' : '2-STEP';
-  const phaseLabel = (account.phase || 'phase1').replace('phase', 'PH ');
+  const phaseLabel = isFundedLive ? '' : (account.phase || 'phase1').replace('phase', 'PH ');
   const statusLabel = account.status === 'active' ? 'Active'
     : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Funded' : account.status;
