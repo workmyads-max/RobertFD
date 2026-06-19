@@ -143,11 +143,15 @@ Deno.serve(async (req) => {
     const mt5Provider = mt5Providers[0];
     const mt5Creds = mt5Provider ? {
       api_key: mt5Provider.api_key,
+      manager_login: mt5Provider.manager_login || '',
+      manager_password: mt5Provider.manager_password || '',
       server_url: mt5Provider.server_url || Deno.env.get('MT5_API_BASE_URL'),
       server_name: mt5Provider.server_name || Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
       success: true,
     } : (Deno.env.get('MT5_API_KEY') ? {
       api_key: Deno.env.get('MT5_API_KEY'),
+      manager_login: '',
+      manager_password: '',
       server_url: Deno.env.get('MT5_API_BASE_URL'),
       server_name: Deno.env.get('MT5_SERVER_NAME') || 'XyloMarkets-Server',
       success: true,
@@ -170,15 +174,29 @@ Deno.serve(async (req) => {
 
           const apiBase = creds.server_url || Deno.env.get('MT5_API_BASE_URL');
           const apiKey = creds.api_key;
+          const managerLogin = creds.manager_login || '';
+          const managerPassword = creds.manager_password || '';
 
           if (!apiBase || !apiKey) {
             return { account_id: acc.account_id, ok: false, error: 'Invalid MT5 API config' };
           }
 
-          const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'ApiKey': apiKey };
+          // CRITICAL: Must include ManagerLogin + ManagerPassword — without them Tritech
+          // returns empty deal history for accounts that require manager-level auth.
+          // getClosedTrades uses this same header format (confirmed working).
+          const headers = {
+            'Content-Type': 'application/json',
+            'ApiKey': apiKey,
+            'ManagerLogin': managerLogin,
+            'ManagerPassword': managerPassword,
+          };
           const loginNum = parseInt(acc.mt_login);
-          const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-          const toDate = new Date().toISOString();
+          // Use provisioning date as start (same as getClosedTrades) — ensures no trades missed.
+          // Fall back to 365 days if provisioned_at not set.
+          const fromDate = acc.provisioned_at
+            ? new Date(new Date(acc.provisioned_at).getTime() - 24 * 60 * 60 * 1000).toISOString()
+            : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+          const toDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // +1 day buffer for today's trades
 
           // Confirmed working payload format — empty groups array, logins array only
           const dealHistoryBody = {
