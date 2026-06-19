@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
-import LiveFundedAccountCard from './LiveFundedAccountCard';
+import DashboardPreview from './DashboardPreview';
 
 const stats = [
 { label: 'Traders worldwide', value: '14,200+', icon: Users },
@@ -68,9 +68,9 @@ export default function HeroSection({ heroImage }) {
             </div>
           </div>
 
-          {/* Right Content - Animated Funded Account Card */}
+          {/* Right Content - Dashboard Preview */}
           <div className="hidden lg:block">
-            <LiveFundedAccountCard />
+            <DashboardPreview />
           </div>
         </div>
       </div>
