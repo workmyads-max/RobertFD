@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import GalaxyInteractiveHeroSection from '../components/landing/GalaxyInteractiveHeroSection';
+import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
 import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
@@ -48,7 +48,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-inter dark">
       <PromoPopup mascotImage={IMAGES.mascot} />
-      <GalaxyInteractiveHeroSection />
+      <HeroSection heroImage={IMAGES.hero} />
       <TrustBar />
       <SliderSection images={[IMAGES.trading, IMAGES.dashboard, IMAGES.infrastructure]} />
       <section className="py-20 max-w-[1200px] mx-auto px-6">
