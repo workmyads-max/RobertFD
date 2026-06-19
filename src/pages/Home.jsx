@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
 import SliderSection from '../components/landing/SliderSection';
@@ -48,6 +49,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-inter dark">
       <PromoPopup mascotImage={IMAGES.mascot} />
+      <Navbar />
       <HeroSection heroImage={IMAGES.hero} />
       <TrustBar />
       <SliderSection images={[IMAGES.trading, IMAGES.dashboard, IMAGES.infrastructure]} />
