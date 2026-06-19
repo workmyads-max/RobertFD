@@ -31,12 +31,20 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
 
   const savedWalletAddress = user?.payout_wallet_address || user?.usdt_trc20 || user?.bitcoin || '';
   
+  // Load KYC status from entity
+  const { data: kycData = [] } = useQuery({
+    queryKey: ['kyc-status', user?.email],
+    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+  });
+  const kycRecord = kycData[0];
+  const kycApproved = kycRecord?.status === 'approved';
+  
   // Eligibility checks
   const isFunded = selectedAccount?.status === 'funded';
   const hasProfit = selectedProfit > 0;
   const tradingDays = selectedAccount?.trading_days || 0;
   const hasMinTradingDays = tradingDays >= 1;
-  const kycApproved = user?.kyc_status === 'approved';
   const isEligible = isFunded && hasProfit && hasMinTradingDays && kycApproved && savedWalletAddress;
   
   const requirements = [];

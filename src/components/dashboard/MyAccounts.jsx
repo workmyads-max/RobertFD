@@ -4,6 +4,7 @@ import { Wallet, Plus, TrendingUp, BarChart3, DollarSign, Eye, CheckCircle, Cloc
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import QuickWithdrawModal from '../overview/QuickWithdrawModal';
+import AccountTimeline from '../overview/AccountTimeline';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },

@@ -224,7 +224,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
                     closedTrades={trades.filter(t => t.status === 'closed')}
                     onNavigate={onNavigate}
                     onRequestWithdrawal={() => setShowWithdrawModal(true)}
-                    kycApproved={kyc?.status === 'approved'}
+                    user={currentUser}
                   />
                 </motion.div>
               )}
