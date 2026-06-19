@@ -254,14 +254,16 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
 
 export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading, isFetching } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       const all = await base44.entities.ChallengeAccount.filter({ user_email: user.email, platform: 'mt5' }, '-created_date', 100);
       return all.filter(a => a.status !== 'failed').sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
-    refetchInterval: 15000,
+    refetchInterval: 30000, // Reduced from 15s to 30s to prevent excessive refetching
+    placeholderData: (prev) => prev, // Keep previous data while refetching — prevents empty state flash
+    staleTime: 10000, // Data is fresh for 10s
   });
 
   const { data: myOrders = [] } = useQuery({
@@ -302,7 +304,7 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
         ))}
       </div>
 
-      {isLoading || !user ? (
+      {(isLoading && accounts.length === 0) || !user ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>

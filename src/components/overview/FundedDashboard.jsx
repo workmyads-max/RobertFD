@@ -68,7 +68,7 @@ function AccountInfoStrip({ account }) {
 
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function FundedDashboard({ user, onStartChallenge, onNavigate, bannerNotification }) {
+export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigate, bannerNotification }) {
   // Refetch user to get latest avatar_url/profile_photo_url
   const { data: currentUser = user } = useQuery({
     queryKey: ['current-user'],
@@ -87,18 +87,14 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
       return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
     },
     enabled: !!user?.email,
-    refetchInterval: 5000,
-    staleTime: 10000,
-    placeholderData: (prev) => prev, // Keep previous data while refetching — prevents empty state flash
+    refetchInterval: 15000, // Reduced from 5s to prevent excessive polling
+    staleTime: 60000, // Increased to 1min to prevent stale data flash
+    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching — prevents empty state flash
+    initialData: undefined, // Don't use cached empty data on first load
   });
 
-  // Load KYC for welcome header
-  const { data: kycList = [] } = useQuery({
-    queryKey: ['kyc-status', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-  const kyc = kycList[0] || null;
+  // Use KYC from parent (Dashboard) to prevent duplicate queries and loading flash
+  // kyc prop is loaded once in Dashboard with proper staleTime
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending'].includes(a.status));
 
@@ -129,7 +125,10 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
   const stats = useAccountStats(derivedSelected, trades);
 
   // Only show full-page spinner on the very first load (no cached data yet)
-  if (isLoading && accounts.length === 0) {
+  // During refetch, keep showing previous data (no empty state flash)
+  const isInitialLoading = isLoading && !accounts.length;
+  
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-background">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}

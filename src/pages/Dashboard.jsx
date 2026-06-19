@@ -173,7 +173,20 @@ export default function Dashboard() {
       return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
     },
     enabled: !!user?.email,
+    refetchInterval: 30000, // 30s refetch for accounts
+    staleTime: 60000, // 1min stale time
+    placeholderData: (prev) => prev, // Keep previous data while refetching - prevents flash of empty state
   });
+
+  // Load KYC status for welcome header and withdrawal eligibility
+  const { data: kycData = [] } = useQuery({
+    queryKey: ['kyc-status', user?.email],
+    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+    staleTime: 120000, // 2min stale time - KYC status rarely changes
+    placeholderData: (prev) => prev, // Keep previous KYC status while refetching - prevents flash of wrong status
+  });
+  const kyc = kycData[0] || null;
 
   // CRITICAL: Only count accounts belonging to the current user (allAccounts is already email-filtered)
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
@@ -262,7 +275,7 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <FundedDashboard user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
+      case 'overview': return <FundedDashboard user={user} kyc={kyc} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
       case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} onNavigate={setActivePage} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;

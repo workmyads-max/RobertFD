@@ -8,6 +8,7 @@ import { SESSIONS } from '../terminal/terminalConfig';
 
 export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   const location = useUserLocation();
+  // Use KYC status from prop (loaded in parent), fallback to safe default during loading
   const kycStatus = kyc?.status || 'not_submitted';
   const isVerified = kycStatus === 'approved';
   const displayName = user?.full_name || user?.email?.split('@')[0] || 'Trader';
