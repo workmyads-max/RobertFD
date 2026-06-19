@@ -101,9 +101,21 @@ function EquityChart() {
     <svg width={width} height={height} className="overflow-visible">
       <defs>
         <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+          <stop offset="50%" stopColor="#10b981" stopOpacity="0.15" />
           <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
         </linearGradient>
+        <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#34d399" />
+          <stop offset="100%" stopColor="#10b981" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
       <motion.path
         d={areaD}
@@ -115,13 +127,25 @@ function EquityChart() {
       <motion.path
         d={pathD}
         fill="none"
-        stroke="#10b981"
-        strokeWidth="2"
+        stroke="url(#lineGradient)"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
+        filter="url(#glow)"
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: animated ? 1 : 0, opacity: animated ? 1 : 0 }}
-        transition={{ duration: 2, delay: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 2.5, delay: 0.2, ease: 'easeOut' }}
+      />
+      {/* Animated dot at the end */}
+      <motion.circle
+        cx={width}
+        cy={height - (100 / 100) * height}
+        r="3"
+        fill="#34d399"
+        filter="url(#glow)"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: animated ? 1 : 0, scale: animated ? 1 : 0 }}
+        transition={{ delay: 2.2, duration: 0.3 }}
       />
     </svg>
   );
