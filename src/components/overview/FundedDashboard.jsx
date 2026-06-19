@@ -217,7 +217,7 @@ export default function FundedDashboard({ user, onStartChallenge, onNavigate, ba
                   {/* Info strip */}
                   <AccountInfoStrip account={derivedSelected} />
                   {/* Progress Timeline */}
-                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} allAccounts={activeAccounts.filter(a => a.status === 'funded')} onNavigate={onNavigate} kycApproved={kyc?.status === 'approved'} user={currentUser} />
+                  <AccountTimeline account={derivedSelected} closedTrades={trades.filter(t => t.status === 'closed')} onNavigate={onNavigate} kycApproved={kyc?.status === 'approved'} />
                 </motion.div>
               )}
             </>

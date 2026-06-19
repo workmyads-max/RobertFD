@@ -4,7 +4,6 @@ import { Wallet, Plus, TrendingUp, Monitor, BarChart3, DollarSign, Eye, CheckCir
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import FundingShowcase from './FundingShowcase';
-import WithdrawalModal from '@/components/overview/WithdrawalModal';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
@@ -69,7 +68,7 @@ function CredentialsModal({ account, onClose }) {
   );
 }
 
-function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate, onWithdraw }) {
+function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate }) {
   const [expanded, setExpanded] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
@@ -241,7 +240,7 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
             <BarChart3 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Analytics</span><span className="sm:hidden">Stats</span>
           </button>
           {account.status === 'funded' && (
-            <button onClick={() => onWithdraw?.(account)}
+            <button onClick={() => onNavigate?.('withdrawals')}
               className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all hover:bg-emerald-500/10 flex-1 sm:flex-none justify-center"
               style={{ border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}>
               <DollarSign className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Withdraw</span><span className="sm:hidden">Cash Out</span>
@@ -272,7 +271,6 @@ function AccountCard({ account, onStartChallenge, onOpenTerminal, onOpenAnalytic
 }
 
 export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onOpenAnalytics, onNavigate }) {
-  const [withdrawModalAccount, setWithdrawModalAccount] = useState(null);
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
@@ -404,7 +402,7 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
 
           {/* Active accounts */}
           {displayAccounts.map((acc) => (
-            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} onNavigate={onNavigate} onWithdraw={setWithdrawModalAccount} />
+            <AccountCard key={acc.id || acc.account_id} account={acc} onStartChallenge={onStartChallenge} onOpenTerminal={onOpenTerminal} onOpenAnalytics={onOpenAnalytics} onNavigate={onNavigate} />
           ))}
 
           {/* Failed Accounts Section */}
@@ -449,17 +447,6 @@ export default function MyAccounts({ user, onStartChallenge, onOpenTerminal, onO
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Withdrawal Modal */}
-          {withdrawModalAccount && (
-            <WithdrawalModal
-              user={user}
-              accounts={accounts.filter(a => a.status === 'funded')}
-              defaultAccountId={withdrawModalAccount.account_id}
-              onClose={() => setWithdrawModalAccount(null)}
-              onNavigate={onNavigate}
-            />
           )}
 
           {/* Empty state */}

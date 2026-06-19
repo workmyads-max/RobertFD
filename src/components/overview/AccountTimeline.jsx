@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight } from 'lucide-react';
-import WithdrawalModal from './WithdrawalModal';
 function fmt(n) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 // ─── timeline step ─────────────────────────────────────────────────────────────
@@ -96,12 +95,9 @@ function useTimelineSteps(account, closedTrades = []) {
     const tradingDaySet = new Set(
       closedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
     );
-    // Use whichever is higher: closed trade days or MT5-synced trading_days field
     const tradingDaysCount = Math.max(tradingDaySet.size, account.trading_days || 0);
 
     const isFunded = status === 'funded';
-    // Eligible if funded AND at least 1 trading day recorded by MT5 sync OR closed trades
-    // Note: account.trading_days is the authoritative field set by scheduledMTSync
     const withdrawalEligible = isFunded && tradingDaysCount >= 1;
 
     if (challengeType === 'instant' || challengeType === 'instant_light') {
@@ -137,7 +133,7 @@ function useTimelineSteps(account, closedTrades = []) {
             : isFunded
               ? `Complete 1 trading day (${tradingDaysCount}/1 done)`
               : 'First payout available after funded status',
-          status: withdrawalEligible ? 'done' : isFunded ? 'active' : 'pending',
+          status: withdrawalEligible ? 'active' : 'pending',
         },
       ];
     }
@@ -211,26 +207,30 @@ function useTimelineSteps(account, closedTrades = []) {
           : isFunded
             ? `Complete 1 trading day (${tradingDaysCount}/1 done)`
             : 'First payout available after funded status',
-        status: withdrawalEligible ? 'done' : isFunded ? 'active' : 'pending',
+        status: withdrawalEligible ? 'active' : 'pending',
       },
-      ];
-            }, [account, closedTrades]);
+    ];
+              }, [account, closedTrades]);
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────────
-export default function AccountTimeline({ account, closedTrades = [], allAccounts = [], onNavigate, kycApproved = false, user }) {
+export default function AccountTimeline({ account, closedTrades = [], onNavigate, kycApproved = false }) {
   const steps = useTimelineSteps(account, closedTrades);
-  const [showModal, setShowModal] = useState(false);
 
   if (!account || steps.length === 0) return null;
 
   const isFunded = account?.status === 'funded';
+  // Eligibility: funded + KYC approved + at least 1 trading day (from entity or closed trades)
   const tradingDaysFromTrades = new Set(
     closedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
   ).size;
-  // Use whichever is higher — account.trading_days is set by MT5 sync, trades may not be in entity yet
   const tradingDays = Math.max(tradingDaysFromTrades, account?.trading_days || 0);
-  const isEligible = isFunded && tradingDays >= 1;
+  const isEligible = isFunded && kycApproved && tradingDays >= 1;
+
+  const handleWithdrawClick = () => {
+    // Always navigate directly to withdrawals section — let that page handle validation
+    onNavigate?.('withdrawals');
+  };
 
   return (
     <>
@@ -248,7 +248,7 @@ export default function AccountTimeline({ account, closedTrades = [], allAccount
           </div>
           {isFunded && (
             <button
-              onClick={() => setShowModal(true)}
+              onClick={handleWithdrawClick}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 active:scale-95"
               style={{ background: '#FF5C00', color: '#fff', boxShadow: '0 2px 14px rgba(255,92,0,0.4)', letterSpacing: '0.01em' }}
             >
@@ -269,16 +269,6 @@ export default function AccountTimeline({ account, closedTrades = [], allAccount
           ))}
         </div>
       </div>
-
-      {showModal && (
-        <WithdrawalModal
-          user={user}
-          accounts={allAccounts.length > 0 ? allAccounts : [account]}
-          defaultAccountId={account.account_id}
-          onClose={() => setShowModal(false)}
-          onNavigate={onNavigate}
-        />
-      )}
     </>
   );
 }
