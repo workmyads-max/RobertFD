@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 import LivePriceTicker from './LivePriceTicker';
 import ShaderBackground from '@/components/ui/shader-background';
-import RotatingEarth from '@/components/ui/wireframe-dotted-globe';
+import HeroFuturistic from '@/components/ui/hero-futuristic';
 
 
 const stats = [
@@ -253,10 +253,8 @@ export default function HeroSection({ heroImage }) {
                 <div className="w-[380px] h-[380px] rounded-full blur-[60px] opacity-20"
                   style={{ background: 'radial-gradient(circle, #FF5C00, transparent)' }} />
               </div>
-              <RotatingEarth width={520} height={480} />
-              {/* Drag hint */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono text-muted-foreground/50 whitespace-nowrap">
-                Drag to rotate
+              <div className="relative w-[520px] h-[480px] rounded-2xl overflow-hidden">
+                <HeroFuturistic className="rounded-2xl" />
               </div>
             </motion.div>
           </div>
