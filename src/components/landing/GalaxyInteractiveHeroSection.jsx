@@ -8,8 +8,11 @@ import { ArrowRight, Play } from 'lucide-react';
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
 function HeroSplineBackground() {
+  const splineContainerRef = useRef<HTMLDivElement>(null);
+
   return (
     <div
+      ref={splineContainerRef}
       style={{
         position: 'absolute',
         top: 0,
@@ -20,14 +23,17 @@ function HeroSplineBackground() {
         overflow: 'hidden',
       }}
     >
-      <Spline
+      <div
         style={{
           width: '100%',
           height: '100vh',
           pointerEvents: 'auto',
         }}
-        scene="https://prod.spline.design/us3ALejTXl6usHZ7/scene.splinecode"
-      />
+      >
+        <Spline
+          scene="https://prod.spline.design/us3ALejTXl6usHZ7/scene.splinecode"
+        />
+      </div>
       <div
         style={{
           position: 'absolute',
