@@ -233,22 +233,22 @@ function HeroContent() {
 }
 
 export default function GalaxyInteractiveHeroSection() {
-  const [heroContentRef, setHeroContentRef] = useState<HTMLDivElement | null>(null);
+  const heroContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (heroContentRef) {
+      if (heroContentRef.current) {
         requestAnimationFrame(() => {
           const scrollPosition = window.pageYOffset;
           const maxScroll = 400;
           const opacity = 1 - Math.min(scrollPosition / maxScroll, 1);
-          heroContentRef.style.opacity = opacity.toString();
+          heroContentRef.current.style.opacity = opacity.toString();
         });
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [heroContentRef]);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -260,7 +260,7 @@ export default function GalaxyInteractiveHeroSection() {
         </div>
 
         <div
-          ref={setHeroContentRef}
+          ref={heroContentRef}
           className="absolute inset-0 z-10 flex items-center"
           style={{ pointerEvents: 'none' }}
         >
