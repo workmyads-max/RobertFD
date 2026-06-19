@@ -24,10 +24,10 @@ export default function HeroSection({ heroImage }) {
           {/* Left Content */}
           <div className="space-y-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-6 hidden" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="text-xs text-muted-foreground">XFunded Trader — Dubai</span>
-              </div>
+              
+
+
+              
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.1] tracking-tight mb-6">
                 Trade bigger.<br />
