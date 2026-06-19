@@ -162,7 +162,7 @@ export default function DashboardPreview() {
       
       {/* Browser Frame */}
       <div
-        className="rounded-[14px] overflow-hidden shadow-2xl"
+        className="rounded-[14px] overflow-hidden shadow-2xl hidden"
         style={{
           background: '#16181d',
           border: '1px solid rgba(255,255,255,0.08)',
