@@ -104,6 +104,42 @@ function useTimelineSteps(account, closedTrades = []) {
 
     if (challengeType === 'instant' || challengeType === 'instant_light') {
       const typeLabel = challengeType === 'instant_light' ? 'Instant Light' : 'Instant';
+      const isInstantLight = challengeType === 'instant_light';
+      
+      // Instant Light: 5% trailing target ($100K → $105K), then trailing DD activates
+      // Instant: No target, funded immediately
+      const trailingTargetPct = isInstantLight ? 5 : 0;
+      const trailingTargetValue = account.account_size * (1 + trailingTargetPct / 100);
+      const currentBalance = account.balance || account.account_size;
+      const trailingTargetMet = isInstantLight ? currentBalance >= trailingTargetValue : true;
+      
+      // For Instant: skip target step, go straight to funded
+      if (!isInstantLight) {
+        return [
+          {
+            icon: CheckCircle2,
+            label: 'Challenge Purchased',
+            desc: `$${fmt(account.account_size)} ${typeLabel} account issued`,
+            status: 'done',
+          },
+          {
+            icon: DollarSign,
+            label: 'Funded Account',
+            desc: `Live capital · ${profitSplit}% profit split`,
+            status: 'done',
+          },
+          {
+            icon: Clock,
+            label: 'Withdrawal Eligible',
+            desc: withdrawalEligible
+              ? '✓ Eligible for withdrawals'
+              : `Complete 1 trading day (${tradingDaysCount}/1 done)`,
+            status: withdrawalEligible ? 'active' : 'pending',
+          },
+        ];
+      }
+      
+      // For Instant Light: show trailing target step
       return [
         {
           icon: CheckCircle2,
@@ -113,29 +149,29 @@ function useTimelineSteps(account, closedTrades = []) {
         },
         {
           icon: Zap,
-          label: 'One-Time Profit Target',
-          desc: profitTargetMet
-            ? `✓ ${profitTargetPct}% target achieved`
-            : `${profitTargetPct}% profit · ${ruleSnapshot.daily_dd_limit ?? 5}% daily DD`,
-          status: profitTargetMet ? 'done' : (status === 'active' ? 'active' : 'pending'),
+          label: 'Trailing Target (5%)',
+          desc: trailingTargetMet
+            ? `✓ $${fmt(trailingTargetValue)} hit — Trailing DD now active`
+            : `Reach $${fmt(trailingTargetValue)} · 5% daily DD · 10% trailing DD`,
+          status: trailingTargetMet ? 'done' : 'active',
         },
         {
           icon: DollarSign,
           label: 'Funded Account',
-          desc: isFunded
+          desc: trailingTargetMet
             ? `Live capital · ${profitSplit}% profit split`
-            : 'Pending profit target completion',
-          status: isFunded ? 'done' : (profitTargetMet ? 'active' : 'pending'),
+            : 'Pending trailing target completion',
+          status: trailingTargetMet ? 'done' : 'pending',
         },
         {
           icon: Clock,
           label: 'Withdrawal Eligible',
-          desc: withdrawalEligible
+          desc: withdrawalEligible && trailingTargetMet
             ? '✓ Eligible for withdrawals'
-            : isFunded
+            : trailingTargetMet
               ? `Complete 1 trading day (${tradingDaysCount}/1 done)`
-              : 'First payout available after funded status',
-          status: withdrawalEligible ? 'active' : 'pending',
+              : 'First payout available after hitting trailing target',
+          status: withdrawalEligible && trailingTargetMet ? 'active' : 'pending',
         },
       ];
     }
