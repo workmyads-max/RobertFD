@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     // 5. Minimum 1 trading day on the funded account
-    // Check both TradeRecord entity AND account.trading_days field (set by scheduledMTSync)
+    // Check TradeRecord entity, account.trading_days field, AND account profit as fallback
     const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
     const tradingDaySet = new Set();
     for (const t of tradeRecords) {
@@ -73,10 +73,11 @@ Deno.serve(async (req) => {
         if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
       }
     }
-    // Use whichever is higher: TradeRecord count or account.trading_days (from MT5 sync)
     const tradingDaysFromRecords = tradingDaySet.size;
     const tradingDaysFromAccount = account.trading_days || 0;
-    const tradingDaysCompleted = Math.max(tradingDaysFromRecords, tradingDaysFromAccount);
+    // If account has positive PnL (balance > account_size), trading has clearly occurred
+    const hasRealProfit = (account.pnl || 0) > 0 || (account.balance || 0) > (account.account_size || 0);
+    const tradingDaysCompleted = Math.max(tradingDaysFromRecords, tradingDaysFromAccount, hasRealProfit ? 1 : 0);
     if (tradingDaysCompleted < 1) {
       return Response.json({
         error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s). Please complete at least 1 trading day on your funded account first.`,
