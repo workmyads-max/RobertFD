@@ -19,14 +19,14 @@ export default function ForgotPassword() {
     try {
       const normalizedEmail = email.toLowerCase().trim();
       
-      // Use Base44 native password reset
-      await base44.auth.resetPasswordRequest(normalizedEmail);
+      // Use Base44 native password reset - sends email with reset link
+      await base44.auth.sendResetPasswordEmail(normalizedEmail);
 
       setSent(true);
       toast.success('Password reset link sent to your email!');
     } catch (err) {
       console.error('Password reset error:', err);
-      // Always show success message for security
+      // Always show success message for security (prevents email enumeration)
       setSent(true);
       toast.success('If an account exists, you will receive a reset link.');
     } finally {

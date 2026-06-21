@@ -15,7 +15,7 @@ export default function ResetPassword() {
 
   // Get reset token from URL query params
   const searchParams = new URLSearchParams(location.search);
-  const resetToken = searchParams.get('token');
+  const token = searchParams.get('token');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +29,7 @@ export default function ResetPassword() {
       setError('Password must be at least 6 characters');
       return;
     }
-    if (!resetToken) {
+    if (!token) {
       setError('Invalid reset link. Please request a new one.');
       return;
     }
@@ -38,7 +38,7 @@ export default function ResetPassword() {
     try {
       // Use Base44 native password reset completion
       await base44.auth.resetPassword({
-        resetToken,
+        token,
         newPassword: password,
       });
 
@@ -55,7 +55,7 @@ export default function ResetPassword() {
     }
   };
 
-  if (!resetToken) {
+  if (!token) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">

@@ -23,12 +23,12 @@ export default function Login() {
     try {
       const normalizedEmail = formData.email.toLowerCase().trim();
       
-      // Use Base44 native email+password login
-      await base44.auth.loginViaEmailPassword(normalizedEmail, formData.password);
+      // Use Base44 native login - this creates a proper session
+      await base44.auth.login(normalizedEmail, formData.password);
       
       toast.success('Welcome back!');
-      // Hard reload to refresh auth state
-      window.location.href = '/dashboard';
+      // Navigate to dashboard - auth context will update
+      navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       const errorMsg = err.message || 'Invalid email or password';
@@ -97,6 +97,13 @@ export default function Login() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

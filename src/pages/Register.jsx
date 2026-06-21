@@ -62,14 +62,16 @@ export default function Register() {
       const normalizedEmail = formData.email.toLowerCase().trim();
       const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ');
 
-      // Use Base44 native registration
+      // Use Base44 native registration - creates user and logs them in
       await base44.auth.register({
         email: normalizedEmail,
         password: formData.password,
         full_name: fullName,
-        data: {
-          country: formData.country || undefined,
-        }
+      });
+
+      // Update user with additional data after registration
+      await base44.auth.updateMe({
+        country: formData.country || undefined,
       });
 
       // Affiliate attribution
@@ -98,11 +100,9 @@ export default function Register() {
         }
       }
 
-      toast.success('Account created! Redirecting to login...');
-      // Navigate to login after successful registration
-      setTimeout(() => {
-        navigate('/login');
-      }, 1000);
+      toast.success('Account created! Redirecting to dashboard...');
+      // Navigate to dashboard after successful registration
+      navigate('/dashboard');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed');

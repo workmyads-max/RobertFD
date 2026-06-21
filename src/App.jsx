@@ -2,7 +2,7 @@ import React from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider } from '@/lib/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -13,22 +13,26 @@ import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
-      {/* Protected routes - all require authentication */}
-      <Route element={<ProtectedRoute />}>
+      {/* Protected routes - all app routes require authentication */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/challenges" element={<ChallengeSelect />} />
       </Route>
       
+      {/* 404 */}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
