@@ -4,6 +4,8 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SupabaseAuthProvider, useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -14,8 +16,18 @@ import Login from './pages/Login';
 import LegalPage from './pages/LegalPage';
 
 const LoginRoute = () => {
-  const { user } = useSupabaseAuth();
-  if (user) return <Navigate to="/dashboard" replace />;
+  const { user, loading } = useSupabaseAuth();
+  // Show loading spinner while auth state loads
+  if (loading) return (
+    <div className="fixed inset-0 flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+  // Redirect to dashboard if already logged in
+  if (user) {
+    window.location.href = '/dashboard';
+    return null;
+  }
   return <Login />;
 };
 
@@ -61,14 +73,17 @@ function AppRoutes() {
 
 function App() {
   return (
-    <SupabaseAuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AppRoutes />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </SupabaseAuthProvider>
+    <AuthProvider>
+      <SupabaseAuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AppRoutes />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </SupabaseAuthProvider>
+      <UserNotRegisteredError />
+    </AuthProvider>
   );
 }
 
