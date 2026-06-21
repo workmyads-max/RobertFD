@@ -113,24 +113,20 @@ export default function Register() {
         throw new Error(verifyRes.data?.error || 'Invalid verification code');
       }
 
-      // STEP 3: Register via backend (service role — no Base44 email sent)
-      const regRes = await base44.functions.invoke('registerUser', {
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        country: formData.country || undefined,
-        otp_id: otpId,
-        otp_code: otpCode,
-      });
-      if (!regRes.data?.success) {
-        throw new Error(regRes.data?.error || 'Registration failed');
+      // STEP 3: Create the account
+      try {
+        await base44.auth.register({ email: formData.email, password: formData.password });
+      } catch (regErr) {
+        if (!regErr.message?.toLowerCase().includes('already') &&
+            !regErr.message?.toLowerCase().includes('exist')) {
+          throw regErr;
+        }
       }
 
       // STEP 4: Log the user in
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
-      // STEP 5: Save profile (in case inviteUser didn't carry all fields)
+      // STEP 5: Save profile
       try {
         await base44.auth.updateMe({
           full_name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
