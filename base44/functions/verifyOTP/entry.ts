@@ -1,16 +1,17 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole;
     const { otp_id, code } = await req.json();
 
     if (!otp_id || !code) {
       return Response.json({ error: 'OTP ID and code required' }, { status: 400 });
     }
 
-    // Get OTP record
-    const otpRecords = await base44.entities.OTP.filter({ id: otp_id });
+    // Get OTP record (use service role since caller may not be authenticated yet)
+    const otpRecords = await sr.entities.OTP.filter({ id: otp_id });
     if (otpRecords.length === 0) {
       return Response.json({ error: 'Invalid OTP' }, { status: 400 });
     }
@@ -34,12 +35,12 @@ Deno.serve(async (req) => {
 
     // Verify code
     if (otpRecord.code !== code) {
-      await base44.entities.OTP.update(otp_id, { attempts: (otpRecord.attempts || 0) + 1 });
+      await sr.entities.OTP.update(otp_id, { attempts: (otpRecord.attempts || 0) + 1 });
       return Response.json({ error: 'Invalid code' }, { status: 400 });
     }
 
     // Mark as verified
-    await base44.entities.OTP.update(otp_id, { verified: true });
+    await sr.entities.OTP.update(otp_id, { verified: true });
 
     // Update user if phone verification
     if (otpRecord.type === 'phone_verification' && otpRecord.phone) {

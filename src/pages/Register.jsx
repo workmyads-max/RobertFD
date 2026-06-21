@@ -66,20 +66,20 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Register user account
-      await base44.auth.register({ email: formData.email, password: formData.password });
-      // Send custom OTP via Resend (from noreply@xfundedtrader.com)
+      // STEP 1: Only send our custom OTP via Resend — do NOT call auth.register yet
+      // (auth.register triggers Base44's own OTP email which we can't suppress)
       const otpRes = await base44.functions.invoke('sendOTP', {
         email: formData.email,
         type: 'registration',
         name: formData.firstName,
       });
-      setOtpId(otpRes.data?.otp_id || null);
+      if (!otpRes.data?.otp_id) throw new Error('Failed to send verification code');
+      setOtpId(otpRes.data.otp_id);
       toast.success('Check your email for a verification code!');
       setStep('otp');
     } catch (err) {
-      setError(err.message || 'Registration failed');
-      toast.error(err.message || 'Registration failed');
+      setError(err.message || 'Failed to send verification code');
+      toast.error(err.message || 'Failed to send verification code');
     } finally {
       setIsLoading(false);
     }
@@ -107,15 +107,18 @@ export default function Register() {
     setError('');
     setIsLoading(true);
     try {
-      // Verify our custom OTP (sent from noreply@xfundedtrader.com)
-      if (otpId) {
-        const verifyRes = await base44.functions.invoke('verifyOTP', { otp_id: otpId, code: otpCode });
-        if (!verifyRes.data?.success) {
-          throw new Error(verifyRes.data?.error || 'Invalid verification code');
-        }
-      } else {
-        // Fallback: verify Base44 OTP
-        await base44.auth.verifyOtp({ email: formData.email, otpCode });
+      // STEP 2: Verify our custom OTP first
+      const verifyRes = await base44.functions.invoke('verifyOTP', { otp_id: otpId, code: otpCode });
+      if (!verifyRes.data?.success) {
+        throw new Error(verifyRes.data?.error || 'Invalid verification code');
+      }
+
+      // STEP 3: Only NOW register the account (Base44 will send its own email but OTP is already verified)
+      try {
+        await base44.auth.register({ email: formData.email, password: formData.password });
+      } catch (regErr) {
+        // If already registered (e.g. retry), continue to login
+        if (!regErr.message?.toLowerCase().includes('already')) throw regErr;
       }
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
