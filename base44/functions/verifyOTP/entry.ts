@@ -6,7 +6,9 @@ Deno.serve(async (req) => {
     const sr = base44.asServiceRole;
     const { email, code, otp_id } = await req.json();
 
-    console.log('[verifyOTP] Received:', { email, code, otp_id });
+    // Normalize email (lowercase, trim) for consistency
+    const normalizedEmail = email ? email.toLowerCase().trim() : null;
+    console.log('[verifyOTP] Received:', { email: normalizedEmail || '(via otp_id)', code, otp_id });
 
     if (!code) {
       return Response.json({ error: 'Code required' }, { status: 400 });
@@ -22,12 +24,12 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Invalid OTP' }, { status: 400 });
       }
       otpRecord = otpRecords[0];
-    } else if (email) {
-      console.log('[verifyOTP] Looking up by email:', email);
+    } else if (normalizedEmail) {
+      console.log('[verifyOTP] Looking up by email:', normalizedEmail);
       // Find latest unverified OTP for this email
       const allOtps = await sr.entities.OTP.list();
       const otpRecords = allOtps.filter(o => 
-        o.email === email && 
+        o.email === normalizedEmail && 
         o.type === 'registration' && 
         o.verified === false
       );
@@ -39,7 +41,7 @@ Deno.serve(async (req) => {
       otpRecord = otpRecords.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       )[0];
-      console.log('[verifyOTP] Using OTP:', otpRecord.id);
+      console.log('[verifyOTP] Using OTP:', otpRecord.id, 'Email:', otpRecord.email);
     } else {
       return Response.json({ error: 'Email or OTP ID required' }, { status: 400 });
     }
@@ -85,10 +87,14 @@ Deno.serve(async (req) => {
 
     // Mark user as email verified for registration OTP
     if (otpRecord.type === 'registration' && otpRecord.email) {
-      const users = await sr.entities.User.filter({ email: otpRecord.email });
+      const normalizedOtpEmail = otpRecord.email.toLowerCase().trim();
+      const users = await sr.entities.User.filter({ email: normalizedOtpEmail });
+      console.log('[verifyOTP] Looking for user with email:', normalizedOtpEmail, 'Found:', users.length);
       if (users.length > 0) {
         await sr.entities.User.update(users[0].id, { email_verified: true });
-        console.log('[verifyOTP] User marked as email_verified');
+        console.log('[verifyOTP] User', users[0].id, 'marked as email_verified. Email:', users[0].email);
+      } else {
+        console.error('[verifyOTP] User not found for email:', normalizedOtpEmail);
       }
     }
 

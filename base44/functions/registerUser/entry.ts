@@ -15,9 +15,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    // Check if user already exists
-    const existingUsers = await sr.entities.User.filter({ email });
+    // Normalize email (lowercase, trim) for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('[registerUser] Registering user:', normalizedEmail);
+
+    // Check if user already exists (using normalized email)
+    const existingUsers = await sr.entities.User.filter({ email: normalizedEmail });
     if (existingUsers.length > 0) {
+      console.log('[registerUser] Email already registered:', normalizedEmail);
       return Response.json({ error: 'Email already registered' }, { status: 400 });
     }
 
@@ -28,19 +33,19 @@ Deno.serve(async (req) => {
     const fullName = [firstName, lastName].filter(Boolean).join(' ');
 
     // Create user - try service role first
-    console.log('[registerUser] Attempting to create user:', email);
+    console.log('[registerUser] Attempting to create user:', normalizedEmail);
     
     let newUser;
     try {
       newUser = await sr.entities.User.create({
-        email,
+        email: normalizedEmail,
         full_name: fullName,
         role: 'user',
         password_hash: passwordHash,
         email_verified: false,
         ...(country && { country }),
       });
-      console.log('[registerUser] Created via SR:', newUser.id);
+      console.log('[registerUser] Created via SR:', newUser.id, 'Email:', newUser.email);
     } catch (createErr) {
       console.error('[registerUser] SR create failed:', createErr.message);
       throw createErr;
@@ -53,13 +58,14 @@ Deno.serve(async (req) => {
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     
     await sr.entities.OTP.create({
-      email,
+      email: normalizedEmail,
       type: 'registration',
       code: otp,
       expires_at: otpExpiresAt,
       verified: false,
       attempts: 0,
     });
+    console.log('[registerUser] OTP created for:', normalizedEmail);
 
     // Send OTP email via Resend
     try {
@@ -75,12 +81,12 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             from: 'XFunded Trader <noreply@xfundedtrader.com>',
-            to: [email],
+            to: [normalizedEmail],
             subject: 'Your Verification Code - XFunded Trader',
             html: emailHtml,
           }),
         });
-        console.log('[registerUser] OTP email sent to', email);
+        console.log('[registerUser] OTP email sent to', normalizedEmail);
       }
     } catch (emailErr) {
       console.error('[registerUser] OTP email failed:', emailErr.message);

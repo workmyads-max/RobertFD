@@ -16,32 +16,42 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    // Find user by email
-    const users = await sr.entities.User.filter({ email });
+    // Normalize email (lowercase, trim) for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('[loginWithoutVerification] Login attempt for:', normalizedEmail);
+
+    // Find user by email (using normalized email)
+    const users = await sr.entities.User.filter({ email: normalizedEmail });
     if (users.length === 0) {
+      console.log('[loginWithoutVerification] User not found:', normalizedEmail);
       return Response.json({ error: 'Invalid email or password' }, { status: 400 });
     }
 
     const user = users[0];
+    console.log('[loginWithoutVerification] User found:', user.id, 'Email:', user.email, 'Verified:', user.email_verified, 'Has password_hash:', !!user.password_hash);
 
     // Verify password hash
     if (!user.password_hash) {
-      console.error('User has no password_hash:', email);
+      console.error('[loginWithoutVerification] User has no password_hash:', normalizedEmail);
       return Response.json({ error: 'Invalid email or password' }, { status: 400 });
     }
 
     const isValid = bcrypt.compareSync(password, user.password_hash);
     if (!isValid) {
+      console.log('[loginWithoutVerification] Password invalid for:', normalizedEmail);
       return Response.json({ error: 'Invalid email or password' }, { status: 400 });
     }
+    console.log('[loginWithoutVerification] Password valid for:', normalizedEmail);
 
     // Check if email is verified
     if (user.email_verified === false) {
+      console.log('[loginWithoutVerification] Email not verified:', normalizedEmail);
       return Response.json({ 
         error: 'Please verify your email first. Check your inbox for the verification code.',
         requires_verification: true
       }, { status: 403 });
     }
+    console.log('[loginWithoutVerification] Email verified, login successful:', normalizedEmail);
 
     // Return user data for frontend to use
     return Response.json({
