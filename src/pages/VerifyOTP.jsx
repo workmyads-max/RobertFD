@@ -53,36 +53,23 @@ export default function VerifyOTP() {
 
     setIsLoading(true);
     try {
-      // Find the OTP record
-      const otpRecords = await base44.entities.OTP.filter({ 
-        email, 
-        type: 'registration',
-        verified: false 
-      });
-
-      if (otpRecords.length === 0) {
-        toast.error('No pending verification found. Please register again.');
-        navigate('/register');
-        return;
-      }
-
-      const otpRecord = otpRecords[0];
-      setOtpId(otpRecord.id);
-
-      // Verify OTP
+      // Verify OTP using email
       const response = await base44.functions.invoke('verifyOTP', {
-        otp_id: otpRecord.id,
+        email,
         code
       });
 
       if (response.data.success) {
-        toast.success('Email verified successfully!');
-        navigate('/login', { state: { email } });
+        toast.success('Email verified successfully! Redirecting to login...');
+        setTimeout(() => {
+          navigate('/login', { state: { email } });
+        }, 1000);
       } else {
         toast.error(response.data.error || 'Invalid code');
       }
     } catch (err) {
-      toast.error(err.message || 'Verification failed');
+      console.error('Verification error:', err);
+      toast.error(err.message || 'Verification failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -4,19 +4,37 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
-    const { otp_id, code } = await req.json();
+    const { email, code, otp_id } = await req.json();
 
-    if (!otp_id || !code) {
-      return Response.json({ error: 'OTP ID and code required' }, { status: 400 });
+    if (!code) {
+      return Response.json({ error: 'Code required' }, { status: 400 });
     }
 
-    // Get OTP record (use service role since caller may not be authenticated yet)
-    const otpRecords = await sr.entities.OTP.filter({ id: otp_id });
-    if (otpRecords.length === 0) {
-      return Response.json({ error: 'Invalid OTP' }, { status: 400 });
+    // Get OTP record - support lookup by email or otp_id
+    let otpRecord;
+    if (otp_id) {
+      const otpRecords = await sr.entities.OTP.filter({ id: otp_id });
+      if (otpRecords.length === 0) {
+        return Response.json({ error: 'Invalid OTP' }, { status: 400 });
+      }
+      otpRecord = otpRecords[0];
+    } else if (email) {
+      // Find latest unverified OTP for this email
+      const otpRecords = await sr.entities.OTP.filter({ 
+        email, 
+        type: 'registration',
+        verified: false 
+      });
+      if (otpRecords.length === 0) {
+        return Response.json({ error: 'No pending verification found' }, { status: 400 });
+      }
+      // Get the most recent one
+      otpRecord = otpRecords.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      )[0];
+    } else {
+      return Response.json({ error: 'Email or OTP ID required' }, { status: 400 });
     }
-
-    const otpRecord = otpRecords[0];
 
     // Check if already verified
     if (otpRecord.verified) {
