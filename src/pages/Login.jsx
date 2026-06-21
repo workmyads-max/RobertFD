@@ -5,11 +5,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { refreshUser } = useSupabaseAuth();
+  const { checkUserAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,8 +33,10 @@ export default function Login() {
       if (response.data.success) {
         // Store user info in localStorage for auth context to pick up
         localStorage.setItem('xf_user', JSON.stringify(response.data.user));
-        // Force reload to trigger auth context to read stored user
-        window.location.href = '/dashboard';
+        // Trigger auth context to reload user
+        await checkUserAuth();
+        toast.success('Welcome back!');
+        navigate('/dashboard');
         return;
       } else {
         const errorMsg = response.data.error || 'Invalid email or password';

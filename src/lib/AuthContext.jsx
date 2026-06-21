@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserAuth = async () => {
     try {
-      // Now check if the user is authenticated
+      // First try Base44 native auth
       setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
@@ -99,13 +99,32 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
+      // Base44 auth not available, try custom auth fallback
+      try {
+        const storedUser = localStorage.getItem('xf_user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          // Verify user still exists
+          const users = await base44.asServiceRole.entities.User.filter({ email: userData.email });
+          if (users.length > 0) {
+            setUser(users[0]);
+            setIsAuthenticated(true);
+          } else {
+            localStorage.removeItem('xf_user');
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+        setIsLoadingAuth(false);
+        setAuthChecked(true);
+      } catch (storageErr) {
+        console.error('Custom auth check failed:', storageErr);
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        setAuthChecked(true);
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
@@ -115,14 +134,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    // Clear custom auth storage
+    localStorage.removeItem('xf_user');
     setUser(null);
     setIsAuthenticated(false);
     
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
       base44.auth.logout(window.location.href);
     } else {
-      // Just remove the token without redirect
       base44.auth.logout();
     }
   };

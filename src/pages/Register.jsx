@@ -4,8 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
-import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
-
 const ALL_COUNTRIES = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria',
   'Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
@@ -23,7 +21,6 @@ const ALL_COUNTRIES = [
 
 export default function Register() {
   const navigate = useNavigate();
-  const { refreshUser } = useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({

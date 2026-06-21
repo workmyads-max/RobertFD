@@ -6,7 +6,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { SupabaseAuthProvider, useSupabaseAuth } from '@/lib/SupabaseAuthContext';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
@@ -17,14 +16,12 @@ import VerifyOTP from './pages/VerifyOTP';
 import LegalPage from './pages/LegalPage';
 
 const LoginRoute = () => {
-  const { user, loading } = useSupabaseAuth();
-  // Show loading spinner while auth state loads
-  if (loading) return (
+  const { user, isLoadingAuth } = useAuth();
+  if (isLoadingAuth) return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
       <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>
   );
-  // Redirect to dashboard if already logged in
   if (user) {
     window.location.href = '/dashboard';
     return null;
@@ -33,19 +30,9 @@ const LoginRoute = () => {
 };
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, refreshUser } = useSupabaseAuth();
-  const [checking, setChecking] = React.useState(false);
+  const { user, isLoadingAuth } = useAuth();
 
-  React.useEffect(() => {
-    // If auth context finished loading but has no user, do one extra check
-    // to handle the race condition after login redirect
-    if (!loading && !user) {
-      setChecking(true);
-      refreshUser().finally(() => setChecking(false));
-    }
-  }, [loading]);
-
-  if (loading || checking) return (
+  if (isLoadingAuth) return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
       <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>
@@ -76,14 +63,12 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <SupabaseAuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <AppRoutes />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </SupabaseAuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
+          <AppRoutes />
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
       <UserNotRegisteredError />
     </AuthProvider>
   );
