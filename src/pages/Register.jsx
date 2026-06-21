@@ -61,21 +61,21 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Register account
-      await base44.auth.register({ email: formData.email, password: formData.password });
+      // Register via backend function (service role - no email verification required)
+      const response = await base44.functions.invoke('registerUser', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        country: formData.country || undefined,
+      });
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Registration failed');
+      }
 
       // Log in immediately
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
-
-      // Save profile
-      try {
-        await base44.auth.updateMe({
-          full_name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
-          first_name: formData.firstName.trim(),
-          last_name: formData.lastName.trim(),
-          country: formData.country || undefined,
-        });
-      } catch (_) {}
 
       // Affiliate attribution
       if (refCode) {

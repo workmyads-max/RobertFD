@@ -1,6 +1,6 @@
 /**
- * registerUser — Creates a Base44 user account via service role.
- * Called AFTER custom OTP verification is complete.
+ * registerUser — Creates a Base44 user account via service role without OTP.
+ * Direct registration for frictionless signup.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -9,29 +9,13 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
 
-    const { email, password, firstName, lastName, country, otp_id } = await req.json();
+    const { email, password, firstName, lastName, country } = await req.json();
 
-    if (!email || !password || !otp_id) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!email || !password) {
+      return Response.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    // 1. Verify OTP was marked as verified
-    const otpRecords = await sr.entities.OTP.filter({ id: otp_id });
-    if (!otpRecords.length) {
-      return Response.json({ error: 'Invalid OTP session' }, { status: 400 });
-    }
-    const otpRecord = otpRecords[0];
-
-    if (!otpRecord.verified) {
-      return Response.json({ error: 'OTP not verified' }, { status: 400 });
-    }
-
-    if (otpRecord.email !== email) {
-      return Response.json({ error: 'Email mismatch' }, { status: 400 });
-    }
-
-    // 2. Register via Base44 (this is the standard way — same as frontend auth.register)
-    // Using service role so it doesn't require a user session
+    // Register via Base44 using service role
     try {
       await sr.auth.register({ email, password });
     } catch (regErr) {
@@ -39,10 +23,10 @@ Deno.serve(async (req) => {
       if (!msg.includes('already') && !msg.includes('exist') && !msg.includes('registered')) {
         return Response.json({ error: regErr.message }, { status: 400 });
       }
-      // User already exists — that's fine, they may be retrying
+      // User already exists — that's fine
     }
 
-    // 3. Update profile fields via User entity (service role can do this)
+    // Update profile fields via User entity (service role can do this)
     try {
       const users = await sr.entities.User.filter({ email });
       if (users.length > 0) {
