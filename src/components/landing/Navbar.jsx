@@ -103,33 +103,46 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 glass pt-24 px-6 lg:hidden overflow-y-auto"
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 lg:hidden overflow-y-auto flex flex-col"
+            style={{ zIndex: 55, background: '#0d0e12' }}
           >
-            <div className="space-y-1">
+            {/* Mobile menu header */}
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <a href="#" onClick={() => setMobileOpen(false)}><XFLogo size="xl" animate /></a>
+              <button onClick={() => setMobileOpen(false)} className="p-2 text-foreground">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div className="flex-1 px-6 py-6 space-y-1">
               {navLinks.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => scrollTo(link.href)}
-                  className="block w-full text-left px-4 py-3 text-lg text-foreground hover:text-primary transition-colors border-b border-border/30"
+                  className="block w-full text-left px-4 py-4 text-lg font-medium text-foreground hover:text-primary transition-colors"
+                  style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
                 >
                   {link.label}
                 </button>
               ))}
             </div>
-            <div className="mt-8 space-y-3">
+
+            {/* CTA buttons */}
+            <div className="px-6 pb-10 space-y-3">
               {user ? (
                 <>
-                  <Link to="/dashboard" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full">Dashboard</Link>
-                  <button onClick={logout} className="block w-full py-3 text-sm text-center text-red-400 border border-red-400/30 rounded-full">Logout</button>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block w-full py-3.5 text-sm text-center font-semibold text-foreground border border-border rounded-full">Dashboard</Link>
+                  <button onClick={() => { logout(); setMobileOpen(false); }} className="block w-full py-3.5 text-sm text-center font-semibold text-red-400 border border-red-400/30 rounded-full">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block w-full py-3 text-sm text-center text-foreground border border-border rounded-full hover:border-primary/50">Login</Link>
-                  <button onClick={() => scrollTo('#challenge')} className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge</button>
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="block w-full py-3.5 text-sm text-center font-semibold text-foreground border border-border rounded-full">Login</Link>
+                  <button onClick={() => scrollTo('#challenge')} className="w-full py-3.5 text-sm font-semibold text-white bg-primary rounded-full">Start Challenge →</button>
                 </>
               )}
             </div>
