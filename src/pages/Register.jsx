@@ -1,10 +1,25 @@
 import { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle2, KeyRound, User, Globe } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
 import { useSupabaseAuth } from '@/lib/SupabaseAuthContext';
+
+const ALL_COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria',
+  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
+  'Cambodia','Canada','Chile','China','Colombia','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic',
+  'Denmark','Dominican Republic','Ecuador','Egypt','Estonia','Ethiopia','Finland','France','Georgia','Germany',
+  'Ghana','Greece','Guatemala','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland',
+  'Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Latvia','Lebanon',
+  'Lithuania','Luxembourg','Malaysia','Malta','Mexico','Moldova','Monaco','Mongolia','Morocco','Myanmar',
+  'Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan','Palestine','Panama','Paraguay',
+  'Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Senegal',
+  'Serbia','Singapore','Slovakia','Slovenia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden',
+  'Switzerland','Syria','Taiwan','Tanzania','Thailand','Tunisia','Turkey','Ukraine','United Arab Emirates',
+  'United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,7 +29,14 @@ export default function Register() {
   const [step, setStep] = useState('register'); // 'register' | 'otp'
   const [otpCode, setOtpCode] = useState('');
   const [resending, setResending] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    country: '',
+  });
   const [error, setError] = useState('');
 
   // Read ref from URL param first, fallback to cookie (set by Home page)
@@ -23,18 +45,6 @@ export default function Register() {
       const match = document.cookie.match(/(?:^|;\s*)xf_ref=([^;]*)/);
       return match ? match[1] : '';
     })();
-
-  const handleGoogleSignup = async () => {
-    try {
-      // Store ref code in sessionStorage so it survives Google OAuth redirect
-      if (refCode) {
-        sessionStorage.setItem('xf_pending_ref', refCode);
-      }
-      await base44.auth.loginViaGoogle({ redirectTo: `${window.location.origin}/dashboard` });
-    } catch (err) {
-      toast.error('Google signup failed: ' + err.message);
-    }
-  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -46,6 +56,10 @@ export default function Register() {
     }
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters');
+      return;
+    }
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setError('First name and last name are required');
       return;
     }
 
@@ -81,6 +95,19 @@ export default function Register() {
     try {
       await base44.auth.verifyOtp({ email: formData.email, otpCode });
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
+
+      // Save profile data (first name, last name, country) to user account
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      try {
+        await base44.auth.updateMe({
+          full_name: fullName,
+          first_name: formData.firstName.trim(),
+          last_name: formData.lastName.trim(),
+          country: formData.country || undefined,
+        });
+      } catch (profileErr) {
+        console.error('Profile save error (non-blocking):', profileErr);
+      }
 
       // Affiliate attribution
       if (refCode) {
@@ -119,6 +146,8 @@ export default function Register() {
     }
   };
 
+  const inputCls = "w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Form */}
@@ -146,6 +175,39 @@ export default function Register() {
           {/* Step: Register */}
           {step === 'register' && (
             <form onSubmit={handleRegister} className="space-y-4">
+              {/* First & Last Name */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">First Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className={inputCls}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Last Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className={inputCls}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Email</label>
                 <div className="relative">
@@ -155,12 +217,13 @@ export default function Register() {
                     placeholder="your@email.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className={inputCls}
                     required
                   />
                 </div>
               </div>
 
+              {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Password</label>
                 <div className="relative">
@@ -180,6 +243,7 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Confirm Password */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
                 <div className="relative">
@@ -189,9 +253,27 @@ export default function Register() {
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className={inputCls}
                     required
                   />
+                </div>
+              </div>
+
+              {/* Country */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Country</label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                  >
+                    <option value="">Select your country</option>
+                    {ALL_COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -203,6 +285,21 @@ export default function Register() {
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 {isLoading ? 'Please wait...' : 'Create Account'}
               </button>
+
+              {/* Benefits */}
+              <div className="space-y-2 pt-1">
+                {[
+                  ['Instant Access', 'Start trading immediately after verification'],
+                  ['No Hidden Fees', 'Transparent pricing with 0% commission'],
+                ].map(([title, desc]) => (
+                  <div key={title} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-medium">{title}</span> — {desc}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </form>
           )}
 
@@ -246,37 +343,6 @@ export default function Register() {
             </form>
           )}
 
-          {step === 'register' && (
-            <>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground font-mono">OR</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              <button onClick={handleGoogleSignup} disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:bg-card/80 transition-all disabled:opacity-50">
-                <Chrome className="w-5 h-5 text-foreground" />
-                <span className="text-sm font-medium text-foreground">Continue with Google</span>
-              </button>
-
-              <div className="space-y-3 pt-2">
-                {[
-                  ['Instant Access', 'Start trading immediately after verification'],
-                  ['No Hidden Fees', 'Transparent pricing with 0% commission'],
-                  ['Professional Platform', 'Trade on MT5, MT4, and more'],
-                ].map(([title, desc]) => (
-                  <div key={title} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-muted-foreground">
-                      <span className="text-foreground font-medium">{title}</span> - {desc}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link to="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">Sign In</Link>
@@ -293,7 +359,7 @@ export default function Register() {
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-black text-foreground leading-tight">
             Your Trading Career<br />
-            <span className="text-accent">Starts Here.</span>
+            <span className="text-primary">Starts Here.</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Get funded with up to $200,000 in trading capital. Prove your skills in our evaluation
@@ -302,7 +368,7 @@ export default function Register() {
           <div className="grid grid-cols-2 gap-6 pt-8">
             {[['5K-200K', 'Account Sizes'], ['1:100', 'Leverage'], ['Fast', 'Payouts'], ['Global', 'Access']].map(([v, l]) => (
               <div key={l} className="space-y-1">
-                <div className="text-3xl font-black text-accent">{v}</div>
+                <div className="text-3xl font-black text-primary">{v}</div>
                 <div className="text-sm text-muted-foreground">{l}</div>
               </div>
             ))}
