@@ -3,6 +3,7 @@
  * Creates a session even if email is not verified.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import bcrypt from 'npm:bcryptjs@2.4.3';
 
 Deno.serve(async (req) => {
   try {
@@ -23,14 +24,15 @@ Deno.serve(async (req) => {
 
     const user = users[0];
 
-    // Verify password by attempting login (this will work even if email not verified)
-    // We use a workaround: create a temporary session via service role
-    try {
-      // Try standard login first
-      // Note: This may still fail if verification is required
-      // So we create a service session instead
-    } catch (loginErr) {
-      // Continue with service role session creation
+    // Verify password hash
+    if (!user.password_hash) {
+      console.error('User has no password_hash:', email);
+      return Response.json({ error: 'Invalid email or password' }, { status: 400 });
+    }
+
+    const isValid = bcrypt.compareSync(password, user.password_hash);
+    if (!isValid) {
+      return Response.json({ error: 'Invalid email or password' }, { status: 400 });
     }
 
     // Return user data for frontend to use

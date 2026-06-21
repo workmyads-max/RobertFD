@@ -3,6 +3,7 @@
  * Uses service role to bypass Base44's automatic verification flow.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import bcrypt from 'npm:bcryptjs@2.4.3';
 
 Deno.serve(async (req) => {
   try {
@@ -21,6 +22,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email already registered' }, { status: 400 });
     }
 
+    // Hash password using bcrypt
+    const salt = bcrypt.genSaltSync(10);
+    const passwordHash = bcrypt.hashSync(password, salt);
+
     // Create user directly via User entity (service role bypasses verification)
     const fullName = [firstName, lastName].filter(Boolean).join(' ');
     const newUser = await sr.entities.User.create({
@@ -30,6 +35,7 @@ Deno.serve(async (req) => {
       last_name: lastName,
       ...(country && { country }),
       role: 'user',
+      password_hash: passwordHash,
     });
 
     // Generate and send OTP via custom email (Resend)

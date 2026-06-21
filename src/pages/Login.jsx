@@ -24,13 +24,25 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
-      await refreshUser();
-      toast.success('Welcome back!');
-      navigate('/dashboard');
+      // Use custom login function (bypasses Base44 email verification requirement)
+      const response = await base44.functions.invoke('loginWithoutVerification', {
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (response.data.success) {
+        await refreshUser();
+        toast.success('Welcome back!');
+        navigate('/dashboard');
+      } else {
+        const errorMsg = response.data.error || 'Invalid email or password';
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
-      toast.error(err.message || 'Invalid email or password');
+      const errorMsg = err.response?.data?.error || err.message || 'Invalid email or password';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
