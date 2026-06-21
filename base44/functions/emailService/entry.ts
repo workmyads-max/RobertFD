@@ -140,8 +140,18 @@ function getEmailTemplate(type, data) {
         ]),
         BRAND.green
       ) +
-      ui.button('View Account Details', 'https://xfundedtrader.com/dashboard/accounts') +
-      ui.infoBox(`📋 <strong style="color:#d4d5db;">What's next?</strong><br>• Access your account credentials in the dashboard<br>• Review trading rules and objectives<br>• Start trading and reach your profit target`),
+      (data.mt_login
+        ? ui.card(
+            `<div style="color:${BRAND.muted};font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">MT5 Account Credentials</div>` +
+            ui.stats([
+              { value: data.mt_login, label: 'Login ID', color: '#ffffff' },
+              { value: data.mt_server || 'XyloMarkets-Server', label: 'Server', color: '#ffffff' },
+              { value: data.mt_password || '—', label: 'Password', color: '#ffffff' },
+            ])
+          )
+        : '') +
+      ui.button('View Account Details', 'https://xfundedtrader.com/dashboard') +
+      ui.infoBox(`📋 <strong style="color:#d4d5db;">What's next?</strong><br>• Open MetaTrader 5 and use the credentials above to connect<br>• Review trading rules and objectives in the dashboard<br>• Start trading and reach your profit target`),
 
     payout_approved:
       ui.paragraph(`<strong style="color:${BRAND.green};font-size:18px;">💰 Profit Split Approved</strong>`, 'text-align:center;') +

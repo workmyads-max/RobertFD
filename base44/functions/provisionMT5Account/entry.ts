@@ -238,6 +238,27 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
+    // ── Send welcome email with MT5 credentials ──────────────────────────
+    try {
+      await base44.asServiceRole.functions.invoke('emailService', {
+        action: 'send_notification',
+        to: user_email,
+        type: 'challenge_purchase',
+        data: {
+          name: user_email.split('@')[0],
+          challenge_type,
+          account_size,
+          platform: 'MT5',
+          mt_login: String(mtLogin),
+          mt_password: masterPassword,
+          mt_server: 'XyloMarkets-Server',
+        },
+      });
+      console.log(`[provisionMT5Account] ✅ Welcome email sent to ${user_email}`);
+    } catch (emailErr) {
+      console.warn('[provisionMT5Account] Email send failed (non-blocking):', emailErr.message);
+    }
+
     return Response.json({
       success: true,
       message: 'MT5 account provisioned via Tritech API (Xylo Markets)',
