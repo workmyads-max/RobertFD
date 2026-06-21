@@ -28,6 +28,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState('register'); // 'register' | 'otp'
   const [otpCode, setOtpCode] = useState('');
+  const [otpId, setOtpId] = useState(null);
   const [resending, setResending] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -65,7 +66,15 @@ export default function Register() {
 
     setIsLoading(true);
     try {
+      // Register user account
       await base44.auth.register({ email: formData.email, password: formData.password });
+      // Send custom OTP via Resend (from noreply@xfundedtrader.com)
+      const otpRes = await base44.functions.invoke('sendOTP', {
+        email: formData.email,
+        type: 'registration',
+        name: formData.firstName,
+      });
+      setOtpId(otpRes.data?.otp_id || null);
       toast.success('Check your email for a verification code!');
       setStep('otp');
     } catch (err) {
@@ -79,7 +88,12 @@ export default function Register() {
   const handleResendOtp = async () => {
     setResending(true);
     try {
-      await base44.auth.resendOtp(formData.email);
+      const otpRes = await base44.functions.invoke('sendOTP', {
+        email: formData.email,
+        type: 'registration',
+        name: formData.firstName,
+      });
+      setOtpId(otpRes.data?.otp_id || null);
       toast.success('A new code has been sent to your email');
     } catch (err) {
       toast.error(err.message || 'Failed to resend code');
@@ -93,7 +107,16 @@ export default function Register() {
     setError('');
     setIsLoading(true);
     try {
-      await base44.auth.verifyOtp({ email: formData.email, otpCode });
+      // Verify our custom OTP (sent from noreply@xfundedtrader.com)
+      if (otpId) {
+        const verifyRes = await base44.functions.invoke('verifyOTP', { otp_id: otpId, code: otpCode });
+        if (!verifyRes.data?.success) {
+          throw new Error(verifyRes.data?.error || 'Invalid verification code');
+        }
+      } else {
+        // Fallback: verify Base44 OTP
+        await base44.auth.verifyOtp({ email: formData.email, otpCode });
+      }
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
       // Save profile data (first name, last name, country) to user account
