@@ -1,9 +1,8 @@
 /**
- * registerUser — Creates a user account via Supabase admin API (no email verification required).
+ * registerUser — Creates a Base44 user account via service role.
  * Called AFTER custom OTP verification is complete.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 Deno.serve(async (req) => {
   try {
@@ -16,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Verify the OTP was marked as verified
+    // 1. Verify OTP was marked as verified
     const otpRecords = await sr.entities.OTP.filter({ id: otp_id });
     if (!otpRecords.length) {
       return Response.json({ error: 'Invalid OTP session' }, { status: 400 });
@@ -31,36 +30,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email mismatch' }, { status: 400 });
     }
 
-    // 2. Create account via Supabase Admin API (auto-confirms email, no verification email)
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL'),
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const fullName = [firstName, lastName].filter(Boolean).join(' ');
-
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // skip email verification
-      user_metadata: {
-        full_name: fullName,
-        first_name: firstName || '',
-        last_name: lastName || '',
-        country: country || '',
+    // 2. Register via Base44 (this is the standard way — same as frontend auth.register)
+    // Using service role so it doesn't require a user session
+    try {
+      await sr.auth.register({ email, password });
+    } catch (regErr) {
+      const msg = regErr.message?.toLowerCase() || '';
+      if (!msg.includes('already') && !msg.includes('exist') && !msg.includes('registered')) {
+        return Response.json({ error: regErr.message }, { status: 400 });
       }
-    });
-
-    if (createError) {
-      // If user already exists, that's okay — they may be retrying
-      if (!createError.message?.toLowerCase().includes('already') &&
-          !createError.message?.toLowerCase().includes('exist')) {
-        return Response.json({ error: createError.message }, { status: 400 });
-      }
+      // User already exists — that's fine, they may be retrying
     }
 
-    return Response.json({ success: true, message: 'Account created successfully' });
+    // 3. Update profile fields via User entity (service role can do this)
+    try {
+      const users = await sr.entities.User.filter({ email });
+      if (users.length > 0) {
+        const fullName = [firstName, lastName].filter(Boolean).join(' ');
+        await sr.entities.User.update(users[0].id, {
+          ...(fullName && { full_name: fullName }),
+          ...(country && { country }),
+        });
+      }
+    } catch (profileErr) {
+      console.error('Profile update (non-blocking):', profileErr.message);
+    }
+
+    return Response.json({ success: true });
 
   } catch (error) {
     console.error('registerUser error:', error);

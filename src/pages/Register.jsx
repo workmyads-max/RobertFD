@@ -126,8 +126,15 @@ export default function Register() {
         throw new Error(regRes.data?.error || 'Registration failed');
       }
 
-      // STEP 4: Log the user in (email is already confirmed via Supabase admin)
-      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
+      // STEP 4: Log the user in
+      try {
+        await base44.auth.loginViaEmailPassword(formData.email, formData.password);
+      } catch (loginErr) {
+        // If login fails (e.g. email verification pending), redirect to login page
+        toast.success('Account created! Please sign in.');
+        navigate('/login');
+        return;
+      }
 
       // STEP 5: Save profile
       try {
