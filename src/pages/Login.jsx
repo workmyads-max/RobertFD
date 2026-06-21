@@ -23,11 +23,10 @@ export default function Login() {
     try {
       const normalizedEmail = formData.email.toLowerCase().trim();
       
-      // Use Base44 native login - this creates a proper session
-      await base44.auth.login(normalizedEmail, formData.password);
+      // Use Base44 native email+password login
+      await base44.auth.loginViaEmailPassword(normalizedEmail, formData.password);
       
       toast.success('Welcome back!');
-      // Navigate to dashboard - auth context will update
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);

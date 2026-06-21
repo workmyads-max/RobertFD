@@ -34,12 +34,6 @@ export default function Register() {
   });
   const [error, setError] = useState('');
 
-  const refCode = new URLSearchParams(window.location.search).get('ref')
-    || (() => {
-      const match = document.cookie.match(/(?:^|;\s*)xf_ref=([^;]*)/);
-      return match ? match[1] : '';
-    })();
-
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
@@ -62,47 +56,20 @@ export default function Register() {
       const normalizedEmail = formData.email.toLowerCase().trim();
       const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ');
 
-      // Use Base44 native registration - creates user and logs them in
+      // Use Base44 native registration - creates user in native User entity
+      // Email verification and password reset are handled by Base44 native auth
       await base44.auth.register({
         email: normalizedEmail,
         password: formData.password,
         full_name: fullName,
-      });
-
-      // Update user with additional data after registration
-      await base44.auth.updateMe({
-        country: formData.country || undefined,
-      });
-
-      // Affiliate attribution
-      if (refCode) {
-        try {
-          const referrers = await base44.entities.AffiliateProfile.filter({ referral_code: refCode });
-          if (referrers.length > 0) {
-            const referrer = referrers[0];
-            const newCode = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
-            await base44.entities.AffiliateProfile.create({
-              user_email: normalizedEmail,
-              referral_code: newCode,
-              referred_by_code: refCode,
-              referred_by_email: referrer.user_email,
-              tier: 'standard',
-              total_earned: 0, total_pending: 0, total_paid: 0,
-              referral_clicks: 0, total_referrals: 0, conversions: 0,
-              active_funded_traders: 0, is_active: true, is_frozen: false,
-            });
-            await base44.entities.AffiliateProfile.update(referrer.id, {
-              total_referrals: (referrer.total_referrals || 0) + 1,
-            });
-          }
-        } catch (affErr) {
-          console.error('Affiliate attribution error (non-blocking):', affErr);
+        data: {
+          country: formData.country || undefined,
         }
-      }
+      });
 
-      toast.success('Account created! Redirecting to dashboard...');
-      // Navigate to dashboard after successful registration
-      navigate('/dashboard');
+      toast.success('Account created! Please check your email for verification code.');
+      // Redirect to login to complete verification
+      navigate('/login');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed');
