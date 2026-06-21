@@ -1,24 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, Globe, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
-
-const ALL_COUNTRIES = [
-  'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria',
-  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
-  'Cambodia','Canada','Chile','China','Colombia','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic',
-  'Denmark','Dominican Republic','Ecuador','Egypt','Estonia','Ethiopia','Finland','France','Georgia','Germany',
-  'Ghana','Greece','Guatemala','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland',
-  'Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Latvia','Lebanon',
-  'Lithuania','Luxembourg','Malaysia','Malta','Mexico','Moldova','Monaco','Mongolia','Morocco','Myanmar',
-  'Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan','Palestine','Panama','Paraguay',
-  'Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Senegal',
-  'Serbia','Singapore','Slovakia','Slovenia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden',
-  'Switzerland','Syria','Taiwan','Tanzania','Thailand','Tunisia','Turkey','Ukraine','United Arab Emirates',
-  'United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
-];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -33,6 +18,48 @@ export default function Register() {
     country: '',
   });
   const [error, setError] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        if (isAuthenticated) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const ALL_COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria',
+  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
+  'Cambodia','Canada','Chile','China','Colombia','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic',
+  'Denmark','Dominican Republic','Ecuador','Egypt','Estonia','Ethiopia','Finland','France','Georgia','Germany',
+  'Ghana','Greece','Guatemala','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland',
+  'Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Latvia','Lebanon',
+  'Lithuania','Luxembourg','Malaysia','Malta','Mexico','Moldova','Monaco','Mongolia','Morocco','Myanmar',
+  'Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan','Palestine','Panama','Paraguay',
+  'Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Senegal',
+  'Serbia','Singapore','Slovakia','Slovenia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden',
+  'Switzerland','Syria','Taiwan','Tanzania','Thailand','Tunisia','Turkey','Ukraine','United Arab Emirates',
+  'United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+  ];
 
   const handleRegister = async (e) => {
     e.preventDefault();

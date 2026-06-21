@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
@@ -12,6 +12,33 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        if (isAuthenticated) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // Get reset token from URL query params
   const searchParams = new URLSearchParams(location.search);
