@@ -38,8 +38,8 @@ export default function Navbar() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 py-4"
-        style={{ background: '#0d0e12', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        className="fixed top-0 left-0 right-0 transition-all duration-500 py-4"
+        style={{ background: '#0d0e12', borderBottom: '1px solid rgba(255,255,255,0.06)', zIndex: 100 }}
       >
         <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
@@ -108,7 +108,7 @@ export default function Navbar() {
             exit={{ opacity: 0, x: '100%' }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 lg:hidden overflow-y-auto flex flex-col"
-            style={{ zIndex: 55, background: '#0d0e12' }}
+            style={{ zIndex: 200, background: '#0d0e12' }}
           >
             {/* Mobile menu header */}
             <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
