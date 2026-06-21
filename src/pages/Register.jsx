@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle2, User, Globe } from 'lucide-react';
+import { Mail, ArrowLeft, Eye, EyeOff, User, Globe, CheckCircle2, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+
 const ALL_COUNTRIES = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria',
   'Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
@@ -58,21 +59,18 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Register via backend function (service role)
-      const response = await base44.functions.invoke('registerUser', {
-        email: formData.email,
+      const normalizedEmail = formData.email.toLowerCase().trim();
+      const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ');
+
+      // Use Base44 native registration with email verification
+      await base44.auth.register({
+        email: normalizedEmail,
         password: formData.password,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        country: formData.country || undefined,
+        full_name: fullName,
+        data: {
+          country: formData.country || undefined,
+        }
       });
-
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Registration failed');
-      }
-
-      // Store email for OTP verification page
-      sessionStorage.setItem('xf_pending_verify_email', formData.email);
 
       // Affiliate attribution
       if (refCode) {
@@ -82,7 +80,7 @@ export default function Register() {
             const referrer = referrers[0];
             const newCode = 'RF' + Math.random().toString(36).slice(2, 8).toUpperCase();
             await base44.entities.AffiliateProfile.create({
-              user_email: formData.email,
+              user_email: normalizedEmail,
               referral_code: newCode,
               referred_by_code: refCode,
               referred_by_email: referrer.user_email,
@@ -102,8 +100,9 @@ export default function Register() {
 
       toast.success('Account created! Check your email for verification code.');
       // Navigate to OTP verification
-      navigate('/verify-otp', { state: { email: formData.email } });
+      navigate('/verify-otp', { state: { email: normalizedEmail } });
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err.message || 'Registration failed');
       toast.error(err.message || 'Registration failed');
     } finally {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -9,13 +9,9 @@ import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { checkUserAuth } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
+  const { checkAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
@@ -24,35 +20,19 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Use custom login function (bypasses Base44 email verification requirement)
-      const response = await base44.functions.invoke('loginWithoutVerification', {
-        email: formData.email,
-        password: formData.password
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      // Use Base44 native email+OTP login (passwordless)
+      await base44.auth.loginViaEmailOtp({
+        email: normalizedEmail,
       });
 
-      if (response.data.success) {
-        // Store user info in localStorage for auth context to pick up
-        localStorage.setItem('xf_user', JSON.stringify(response.data.user));
-        // Trigger auth context to reload user
-        await checkUserAuth();
-        toast.success('Welcome back!');
-        navigate('/dashboard');
-        return;
-      } else if (response.data.requires_verification) {
-        // User needs to verify email first
-        setError('Please verify your email first. Check your inbox for the verification code.');
-        toast.error('Email verification required');
-        setTimeout(() => {
-          navigate('/verify-otp', { state: { email: formData.email } });
-        }, 1500);
-        return;
-      } else {
-        const errorMsg = response.data.error || 'Invalid email or password';
-        setError(errorMsg);
-        toast.error(errorMsg);
-      }
+      toast.success('Verification code sent to your email!');
+      // Navigate to OTP verification for login
+      navigate('/verify-otp', { state: { email: normalizedEmail, isLogin: true } });
     } catch (err) {
-      const errorMsg = err.response?.data?.error || err.message || 'Invalid email or password';
+      console.error('Login error:', err);
+      const errorMsg = err.message || 'Failed to send verification code';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -90,33 +70,11 @@ export default function Login() {
                 <input
                   type="email"
                   placeholder="your@email.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   required
                 />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-10 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
             </div>
 
@@ -131,9 +89,22 @@ export default function Login() {
               disabled={isLoading}
               className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Please wait...' : 'Sign In'}
+              {isLoading ? 'Sending code...' : 'Send Verification Code'}
             </button>
           </form>
+
+          {/* Password Login Link */}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-2">
+              Prefer to use password?
+            </p>
+            <Link 
+              to="/forgot-password" 
+              className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              Reset your password
+            </Link>
+          </div>
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground">
@@ -145,9 +116,8 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Side - Trading Motivation */}
+      {/* Right Side */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex-col justify-center p-12 relative overflow-hidden">
-        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent rounded-full blur-3xl" />

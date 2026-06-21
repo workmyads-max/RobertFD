@@ -4,18 +4,19 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function VerifyOTP() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { checkAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [otpId, setOtpId] = useState(null);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
-    // Get email from location state (passed from register) or session storage
     const state = location.state;
     if (state?.email) {
       setEmail(state.email);
@@ -26,6 +27,9 @@ export default function VerifyOTP() {
         setEmail(storedEmail);
       }
     }
+    if (state?.isLogin) {
+      setIsLogin(true);
+    }
   }, [location]);
 
   const handleOtpChange = (index, value) => {
@@ -34,7 +38,6 @@ export default function VerifyOTP() {
     newOtp[index] = value;
     setOtp(newOtp);
     
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
@@ -59,32 +62,37 @@ export default function VerifyOTP() {
 
     setIsLoading(true);
     try {
-      console.log('[VerifyOTP] Submitting:', { email, code });
+      const normalizedEmail = email.toLowerCase().trim();
       
-      // Verify OTP using email
-      const response = await base44.functions.invoke('verifyOTP', {
-        email,
-        code
-      });
-
-      console.log('[VerifyOTP] Response:', response.data);
-
-      if (response.data.success) {
+      if (isLogin) {
+        // Complete login via OTP
+        await base44.auth.verifyEmailOtp({
+          email: normalizedEmail,
+          code,
+        });
+        
+        // Refresh auth context
+        await checkAuth();
+        
+        toast.success('Welcome back!');
+        sessionStorage.removeItem('xf_pending_verify_email');
+        navigate('/dashboard');
+      } else {
+        // Complete registration verification
+        await base44.auth.verifyEmailOtp({
+          email: normalizedEmail,
+          code,
+        });
+        
         toast.success('Email verified successfully! You can now login.');
-        // Clear pending verification
         sessionStorage.removeItem('xf_pending_verify_email');
         setTimeout(() => {
-          navigate('/login', { state: { email, verified: true } });
+          navigate('/login', { state: { email: normalizedEmail, verified: true } });
         }, 800);
-      } else {
-        const errorMsg = response.data.error || 'Invalid code';
-        console.error('[VerifyOTP] Error:', errorMsg);
-        toast.error(errorMsg);
-        setIsLoading(false);
       }
     } catch (err) {
-      console.error('[VerifyOTP] Exception:', err);
-      const errorMsg = err.response?.data?.error || err.message || 'Verification failed';
+      console.error('OTP verification error:', err);
+      const errorMsg = err.message || 'Invalid code';
       toast.error(errorMsg);
       setIsLoading(false);
     }
@@ -93,16 +101,15 @@ export default function VerifyOTP() {
   const handleResend = async () => {
     setIsResending(true);
     try {
-      const response = await base44.functions.invoke('sendOTP', {
-        email,
-        type: 'registration'
-      });
-
-      if (response.data.success) {
-        toast.success('New code sent! Check your email.');
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      if (isLogin) {
+        await base44.auth.loginViaEmailOtp({ email: normalizedEmail });
       } else {
-        toast.error('Failed to resend');
+        await base44.auth.sendVerificationEmail({ email: normalizedEmail });
       }
+      
+      toast.success('New code sent! Check your email.');
     } catch (err) {
       toast.error(err.message || 'Failed to resend');
     } finally {
@@ -115,8 +122,8 @@ export default function VerifyOTP() {
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-6">
-          <Link to="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Registration
+          <Link to="/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to Login
           </Link>
 
           <div className="text-center">
@@ -129,7 +136,7 @@ export default function VerifyOTP() {
             </div>
             <h1 className="text-3xl font-black text-foreground">Verify Your Email</h1>
             <p className="text-muted-foreground">
-              Enter the 6-digit code sent to<br />
+              {isLogin ? 'Enter the code sent to' : 'Enter the 6-digit code sent to'}<br />
               <span className="text-primary font-semibold">{email}</span>
             </p>
           </div>
@@ -166,7 +173,7 @@ export default function VerifyOTP() {
               ) : (
                 <>
                   <CheckCircle2 className="w-5 h-5" />
-                  Verify Email
+                  {isLogin ? 'Sign In' : 'Verify Email'}
                 </>
               )}
             </button>
@@ -202,7 +209,7 @@ export default function VerifyOTP() {
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent flex-col justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 right-0 w-96 h-96 bg-accent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-1/2 bg-primary rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-black text-foreground leading-tight">

@@ -14,6 +14,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import VerifyOTP from './pages/VerifyOTP';
 import LegalPage from './pages/LegalPage';
+import ForgotPassword from './pages/ForgotPassword';
 
 const LoginRoute = () => {
   const { user, isLoadingAuth } = useAuth();
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-otp" element={<VerifyOTP />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       <Route path="/challenges" element={<ChallengeSelect />} />
