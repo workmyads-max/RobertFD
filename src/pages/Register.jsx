@@ -107,33 +107,38 @@ export default function Register() {
     setError('');
     setIsLoading(true);
     try {
-      // STEP 2: Verify our custom OTP first
+      // STEP 2: Verify our custom OTP
       const verifyRes = await base44.functions.invoke('verifyOTP', { otp_id: otpId, code: otpCode });
       if (!verifyRes.data?.success) {
         throw new Error(verifyRes.data?.error || 'Invalid verification code');
       }
 
-      // STEP 3: Only NOW register the account (Base44 will send its own email but OTP is already verified)
-      try {
-        await base44.auth.register({ email: formData.email, password: formData.password });
-      } catch (regErr) {
-        // If already registered (e.g. retry), continue to login
-        if (!regErr.message?.toLowerCase().includes('already')) throw regErr;
+      // STEP 3: Register via backend (service role — no Base44 email sent)
+      const regRes = await base44.functions.invoke('registerUser', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        country: formData.country || undefined,
+        otp_id: otpId,
+        otp_code: otpCode,
+      });
+      if (!regRes.data?.success) {
+        throw new Error(regRes.data?.error || 'Registration failed');
       }
+
+      // STEP 4: Log the user in
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
-      // Save profile data (first name, last name, country) to user account
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      // STEP 5: Save profile (in case inviteUser didn't carry all fields)
       try {
         await base44.auth.updateMe({
-          full_name: fullName,
+          full_name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
           first_name: formData.firstName.trim(),
           last_name: formData.lastName.trim(),
           country: formData.country || undefined,
         });
-      } catch (profileErr) {
-        console.error('Profile save error (non-blocking):', profileErr);
-      }
+      } catch (_) {}
 
       // Affiliate attribution
       if (refCode) {
