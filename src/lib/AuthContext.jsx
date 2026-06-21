@@ -27,10 +27,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = (redirectUrl) => {
+  const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    base44.auth.logout(redirectUrl);
+    base44.auth.logout('/login');
   };
 
   return (

@@ -20,22 +20,26 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Redirect if already logged in
+  // Redirect if already logged in - runs once on mount
   useEffect(() => {
+    let isMounted = true;
     const checkAuth = async () => {
       try {
         const isAuthenticated = await base44.auth.isAuthenticated();
-        if (isAuthenticated) {
+        if (isMounted && isAuthenticated) {
           navigate('/dashboard', { replace: true });
-        } else {
+        } else if (isMounted) {
           setIsCheckingAuth(false);
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     };
     checkAuth();
+    return () => { isMounted = false; };
   }, [navigate]);
 
   if (isCheckingAuth) {

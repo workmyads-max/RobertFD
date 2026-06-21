@@ -16,22 +16,36 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Redirect if already logged in
+  // Redirect if already logged in - runs once on mount
   useEffect(() => {
+    let isMounted = true;
     const checkAuth = async () => {
       try {
         const isAuthenticated = await base44.auth.isAuthenticated();
-        if (isAuthenticated) {
-          navigate('/dashboard', { replace: true });
-        } else {
+        if (isMounted && isAuthenticated) {
+          // Handle from_url parameter safely - only allow internal paths
+          const params = new URLSearchParams(window.location.search);
+          const fromUrl = params.get('from_url');
+          let redirectPath = '/dashboard';
+          
+          // Only use from_url if it's a safe internal path (starts with /)
+          if (fromUrl && fromUrl.startsWith('/') && !fromUrl.startsWith('//')) {
+            redirectPath = fromUrl;
+          }
+          
+          navigate(redirectPath, { replace: true });
+        } else if (isMounted) {
           setIsCheckingAuth(false);
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     };
     checkAuth();
+    return () => { isMounted = false; };
   }, [navigate]);
 
   if (isCheckingAuth) {
@@ -54,7 +68,19 @@ export default function Login() {
       await base44.auth.loginViaEmailPassword(normalizedEmail, formData.password);
       
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      
+      // Handle from_url parameter safely - only allow internal paths
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get('from_url');
+      let redirectPath = '/dashboard';
+      
+      // Only use from_url if it's a safe internal path (starts with /, not //)
+      if (fromUrl && fromUrl.startsWith('/') && !fromUrl.startsWith('//')) {
+        redirectPath = fromUrl;
+      }
+      
+      // Use replace to prevent back-button returning to login
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
       const errorMsg = err.message || 'Invalid email or password';
