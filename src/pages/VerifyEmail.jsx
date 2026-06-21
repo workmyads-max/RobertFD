@@ -45,10 +45,10 @@ export default function VerifyEmail() {
 
     setIsLoading(true);
     try {
-      // Use Base44 native OTP verification
+      // Use Base44 native OTP verification with EXACT parameter names
       await base44.auth.verifyOtp({
         email: email.toLowerCase().trim(),
-        code: code,
+        otpCode: code,
       });
 
       toast.success('Email verified! Logging you in...');
@@ -65,8 +65,9 @@ export default function VerifyEmail() {
       }
     } catch (err) {
       console.error('Verification error:', err);
-      setError(err.message || 'Invalid verification code');
-      toast.error(err.message || 'Invalid verification code');
+      const errorMsg = err?.message || err?.detail || 'Invalid or expired verification code';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +81,13 @@ export default function VerifyEmail() {
 
     setIsResending(true);
     try {
-      await base44.auth.sendVerificationEmail(email.toLowerCase().trim());
-      toast.success('Verification code resent to ' + email);
+      // Use Base44 native resend OTP - pass email string directly
+      await base44.auth.resendOtp(email.toLowerCase().trim());
+      toast.success('Verification code resent! Check your email.');
     } catch (err) {
       console.error('Resend error:', err);
-      toast.error(err.message || 'Failed to resend code');
+      const errorMsg = err?.message || err?.detail || 'Failed to resend code';
+      toast.error(errorMsg);
     } finally {
       setIsResending(false);
     }

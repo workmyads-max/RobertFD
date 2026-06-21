@@ -19,8 +19,8 @@ export default function ForgotPassword() {
     try {
       const normalizedEmail = email.toLowerCase().trim();
       
-      // Use Base44 native password reset - sends email from custom domain
-      await base44.auth.sendResetPasswordEmail(normalizedEmail);
+      // Use Base44 native password reset request - sends email from custom domain
+      await base44.auth.resetPasswordRequest(normalizedEmail);
 
       setSent(true);
       toast.success('Password reset link sent to your email!');

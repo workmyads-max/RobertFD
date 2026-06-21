@@ -36,9 +36,9 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      // Use Base44 native password reset completion
+      // Use Base44 native password reset completion with EXACT parameter names
       await base44.auth.resetPassword({
-        token,
+        resetToken: token,
         newPassword: password,
       });
 
@@ -48,8 +48,9 @@ export default function ResetPassword() {
       }, 1500);
     } catch (err) {
       console.error('Password reset error:', err);
-      setError(err.message || 'Failed to reset password');
-      toast.error(err.message || 'Failed to reset password');
+      const errorMsg = err?.message || err?.detail || 'Failed to reset password';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
