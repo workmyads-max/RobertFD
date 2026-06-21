@@ -346,17 +346,34 @@ async function logEmailToSupabase(emailData) {
 }
 
 /**
- * Send email via Base44 built-in SendEmail integration
- * sr = base44.asServiceRole instance passed in from the handler
+ * Send email via Resend API
  */
 async function sendEmailViaSMTP(to, subject, body, sr) {
   try {
-    const fromName = Deno.env.get('SMTP_FROM_NAME') || 'XFunded Trader';
-    await sr.integrations.Core.SendEmail({ to, subject, body, from_name: fromName });
-    console.log('[EMAIL] Sent successfully to', to);
+    const apiKey = Deno.env.get('RESEND_API_KEY');
+    if (!apiKey) throw new Error('RESEND_API_KEY not set');
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'XFunded Trader <noreply@xfundedtrader.com>',
+        reply_to: 'support@xfundedtrader.com',
+        to: [to],
+        subject,
+        html: body,
+      }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || JSON.stringify(result));
+    console.log('[EMAIL] Sent via Resend to', to, '— id:', result.id);
     return true;
   } catch (error) {
-    console.log('[EMAIL] Failed:', error.message);
+    console.error('[EMAIL] Resend failed:', error.message);
     return false;
   }
 }
