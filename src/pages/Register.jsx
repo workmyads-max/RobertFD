@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, ArrowLeft, Eye, EyeOff, User, Globe, CheckCircle2, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, Globe, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -62,7 +62,7 @@ export default function Register() {
       const normalizedEmail = formData.email.toLowerCase().trim();
       const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ');
 
-      // Use Base44 native registration with email verification
+      // Use Base44 native registration
       await base44.auth.register({
         email: normalizedEmail,
         password: formData.password,
@@ -98,9 +98,11 @@ export default function Register() {
         }
       }
 
-      toast.success('Account created! Check your email for verification code.');
-      // Navigate to OTP verification
-      navigate('/verify-otp', { state: { email: normalizedEmail } });
+      toast.success('Account created! Redirecting to login...');
+      // Navigate to login after successful registration
+      setTimeout(() => {
+        navigate('/login');
+      }, 1000);
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed');

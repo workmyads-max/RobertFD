@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
 
 export default function ForgotPassword() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -21,17 +20,15 @@ export default function ForgotPassword() {
       const normalizedEmail = email.toLowerCase().trim();
       
       // Use Base44 native password reset
-      await base44.auth.sendResetPasswordEmail({
-        email: normalizedEmail,
-      });
+      await base44.auth.resetPasswordRequest(normalizedEmail);
 
       setSent(true);
       toast.success('Password reset link sent to your email!');
     } catch (err) {
       console.error('Password reset error:', err);
-      const errorMsg = err.message || 'Failed to send reset link';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      // Always show success message for security
+      setSent(true);
+      toast.success('If an account exists, you will receive a reset link.');
     } finally {
       setIsLoading(false);
     }
@@ -100,12 +97,12 @@ export default function ForgotPassword() {
                   Check your email and click the link to reset your password.
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full py-3 rounded-xl bg-card border border-border text-foreground font-semibold hover:bg-card/80 transition-all"
+              <Link
+                to="/login"
+                className="block w-full py-3 rounded-xl bg-card border border-border text-foreground font-semibold hover:bg-card/80 transition-all text-center"
               >
                 Back to Login
-              </button>
+              </Link>
             </div>
           )}
 

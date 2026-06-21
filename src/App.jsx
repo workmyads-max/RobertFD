@@ -2,61 +2,33 @@ import React from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { AuthProvider } from '@/lib/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import VerifyOTP from './pages/VerifyOTP';
-import LegalPage from './pages/LegalPage';
 import ForgotPassword from './pages/ForgotPassword';
-
-const LoginRoute = () => {
-  const { user, isLoadingAuth } = useAuth();
-  if (isLoadingAuth) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-    </div>
-  );
-  if (user) {
-    window.location.href = '/dashboard';
-    return null;
-  }
-  return <Login />;
-};
-
-const ProtectedRoute = ({ children }) => {
-  const { user, isLoadingAuth } = useAuth();
-
-  if (isLoadingAuth) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
-};
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/login" element={<LoginRoute />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-      <Route path="/challenges" element={<ChallengeSelect />} />
-      <Route path="/terms" element={<LegalPage />} />
-      <Route path="/privacy" element={<LegalPage />} />
-      <Route path="/risk-disclosure" element={<LegalPage />} />
-      <Route path="/aml-policy" element={<LegalPage />} />
+      
+      {/* Protected routes - all require authentication */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/challenges" element={<ChallengeSelect />} />
+      </Route>
+      
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -71,7 +43,6 @@ function App() {
         </Router>
         <Toaster />
       </QueryClientProvider>
-      <UserNotRegisteredError />
     </AuthProvider>
   );
 }
