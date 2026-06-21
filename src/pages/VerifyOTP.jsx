@@ -53,24 +53,31 @@ export default function VerifyOTP() {
 
     setIsLoading(true);
     try {
+      console.log('[VerifyOTP] Submitting:', { email, code });
+      
       // Verify OTP using email
       const response = await base44.functions.invoke('verifyOTP', {
         email,
         code
       });
 
+      console.log('[VerifyOTP] Response:', response.data);
+
       if (response.data.success) {
-        toast.success('Email verified successfully! Redirecting to login...');
+        toast.success('Email verified successfully!');
         setTimeout(() => {
           navigate('/login', { state: { email } });
-        }, 1000);
+        }, 800);
       } else {
-        toast.error(response.data.error || 'Invalid code');
+        const errorMsg = response.data.error || 'Invalid code';
+        console.error('[VerifyOTP] Error:', errorMsg);
+        toast.error(errorMsg);
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error('Verification error:', err);
-      toast.error(err.message || 'Verification failed. Please try again.');
-    } finally {
+      console.error('[VerifyOTP] Exception:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Verification failed';
+      toast.error(errorMsg);
       setIsLoading(false);
     }
   };
