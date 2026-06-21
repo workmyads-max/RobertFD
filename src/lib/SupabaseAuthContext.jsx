@@ -14,10 +14,30 @@ export const SupabaseAuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
+      // First try Base44 native auth
       const me = await base44.auth.me();
       setUser(me ?? null);
     } catch {
-      setUser(null);
+      // Fallback: check for custom auth user stored in localStorage
+      try {
+        const storedUser = localStorage.getItem('xf_user');
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          // Verify user still exists in database using service role
+          const users = await base44.asServiceRole.entities.User.filter({ email: user.email });
+          if (users.length > 0) {
+            setUser(users[0]);
+          } else {
+            localStorage.removeItem('xf_user');
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (storageErr) {
+        console.error('Custom auth fallback failed:', storageErr);
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }

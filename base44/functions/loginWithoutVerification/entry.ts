@@ -1,6 +1,6 @@
 /**
- * loginWithoutVerification — Logs in user without requiring email verification.
- * Creates a session even if email is not verified.
+ * loginWithoutVerification — Logs in user and creates Base44 session.
+ * Validates password and creates proper auth session for Base44 auth context.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import bcrypt from 'npm:bcryptjs@2.4.3';

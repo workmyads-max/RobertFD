@@ -31,9 +31,11 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        await refreshUser();
-        toast.success('Welcome back!');
-        navigate('/dashboard');
+        // Store user info in localStorage for auth context to pick up
+        localStorage.setItem('xf_user', JSON.stringify(response.data.user));
+        // Force reload to trigger auth context to read stored user
+        window.location.href = '/dashboard';
+        return;
       } else {
         const errorMsg = response.data.error || 'Invalid email or password';
         setError(errorMsg);
