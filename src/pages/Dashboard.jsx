@@ -196,8 +196,12 @@ export default function Dashboard() {
   const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
   const hasChallengeAccount = allAccounts.some(a => ['active', 'passed', 'pending'].includes(a.status));
   const notifications = rawNotifications.filter(n => {
-    // market_alert and system notifications MUST be user-scoped — never show globally
-    if ((n.type === 'market_alert' || n.type === 'system') && n.user_email !== user?.email) return false;
+    // CRITICAL: Any notification addressed to a specific user is PRIVATE —
+    // only that exact user may ever see it, regardless of target.
+    if (n.user_email) return n.user_email === user?.email;
+    // From here on, only broadcast notifications (no user_email) remain.
+    // market_alert and system notifications MUST be user-scoped — never show as broadcast
+    if (n.type === 'market_alert' || n.type === 'system') return false;
     if (n.target === 'all') return true;
     if (n.target === 'admin') return isAdmin;
     if (n.target === 'funded') return hasFundedAccount;
