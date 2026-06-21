@@ -95,6 +95,7 @@ function getEmailTemplate(type, data) {
     withdrawal_submitted: 'Your request is pending review',
     withdrawal_approved: 'Your payout has been approved',
     withdrawal_rejected: 'Your withdrawal request was not approved',
+    kyc_approved: 'Identity verification complete',
   };
 
   const templates = {
@@ -249,6 +250,19 @@ function getEmailTemplate(type, data) {
       ui.paragraph(`❌ <strong style="color:${BRAND.red};font-size:20px;">Withdrawal Rejected</strong>`, 'text-align:center;') +
       ui.infoBox(`Reason: <strong style="color:#d4d5db;">${data.reason || 'Please contact support for details.'}</strong>`) +
       ui.button('Contact Support', 'https://xfundedtrader.com/dashboard'),
+
+    kyc_approved:
+      ui.paragraph(`✅ <strong style="color:${BRAND.green};font-size:20px;">KYC Verification Approved</strong>`, 'text-align:center;') +
+      ui.paragraph(`Hello <strong style="color:${BRAND.orange};">${name}</strong>, your identity has been successfully verified. You are now fully verified on XFunded Trader.`) +
+      ui.card(
+        ui.stats([
+          { value: 'Verified', label: 'KYC Status', color: BRAND.green },
+          { value: data.full_name || name, label: 'Name', color: '#ffffff' },
+        ]),
+        BRAND.green
+      ) +
+      ui.infoBox(`✅ <strong style="color:#d4d5db;">You can now:</strong><br>• Request profit withdrawals<br>• Access full platform features<br>• Trade without restrictions`) +
+      ui.button('Access Dashboard', 'https://xfundedtrader.com/dashboard'),
   };
 
   const template = templates[type] || templates.registration;
@@ -287,10 +301,17 @@ function getEmailTemplate(type, data) {
           <!-- Header -->
           <tr>
             <td class="xf-header" align="center" style="padding:44px 40px 30px;border-bottom:1px solid ${BRAND.border};">
-              <div style="font-family:${BRAND.font};font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1;">
-                <span style="color:#ffffff;">X</span><span style="color:${BRAND.orange};">Funded</span><span style="color:#ffffff;"> Trader</span>
-              </div>
-              <div style="font-family:${BRAND.font};font-size:13px;font-weight:600;color:${BRAND.muted};letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Elite Prop Trading</div>
+              <!-- Logo matching homepage style -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:6px;">
+                <tr>
+                  <td style="padding:10px 18px 8px;background:#111318;border:1px solid #2a2b33;border-radius:10px;">
+                    <div style="font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1;">
+                      <span style="color:${BRAND.orange};">X</span><span style="color:#ffffff;">Funded</span>
+                    </div>
+                    <div style="font-family:${BRAND.font};font-size:11px;font-weight:600;color:${BRAND.muted};letter-spacing:4px;text-transform:uppercase;margin-top:2px;text-align:center;">TRADER</div>
+                  </td>
+                </tr>
+              </table>
               <div style="height:1px;background:linear-gradient(90deg,transparent,${BRAND.orange},transparent);margin:18px 0 14px;"></div>
               <div style="font-family:${BRAND.font};font-size:22px;font-weight:800;color:${BRAND.orange};letter-spacing:-0.5px;">${titles[type] || 'XFunded Notification'}</div>
               <div style="font-family:${BRAND.font};font-size:13px;color:${BRAND.muted};margin-top:6px;">${subtitles[type] || 'Elite Proprietary Trading Platform'}</div>
@@ -442,7 +463,9 @@ Deno.serve(async (req) => {
         withdrawal_submitted: '⏳ Withdrawal Request Submitted',
         withdrawal_approved: '✅ Withdrawal Approved',
         withdrawal_rejected: '❌ Withdrawal Rejected',
-      };
+        kyc_approved: '✅ KYC Verification Approved',
+        kyc_approved: 'KYC Verified',
+        };
 
       const subject = subjectMap[type] || 'XFunded Trader Notification';
       const sent = await sendEmailViaSMTP(to, subject, emailBody, sr);
