@@ -65,7 +65,6 @@ export default function Home() {
         </div>
         <FundedShowcaseDemo />
       </section>
-      <DashboardPreview dashImage={IMAGES.dashboard} />
       <ChallengeTypes />
       <PricingSection />
       <RulesSection />
