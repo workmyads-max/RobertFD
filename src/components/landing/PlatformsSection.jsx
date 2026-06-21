@@ -15,14 +15,14 @@ const platforms = [
     title: 'TradeLocker',
     subtitle: 'Web-Based',
     description: 'Next-generation web trading platform with modern UI, real-time analytics, and seamless execution.',
-    available: true,
+    available: false,
   },
   {
     icon: Monitor,
-    title: 'Proprietary Terminal',
+    title: 'Match Trader',
     subtitle: 'Web Trading',
-    description: 'Our custom-built web trading terminal with advanced order management and portfolio analytics.',
-    available: true,
+    description: 'Advanced multi-asset trading platform with powerful order management and portfolio analytics.',
+    available: false,
   },
 ];
 
@@ -69,8 +69,10 @@ export default function PlatformsSection({ mobileImage }) {
                   </div>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">{p.description}</p>
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent" />
-                  <span className="text-xs font-mono text-accent">Available Now</span>
+                  <span className="w-2 h-2 rounded-full" style={{ background: p.available ? '#22c55e' : '#f59e0b' }} />
+                  <span className="text-xs font-mono" style={{ color: p.available ? '#22c55e' : '#f59e0b' }}>
+                    {p.available ? 'Available Now' : 'Coming Soon'}
+                  </span>
                 </div>
               </motion.div>
             );
