@@ -100,8 +100,8 @@ export default function Register() {
         }
       }
 
-      toast.success('Account created! Please check your email to verify, then login.');
-      navigate('/login');
+      toast.success('Account created! Check your email for verification code.');
+      navigate('/verify-otp', { state: { email: formData.email } });
     } catch (err) {
       setError(err.message || 'Registration failed');
       toast.error(err.message || 'Registration failed');

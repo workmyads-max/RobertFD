@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout';
 import ChallengeSelect from './pages/ChallengeSelect';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import VerifyOTP from './pages/VerifyOTP';
 import LegalPage from './pages/LegalPage';
 
 const LoginRoute = () => {
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-otp" element={<VerifyOTP />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       <Route path="/challenges" element={<ChallengeSelect />} />

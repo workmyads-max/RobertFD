@@ -32,20 +32,39 @@ Deno.serve(async (req) => {
       role: 'user',
     });
 
-    // Set password via auth.register
-    // Note: Base44 automatically sends verification email - this is platform-enforced and cannot be disabled
+    // Generate and send OTP via custom email (Resend)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    
+    // Store OTP
+    await sr.entities.OTP.create({
+      email,
+      type: 'registration',
+      code: otp,
+      expires_at: otpExpiresAt,
+      verified: false,
+      attempts: 0,
+    });
+
+    // Send OTP email via Resend (using emailService function)
     try {
-      await sr.auth.register({ email, password });
-    } catch (regErr) {
-      if (!regErr.message?.toLowerCase().includes('already')) {
-        console.error('Auth registration note:', regErr.message);
-      }
+      await sr.functions.invoke('emailService', {
+        action: 'send_otp',
+        to: email,
+        code: otp,
+        name: firstName || 'Trader',
+        purpose: 'registration'
+      });
+    } catch (emailErr) {
+      console.error('OTP email failed:', emailErr.message);
     }
 
     return Response.json({ 
       success: true,
       user_id: newUser.id,
-      email: newUser.email 
+      email: newUser.email,
+      requires_otp: true,
+      message: 'Account created. Please check your email for verification code.'
     });
 
   } catch (error) {
