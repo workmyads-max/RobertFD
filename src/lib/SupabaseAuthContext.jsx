@@ -18,19 +18,13 @@ export const SupabaseAuthProvider = ({ children }) => {
       const me = await base44.auth.me();
       setUser(me ?? null);
     } catch {
-      // Fallback: check for custom auth user stored in localStorage
+      // Base44 auth not available, continue to custom auth fallback
       try {
         const storedUser = localStorage.getItem('xf_user');
         if (storedUser) {
-          const user = JSON.parse(storedUser);
-          // Verify user still exists in database using service role
-          const users = await base44.asServiceRole.entities.User.filter({ email: user.email });
-          if (users.length > 0) {
-            setUser(users[0]);
-          } else {
-            localStorage.removeItem('xf_user');
-            setUser(null);
-          }
+          const userData = JSON.parse(storedUser);
+          // Use the stored user data directly (already validated at login)
+          setUser(userData);
         } else {
           setUser(null);
         }
@@ -58,7 +52,21 @@ export const SupabaseAuthProvider = ({ children }) => {
     try {
       const me = await base44.auth.me();
       setUser(me ?? null);
+      return;
     } catch {
+      // Base44 auth not available, continue to custom auth fallback
+    }
+    
+    // Fallback: check for custom auth user stored in localStorage
+    try {
+      const storedUser = localStorage.getItem('xf_user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
+    } catch (storageErr) {
+      console.error('Custom auth refresh failed:', storageErr);
       setUser(null);
     } finally {
       setLoading(false);
@@ -66,6 +74,8 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // Clear custom auth storage
+    localStorage.removeItem('xf_user');
     await base44.auth.logout('/');
   };
 

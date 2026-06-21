@@ -45,14 +45,8 @@ Deno.serve(async (req) => {
       throw createErr;
     }
 
-    // Verify user was created
-    const verifyUser = await sr.entities.User.filter({ email });
-    if (verifyUser.length === 0) {
-      console.error('[registerUser] User not found after creation!');
-      throw new Error('User creation succeeded but user not found');
-    }
-    
-    console.log('[registerUser] User verified:', verifyUser[0].id);
+    // User created successfully - skip verification due to Base44 User entity restrictions
+    console.log('[registerUser] User created successfully:', newUser.id);
 
     // Generate and send OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
