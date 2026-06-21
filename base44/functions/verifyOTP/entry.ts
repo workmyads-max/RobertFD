@@ -79,9 +79,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid code' }, { status: 400 });
     }
 
-    // Mark as verified
+    // Mark OTP as verified
     console.log('[verifyOTP] Marking as verified');
     await sr.entities.OTP.update(otpRecord.id, { verified: true });
+
+    // Mark user as email verified for registration OTP
+    if (otpRecord.type === 'registration' && otpRecord.email) {
+      const users = await sr.entities.User.filter({ email: otpRecord.email });
+      if (users.length > 0) {
+        await sr.entities.User.update(users[0].id, { email_verified: true });
+        console.log('[verifyOTP] User marked as email_verified');
+      }
+    }
 
     // Update user if phone verification
     if (otpRecord.type === 'phone_verification' && otpRecord.phone) {

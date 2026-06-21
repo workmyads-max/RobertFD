@@ -35,6 +35,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid email or password' }, { status: 400 });
     }
 
+    // Check if email is verified
+    if (user.email_verified === false) {
+      return Response.json({ 
+        error: 'Please verify your email first. Check your inbox for the verification code.',
+        requires_verification: true
+      }, { status: 403 });
+    }
+
     // Return user data for frontend to use
     return Response.json({
       success: true,
@@ -43,6 +51,7 @@ Deno.serve(async (req) => {
         email: user.email,
         full_name: user.full_name,
         role: user.role || 'user',
+        email_verified: user.email_verified,
       }
     });
 

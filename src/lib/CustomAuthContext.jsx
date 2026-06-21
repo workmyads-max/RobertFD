@@ -1,6 +1,6 @@
 /**
  * CustomAuthContext.jsx — Backward-compatibility re-export.
- * All auth is now handled by AuthContext (custom Base44 auth).
+ * All auth is handled by AuthContext (Base44 custom auth with OTP verification).
  * This file exists so existing imports of useCustomAuth/CustomAuthProvider keep working.
  */
 export {

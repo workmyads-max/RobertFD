@@ -104,11 +104,20 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('xf_user');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          // Verify user still exists
+          // Verify user still exists and is verified
           const users = await base44.asServiceRole.entities.User.filter({ email: userData.email });
           if (users.length > 0) {
-            setUser(users[0]);
-            setIsAuthenticated(true);
+            const user = users[0];
+            // Check if email is verified
+            if (user.email_verified === false) {
+              // User exists but not verified - clear session
+              localStorage.removeItem('xf_user');
+              setUser(null);
+              setIsAuthenticated(false);
+            } else {
+              setUser(user);
+              setIsAuthenticated(true);
+            }
           } else {
             localStorage.removeItem('xf_user');
             setUser(null);

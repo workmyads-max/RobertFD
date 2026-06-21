@@ -26,6 +26,11 @@
       "type": "boolean",
       "default": false
     },
+    "email_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has verified their email via OTP"
+    },
     "country_code": {
       "type": "string",
       "description": "Country code for phone (e.g., +1, +44)"

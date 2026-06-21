@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
         full_name: fullName,
         role: 'user',
         password_hash: passwordHash,
+        email_verified: false,
         ...(country && { country }),
       });
       console.log('[registerUser] Created via SR:', newUser.id);
@@ -45,7 +46,6 @@ Deno.serve(async (req) => {
       throw createErr;
     }
 
-    // User created successfully - skip verification due to Base44 User entity restrictions
     console.log('[registerUser] User created successfully:', newUser.id);
 
     // Generate and send OTP

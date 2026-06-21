@@ -71,6 +71,9 @@ export default function Register() {
         throw new Error(response.data.error || 'Registration failed');
       }
 
+      // Store email for OTP verification page
+      sessionStorage.setItem('xf_pending_verify_email', formData.email);
+
       // Affiliate attribution
       if (refCode) {
         try {
@@ -98,6 +101,7 @@ export default function Register() {
       }
 
       toast.success('Account created! Check your email for verification code.');
+      // Navigate to OTP verification
       navigate('/verify-otp', { state: { email: formData.email } });
     } catch (err) {
       setError(err.message || 'Registration failed');

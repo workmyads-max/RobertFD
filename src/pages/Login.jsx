@@ -38,6 +38,14 @@ export default function Login() {
         toast.success('Welcome back!');
         navigate('/dashboard');
         return;
+      } else if (response.data.requires_verification) {
+        // User needs to verify email first
+        setError('Please verify your email first. Check your inbox for the verification code.');
+        toast.error('Email verification required');
+        setTimeout(() => {
+          navigate('/verify-otp', { state: { email: formData.email } });
+        }, 1500);
+        return;
       } else {
         const errorMsg = response.data.error || 'Invalid email or password';
         setError(errorMsg);

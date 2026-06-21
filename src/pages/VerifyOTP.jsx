@@ -15,10 +15,16 @@ export default function VerifyOTP() {
   const [otpId, setOtpId] = useState(null);
 
   useEffect(() => {
-    // Get email from location state (passed from register)
+    // Get email from location state (passed from register) or session storage
     const state = location.state;
     if (state?.email) {
       setEmail(state.email);
+      sessionStorage.setItem('xf_pending_verify_email', state.email);
+    } else {
+      const storedEmail = sessionStorage.getItem('xf_pending_verify_email');
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
     }
   }, [location]);
 
@@ -64,9 +70,11 @@ export default function VerifyOTP() {
       console.log('[VerifyOTP] Response:', response.data);
 
       if (response.data.success) {
-        toast.success('Email verified successfully!');
+        toast.success('Email verified successfully! You can now login.');
+        // Clear pending verification
+        sessionStorage.removeItem('xf_pending_verify_email');
         setTimeout(() => {
-          navigate('/login', { state: { email } });
+          navigate('/login', { state: { email, verified: true } });
         }, 800);
       } else {
         const errorMsg = response.data.error || 'Invalid code';

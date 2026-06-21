@@ -22,10 +22,30 @@ async function sendViaResend(to, subject, html) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole;
     const { email, type, phone, name } = await req.json();
 
     if (!email && !phone) {
       return Response.json({ error: 'Email or phone required' }, { status: 400 });
+    }
+
+    // Rate limiting: Check for recent OTP requests (max 3 per 10 minutes)
+    if (email) {
+      const recentOtps = await sr.entities.OTP.filter({ 
+        email: email, 
+        type: type || 'registration' 
+      });
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const recentCount = recentOtps.filter(otp => 
+        otp.created_at > tenMinutesAgo && otp.verified === false
+      ).length;
+      
+      if (recentCount >= 3) {
+        return Response.json({ 
+          error: 'Too many requests. Please wait 10 minutes before requesting another code.',
+          retry_after: 600
+        }, { status: 429 });
+      }
     }
 
     // Generate 6-digit OTP
@@ -33,7 +53,7 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // Store OTP in database
-    const otpRecord = await base44.asServiceRole.entities.OTP.create({
+    const otpRecord = await sr.entities.OTP.create({
       email: email || null,
       phone: phone || null,
       type: type || 'registration',
