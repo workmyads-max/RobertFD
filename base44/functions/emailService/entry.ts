@@ -287,8 +287,12 @@ function getEmailTemplate(type, data) {
           <!-- Header -->
           <tr>
             <td class="xf-header" align="center" style="padding:44px 40px 30px;border-bottom:1px solid ${BRAND.border};">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" width="60" height="60" style="width:60px;height:60px;background:${BRAND.orange};border-radius:14px;font-family:Georgia,serif;font-size:22px;font-weight:900;color:#ffffff;">XF</td></tr></table>
-              <div style="font-family:${BRAND.font};font-size:26px;font-weight:800;color:${BRAND.orange};margin-top:18px;letter-spacing:-0.5px;">${titles[type] || 'XFunded Notification'}</div>
+              <div style="font-family:${BRAND.font};font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1;">
+                <span style="color:#ffffff;">X</span><span style="color:${BRAND.orange};">Funded</span><span style="color:#ffffff;"> Trader</span>
+              </div>
+              <div style="font-family:${BRAND.font};font-size:13px;font-weight:600;color:${BRAND.muted};letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Elite Prop Trading</div>
+              <div style="height:1px;background:linear-gradient(90deg,transparent,${BRAND.orange},transparent);margin:18px 0 14px;"></div>
+              <div style="font-family:${BRAND.font};font-size:22px;font-weight:800;color:${BRAND.orange};letter-spacing:-0.5px;">${titles[type] || 'XFunded Notification'}</div>
               <div style="font-family:${BRAND.font};font-size:13px;color:${BRAND.muted};margin-top:6px;">${subtitles[type] || 'Elite Proprietary Trading Platform'}</div>
             </td>
           </tr>
