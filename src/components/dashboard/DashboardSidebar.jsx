@@ -183,7 +183,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               className="w-9 h-9 flex items-center justify-center rounded-xl text-white/30 hover:text-white/60 transition-colors hover:bg-white/[0.05]">
               <PanelLeftOpen className="w-4 h-4" />
             </button>
-            <button onClick={() => base44.auth.logout('/')} title="Sign Out"
+            <button onClick={() => base44.auth.logout()} title="Sign Out"
               className="w-9 h-9 flex items-center justify-center rounded-xl text-white/30 hover:text-red-400 transition-colors hover:bg-red-500/5">
               <LogOut className="w-4 h-4" />
             </button>
@@ -193,7 +193,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             <a href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/30 hover:text-white/60 transition-colors">
               ← Back to site
             </a>
-            <button onClick={() => base44.auth.logout('/')}
+            <button onClick={() => base44.auth.logout()}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/30 hover:text-red-400 transition-colors">
               <LogOut className="w-3.5 h-3.5" /> Logout
             </button>

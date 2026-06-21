@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Chrome, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -17,14 +17,6 @@ export default function Login() {
     password: ''
   });
   const [error, setError] = useState('');
-
-  const handleGoogleLogin = async () => {
-    try {
-      await base44.auth.loginViaGoogle({ redirectTo: `${window.location.origin}/dashboard` });
-    } catch (err) {
-      toast.error('Google login failed: ' + err.message);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,23 +110,6 @@ export default function Login() {
               {isLoading ? 'Please wait...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground font-mono">OR</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          {/* Google Login */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:bg-card/80 transition-all disabled:opacity-50"
-          >
-            <Chrome className="w-5 h-5 text-foreground" />
-            <span className="text-sm font-medium text-foreground">Continue with Google</span>
-          </button>
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground">

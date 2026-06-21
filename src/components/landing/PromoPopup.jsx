@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, ArrowRight, Sparkles, Star } from 'lucide-react';
 
@@ -20,9 +21,16 @@ export default function PromoPopup({ mascotImage }) {
     sessionStorage.setItem('promo_dismissed', '1');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
+    try {
+      await base44.integrations.Core.SendEmail({
+        to: 'workmyads@gmail.com',
+        subject: 'New Lead from Promo Popup',
+        body: `New email signup from promo popup: ${email}`,
+      });
+    } catch (_) {}
     setSubmitted(true);
     setTimeout(handleClose, 2000);
   };
