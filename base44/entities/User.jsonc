@@ -75,6 +75,14 @@
     "ethereum": {
       "type": "string",
       "description": "Ethereum wallet address"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "Bcrypt hashed password for custom auth"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country of residence"
     }
   },
   "required": [
