@@ -16,8 +16,11 @@ export default function VerifyEmail() {
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Check if user is already authenticated and get state from navigation
+  // Check if user is already authenticated and get state from navigation - with timeout fallback
   useEffect(() => {
+    let isMounted = true;
+    let redirectAttempted = false;
+    
     const state = location.state;
     if (state?.email) {
       setEmail(state.email);
@@ -29,22 +32,50 @@ export default function VerifyEmail() {
       toast.error('Please verify your email before logging in');
     }
     
-    // If already authenticated, redirect to dashboard
+    // If already authenticated, redirect to dashboard with timeout protection
     const checkAuth = async () => {
       try {
-        const isAuthenticated = await base44.auth.isAuthenticated();
-        if (isAuthenticated) {
+        // Timeout after 2 seconds to prevent infinite spinner
+        const authCheck = base44.auth.isAuthenticated();
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth check timeout')), 2000)
+        );
+        
+        const isAuthenticated = await Promise.race([authCheck, timeout]);
+        
+        if (isMounted && !redirectAttempted && isAuthenticated) {
+          redirectAttempted = true;
           navigate('/dashboard', { replace: true });
-        } else {
+          return;
+        }
+        
+        if (isMounted && !redirectAttempted) {
           setIsCheckingAuth(false);
         }
       } catch (err) {
-        console.error('Auth check failed:', err);
-        setIsCheckingAuth(false);
+        console.error('Auth check failed or timed out:', err);
+        if (isMounted && !redirectAttempted) {
+          // On any error, show the form instead of hanging
+          setIsCheckingAuth(false);
+        }
       }
     };
+    
     checkAuth();
-  }, [location.state, navigate]);
+    
+    // Safety timeout - force show form after 3 seconds
+    const forceShowForm = setTimeout(() => {
+      if (isMounted && isCheckingAuth) {
+        console.warn('[VerifyEmail] Auth check took too long, showing form');
+        setIsCheckingAuth(false);
+      }
+    }, 3000);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(forceShowForm);
+    };
+  }, [location.state, navigate, isCheckingAuth]);
 
   if (isCheckingAuth) {
     return (
@@ -151,11 +182,12 @@ export default function VerifyEmail() {
         }
         
         toast.success('Welcome!');
-        navigate('/dashboard');
+        // CRITICAL: Use window.location.href for guaranteed navigation
+        window.location.href = '/dashboard';
       } else {
         // No password (came from login redirect) - send to login
         toast.success('Email verified! Please log in now.');
-        navigate('/login');
+        window.location.href = '/login';
       }
     } catch (err) {
       console.error('Verification error:', err);

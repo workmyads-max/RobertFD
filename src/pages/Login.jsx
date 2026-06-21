@@ -16,13 +16,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Redirect if already logged in - runs once on mount
+  // Redirect if already logged in - runs once on mount with timeout fallback
   useEffect(() => {
     let isMounted = true;
+    let redirectAttempted = false;
+    
     const checkAuth = async () => {
       try {
-        const isAuthenticated = await base44.auth.isAuthenticated();
-        if (isMounted && isAuthenticated) {
+        // Timeout after 2 seconds to prevent infinite spinner
+        const authCheck = base44.auth.isAuthenticated();
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth check timeout')), 2000)
+        );
+        
+        const isAuthenticated = await Promise.race([authCheck, timeout]);
+        
+        if (isMounted && !redirectAttempted && isAuthenticated) {
+          redirectAttempted = true;
           // Handle from_url parameter safely - only allow internal paths
           const params = new URLSearchParams(window.location.search);
           const fromUrl = params.get('from_url');
@@ -33,20 +43,38 @@ export default function Login() {
             redirectPath = fromUrl;
           }
           
+          // Use replace to prevent back-button returning to login
           navigate(redirectPath, { replace: true });
-        } else if (isMounted) {
+          return;
+        }
+        
+        if (isMounted && !redirectAttempted) {
           setIsCheckingAuth(false);
         }
       } catch (err) {
-        console.error('Auth check failed:', err);
-        if (isMounted) {
+        console.error('Auth check failed or timed out:', err);
+        if (isMounted && !redirectAttempted) {
+          // On any error, show the form instead of hanging
           setIsCheckingAuth(false);
         }
       }
     };
+    
     checkAuth();
-    return () => { isMounted = false; };
-  }, [navigate]);
+    
+    // Safety timeout - force show form after 3 seconds even if auth check is pending
+    const forceShowForm = setTimeout(() => {
+      if (isMounted && isCheckingAuth) {
+        console.warn('[Login] Auth check took too long, showing form');
+        setIsCheckingAuth(false);
+      }
+    }, 3000);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(forceShowForm);
+    };
+  }, [navigate, isCheckingAuth]);
 
   if (isCheckingAuth) {
     return (
@@ -69,18 +97,19 @@ export default function Login() {
       
       toast.success('Welcome back!');
       
-      // Handle from_url parameter safely - only allow internal paths
+      // CRITICAL: Use window.location.href for guaranteed navigation after successful login
+      // This prevents any React Router issues from causing infinite spinners
       const params = new URLSearchParams(window.location.search);
       const fromUrl = params.get('from_url');
-      let redirectPath = '/dashboard';
       
-      // Only use from_url if it's a safe internal path (starts with /, not //)
+      // Only use from_url if it's a safe internal path
       if (fromUrl && fromUrl.startsWith('/') && !fromUrl.startsWith('//')) {
-        redirectPath = fromUrl;
+        window.location.href = fromUrl;
+      } else {
+        window.location.href = '/dashboard';
       }
       
-      // Use replace to prevent back-button returning to login
-      navigate(redirectPath, { replace: true });
+      return; // Exit early - navigation is happening
     } catch (err) {
       console.error('Login error:', err);
       const errorMsg = err.message || 'Invalid email or password';

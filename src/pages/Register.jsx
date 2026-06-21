@@ -20,27 +20,54 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Redirect if already logged in - runs once on mount
+  // Redirect if already logged in - runs once on mount with timeout fallback
   useEffect(() => {
     let isMounted = true;
+    let redirectAttempted = false;
+    
     const checkAuth = async () => {
       try {
-        const isAuthenticated = await base44.auth.isAuthenticated();
-        if (isMounted && isAuthenticated) {
+        // Timeout after 2 seconds to prevent infinite spinner
+        const authCheck = base44.auth.isAuthenticated();
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth check timeout')), 2000)
+        );
+        
+        const isAuthenticated = await Promise.race([authCheck, timeout]);
+        
+        if (isMounted && !redirectAttempted && isAuthenticated) {
+          redirectAttempted = true;
           navigate('/dashboard', { replace: true });
-        } else if (isMounted) {
+          return;
+        }
+        
+        if (isMounted && !redirectAttempted) {
           setIsCheckingAuth(false);
         }
       } catch (err) {
-        console.error('Auth check failed:', err);
-        if (isMounted) {
+        console.error('Auth check failed or timed out:', err);
+        if (isMounted && !redirectAttempted) {
+          // On any error, show the form instead of hanging
           setIsCheckingAuth(false);
         }
       }
     };
+    
     checkAuth();
-    return () => { isMounted = false; };
-  }, [navigate]);
+    
+    // Safety timeout - force show form after 3 seconds
+    const forceShowForm = setTimeout(() => {
+      if (isMounted && isCheckingAuth) {
+        console.warn('[Register] Auth check took too long, showing form');
+        setIsCheckingAuth(false);
+      }
+    }, 3000);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(forceShowForm);
+    };
+  }, [navigate, isCheckingAuth]);
 
   if (isCheckingAuth) {
     return (
