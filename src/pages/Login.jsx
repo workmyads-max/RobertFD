@@ -20,9 +20,9 @@ export default function Login() {
     setError('');
     setIsLoading(true);
 
+    const normalizedEmail = formData.email.toLowerCase().trim();
+
     try {
-      const normalizedEmail = formData.email.toLowerCase().trim();
-      
       // Use Base44 native email+password login
       await base44.auth.loginViaEmailPassword(normalizedEmail, formData.password);
       
@@ -31,6 +31,28 @@ export default function Login() {
     } catch (err) {
       console.error('Login error:', err);
       const errorMsg = err.message || 'Invalid email or password';
+      
+      // Check if error is about email verification needed
+      if (errorMsg.includes('verify') || errorMsg.includes('verification')) {
+        // Redirect to verification screen with email pre-filled
+        toast.error('Please verify your email first');
+        navigate('/verify-email', { 
+          state: { 
+            email: normalizedEmail,
+            password: formData.password,
+            needsVerification: true
+          } 
+        });
+        return;
+      }
+      
+      // Check if account doesn't exist in native auth (old custom auth users)
+      if (errorMsg.includes('not found') || errorMsg.includes('does not exist') || errorMsg.includes('invalid')) {
+        setError('No account found with this email. If you have an existing account, please use "Forgot Password" to set up access with the same email - all your data will be preserved.');
+        toast.error('Account not found - use Forgot Password or Register');
+        return;
+      }
+      
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -127,6 +149,17 @@ export default function Login() {
               Create Account
             </Link>
           </p>
+
+          {/* Old System Users Notice */}
+          <div className="p-3 bg-card border border-border rounded-lg">
+            <p className="text-xs text-muted-foreground text-center">
+              <strong className="text-foreground">Returning user?</strong> If you can't log in, use{' '}
+              <Link to="/forgot-password" className="text-primary hover:text-primary/80 font-medium transition-colors">
+                Forgot Password
+              </Link>
+              {' '}with your existing email to set up access. All your data remains intact.
+            </p>
+          </div>
         </div>
       </div>
 

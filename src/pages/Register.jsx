@@ -68,8 +68,13 @@ export default function Register() {
       });
 
       toast.success('Account created! Please check your email for verification code.');
-      // Redirect to login to complete verification
-      navigate('/login');
+      // Redirect to verification page with email and password in state
+      navigate('/verify-email', { 
+        state: { 
+          email: normalizedEmail, 
+          password: formData.password 
+        } 
+      });
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed');
