@@ -113,17 +113,20 @@ export default function Register() {
         throw new Error(verifyRes.data?.error || 'Invalid verification code');
       }
 
-      // STEP 3: Create the account
-      try {
-        await base44.auth.register({ email: formData.email, password: formData.password });
-      } catch (regErr) {
-        if (!regErr.message?.toLowerCase().includes('already') &&
-            !regErr.message?.toLowerCase().includes('exist')) {
-          throw regErr;
-        }
+      // STEP 3: Create the account via backend (Supabase admin — no email verification needed)
+      const regRes = await base44.functions.invoke('registerUser', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        country: formData.country || undefined,
+        otp_id: otpId,
+      });
+      if (!regRes.data?.success) {
+        throw new Error(regRes.data?.error || 'Registration failed');
       }
 
-      // STEP 4: Log the user in
+      // STEP 4: Log the user in (email is already confirmed via Supabase admin)
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
       // STEP 5: Save profile
