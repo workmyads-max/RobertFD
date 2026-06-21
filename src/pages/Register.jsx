@@ -61,7 +61,7 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Register via backend function (service role - no email verification required)
+      // Register via backend function (service role)
       const response = await base44.functions.invoke('registerUser', {
         email: formData.email,
         password: formData.password,
@@ -73,9 +73,6 @@ export default function Register() {
       if (!response.data.success) {
         throw new Error(response.data.error || 'Registration failed');
       }
-
-      // Log in immediately
-      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
 
       // Affiliate attribution
       if (refCode) {
@@ -103,9 +100,8 @@ export default function Register() {
         }
       }
 
-      toast.success('Account created! Welcome!');
-      await refreshUser();
-      navigate('/dashboard');
+      toast.success('Account created! Please check your email to verify, then login.');
+      navigate('/login');
     } catch (err) {
       setError(err.message || 'Registration failed');
       toast.error(err.message || 'Registration failed');
