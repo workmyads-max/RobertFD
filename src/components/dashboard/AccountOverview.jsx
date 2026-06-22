@@ -7,9 +7,10 @@ import {
   TrendingUp, TrendingDown, Activity, Shield, Target, Clock,
   Zap, Award, CheckCircle2
 } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAccountStats } from '../overview/useAccountStats';
+import { useAccountTrades, filterRealTrades } from '@/hooks/useAccountTrades';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
@@ -18,26 +19,14 @@ import ClosedTradesSection from './ClosedTradesSection';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
-// ─── Hook: fetch closed trades live from MT5 (same source as ClosedTradesSection) ──
+// ─── Hook: fetch closed trades live from MT5 ──
+// Replaced by useAccountTrades (hooks/useAccountTrades.js) which is resilient:
+// waits for account_id, re-fetches on account change, never blanks on transient
+// errors/empties, and excludes MT5 deposit pseudo-records.
+// Thin wrapper kept for call-site compatibility.
 function useClosedTrades(account) {
-  const [trades, setTrades] = useState([]);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (!account?.account_id) { setTrades([]); return; }
-    let cancelled = false;
-    const fetch = () => {
-      setLoading(true);
-      base44.functions.invoke('getClosedTrades', { account_id: account.account_id, page_size: 500 })
-        .then(res => { if (!cancelled) setTrades(res?.data?.trades || []); })
-        .catch(() => { if (!cancelled) setTrades([]); })
-        .finally(() => { if (!cancelled) setLoading(false); });
-    };
-    fetch();
-    // Re-poll every 60s — avoid rate limits (multiple components shared this data)
-    const iv = setInterval(fetch, 60000);
-    return () => { cancelled = true; clearInterval(iv); };
-  }, [account?.account_id]);
-  return { trades, loading };
+  const { trades, isLoading, refetch } = useAccountTrades(account, { intervalMs: 60000 });
+  return { trades, loading: isLoading, refetch };
 }
 
 function useResetCountdown() {
@@ -1076,21 +1065,33 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     staleTime: 30000,
   });
 
-  const { data: tradeRecords = [] } = useQuery({
+  const { data: rawTradeRecords = [] } = useQuery({
     queryKey: ['trade-records-overview', account?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: account.account_id }),
+    queryFn: async () => {
+      if (!account?.account_id) return [];
+      const recs = await base44.entities.TradeRecord.filter({ account_id: account.account_id });
+      return Array.isArray(recs) ? recs : [];
+    },
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
+    placeholderData: keepPreviousData, // never blank on transient refetch
   });
+  // Exclude MT5 deposit pseudo-records from all stats / open-trade feeds
+  const tradeRecords = useMemo(
+    () => filterRealTrades(rawTradeRecords, account),
+    [rawTradeRecords, account]
+  );
 
   const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
     queryFn: async () => {
+      if (!account?.account_id) return [];
       const res = await base44.functions.invoke('getLivePositions', { account_id: account.account_id });
-      return res?.data?.positions || [];
+      return Array.isArray(res?.data?.positions) ? res.data.positions : [];
     },
     enabled: !!account?.account_id,
     refetchInterval: 5000, staleTime: 3000,
+    placeholderData: keepPreviousData, // never blank on transient refetch
   });
 
   const livePositions = livePositionsData || [];

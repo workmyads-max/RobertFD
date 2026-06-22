@@ -67,29 +67,56 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
   // Use livePlan.min_trading_days if available (admin can update it); fall back to rule_snapshot
   const minDays = livePlan?.min_trading_days ?? snap.min_trading_days ?? 4;
 
-  const isPhase1Done = phase !== 'phase1' || status === 'passed' || status === 'funded';
-  const isPhase2Done = phase === 'funded' || status === 'funded';
+  // Fully data-driven stage derivation from phase, status & review flags.
+  const phase1Review = account?.phase_review_status;
+  const fundedReview = account?.funded_review_status;
+
+  // Phase 1: done once we've moved to phase2/funded, or passed+approved.
+  // "Waiting/review" only while status=passed & review pending.
+  const isPhase1Done = phase !== 'phase1' || status === 'funded' ||
+    (status === 'passed' && phase1Review === 'approved');
+  const isPhase1UnderReview = phase === 'phase1' && status === 'passed' && phase1Review === 'pending_review';
   const isPhase1Active = phase === 'phase1' && status === 'active';
+
+  // Phase 2: done once funded (or passed phase2 + funded approved).
+  const isPhase2Done = status === 'funded' ||
+    (phase === 'funded' && status === 'passed') ||
+    (phase === 'phase2' && status === 'passed' && fundedReview === 'approved');
+  const isPhase2UnderReview = (phase === 'phase2' && status === 'passed' && fundedReview === 'pending_review') ||
+    (phase === 'funded' && status === 'passed' && fundedReview !== 'approved');
   const isPhase2Active = phase === 'phase2' && status === 'active';
+
+  const phase1Status = isPhase1UnderReview ? 'waiting'
+    : isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending';
+  const phase2Status = isPhase2UnderReview ? 'waiting'
+    : isPhase2Done ? 'done' : isPhase2Active ? 'active' : (isPhase1Done ? 'active' : 'pending');
+  const fundedStatus = isFunded ? 'done'
+    : isPhase2UnderReview ? 'waiting'
+    : (isPhase2Done || isPhase2Active) ? 'active' : 'pending';
 
   return [
     { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
     {
       key: 'phase1', label: 'Phase 1',
-      desc: isPhase1Done ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
+      desc: isPhase1UnderReview ? `✓ ${phase1Target}% target met — review in progress`
+        : isPhase1Done ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
         : `${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`,
-      status: isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending', icon: Zap,
+      status: phase1Status, icon: Zap,
     },
     {
       key: 'phase2', label: 'Phase 2',
-      desc: isPhase2Done ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
+      desc: isPhase2UnderReview ? `✓ ${phase2Target}% target met — funded review in progress`
+        : isPhase2Done ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
+        : isPhase1UnderReview ? 'Pending Phase 1 approval'
         : `${phase2Target}% profit · ${dailyDd}% daily DD`,
-      status: isPhase2Done ? 'done' : isPhase2Active ? 'active' : (isPhase1Done ? 'active' : 'pending'), icon: Zap,
+      status: phase2Status, icon: Zap,
     },
     {
       key: 'funded', label: 'Funded Account',
-      desc: isFunded ? `Live capital · ${profitSplit}% profit split` : 'Pending Phase 2 completion',
-      status: isFunded ? 'done' : (isPhase2Done ? 'active' : 'pending'), icon: DollarSign,
+      desc: isFunded ? `Live capital · ${profitSplit}% profit split`
+        : isPhase2UnderReview ? 'Pending funded account approval'
+        : 'Pending Phase 2 completion',
+      status: fundedStatus, icon: DollarSign,
     },
     {
       key: 'payout', label: 'Withdrawal Eligible',
