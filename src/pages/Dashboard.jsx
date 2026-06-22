@@ -61,6 +61,8 @@ import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
+import EconomicCalendar from '../components/dashboard/EconomicCalendar';
+import NewsAlertsBar from '../components/dashboard/NewsAlertsBar';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
 
 import { base44 } from '@/api/base44Client';
@@ -278,6 +280,7 @@ export default function Dashboard() {
       case 'overview': return <FundedDashboard user={user} kyc={kyc} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
       case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} onNavigate={setActivePage} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
+      case 'economic-calendar': return <EconomicCalendar onNavigate={setActivePage} />;
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;

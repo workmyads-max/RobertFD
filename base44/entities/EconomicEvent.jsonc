@@ -1,0 +1,48 @@
+{
+  "name": "EconomicEvent",
+  "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Event name from the feed"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency code derived from the feed's country field (USD, EUR, GBP, etc.)"
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event date-time stored in UTC (ISO 8601)"
+    },
+    "impact": {
+      "type": "string",
+      "enum": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "default": "Low"
+    },
+    "forecast": {
+      "type": "string",
+      "description": "Forecast value as a string (may be empty)"
+    },
+    "previous": {
+      "type": "string",
+      "description": "Previous value as a string (may be empty)"
+    }
+  },
+  "required": [
+    "title",
+    "currency",
+    "event_time",
+    "impact"
+  ]
+}

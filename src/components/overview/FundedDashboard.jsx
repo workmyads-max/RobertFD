@@ -8,6 +8,7 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
+import NewsAlertsBar from '../dashboard/NewsAlertsBar';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
 
@@ -188,6 +189,9 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
         <div className="space-y-8 mt-8 min-h-[40vh]">
           {/* First-Time Promo Banner — ALWAYS SHOWN */}
           <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+
+          {/* Live News Alerts Bar — high-impact upcoming events ticker */}
+          <NewsAlertsBar onNavigate={onNavigate} />
 
           {activeAccounts.length === 0 ? (
             <EmptyState onStartChallenge={onStartChallenge} />
