@@ -85,13 +85,14 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+      // Use service-role backend function with case-insensitive email matching
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
     refetchInterval: 15000, // Reduced from 5s to prevent excessive polling
-    staleTime: 60000, // Increased to 1min to prevent stale data flash
+    staleTime: 30000,
     placeholderData: (prev) => prev ?? [], // Keep previous data while refetching — prevents empty state flash
-    initialData: undefined, // Don't use cached empty data on first load
   });
 
   // Use KYC from parent (Dashboard) to prevent duplicate queries and loading flash

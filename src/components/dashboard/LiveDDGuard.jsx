@@ -41,17 +41,22 @@ export default function LiveDDGuard({ onBreach }) {
     queryKey: ['challenge-accounts', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      return base44.entities.ChallengeAccount.filter({ user_email: currentUser.email }, '-created_date', 100);
+      // Use service-role backend function with case-insensitive email matching
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
     },
     enabled: !!currentUser?.email,
     staleTime: 30000,
+    placeholderData: (prev) => prev ?? [],
   });
+
+  const normalizedEmail = (currentUser?.email || '').toLowerCase().trim();
 
   // Only monitor active, non-breached, MT5 accounts belonging to this user
   // NOTE: platform field may be 'mt5', 'xtrading', or other legacy values — all use MT5
   const monitorableAccounts = allAccounts.filter(a =>
-    currentUser?.email &&
-    a.user_email === currentUser.email &&
+    normalizedEmail &&
+    (a.user_email || '').toLowerCase().trim() === normalizedEmail &&
     a.mt_login && // must have MT5 login
     ['active', 'funded', 'passed'].includes(a.status) &&
     !a.dd_breach_detected &&

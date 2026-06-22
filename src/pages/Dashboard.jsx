@@ -174,12 +174,15 @@ export default function Dashboard() {
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100);
+      // Use service-role backend function with case-insensitive email matching
+      // to bypass the RLS exact-match issue that was hiding user's own accounts.
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
     refetchInterval: 30000, // 30s refetch for accounts
-    staleTime: 60000, // 1min stale time
-    placeholderData: (prev) => prev, // Keep previous data while refetching - prevents flash of empty state
+    staleTime: 30000,
+    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching - prevents flash of empty state
   });
 
   // Load KYC status for welcome header and withdrawal eligibility — shared hook

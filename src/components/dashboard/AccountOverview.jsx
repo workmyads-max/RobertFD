@@ -1002,8 +1002,8 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     if (!currentUser?.email) return;
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
       if (event.type === 'update' || event.type === 'create') {
-        // CRITICAL: Only accept events for accounts belonging to the current user
-        if (event.data?.user_email && event.data.user_email !== currentUser.email) return;
+        // CRITICAL: Only accept events for accounts belonging to the current user (case-insensitive)
+        if (event.data?.user_email && event.data.user_email.toLowerCase().trim() !== currentUser.email.toLowerCase().trim()) return;
         queryClient.setQueryData(['challenge-accounts', currentUser?.email], (old = []) =>
           event.type === 'create' ? [event.data, ...old] : old.map(a => a.id === event.id ? event.data : a)
         );
@@ -1017,15 +1017,14 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     queryKey: ['challenge-accounts', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      // CRITICAL: Always filter by user_email — never list() without ownership filter
-      const userAccounts = await base44.entities.ChallengeAccount.filter({
-        user_email: currentUser?.email,
-      }, '-created_date', 100);
-      return userAccounts;
+      // Use service-role backend function with case-insensitive email matching
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
     },
     enabled: !!currentUser?.email,
-    refetchInterval: 5000,
-    staleTime: 60000,
+    refetchInterval: 10000,
+    staleTime: 30000,
+    placeholderData: keepPreviousData, // never blank on transient refetch
   });
 
   // Load account from sessionStorage immediately when accounts are available

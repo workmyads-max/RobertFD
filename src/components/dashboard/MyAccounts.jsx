@@ -257,13 +257,17 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
   const { data: accounts = [], isLoading, isFetching } = useQuery({
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
-      const all = await base44.entities.ChallengeAccount.filter({ user_email: user.email, platform: 'mt5' }, '-created_date', 100);
+      // Use service-role backend function with case-insensitive email matching.
+      // FIX: Removed platform:'mt5' filter — that was hiding all accounts since
+      // they have platform='xtrading' (the default), not 'mt5'.
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      const all = res?.data?.accounts || [];
       return all.filter(a => a.status !== 'failed').sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
-    refetchInterval: 30000, // Reduced from 15s to 30s to prevent excessive refetching
-    placeholderData: (prev) => prev, // Keep previous data while refetching — prevents empty state flash
-    staleTime: 10000, // Data is fresh for 10s
+    refetchInterval: 30000,
+    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching — prevents empty state flash
+    staleTime: 10000,
   });
 
   const { data: myOrders = [] } = useQuery({
