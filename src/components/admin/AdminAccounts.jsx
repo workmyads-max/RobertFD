@@ -23,9 +23,14 @@ export default function AdminAccounts() {
   const [form, setForm] = useState(BLANK);
   const qc = useQueryClient();
 
+  // Admin-scoped fetch via service-role backend function — bypasses per-user RLS
+  // so admins see ALL users' accounts. Normal-user isolation stays intact.
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['admin-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 200),
+    queryKey: ['admin-accounts-all'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('adminListAllAccounts', { limit: 500 });
+      return res?.data?.accounts || [];
+    },
   });
 
   const saveMutation = useMutation({

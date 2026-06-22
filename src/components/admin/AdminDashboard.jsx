@@ -5,24 +5,25 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 export default function AdminDashboard() {
-  const { data: orders = [] } = useQuery({ queryKey: ['admin-orders'], queryFn: () => base44.entities.Order.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
-  const { data: accounts = [] } = useQuery({ queryKey: ['admin-accounts'], queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
-  const { data: withdrawals = [] } = useQuery({ queryKey: ['admin-withdrawals'], queryFn: () => base44.entities.WithdrawalRequest.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
-  const { data: tickets = [] } = useQuery({ queryKey: ['admin-tickets'], queryFn: () => base44.entities.SupportTicket.list('-created_date', 100), staleTime: 3 * 60 * 1000 });
-
-  const totalRevenue = orders.filter(o => o.payment_status === 'confirmed').reduce((s, o) => s + (o.price || 0), 0);
-  const pendingOrders = orders.filter(o => o.payment_status === 'pending' || o.payment_status === 'awaiting_confirmation');
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-  const openTickets = tickets.filter(t => t.status === 'open');
+  // Admin-scoped fetch via service-role backend function — bypasses per-user RLS
+  // so admins see ALL users' orders/accounts/withdrawals/tickets. Normal-user
+  // isolation (RLS by user_email) remains fully intact for non-admin callers.
+  const { data: adminData } = useQuery({
+    queryKey: ['admin-dashboard-summary'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('adminListAllAccounts', { include_summary: true, limit: 500 });
+      return res?.data || {};
+    },
+    staleTime: 60 * 1000,
+  });
+  const summary = adminData?.summary || {};
 
   const stats = [
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, sub: `${orders.filter(o=>o.payment_status==='confirmed').length} confirmed orders`, icon: DollarSign, color: '#10b981' },
-    { label: 'Total Orders', value: orders.length, sub: `${pendingOrders.length} pending review`, icon: ShoppingBag, color: '#FF5C00' },
-    { label: 'Active Accounts', value: accounts.filter(a=>a.status==='active'||a.status==='funded').length, sub: `${accounts.length} total accounts`, icon: TrendingUp, color: '#60a5fa' },
-    { label: 'Open Tickets', value: openTickets.length, sub: `${pendingWithdrawals.length} pending withdrawals`, icon: AlertTriangle, color: '#f59e0b' },
+    { label: 'Total Revenue', value: `$${(summary.total_revenue || 0).toLocaleString()}`, sub: `${summary.confirmed_orders || 0} confirmed orders`, icon: DollarSign, color: '#10b981' },
+    { label: 'Total Orders', value: summary.confirmed_orders + (summary.pending_orders || 0), sub: `${summary.pending_orders || 0} pending review`, icon: ShoppingBag, color: '#FF5C00' },
+    { label: 'Active Accounts', value: summary.active_accounts || 0, sub: `${summary.total_accounts || 0} total accounts`, icon: TrendingUp, color: '#60a5fa' },
+    { label: 'Open Tickets', value: summary.open_tickets || 0, sub: `${summary.pending_withdrawals || 0} pending withdrawals`, icon: AlertTriangle, color: '#f59e0b' },
   ];
-
-  const recentOrders = orders.slice(0, 8);
 
   return (
     <div>
@@ -53,36 +54,12 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Recent orders */}
-      <div className="rounded-2xl overflow-hidden mb-6" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <span className="text-sm font-bold text-foreground">Recent Orders</span>
-          <span className="text-xs font-mono text-muted-foreground">{orders.length} total</span>
-        </div>
-        {recentOrders.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-muted-foreground">No orders yet.</div>
-        ) : recentOrders.map((o, i) => {
-          const statusColor = o.payment_status === 'confirmed' ? '#10b981' : o.payment_status === 'pending' ? '#f59e0b' : '#ef4444';
-          return (
-            <div key={o.id} className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-              <div className="text-xs font-mono text-muted-foreground w-20 sm:w-28 truncate flex-shrink-0">{o.order_id || `ORD-${o.id?.slice(0,6)}`}</div>
-              <div className="flex-1 text-xs text-foreground truncate min-w-0">{o.full_name || o.email || '—'}</div>
-              <div className="hidden sm:block text-xs text-muted-foreground flex-shrink-0">${(o.account_size||0).toLocaleString()}</div>
-              <div className="text-xs font-bold text-foreground flex-shrink-0">${o.price}</div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full capitalize flex-shrink-0" style={{ color: statusColor, background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}>
-                {o.payment_status}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Quick stats grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: 'Pending Withdrawals', count: pendingWithdrawals.length, color: '#f59e0b' },
-          { label: 'Open Support Tickets', count: openTickets.length, color: '#60a5fa' },
-          { label: 'Failed Accounts', count: accounts.filter(a=>a.status==='failed').length, color: '#ef4444' },
+          { label: 'Pending Withdrawals', count: summary.pending_withdrawals || 0, color: '#f59e0b' },
+          { label: 'Open Support Tickets', count: summary.open_tickets || 0, color: '#60a5fa' },
+          { label: 'Failed Accounts', count: summary.failed_accounts || 0, color: '#ef4444' },
         ].map(s => (
           <div key={s.label} className="rounded-xl p-4 flex items-center gap-4"
             style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${s.color}20` }}>
