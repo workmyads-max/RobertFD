@@ -2,16 +2,19 @@
  * getAccountTradeRecords — CENTRAL trade-data source for Account Overview.
  *
  * Uses service role (bypasses RLS) with case-insensitive email ownership check.
- * Returns ALL TradeRecords for the requested account — both open and closed.
+ * Returns TradeRecords for the requested account, filtered by the account's
+ * CURRENT mt_login — so each distinct MT5 account shows ONLY its own trades.
  *
- * This is the SINGLE source of truth for: closed trades, open trades (DB-backed),
- * daily summary, statistics, and performance metrics.
+ * mt_login filtering (per-MT5-account data isolation):
+ *   - If the account has mt_login set, returns records where:
+ *       record.mt_login == account.mt_login  (new records, strictly matched)
+ *       OR record.mt_login is null/empty      (legacy records pre-mt_login field)
+ *   - If the account has NO mt_login, returns all records for that account_id.
  *
- * Live/open positions are supplemented by getLivePositions (real-time MT5 API),
- * but closed trades and all derived stats come exclusively from here.
- *
- * Ownership: the account_id must belong to the authenticated user (matched
- * case-insensitively and trimmed on user_email).
+ * This ensures:
+ *   - Phase 2 account (new account_id + new mt_login): shows ONLY Phase 2 trades
+ *   - Trashed Phase 1 account (old account_id + old mt_login): shows its own trades
+ *   - Legacy accounts (pre-fix): graceful fallback, no data lost
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -31,9 +34,6 @@ Deno.serve(async (req) => {
     const normalizedEmail = (user.email || '').toLowerCase().trim();
 
     // ── OWNERSHIP CHECK (service role, case-insensitive) ──────────────────────
-    // RLS exact-match (user_email = {{user.email}}) can hide the user's own
-    // accounts when casing/whitespace differs. Service role bypasses RLS; we
-    // enforce ownership manually.
     const accounts = await base44.asServiceRole.entities.ChallengeAccount.filter(
       { account_id },
       '-created_date',
@@ -47,14 +47,28 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, trades: [], message: 'Account not found or not owned by user' });
     }
 
-    // ── FETCH ALL TRADE RECORDS (service role, no RLS) ───────────────────────
+    // ── FETCH ALL TRADE RECORDS for this account_id (service role, no RLS) ────
     const records = await base44.asServiceRole.entities.TradeRecord.filter(
       { account_id },
       '-close_time',
       500
     );
 
-    const trades = (Array.isArray(records) ? records : []).map(t => ({
+    // ── mt_login FILTER — per-MT5-account data isolation ──────────────────────
+    // If the account has mt_login, keep only records matching that mt_login,
+    // PLUS legacy records that have no mt_login set (pre-fix data).
+    // This prevents Phase 1 trades from leaking into Phase 2's Account Overview
+    // when account_ids are distinct (post-fix), while preserving legacy data.
+    const accountMtLogin = account.mt_login ? String(account.mt_login) : null;
+    let filtered = Array.isArray(records) ? records : [];
+    if (accountMtLogin) {
+      filtered = filtered.filter(t => {
+        const recMtLogin = t.mt_login ? String(t.mt_login) : '';
+        return recMtLogin === accountMtLogin || !recMtLogin;
+      });
+    }
+
+    const trades = filtered.map(t => ({
       ...t,
       // Normalize field names for UI consumption
       entry: t.entry ?? t.open_price ?? 0,
@@ -70,6 +84,7 @@ Deno.serve(async (req) => {
       trades,
       account: {
         account_id: account.account_id,
+        mt_login: account.mt_login,
         account_size: account.account_size,
         balance: account.balance,
         equity: account.equity,

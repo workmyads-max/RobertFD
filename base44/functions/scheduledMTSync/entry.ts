@@ -613,6 +613,7 @@ Deno.serve(async (req) => {
               const lots = rawVol / 10000;
               return base44.asServiceRole.entities.TradeRecord.create({
                account_id: acc.account_id,
+               mt_login: acc.mt_login,
                user_email: acc.user_email,
                trade_id: tradeId,
                symbol: d.symbol ?? d.Symbol ?? '',

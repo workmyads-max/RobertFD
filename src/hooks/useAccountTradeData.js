@@ -22,9 +22,12 @@ import { filterRealTrades } from './useAccountTrades';
  *      when the account genuinely has zero matching records.
  *   4. Excludes MT5 deposit/balance pseudo-records uniformly across ALL derived data.
  *   5. Works identically for every account status — active, passed, under-review, funded.
+ *   6. mt_login-scoped: the backend function filters by the account's CURRENT mt_login,
+ *      ensuring per-MT5-account data isolation (Phase 1 trades never leak into Phase 2).
  *
  * Uses the getAccountTradeRecords backend function (service role, case-insensitive
- * ownership) to bypass RLS exact-match issues that were hiding the user's own trades.
+ * ownership, mt_login-scoped) to bypass RLS exact-match issues and ensure
+ * per-MT5-account data isolation.
  *
  * @param {object|null} account - The selected ChallengeAccount object
  * @param {object} options - { refetchIntervalMs: 10000 }
@@ -32,9 +35,12 @@ import { filterRealTrades } from './useAccountTrades';
  */
 export function useAccountTradeData(account, { refetchIntervalMs = 10000 } = {}) {
   const accountId = account?.account_id || null;
+  const mtLogin = account?.mt_login || null;
 
   const { data: rawTrades = [], isLoading, refetch } = useQuery({
-    queryKey: ['account-trade-data', accountId],
+    // Include mt_login in the query key so switching between accounts with
+    // different mt_logins properly refetches (no stale cache leakage).
+    queryKey: ['account-trade-data', accountId, mtLogin],
     queryFn: async () => {
       if (!accountId) return [];
       const res = await base44.functions.invoke('getAccountTradeRecords', { account_id: accountId });

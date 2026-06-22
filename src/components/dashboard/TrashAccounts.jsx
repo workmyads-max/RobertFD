@@ -145,11 +145,14 @@ function TrashAccountCardLazy({ acc, onStartChallenge }) {
   const [expanded, setExpanded] = useState(false);
 
   const { data: trades = [], isLoading: tradesLoading } = useQuery({
-    queryKey: ['trash-trades', acc.account_id],
+    queryKey: ['trash-trades', acc.account_id, acc.mt_login],
     queryFn: async () => {
       if (!acc.account_id) return [];
-      const recs = await base44.entities.TradeRecord.filter({ account_id: acc.account_id });
-      return Array.isArray(recs) ? recs : [];
+      // Use the centralized backend function (service role, mt_login-scoped)
+      // to bypass RLS case-sensitivity issues and ensure only this account's
+      // own mt_login trades are returned.
+      const res = await base44.functions.invoke('getAccountTradeRecords', { account_id: acc.account_id });
+      return Array.isArray(res?.data?.trades) ? res.data.trades : [];
     },
     enabled: expanded && !isHistoryExpired(acc),
     staleTime: Infinity, // frozen snapshot — never refetch

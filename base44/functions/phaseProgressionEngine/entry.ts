@@ -10,6 +10,11 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+function genAccountId() {
+  // Unique account_id: XFT-XXXXXXXX (8 random alphanumeric chars)
+  return 'XFT-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
 function genPassword() {
   // MT5 password policy: must contain uppercase, lowercase, digit, special char
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -271,6 +276,12 @@ Deno.serve(async (req) => {
     // ── APPROVE PHASE 1 REVIEW → PROVISION PHASE 2 MT5 ACCOUNT ──────────────
     // Called by admin after auto-detection sets phase_review_status=pending_review.
     // Also handles legacy manual action (mark_phase1_passed) for backward compat.
+    //
+    // CRITICAL: Does NOT mutate the Phase 1 account in place. Instead:
+    //   (a) Trashes the old Phase 1 account (is_trashed=true, trash_reason='superseded')
+    //       — keeps its account_id, mt_login, and trade history intact as a frozen snapshot.
+    //   (b) Creates a NEW separate Phase 2 ChallengeAccount with a NEW account_id,
+    //       new mt_login, fresh balance, phase=phase2, status=active, is_trashed=false.
     if (action === 'approve_phase1' || action === 'mark_phase1_passed') {
       if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
 
@@ -278,29 +289,29 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      // ── IDEMPOTENCY GUARD #1 — already fully provisioned to Phase 2 ──
+      // ── IDEMPOTENCY GUARD #1 — old account already trashed (Phase 2 already provisioned) ──
+      if (account.is_trashed) {
+        return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.', already_done: true }, { status: 409 });
+      }
+      // ── IDEMPOTENCY GUARD #2 — already has Phase 2 credentials (legacy in-place mutation) ──
       if (account.phase === 'phase2' && account.mt_login && account.status === 'active') {
         return Response.json({ error: 'Phase 1 already approved — Phase 2 account has been provisioned.', already_done: true }, { status: 409 });
       }
-      // ── IDEMPOTENCY GUARD #2 — provisioning already claimed/in-progress ──
-      // The claim below sets phase_review_status='approved' BEFORE the multi-second MT5 calls,
-      // so a second click / refresh that arrives mid-flight is rejected here.
+      // ── IDEMPOTENCY GUARD #3 — provisioning already claimed/in-progress ──
       if (account.phase_review_status === 'approved' && account.phase === 'phase1') {
         return Response.json({ error: 'Phase 2 provisioning is already in progress for this account.' }, { status: 409 });
       }
 
-      // ── CLAIM — mark approved BEFORE provisioning. Do NOT advance phase/status/credentials yet. ──
+      // ── CLAIM — mark approved BEFORE provisioning. ──
       await sr.entities.ChallengeAccount.update(account.id, {
         phase_review_status: 'approved',
         phase_passed_at: account.phase_passed_at || new Date().toISOString(),
       });
 
       // ── PROVISION PHASE 2 MT5 (create + deposit, BOTH validated) ──
-      // All accounts use MT5 (Tritech) regardless of platform field value.
       const creds = await loadMT5Creds(sr);
       const groupName = Deno.env.get('MT5_PHASE2_GROUP') || '';
       if (!creds || !creds.apiKey || !creds.apiBase || !groupName) {
-        // Revert claim — NO partial transition. Admin can retry once config is fixed.
         await sr.entities.ChallengeAccount.update(account.id, { phase_review_status: 'pending_review' });
         console.error('[approve_phase1] MT5 credentials or MT5_PHASE2_GROUP not configured');
         return Response.json({ error: 'MT5 credentials or MT5_PHASE2_GROUP not configured. No changes applied.' }, { status: 500 });
@@ -312,25 +323,46 @@ Deno.serve(async (req) => {
       const result = await provisionMT5Account(creds, account.user_email, groupName, leverage, account.account_size, phase2Name);
 
       if (!result.success) {
-        // ── ROLLBACK — no partial transition. Account stays phase1/passed, review back to pending. ──
+        // ── ROLLBACK — no partial transition. ──
         await sr.entities.ChallengeAccount.update(account.id, { phase_review_status: 'pending_review' });
         console.error('[approve_phase1] Phase 2 provisioning failed, rolled back:', result.error);
         return Response.json({ success: false, error: `Phase 2 provisioning failed: ${result.error}. No changes applied — please retry.` }, { status: 500 });
       }
 
-      // ── SUCCESS — MT5 account + deposit BOTH confirmed. Advance everything in one write. ──
+      // ── SUCCESS — MT5 account + deposit BOTH confirmed. ──
+      // Step (a): Trash the old Phase 1 account — keep its account_id, mt_login,
+      // and trade history intact as a frozen 14-day snapshot.
+      const nowIso = new Date().toISOString();
       await sr.entities.ChallengeAccount.update(account.id, {
+        status: 'passed',
+        phase_review_status: 'approved',
+        is_trashed: true,
+        trashed_at: nowIso,
+        trash_reason: 'superseded',
+      });
+      console.log(`[approve_phase1] Old Phase 1 account ${account.account_id} trashed (superseded)`);
+
+      // Step (b): Create a NEW separate Phase 2 account with a NEW account_id.
+      const newAccountId = genAccountId();
+      const phase2AccountData = {
+        account_id: newAccountId,
+        user_email: account.user_email,
+        challenge_type: account.challenge_type,
+        account_type: account.account_type || 'standard',
+        account_size: account.account_size,
+        platform: account.platform || 'xtrading',
+        leverage: account.leverage || '1:100',
         status: 'active',
         phase: 'phase2',
         phase_review_status: 'approved',
-        funded_review_status: 'none', // reset funded review for the new phase
+        funded_review_status: 'none',
         mt_login: result.mt_login,
         mt_password: result.mt_password,
         mt_server: result.mt_server,
         mt_group: result.mt_group,
         login_credentials: `Login: ${result.mt_login} | Password: ${result.mt_password} | Server: ${result.mt_server}`,
         server: result.mt_server,
-        provisioned_at: new Date().toISOString(),
+        provisioned_at: nowIso,
         balance: account.account_size,
         equity: account.account_size,
         high_water_mark: account.account_size,
@@ -338,12 +370,19 @@ Deno.serve(async (req) => {
         pnl: 0, daily_pnl: 0,
         daily_drawdown_used: 0, max_drawdown_used: 0,
         profit_target_progress: 0,
-      });
+        win_rate: 0, total_trades: 0, trading_days: 0,
+        rule_snapshot: account.rule_snapshot || {},
+        country: account.country || '',
+        is_trashed: false,
+      };
+
+      const createdPhase2 = await sr.entities.ChallengeAccount.create(phase2AccountData);
+      console.log(`[approve_phase1] ✅ New Phase 2 account created: ${newAccountId} (mt_login=${result.mt_login})`);
 
       await sr.entities.Notification.create({
         user_email: account.user_email,
         title: '🎉 Phase 1 Passed! Phase 2 Activated',
-        message: `Congratulations! Your Phase 1 challenge is complete. Your Phase 2 account is now active.`,
+        message: `Congratulations! Your Phase 1 challenge is complete. Your Phase 2 account (${newAccountId}) is now active.`,
         type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
       });
 
@@ -353,7 +392,7 @@ Deno.serve(async (req) => {
         phase2_credentials: result,
       });
 
-      return Response.json({ success: true, phase: 'phase2', credentials: result });
+      return Response.json({ success: true, phase: 'phase2', new_account_id: newAccountId, credentials: result });
     }
 
     // ── REJECT PHASE 1 REVIEW ──────────────────────────────────────────────────
@@ -442,6 +481,12 @@ Deno.serve(async (req) => {
     }
 
     // ── APPROVE FUNDED ACCOUNT ─────────────────────────────────────────────────
+    //
+    // CRITICAL: Does NOT mutate the Phase 2 account in place. Instead:
+    //   (a) Trashes the old Phase 2 account (is_trashed=true, trash_reason='superseded')
+    //       — keeps its account_id, mt_login, and trade history intact as a frozen snapshot.
+    //   (b) Creates a NEW separate Funded ChallengeAccount with a NEW account_id,
+    //       new mt_login, fresh balance, phase=funded, status=funded, is_trashed=false.
     if (action === 'approve_funded') {
       if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
 
@@ -454,13 +499,15 @@ Deno.serve(async (req) => {
       const account = accounts[0];
       if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
 
-      // ── IDEMPOTENCY GUARD FIRST — prevent double-funded provisioning ──
+      // ── IDEMPOTENCY GUARD — prevent double-funded provisioning ──
+      if (account.is_trashed && account.trash_reason === 'superseded') {
+        return Response.json({ error: 'Account is already funded — a new funded account was provisioned.', already_done: true }, { status: 409 });
+      }
       if (account.status === 'funded') {
         return Response.json({ error: 'Account is already funded — cannot approve again.' }, { status: 409 });
       }
 
       // ── PROVISION FUNDED MT5 (create + deposit, BOTH validated) — abort on failure ──
-      // All accounts use MT5 (Tritech) regardless of platform field value.
       const creds = await loadMT5Creds(sr);
       const groupName = Deno.env.get('MT5_FUNDED_GROUP') || '';
       if (!creds || !creds.apiKey || !creds.apiBase || !groupName) {
@@ -481,85 +528,105 @@ Deno.serve(async (req) => {
       };
 
       const fundedId = `FUNDED-${Date.now()}`;
+      const nowIso = new Date().toISOString();
 
-      // funded_review_status=approved marks the funded provisioning as complete.
-      // IMPORTANT: account_id is NOT overwritten — it must stay stable so all
-      // MT5 sync, trade records, and queries continue to match correctly.
+      // Step (a): Trash the old Phase 2 account — keep its account_id, mt_login,
+      // and trade history intact as a frozen 14-day snapshot.
       await sr.entities.ChallengeAccount.update(account.id, {
-        status: 'funded',
+        status: 'passed',
         funded_review_status: 'approved',
-        funded_account_id: fundedId,   // ← separate field, does NOT replace account_id
-        ...fundedCredentials,
+        funded_account_id: fundedId,
+        is_trashed: true,
+        trashed_at: nowIso,
+        trash_reason: 'superseded',
+      });
+      console.log(`[approve_funded] Old Phase 2 account ${account.account_id} trashed (superseded)`);
+
+      // Step (b): Create a NEW separate Funded account with a NEW account_id.
+      const newAccountId = genAccountId();
+      const fundedAccountData = {
+        account_id: newAccountId,
+        user_email: account.user_email,
+        challenge_type: account.challenge_type,
+        account_type: account.account_type || 'standard',
+        account_size: account.account_size,
+        platform: account.platform || 'xtrading',
+        leverage: account.leverage || '1:100',
+        status: 'funded',
+        phase: 'funded',
+        phase_review_status: 'approved',
+        funded_review_status: 'approved',
+        funded_account_id: fundedId,
+        mt_login: fundedCredentials.mt_login,
+        mt_password: fundedCredentials.mt_password,
+        mt_server: fundedCredentials.mt_server,
+        mt_group: fundedCredentials.mt_group,
         login_credentials: `Login: ${fundedCredentials.mt_login} | Password: ${fundedCredentials.mt_password} | Server: ${fundedCredentials.mt_server}`,
         server: fundedCredentials.mt_server,
-        provisioned_at: new Date().toISOString(),
+        provisioned_at: nowIso,
         balance: account.account_size,
         equity: account.account_size,
         high_water_mark: account.account_size,
         daily_start_balance: account.account_size,
         pnl: 0, daily_pnl: 0,
-      });
+        daily_drawdown_used: 0, max_drawdown_used: 0,
+        profit_target_progress: 0,
+        win_rate: 0, total_trades: 0, trading_days: 0,
+        rule_snapshot: account.rule_snapshot || {},
+        country: account.country || '',
+        is_trashed: false,
+      };
 
+      const createdFunded = await sr.entities.ChallengeAccount.create(fundedAccountData);
+      console.log(`[approve_funded] ✅ New Funded account created: ${newAccountId} (mt_login=${fundedCredentials.mt_login})`);
+
+      // Update the review with the new funded account info
       await sr.entities.FundedAccountReview.update(review.id, {
         status: 'approved',
         reviewed_by: user.email,
-        reviewed_at: new Date().toISOString(),
+        reviewed_at: nowIso,
         funded_account_id: fundedId,
-        ...(fundedCredentials ? {
-          funded_mt5_login: fundedCredentials.mt_login,
-          funded_mt5_password: fundedCredentials.mt_password,
-          funded_mt5_server: fundedCredentials.mt_server,
-          funded_provisioned_at: new Date().toISOString(),
-        } : {}),
+        funded_mt5_login: fundedCredentials.mt_login,
+        funded_mt5_password: fundedCredentials.mt_password,
+        funded_mt5_server: fundedCredentials.mt_server,
+        funded_provisioned_at: nowIso,
       });
 
       await sr.entities.Notification.create({
         user_email: account.user_email,
         title: '🏆 Funded Account Approved!',
-        message: `Congratulations! You have been approved as a Funded Trader. Your live funded account credentials are now available in your dashboard.`,
+        message: `Congratulations! You have been approved as a Funded Trader. Your live funded account (${newAccountId}) credentials are now available in your dashboard.`,
         type: 'payout', priority: 'critical', display_mode: 'popup', is_active: true, target: 'funded',
       });
 
       // ── Payout Reward Commissions (for referrers) + active_funded_traders ────
+      // Use the NEW funded account_id for commission linkage
       try {
         const buyerProfiles = await sr.entities.AffiliateProfile.filter({ user_email: account.user_email });
         const buyerProfile = buyerProfiles[0];
         
         if (buyerProfile?.referred_by_email) {
-          // Read payout tier rates from settings
           const settingsList = await sr.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
           const settings = settingsList[0];
-          
-          // Count active funded traders to determine tier
           const allFunded = await sr.entities.ChallengeAccount.filter({ status: 'funded' });
           
-          // Build referral chain (up to 3 levels)
           const chain = [];
-          
-          // L1
           const l1Affs = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
           if (l1Affs[0]) {
-            const l1Count = allFunded.filter(a => {
-              // Count funded traders under this L1 affiliate
-              return true; // simplified — count all funded; real filtering would need full tree
-            }).length;
-            
             let l1Rate = settings?.payout_reward_rate ?? 9;
             if (l1Affs[0].custom_payout_rate) l1Rate = l1Affs[0].custom_payout_rate;
             chain.push({ level: 1, email: l1Affs[0].user_email, rate: l1Rate, profile: l1Affs[0] });
             
-            // L2
             if (l1Affs[0].referred_by_email) {
               const l2Affs = await sr.entities.AffiliateProfile.filter({ user_email: l1Affs[0].referred_by_email });
               if (l2Affs[0]) {
-                let l2Rate = 2; // default L2 rate
+                let l2Rate = 2;
                 chain.push({ level: 2, email: l2Affs[0].user_email, rate: l2Rate, profile: l2Affs[0] });
                 
-                // L3
                 if (l2Affs[0].referred_by_email) {
                   const l3Affs = await sr.entities.AffiliateProfile.filter({ user_email: l2Affs[0].referred_by_email });
                   if (l3Affs[0]) {
-                    let l3Rate = 1; // default L3 rate
+                    let l3Rate = 1;
                     chain.push({ level: 3, email: l3Affs[0].user_email, rate: l3Rate, profile: l3Affs[0] });
                   }
                 }
@@ -567,7 +634,6 @@ Deno.serve(async (req) => {
             }
           }
           
-          // Create payout_reward commissions and update active_funded_traders
           for (const { level, email, rate, profile } of chain) {
             const commissionAmount = parseFloat(((account.account_size * rate) / 100).toFixed(2));
             if (commissionAmount <= 0) continue;
@@ -580,12 +646,11 @@ Deno.serve(async (req) => {
               source_amount: account.account_size,
               commission_rate: rate,
               commission_amount: commissionAmount,
-              account_id: account.account_id,
+              account_id: newAccountId,
               status: 'pending',
               notes: `Payout reward L${level}: ${rate}% of $${account.account_size.toLocaleString()} funded account`,
             });
             
-            // Update affiliate profile
             await sr.entities.AffiliateProfile.update(profile.id, {
               total_earned: parseFloat(((profile.total_earned || 0) + commissionAmount).toFixed(2)),
               total_pending: parseFloat(((profile.total_pending || 0) + commissionAmount).toFixed(2)),
@@ -606,7 +671,7 @@ Deno.serve(async (req) => {
         credentials: fundedCredentials,
       });
 
-      return Response.json({ success: true, funded_account_id: fundedId, credentials: fundedCredentials });
+      return Response.json({ success: true, funded_account_id: fundedId, new_account_id: newAccountId, credentials: fundedCredentials });
     }
 
     // ── REJECT FUNDED ──────────────────────────────────────────────────────────

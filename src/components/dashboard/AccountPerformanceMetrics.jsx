@@ -90,9 +90,11 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     : isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending';
   const phase2Status = isPhase2UnderReview ? 'waiting'
     : isPhase2Done ? 'done' : isPhase2Active ? 'active' : (isPhase1Done ? 'active' : 'pending');
+  // Funded Account is NEVER 'active' — only 'done' when actually funded,
+  // 'waiting' when under funded review, otherwise 'pending'.
   const fundedStatus = isFunded ? 'done'
     : isPhase2UnderReview ? 'waiting'
-    : (isPhase2Done || isPhase2Active) ? 'active' : 'pending';
+    : 'pending';
 
   return [
     { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },

@@ -14,7 +14,12 @@
   },
   "properties": {
     "account_id": {
-      "type": "string"
+      "type": "string",
+      "description": "The ChallengeAccount account_id this trade belongs to"
+    },
+    "mt_login": {
+      "type": "string",
+      "description": "The MT5 login of the account this trade belongs to \u2014 primary key for per-MT5-account data isolation. Populated on every TradeRecord at sync time."
     },
     "user_email": {
       "type": "string"

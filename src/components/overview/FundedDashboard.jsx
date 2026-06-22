@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
+import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import NewsAlertsBar from '../dashboard/NewsAlertsBar';
@@ -116,13 +117,10 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
     }
   }, [derivedSelected?.id]);
 
-  // Load trade records scoped to this account's MT5 account_id
-  const { data: trades = [] } = useQuery({
-    queryKey: ['trade-records', derivedSelected?.account_id],
-    queryFn: () => base44.entities.TradeRecord.filter({ account_id: derivedSelected.account_id }),
-    enabled: !!derivedSelected?.account_id,
-    refetchInterval: 5000,
-  });
+  // ── CENTRALIZED TRADE DATA — mt_login-scoped, single source of truth ──────
+  // Uses getAccountTradeRecords backend function (service role, mt_login filter)
+  // so each MT5 account shows ONLY its own trades — no cross-phase contamination.
+  const { allTrades: trades = [], closedTrades: closedTradesList = [] } = useAccountTradeData(derivedSelected, { refetchIntervalMs: 5000 });
 
   const stats = useAccountStats(derivedSelected, trades);
 
@@ -225,7 +223,7 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
                   {/* Progress Timeline */}
                   <AccountTimeline
                     account={derivedSelected}
-                    closedTrades={trades.filter(t => t.status === 'closed')}
+                    closedTrades={closedTradesList}
                     onNavigate={onNavigate}
                     onRequestWithdrawal={() => setShowWithdrawModal(true)}
                     user={currentUser}
