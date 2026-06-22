@@ -1,6 +1,17 @@
 {
   "name": "ViolationAppeal",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    }
+  },
   "properties": {
     "user_email": {
       "type": "string"

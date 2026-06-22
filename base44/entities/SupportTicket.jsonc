@@ -1,6 +1,17 @@
 {
   "name": "SupportTicket",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    }
+  },
   "properties": {
     "subject": {
       "type": "string"

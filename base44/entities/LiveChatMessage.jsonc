@@ -1,6 +1,17 @@
 {
   "name": "LiveChatMessage",
   "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "authenticated",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "rls": {
+    "read": {
+      "sender_email": "{{user.email}}"
+    }
+  },
   "properties": {
     "message": {
       "type": "string",
