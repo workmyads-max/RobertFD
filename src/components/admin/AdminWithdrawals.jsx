@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, CheckCircle, XCircle, Clock, Search, Eye, Percent, Edit3 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { retryWithBackoff } from '@/lib/retryWithBackoff';
 
 const STATUS_COLOR = { pending: '#f59e0b', approved: '#60a5fa', processing: '#FF5C00', paid: '#10b981', rejected: '#ef4444' };
 const STATUS_OPTS = ['pending','approved','processing','paid','rejected'];
@@ -10,12 +11,12 @@ const STATUS_OPTS = ['pending','approved','processing','paid','rejected'];
 async function approveAndDistribute(withdrawal, qc, overrideSplit, overrideFee, adminNotes) {
   // All logic is now backend-secured via adminApproveWithdrawal function
   // Idempotency, duplicate payout_reward protection, and audit trail are backend-enforced
-  const res = await base44.functions.invoke('adminApproveWithdrawal', {
+  const res = await retryWithBackoff(() => base44.functions.invoke('adminApproveWithdrawal', {
     withdrawal_id: withdrawal.id,
     override_split_pct: overrideSplit ? parseFloat(overrideSplit) : undefined,
     override_fee: overrideFee ? parseFloat(overrideFee) : undefined,
     admin_notes: adminNotes || '',
-  });
+  }));
   if (res.data?.error) throw new Error(res.data.error);
   qc.invalidateQueries({ queryKey: ['admin-withdrawals'] });
   qc.invalidateQueries({ queryKey: ['withdrawals'] });
@@ -46,6 +47,41 @@ export default function AdminWithdrawals() {
   const approveMutation = useMutation({
     mutationFn: (w) => approveAndDistribute(w, qc, editSplit, editFee, document.getElementById('admin-notes')?.value),
     onSuccess: () => setSelected(null),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (w) => {
+      const res = await retryWithBackoff(() => base44.functions.invoke('adminApproveWithdrawal', {
+        withdrawal_id: w.id,
+        action: 'reject',
+        admin_notes: document.getElementById('admin-notes')?.value || '',
+      }));
+      if (res.data?.error) throw new Error(res.data.error);
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-withdrawals'] });
+      qc.invalidateQueries({ queryKey: ['withdrawals'] });
+      setSelected(null);
+    },
+  });
+
+  // Fetch account + user details for the detail modal (mt_login, trader name)
+  const { data: detailData } = useQuery({
+    queryKey: ['withdrawal-detail', selected?.id],
+    queryFn: async () => {
+      if (!selected) return null;
+      const [accounts, users] = await Promise.all([
+        base44.entities.ChallengeAccount.filter({ account_id: selected.account_id }),
+        base44.entities.User.filter({ email: selected.user_email }),
+      ]);
+      return {
+        mt_login: accounts[0]?.mt_login || '',
+        trader_name: users[0]?.full_name || '',
+      };
+    },
+    enabled: !!selected,
+    staleTime: 120000,
   });
 
   const filtered = withdrawals.filter(w =>
@@ -129,8 +165,8 @@ export default function AdminWithdrawals() {
                   className="p-1.5 rounded-lg hover:bg-emerald-500/10 disabled:opacity-30 transition-colors" title="Approve & Distribute">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
                 </button>
-                <button onClick={() => updateMutation.mutate({ id: w.id, data: { status: 'rejected' } })}
-                  disabled={w.status === 'rejected' || w.status === 'paid'}
+                <button onClick={() => rejectMutation.mutate(w)}
+                  disabled={w.status === 'rejected' || w.status === 'paid' || rejectMutation.isPending}
                   className="p-1.5 rounded-lg hover:bg-red-500/10 disabled:opacity-30 transition-colors" title="Reject">
                   <XCircle className="w-3.5 h-3.5 text-red-400" />
                 </button>
@@ -157,11 +193,13 @@ export default function AdminWithdrawals() {
                 {/* Info */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { l: 'Account ID', v: selected.account_id },
+                    { l: 'Trader Name', v: detailData?.trader_name || '—' },
                     { l: 'User Email', v: selected.user_email },
+                    { l: 'Account ID', v: selected.account_id },
+                    { l: 'MT5 Login', v: detailData?.mt_login || '—' },
                     { l: 'Amount', v: `$${selected.amount}` },
-                    { l: 'Method', v: selected.method },
-                    { l: 'Wallet', v: selected.wallet_address?.slice(0, 24) + '...' },
+                    { l: 'Method', v: selected.method?.replace('_', ' ') },
+                    { l: 'Wallet Address', v: selected.wallet_address },
                     { l: 'Status', v: selected.status },
                   ].map(({ l, v }) => (
                     <div key={l}>
@@ -203,8 +241,7 @@ export default function AdminWithdrawals() {
                   const fee = parseFloat(editFee) || 25;
                   const traderShare = gross * (split / 100);
                   const companyShare = gross - traderShare;
-                  const affiliateReward = traderShare * 0.09;
-                  const finalAmount = Math.max(0, traderShare - affiliateReward - fee);
+                  const finalAmount = Math.max(0, traderShare - fee);
                   return (
                     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                       <div className="px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase bg-white/[0.02]">Calculated Breakdown</div>
@@ -212,8 +249,7 @@ export default function AdminWithdrawals() {
                         { l: 'Gross', v: `$${gross.toLocaleString()}`, c: 'text-foreground' },
                         { l: `Company (${100 - split}%)`, v: `-$${companyShare.toFixed(2)}`, c: 'text-red-400' },
                         { l: `Trader (${split}%)`, v: `$${traderShare.toFixed(2)}`, c: 'text-emerald-400' },
-                        { l: 'Affiliate (9%)', v: `-$${affiliateReward.toFixed(2)}`, c: 'text-yellow-400' },
-                        { l: 'Fee', v: `-$${fee.toFixed(2)}`, c: 'text-muted-foreground' },
+                        { l: 'Processing Fee', v: `-$${fee.toFixed(2)}`, c: 'text-yellow-400' },
                         { l: 'Final Payout', v: `$${finalAmount.toFixed(2)}`, c: 'text-primary', bold: true },
                       ].map((r, i) => (
                         <div key={i} className="flex justify-between px-4 py-2 border-b border-white/[0.04] last:border-0">
@@ -225,7 +261,14 @@ export default function AdminWithdrawals() {
                   );
                 })()}
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <button
+                    onClick={() => rejectMutation.mutate(selected)}
+                    disabled={selected.status === 'rejected' || selected.status === 'paid' || rejectMutation.isPending}
+                    className="py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+                    style={{ background: 'linear-gradient(90deg,#ef4444,#dc2626)' }}>
+                    {rejectMutation.isPending ? '⏳...' : '✕ Reject'}
+                  </button>
                   <button
                     onClick={() => updateMutation.mutate({ id: selected.id, data: {
                       profit_split_pct: parseFloat(editSplit) || 80,
@@ -234,7 +277,7 @@ export default function AdminWithdrawals() {
                     }})}
                     className="py-2.5 rounded-xl text-xs font-bold text-white"
                     style={{ background: 'rgba(96,165,250,0.8)' }}>
-                    💾 Save Changes
+                    💾 Save
                   </button>
                   <button onClick={() => approveMutation.mutate(selected)}
                     disabled={selected.status === 'paid' || approveMutation.isPending}

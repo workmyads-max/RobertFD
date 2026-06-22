@@ -23,7 +23,7 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const POLL_INTERVAL_MS = 1000; // 1 second — near-instant floating loss breach detection
+const POLL_INTERVAL_MS = 15000; // 15s — catches floating DD without overloading the API (was 1s)
 
 export default function LiveDDGuard({ onBreach }) {
   const queryClient = useQueryClient();

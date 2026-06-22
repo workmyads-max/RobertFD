@@ -5,6 +5,7 @@ import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useKycStatus } from '@/hooks/useKycStatus';
+import { retryWithBackoff } from '@/lib/retryWithBackoff';
 
 const STATUS_CFG = {
   pending: { label: 'Pending Review', color: '#f59e0b', icon: Clock },
@@ -154,12 +155,12 @@ export default function Withdrawals({ user, onNavigate }) {
     mutationFn: async () => {
       if (!selectedAccount) throw new Error('No funded account selected');
       if (!savedWalletAddress) throw new Error('Please save your payout wallet address in Settings → Payout Wallets first.');
-      const res = await base44.functions.invoke('requestTraderWithdrawal', {
+      const res = await retryWithBackoff(() => base44.functions.invoke('requestTraderWithdrawal', {
         account_id: selectedAccount.account_id,
         amount: selectedProfit, // Send gross profit — backend calculates split
         method,
         wallet_address: savedWalletAddress,
-      });
+      }));
       if (res.data?.error) throw new Error(res.data.error);
       return res.data;
     },

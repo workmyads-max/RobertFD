@@ -4,6 +4,7 @@ import { DollarSign, X, Wallet, ExternalLink, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useKycStatus } from '@/hooks/useKycStatus';
+import { retryWithBackoff } from '@/lib/retryWithBackoff';
 
 const FEE_PCT = 0.05;
 const METHODS = [
@@ -53,12 +54,12 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
     mutationFn: async () => {
       if (!selectedAccount) throw new Error('No funded account selected');
       if (!savedWalletAddress) throw new Error('Please save your payout wallet address in Settings → Payout Wallets first.');
-      const res = await base44.functions.invoke('requestTraderWithdrawal', {
+      const res = await retryWithBackoff(() => base44.functions.invoke('requestTraderWithdrawal', {
         account_id: selectedAccount.account_id,
         amount: selectedProfit,
         method,
         wallet_address: savedWalletAddress,
-      });
+      }));
       if (res.data?.error) throw new Error(res.data.error);
       return res.data;
     },

@@ -156,7 +156,7 @@ export default function Dashboard() {
       const all = await base44.entities.Notification.filter({ is_active: true }, '-created_date', 100);
       return all;
     },
-    refetchInterval: 30000,
+    refetchInterval: 60000,
     enabled: !!user?.email,
     placeholderData: (prev) => prev ?? [], // Never clear the list on transient refetch
   });
@@ -174,7 +174,7 @@ export default function Dashboard() {
       return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
-    refetchInterval: 30000, // 30s refetch for accounts
+    refetchInterval: 60000, // 60s refetch for accounts (was 30s — reduces API load)
     staleTime: 30000,
     placeholderData: (prev) => prev ?? [], // Keep previous data while refetching - prevents flash of empty state
   });

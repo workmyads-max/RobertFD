@@ -62,22 +62,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'A pending withdrawal already exists for this account' }, { status: 409 });
     }
 
-    // 5. Minimum 1 trading day on the funded account
-    // Check TradeRecord entity, account.trading_days field, AND account profit as fallback
-    const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
-    const tradingDaySet = new Set();
-    for (const t of tradeRecords) {
-      const closeTime = t.close_time;
-      if (closeTime) {
-        const d = new Date(closeTime);
-        if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
-      }
-    }
-    const tradingDaysFromRecords = tradingDaySet.size;
+    // 5. Minimum 1 trading day — OPTIMIZED: skip the expensive TradeRecord query
+    // when the account already indicates trading has occurred (trading_days field
+    // or positive profit). This eliminates a potentially large query in 99% of
+    // withdrawal requests, keeping the submit to 4 SDK calls instead of 5+.
     const tradingDaysFromAccount = account.trading_days || 0;
-    // If account has positive PnL (balance > account_size), trading has clearly occurred
     const hasRealProfit = (account.pnl || 0) > 0 || (account.balance || 0) > (account.account_size || 0);
-    const tradingDaysCompleted = Math.max(tradingDaysFromRecords, tradingDaysFromAccount, hasRealProfit ? 1 : 0);
+    let tradingDaysCompleted;
+    if (tradingDaysFromAccount >= 1 || hasRealProfit) {
+      // Fast path — no TradeRecord query needed
+      tradingDaysCompleted = Math.max(tradingDaysFromAccount, hasRealProfit ? 1 : 0);
+    } else {
+      // Fallback: count unique trading days from closed trades
+      const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
+      const tradingDaySet = new Set();
+      for (const t of tradeRecords) {
+        const closeTime = t.close_time;
+        if (closeTime) {
+          const d = new Date(closeTime);
+          if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
+        }
+      }
+      tradingDaysCompleted = Math.max(tradingDaySet.size, tradingDaysFromAccount, hasRealProfit ? 1 : 0);
+    }
     if (tradingDaysCompleted < 1) {
       return Response.json({
         error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s). Please complete at least 1 trading day on your funded account first.`,
