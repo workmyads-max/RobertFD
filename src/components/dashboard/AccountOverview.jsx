@@ -10,7 +10,7 @@ import {
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAccountStats } from '../overview/useAccountStats';
-import { useAccountTrades, filterRealTrades } from '@/hooks/useAccountTrades';
+import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import AccountCurrentResults from './AccountCurrentResults';
 import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
@@ -18,16 +18,6 @@ import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
-
-// ─── Hook: fetch closed trades live from MT5 ──
-// Replaced by useAccountTrades (hooks/useAccountTrades.js) which is resilient:
-// waits for account_id, re-fetches on account change, never blanks on transient
-// errors/empties, and excludes MT5 deposit pseudo-records.
-// Thin wrapper kept for call-site compatibility.
-function useClosedTrades(account) {
-  const { trades, isLoading, refetch } = useAccountTrades(account, { intervalMs: 60000 });
-  return { trades, loading: isLoading, refetch };
-}
 
 function useResetCountdown() {
   const [countdown, setCountdown] = useState('');
@@ -1064,22 +1054,15 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     staleTime: 30000,
   });
 
-  const { data: rawTradeRecords = [] } = useQuery({
-    queryKey: ['trade-records-overview', account?.account_id],
-    queryFn: async () => {
-      if (!account?.account_id) return [];
-      const recs = await base44.entities.TradeRecord.filter({ account_id: account.account_id });
-      return Array.isArray(recs) ? recs : [];
-    },
-    enabled: !!account?.account_id,
-    refetchInterval: 5000, staleTime: 3000,
-    placeholderData: keepPreviousData, // never blank on transient refetch
-  });
-  // Exclude MT5 deposit pseudo-records from all stats / open-trade feeds
-  const tradeRecords = useMemo(
-    () => filterRealTrades(rawTradeRecords, account),
-    [rawTradeRecords, account]
-  );
+  // ── CENTRALIZED TRADE DATA — single source of truth for ALL sections ────────
+  // Uses getAccountTradeRecords backend function (service role, case-insensitive
+  // ownership) to bypass RLS exact-match issues that were hiding the user's own
+  // trades. All sections below consume these derived arrays — no scattered
+  // per-section query logic.
+  const { allTrades, closedTrades, isLoading: tradesLoading } = useAccountTradeData(account, { refetchIntervalMs: 10000 });
+
+  // Legacy alias for components that expect `tradeRecords` prop (OpenTradesPanel etc.)
+  const tradeRecords = allTrades;
 
   const { data: livePositionsData } = useQuery({
     queryKey: ['live-positions-overview', account?.account_id],
@@ -1100,10 +1083,6 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     : (account?.equity || account?.balance || account?.account_size || 0);
 
   const stats = useAccountStats(account, tradeRecords);
-
-  // Live closed trades from MT5 — used by Statistics, Daily Summary, Discipline panels + ClosedTradesSection
-  // Single fetch point — passed down to all children to avoid duplicate calls causing rate limits
-  const { trades: closedTrades, loading: closedTradesLoading } = useClosedTrades(account);
 
   const showLoader = isLoading || !currentUser;
   if (showLoader) return (
@@ -1210,8 +1189,8 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Live Open Trades */}
       <OpenTradesPanel account={account} initialPositions={livePositions} tradeRecords={tradeRecords} />
 
-      {/* Closed Trades — pass pre-fetched trades to avoid duplicate MT5 calls */}
-      <ClosedTradesSection account={account} trades={closedTrades} loading={closedTradesLoading} />
+      {/* Closed Trades — from centralized TradeRecord source */}
+      <ClosedTradesSection account={account} trades={closedTrades} loading={tradesLoading} />
 
       {/* Performance Metrics + Progress Timeline */}
       <AccountPerformanceMetrics account={account} stats={stats} closedTrades={closedTrades} livePlan={livePlan} />

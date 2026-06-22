@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, ChevronRight } from 'lucide-react';
-import { useAccountTrades } from '@/hooks/useAccountTrades';
 
 function formatDateTime(dt) {
   if (!dt) return '—';
@@ -78,16 +77,14 @@ function TradeDetailDrawer({ trade, onClose }) {
 
 const PAGE_SIZE = 12;
 
-// Accept pre-fetched trades from parent (AccountOverview) to avoid duplicate MT5 calls.
-// Falls back to the resilient useAccountTrades hook when used standalone.
+// Receives pre-fetched trades from the centralized useAccountTradeData hook
+// in AccountOverview — the single source of truth for all trade data.
 export default function ClosedTradesSection({ account, trades: propTrades, loading: propLoading }) {
-  const { trades: hookTrades, isLoading: hookLoading } = useAccountTrades(account, { intervalMs: 60000 });
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [page, setPage] = useState(1);
 
-  const isControlled = propTrades !== undefined;
-  const trades = isControlled ? propTrades : hookTrades;
-  const loading = isControlled ? (propLoading ?? false) : hookLoading;
+  const trades = propTrades || [];
+  const loading = propLoading ?? false;
 
   const totalPnl = trades.reduce((s, t) => s + (t.pnl || 0), 0);
   const winCount = trades.filter(t => (t.pnl || 0) > 0).length;
