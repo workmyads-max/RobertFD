@@ -67,18 +67,30 @@ Deno.serve(async (req) => {
     // status dropdown). That keeps the payout-reward logic in a single,
     // idempotent place. Do not re-add commission creation here.
 
-    // First payout certificate — IDEMPOTENT
+    // First payout certificate — IDEMPOTENT (one per user_email + type)
     if (w.account_id !== 'affiliate' && w.user_email) {
       const existing = await sr.entities.Certificate.filter({ user_email: w.user_email, type: 'first_payout' });
       if (existing.length === 0) {
+        // Fetch trader full name + challenge_type from the account
+        let traderName = w.user_email;
+        let challengeType = '';
+        try {
+          const accs = await sr.entities.ChallengeAccount.filter({ account_id: w.account_id });
+          if (accs[0]) challengeType = accs[0].challenge_type || '';
+        } catch { /* keep defaults */ }
+        try {
+          const users = await sr.entities.User.filter({ email: w.user_email });
+          if (users[0]?.full_name) traderName = users[0].full_name;
+        } catch { /* keep email fallback */ }
         await sr.entities.Certificate.create({
-          certificate_id: `RF-CERT-${Date.now().toString(36).toUpperCase()}`,
+          certificate_id: `XFT-CERT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
           user_email: w.user_email,
-          trader_name: w.user_email,
+          trader_name: traderName,
           type: 'first_payout',
-          title: 'First Profit Payout',
+          title: 'First Withdrawal',
           account_id: w.account_id,
           account_size: w.amount,
+          challenge_type: challengeType,
           issue_date: new Date().toISOString().split('T')[0],
           is_verified: true,
         });

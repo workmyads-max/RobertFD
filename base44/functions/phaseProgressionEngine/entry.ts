@@ -43,6 +43,37 @@ async function sendEmail(sr, to, type, data) {
 }
 
 /**
+ * Idempotent certificate creation — never creates a duplicate for the same
+ * account_id + type. Fetches the user's full_name for trader_name.
+ */
+async function ensureCertificate(sr, { user_email, type, title, account_id, challenge_type, account_size }) {
+  try {
+    const existing = await sr.entities.Certificate.filter({ account_id, type });
+    if (existing.length > 0) return null; // already created — idempotent
+    let trader_name = user_email;
+    try {
+      const users = await sr.entities.User.filter({ email: user_email });
+      if (users[0]?.full_name) trader_name = users[0].full_name;
+    } catch { /* keep email fallback */ }
+    return await sr.entities.Certificate.create({
+      certificate_id: `XFT-CERT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      user_email,
+      trader_name,
+      type,
+      title,
+      account_id,
+      account_size: account_size || 0,
+      challenge_type: challenge_type || '',
+      issue_date: new Date().toISOString().split('T')[0],
+      is_verified: true,
+    });
+  } catch (e) {
+    console.error(`[ensureCertificate] ${type} for ${account_id} failed (non-blocking):`, e.message);
+    return null;
+  }
+}
+
+/**
  * Load MT5 credentials from getPlatformCredentials — single source of truth.
  * Returns { apiKey, apiBase, serverName } or null if not configured.
  */
@@ -386,6 +417,16 @@ Deno.serve(async (req) => {
         type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
       });
 
+      // ── CERTIFICATE: Phase 1 Evaluation passed ────────────────────────────
+      await ensureCertificate(sr, {
+        user_email: account.user_email,
+        type: 'phase1_passed',
+        title: 'Phase 1 Evaluation',
+        account_id: account.account_id,
+        challenge_type: account.challenge_type,
+        account_size: account.account_size,
+      });
+
       await sendEmail(sr, account.user_email, 'phase1_passed', {
         name: account.user_email,
         account_size: account.account_size,
@@ -664,6 +705,16 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error('[phaseProgressionEngine] Payout reward creation failed (non-blocking):', e.message);
       }
+
+      // ── CERTIFICATE: Phase 2 Evaluation passed ────────────────────────────
+      await ensureCertificate(sr, {
+        user_email: account.user_email,
+        type: 'phase2_passed',
+        title: 'Phase 2 Evaluation',
+        account_id: account.account_id,
+        challenge_type: account.challenge_type,
+        account_size: account.account_size,
+      });
 
       await sendEmail(sr, account.user_email, 'funded_approved', {
         name: account.user_email,

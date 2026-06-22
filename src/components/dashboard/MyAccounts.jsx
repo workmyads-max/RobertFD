@@ -9,7 +9,7 @@ import AccountTimeline from '../overview/AccountTimeline';
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
   pending: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-  passed: { label: 'Passed', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
+  passed: { label: 'Passed — Under Review', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
   failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
   funded: { label: 'Funded', color: '#FF5C00', bg: 'rgba(255,92,0,0.08)' },
 };
@@ -183,6 +183,17 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
           )}
 
           {/* Phase review states */}
+          {account.status === 'passed' && account.phase === 'phase1' && account.phase_review_status === 'pending_review' && (
+            <div className="mb-4 rounded-lg p-3 flex items-start gap-3"
+              style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
+              <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-medium text-blue-400 mb-0.5">Phase 1 passed — Under review</div>
+                <div className="text-[11px] text-muted-foreground">Phase 2 credentials will be issued after admin approval. Expected: 1–3 business days.</div>
+              </div>
+            </div>
+          )}
+
           {account.status === 'passed' && account.phase === 'phase2' && account.phase_review_status === 'pending_review' && (
             <div className="mb-4 rounded-lg p-3 flex items-start gap-3"
               style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
@@ -262,7 +273,9 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
       // they have platform='xtrading' (the default), not 'mt5'.
       const res = await base44.functions.invoke('getUserAccounts', {});
       const all = res?.data?.accounts || [];
-      return all.filter(a => a.status !== 'failed').sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      // Show all non-trashed accounts — trashed accounts belong in the Trash page.
+      // This ensures passed/active/funded/failed (non-trashed) are all visible and counted.
+      return all.filter(a => !a.is_trashed).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
     refetchInterval: 30000,
