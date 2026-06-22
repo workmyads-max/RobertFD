@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
     const activeAccounts = allAccounts.filter(a =>
       a.mt_login &&
       a.user_email && // CRITICAL: Skip any orphaned accounts with no owner
-      ['active', 'funded', 'passed', 'pending'].includes(a.status)
+      ['active', 'funded', 'passed', 'pending'].includes(a.status) &&
+      !a.is_trashed // CRITICAL: Never sync trashed accounts — their history is a frozen snapshot
       // NOTE: platform check removed — all accounts use MT5 (Tritech) regardless of platform field value
       // platform field may be 'xtrading', 'mt5', or other legacy values
     );

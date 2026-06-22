@@ -296,6 +296,31 @@
       "type": "boolean",
       "default": true,
       "description": "Whether account is allowed to trade (false if risk suspended)"
+    },
+    "is_trashed": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the account is in Trash (terminal/superseded) and its trade history is frozen as a read-only snapshot. MT5 sync skips trashed accounts."
+    },
+    "trashed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp the account entered Trash. Trade history snapshot is available for 14 days from this date, then auto-deleted."
+    },
+    "trash_reason": {
+      "type": "string",
+      "enum": [
+        "failed",
+        "rejected",
+        "superseded",
+        "manual"
+      ],
+      "description": "Why the account was moved to Trash"
+    },
+    "history_expired": {
+      "type": "boolean",
+      "default": false,
+      "description": "True after the daily cleanup job deleted the frozen TradeRecords (older than 14 days). The account summary remains, but trades are gone."
     }
   },
   "required": [

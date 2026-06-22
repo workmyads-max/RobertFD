@@ -146,6 +146,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: account does not belong to this user' }, { status: 403 });
     }
 
+    // ── TRASHED ACCOUNT — never sync from MT5; its history is a frozen snapshot ─
+    if (acc.is_trashed) {
+      return Response.json({
+        success: true,
+        breach_detected: false,
+        skipped: true,
+        reason: 'Account is trashed — frozen snapshot, no MT5 sync',
+      });
+    }
+
     // ── ALREADY BREACHED — return immediately, nothing to enforce ─────────────
     if (acc.dd_breach_detected || acc.status === 'failed') {
       return Response.json({

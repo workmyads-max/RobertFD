@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -31,6 +31,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'kyc', label: 'KYC', icon: ShieldCheck },
     { id: 'support', label: 'Support', icon: HeadphonesIcon },
     { id: 'settings', label: 'Settings', icon: Sliders },
+    { id: 'trash', label: 'Trash Account', icon: Trash2 },
   ];
 
   const filterNavItems = () => {

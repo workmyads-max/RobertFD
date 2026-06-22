@@ -186,7 +186,7 @@ export default function Dashboard() {
 
   // CRITICAL: Only count accounts belonging to the current user (allAccounts is already email-filtered)
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;
-  const failedAccountsCount = allAccounts.filter(a => a.status === 'failed').length;
+  const failedAccountsCount = allAccounts.filter(a => a.is_trashed).length;
 
   // SECURITY: Filter notifications by target audience
   const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
