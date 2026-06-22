@@ -60,35 +60,12 @@ Deno.serve(async (req) => {
       admin_notes: admin_notes || w.admin_notes || '',
     });
 
-    // Payout reward commission — IDEMPOTENT: check by withdrawal_id
-    if (w.account_id !== 'affiliate' && w.user_email) {
-      const existingRewardComm = await sr.entities.AffiliateCommission.filter({
-        withdrawal_id: w.id,
-        commission_type: 'payout_reward',
-      });
-
-      if (existingRewardComm.length === 0) {
-        const traderProfiles = await sr.entities.AffiliateProfile.filter({ user_email: w.user_email });
-        const traderProfile = traderProfiles[0];
-        if (traderProfile?.referred_by_email && affiliateReward > 0) {
-          await sr.entities.AffiliateCommission.create({
-            affiliate_email: traderProfile.referred_by_email,
-            referred_email: w.user_email,
-            commission_type: 'payout_reward',
-            level: 1,
-            source_amount: traderShare,
-            commission_rate: parseFloat(((affiliateReward / traderShare) * 100).toFixed(2)),
-            commission_amount: affiliateReward,
-            withdrawal_id: w.id,
-            account_id: w.account_id,
-            status: 'approved',
-            notes: `Payout reward from ${w.user_email} withdrawal approved by admin ${user.email}`,
-          });
-        }
-      } else {
-        console.log(`[adminApproveWithdrawal] Payout reward commission already exists for withdrawal ${w.id} — skipping duplicate`);
-      }
-    }
+    // NOTE: The payout-reward affiliate commission is intentionally NOT handled
+    // here. It is owned exclusively by the `processPayoutRewardCommission`
+    // function, triggered by an entity automation whenever a WithdrawalRequest's
+    // status becomes "approved" (this covers both this function and the admin
+    // status dropdown). That keeps the payout-reward logic in a single,
+    // idempotent place. Do not re-add commission creation here.
 
     // First payout certificate — IDEMPOTENT
     if (w.account_id !== 'affiliate' && w.user_email) {

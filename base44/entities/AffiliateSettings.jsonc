@@ -25,7 +25,28 @@
     },
     "payout_reward_rate": {
       "type": "number",
-      "default": 9
+      "default": 9,
+      "description": "Legacy flat payout-reward rate (kept for backward compatibility). Tiered rates below take precedence."
+    },
+    "payout_tier_0_rate": {
+      "type": "number",
+      "default": 7,
+      "description": "Payout-reward % for referrers with 0-9 active funded traders"
+    },
+    "payout_tier_10_rate": {
+      "type": "number",
+      "default": 11,
+      "description": "Payout-reward % for referrers with 10-24 active funded traders"
+    },
+    "payout_tier_25_rate": {
+      "type": "number",
+      "default": 17,
+      "description": "Payout-reward % for referrers with 25-49 active funded traders"
+    },
+    "payout_tier_50_rate": {
+      "type": "number",
+      "default": 25,
+      "description": "Payout-reward % for referrers with 50+ active funded traders"
     },
     "min_withdrawal": {
       "type": "number",
