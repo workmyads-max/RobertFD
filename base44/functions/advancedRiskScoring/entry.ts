@@ -155,20 +155,14 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ── 8. UNUSUAL DD BEHAVIOR ────────────────────────────────────────────
-        {
-          const ddUsed = account.max_drawdown_used || 0;
-          // Only flag if account has real trade history AND drawdown data is populated
-          if (closedTrades.length >= 3 && account.last_synced_at) {
-            if (ddUsed > 9) {
-              violations.push({ type: 'unusual_dd_behavior', severity: 'critical', detail: `Max DD used: ${ddUsed.toFixed(1)}% (approaching limit)` });
-              totalRiskScore += 30;
-            } else if (ddUsed > 7) {
-              violations.push({ type: 'unusual_dd_behavior', severity: 'high', detail: `Max DD used: ${ddUsed.toFixed(1)}%` });
-              totalRiskScore += 15;
-            }
-          }
-        }
+        // ── 8. (REMOVED) UNUSUAL DD BEHAVIOR / "APPROACHING LIMIT" ─────────────
+        // As of 2026-06-22 this check is removed entirely. Flagging accounts whose
+        // drawdown is merely "approaching" a limit caused false auto-flags (e.g.
+        // XFT-MQK3Y6E5) and leaked into the user-facing "Account Under Review"
+        // banner. "Approaching" a limit is NOT a breach — only actually EXCEEDING
+        // the Daily DD or Overall/Max DD limit (handled by mt5RealtimeSync /
+        // scheduledMTSync / automatedDDBreach) may fail an account. Drawdown
+        // progression is visible to the user in their dashboard already.
 
         // ── 9. OVERNIGHT VIOLATIONS ───────────────────────────────────────────
         {

@@ -23,11 +23,13 @@
  *   - Does NOT update balance/equity/DD values (scheduledMTSync owns that)
  *   - Does NOT breach accounts for DD violations (scheduledMTSync owns that)
  *
- * Violation handling:
- *   - max_lots, hedging → status=failed immediately (hard rule)
- *   - weekend_holding, overnight_holding → RiskFlag + Notification (warning, not instant fail)
- *     Note: auto-close is handled by autoCloseWeekendPositions function
- *   - leverage exceeded → RiskFlag + Notification (warning)
+ * Violation handling (ADMIN-REVIEW-ONLY as of 2026-06-22):
+ *   - ALL non-DD violations (max_lots, hedging, weekend/overnight holding, leverage)
+ *     → RiskFlag record for ADMIN review ONLY. NO automatic status change, NO
+ *     automatic can_trade=false, NO user-facing notification. Admins act manually.
+ *   - The ONLY condition that may automatically fail an account is a REAL Daily DD
+ *     or Overall/Max DD breach, which is owned by mt5RealtimeSync / scheduledMTSync /
+ *     automatedDDBreach — NOT this function.
  *
  * Authorization: Admin session OR valid SCHEDULER_SECRET_TOKEN header.
  */
@@ -308,30 +310,13 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ── PROCESS VIOLATIONS ────────────────────────────────────────────────
+        // ── PROCESS VIOLATIONS (ADMIN-REVIEW-ONLY) ─────────────────────────────
+        // As of 2026-06-22: NO automatic enforcement. Non-DD rule violations only
+        // create RiskFlag records for admin manual review. Never auto-fail, never
+        // set can_trade=false, never send user-facing notifications. Only a REAL
+        // DD breach (owned by mt5RealtimeSync/scheduledMTSync/automatedDDBreach)
+        // may automatically fail an account.
         if (violations.length > 0) {
-          const hardFails = violations.filter(v => v.hard_fail);
-          const warnings  = violations.filter(v => !v.hard_fail);
-
-          // Hard fail violations → status=failed immediately
-          if (hardFails.length > 0 && acc.status !== 'failed') {
-            const primaryViolation = hardFails[0];
-            await sr.entities.ChallengeAccount.update(acc.id, {
-              status: 'failed',
-              dd_breach_detected: true,
-              dd_breach_type: 'overall', // closest match for schema
-              dd_breach_time: now.toISOString(),
-              dd_breach_value: 0,
-            });
-            console.log(`[RULE-FAIL] ${acc.account_id} → failed (${primaryViolation.type})`);
-
-            // Disable MT5 broker-side
-            if (acc.mt_login) {
-              disableMT5(acc.mt_login, MT5_BASE, MT5_KEY);
-            }
-          }
-
-          // Create RiskFlag for ALL violations (hard + warning)
           await Promise.all(violations.map(v =>
             sr.entities.RiskFlag.create({
               user_email: acc.user_email,
@@ -343,28 +328,7 @@ Deno.serve(async (req) => {
               triggered_at: now.toISOString(),
             }).catch(() => null)
           ));
-
-          // Create Notification for hard fails — scoped to user_email to prevent leakage
-          if (hardFails.length > 0) {
-            await sr.entities.Notification.create({
-              user_email: acc.user_email,
-              title: '🚫 Challenge Rule Violation — Account Failed',
-              message: `Account ${acc.account_id} failed: ${hardFails[0].description}`,
-              type: 'market_alert', priority: 'critical',
-              display_mode: 'popup', is_active: true, target: 'challenge',
-            }).catch(() => null);
-          }
-
-          // Create Notification for warnings — scoped to user_email to prevent leakage
-          if (warnings.length > 0) {
-            await sr.entities.Notification.create({
-              user_email: acc.user_email,
-              title: '⚠️ Challenge Rule Warning',
-              message: `Account ${acc.account_id}: ${warnings[0].description}`,
-              type: 'market_alert', priority: 'high',
-              display_mode: 'banner', is_active: true, target: 'challenge',
-            }).catch(() => null);
-          }
+          console.log(`[RULE-FLAG] ${acc.account_id}: ${violations.length} admin-review-only flag(s) (${violations.map(v => v.type).join(', ')})`);
         }
 
         results.push({
@@ -372,8 +336,7 @@ Deno.serve(async (req) => {
           ok: true,
           trading_days: tradingDays,
           violations: violations.length,
-          hard_fails: violations.filter(v => v.hard_fail).length,
-          warnings: violations.filter(v => !v.hard_fail).length,
+          admin_review_flags: violations.length,
           violation_types: violations.map(v => v.type),
         });
 
@@ -384,13 +347,13 @@ Deno.serve(async (req) => {
     }));
 
     const totalViolations = results.reduce((s, r) => s + (r.violations || 0), 0);
-    const totalHardFails  = results.reduce((s, r) => s + (r.hard_fails || 0), 0);
 
     return Response.json({
       success: true,
       accounts_checked: accounts.length,
       total_violations: totalViolations,
-      total_hard_fails: totalHardFails,
+      total_admin_review_flags: totalViolations,
+      note: 'Non-DD violations are admin-review-only. No automatic account failure or user notification.',
       results,
     });
 
