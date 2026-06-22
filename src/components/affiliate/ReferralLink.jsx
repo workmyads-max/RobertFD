@@ -20,7 +20,11 @@ const PAYOUT_TIERS = [
 export default function ReferralLink({ profile }) {
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const refLink = profile ? `${window.location.origin}/?ref=${profile.referral_code}` : '';
+  // Official referral link — points to the register page with ?ref=CODE so the
+  // visitor's referral is captured before authentication and attributed on signup.
+  const refLink = profile?.referral_code
+    ? `https://xfundedtrader.com/register?ref=${profile.referral_code}`
+    : '';
   const code = profile?.referral_code || '—';
 
   const copy = async (text, setter) => {

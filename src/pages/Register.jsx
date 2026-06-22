@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { captureReferralCode, getStoredReferralCode } from '@/utils/referralUtils';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -19,6 +20,11 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Capture any ?ref=CODE on this page so it survives until verification
+  useEffect(() => {
+    captureReferralCode();
+  }, []);
 
   // Redirect if already logged in - runs once on mount with timeout fallback
   useEffect(() => {
@@ -126,11 +132,15 @@ export default function Register() {
       });
 
       toast.success('Account created! Please check your email for verification code.');
+      // Pass the stored referral code to the verification step so it can be
+      // processed after the user verifies their email and is logged in.
+      const storedRef = getStoredReferralCode();
       // Redirect to verification page with email and password in state
       navigate('/verify-email', { 
         state: { 
           email: normalizedEmail, 
-          password: formData.password 
+          password: formData.password,
+          referral_code: storedRef || '',
         } 
       });
     } catch (err) {

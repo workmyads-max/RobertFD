@@ -4,6 +4,7 @@ import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown
 import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useKycStatus } from '@/hooks/useKycStatus';
 
 const STATUS_CFG = {
   pending: { label: 'Pending Review', color: '#f59e0b', icon: Clock },
@@ -119,13 +120,10 @@ export default function Withdrawals({ user, onNavigate }) {
 
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
 
-  const { data: kycList = [] } = useQuery({
-    queryKey: ['kyc', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-  const kyc = (kycList || [])[0] || null;
-  const kycApproved = kyc?.status === 'approved';
+  // Shared KYC status — single source of truth (same hook as the KYC page).
+  // isLoading is true only on first load with no cached data, so we never show
+  // a stale "pending" KYC card before the real status arrives.
+  const { kyc, status: kycStatus, isApproved: kycApproved, isLoading: kycLoading } = useKycStatus(user?.email);
 
   const { data: withdrawals = [] } = useQuery({
     queryKey: ['withdrawals', user?.email],
@@ -192,15 +190,23 @@ export default function Withdrawals({ user, onNavigate }) {
         </button>
       </div>
 
-      {/* KYC Gate */}
-      {!kycApproved && showKycAlert && (
+      {/* KYC Gate — never render a stale "pending" state. Show a brief loading
+          indicator until the real status arrives, then the correct card. */}
+      {kycLoading ? (
+        <div className="flex justify-center mb-5">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-mono text-muted-foreground">Loading KYC status…</span>
+          </div>
+        </div>
+      ) : !kycApproved && showKycAlert && (
         <div className="flex justify-center mb-5">
           <AlertCard
             isVisible={showKycAlert}
             title="KYC Required"
-            description={!kyc || kyc.status === 'not_submitted'
+            description={!kyc || kycStatus === 'not_submitted'
               ? 'Complete identity verification before requesting payouts. Submit your documents in the KYC section.'
-              : kyc.status === 'pending'
+              : kycStatus === 'pending'
               ? 'KYC under review (24-48 hours). Payouts unavailable until approved.'
               : 'KYC was rejected. Please resubmit correct documents.'}
             buttonText="Go to KYC"

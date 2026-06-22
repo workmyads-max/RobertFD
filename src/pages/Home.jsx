@@ -20,6 +20,7 @@ import AboutSection from '../components/landing/AboutSection';
 import PromoPopup from '../components/landing/PromoPopup';
 import LiveChat from '../components/landing/LiveChat';
 import Footer from '../components/landing/Footer';
+import { captureReferralCode } from '@/utils/referralUtils';
 
 const IMAGES = {
   hero: 'https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?w=1800&q=80&fit=crop',
@@ -32,17 +33,16 @@ const IMAGES = {
 };
 
 export default function Home() {
-  // ── Cookie-based referral tracking ──────────────────────────────────────
+  // ── Referral tracking — capture ?ref=CODE into localStorage (30-day expiry)
+  // and fire a non-blocking click-tracking backend call. Also kept in a cookie
+  // for backward compatibility with any legacy reads.
   useEffect(() => {
+    captureReferralCode();
+    // Backward-compat cookie
     const refCode = new URLSearchParams(window.location.search).get('ref');
     if (refCode) {
-      // Store in cookie with 30-day expiry (matches AffiliateSettings.cookie_days default)
       const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
       document.cookie = `xf_ref=${refCode}; expires=${expires}; path=/; SameSite=Lax`;
-      // Clean URL without reload
-      const url = new URL(window.location.href);
-      url.searchParams.delete('ref');
-      window.history.replaceState({}, '', url.toString());
     }
   }, []);
 

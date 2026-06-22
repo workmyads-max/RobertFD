@@ -60,6 +60,20 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
         }
       }
 
+      // Affiliate attribution: look up the buyer's AffiliateProfile and use their
+      // referred_by_code so the referrer gets credited when the payment confirms.
+      let affiliateCode = order.affiliate_code || '';
+      if (!affiliateCode && order.email) {
+        try {
+          const profiles = await base44.entities.AffiliateProfile.filter({ user_email: order.email });
+          if (profiles && profiles.length > 0 && profiles[0].referred_by_code) {
+            affiliateCode = profiles[0].referred_by_code;
+          }
+        } catch (e) {
+          console.warn('[checkout] affiliate profile lookup failed (non-blocking):', e?.message || e);
+        }
+      }
+
       // Create order directly in Base44 Order entity — no Supabase
       await base44.entities.Order.create({
         order_id: orderId,
@@ -83,7 +97,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
         postal_code: order.postal_code || '',
         coupon_code: order.coupon_code || '',
         discount_amount: order.discount_amount || 0,
-        affiliate_code: order.affiliate_code || '',
+        affiliate_code: affiliateCode,
       });
 
       return { order_id: orderId, exists: false };

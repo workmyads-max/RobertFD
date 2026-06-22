@@ -67,6 +67,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
+import { useKycStatus } from '@/hooks/useKycStatus';
 
 export default function Dashboard() {
   const { isEnabled } = useFeatureVisibility();
@@ -178,15 +179,9 @@ export default function Dashboard() {
     placeholderData: (prev) => prev, // Keep previous data while refetching - prevents flash of empty state
   });
 
-  // Load KYC status for welcome header and withdrawal eligibility
-  const { data: kycData = [] } = useQuery({
-    queryKey: ['kyc-status', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-    staleTime: 120000, // 2min stale time - KYC status rarely changes
-    placeholderData: (prev) => prev, // Keep previous KYC status while refetching - prevents flash of wrong status
-  });
-  const kyc = kycData[0] || null;
+  // Load KYC status for welcome header and withdrawal eligibility — shared hook
+  // (same source of truth as the KYC and Withdrawals pages).
+  const { kyc } = useKycStatus(user?.email);
 
   // CRITICAL: Only count accounts belonging to the current user (allAccounts is already email-filtered)
   const primaryActiveAccount = allAccounts.find(a => a.status === 'active' || a.status === 'funded' || a.status === 'passed') || null;

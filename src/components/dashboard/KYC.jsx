@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Upload, CheckCircle2, Clock, XCircle, AlertTriangle, FileText, User, Home, Camera, RefreshCw, Target, Award, Layers } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useKycStatus } from '@/hooks/useKycStatus';
 
 const ACCENT = '#CCFF00';
 
@@ -49,25 +50,20 @@ function UploadCard({ label, icon: Icon, field, value, onUpload, uploading, disa
 }
 
 export default function KYC({ user }) {
-  const qc = useQueryClient();
   const [uploading, setUploading] = useState(null);
   const [form, setForm] = useState({ id_type: 'passport', full_name: user?.full_name || '', date_of_birth: '', nationality: '' });
 
-  const { data: kyc, isLoading } = useQuery({
-    queryKey: ['kyc', user?.email],
-    queryFn: async () => {
-      const results = await base44.entities.KYCVerification.filter({ user_email: user?.email }) || [];
-      return results[0] || null;
-    },
-    enabled: !!user?.email,
-  });
+  // Shared KYC status — single source of truth (also used by Withdrawals).
+  // Shows a loading indicator until the real status arrives; never renders a
+  // stale default "pending" state.
+  const { kyc, status, isLoading, invalidate: invalidateKyc } = useKycStatus(user?.email);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
       if (kyc?.id) return base44.entities.KYCVerification.update(kyc.id, { ...data, status: 'pending', submitted_at: new Date().toISOString() });
       return base44.entities.KYCVerification.create({ ...data, user_email: user?.email, status: 'pending', submitted_at: new Date().toISOString() });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc', user?.email] }),
+    onSuccess: () => invalidateKyc(),
   });
 
   const handleUpload = async (field, file) => {
@@ -80,7 +76,7 @@ export default function KYC({ user }) {
     } else {
       setForm(f => ({ ...f, [field]: file_uri }));
     }
-    qc.invalidateQueries({ queryKey: ['kyc', user?.email] });
+    invalidateKyc();
     setUploading(null);
   };
 
@@ -96,7 +92,6 @@ export default function KYC({ user }) {
   };
 
   const effectiveKyc = kyc || form;
-  const status = kyc?.status || 'not_submitted';
   const statusCfg = STATUS_CONFIG[status];
   const StatusIcon = statusCfg.icon;
   const canEdit = status === 'not_submitted' || status === 'rejected' || status === 'resubmit_required';

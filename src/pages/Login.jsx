@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { captureReferralCode } from '@/utils/referralUtils';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,6 +16,11 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Capture any ?ref=CODE so it survives until the user registers
+  useEffect(() => {
+    captureReferralCode();
+  }, []);
 
   // Redirect if already logged in - runs once on mount with timeout fallback
   useEffect(() => {

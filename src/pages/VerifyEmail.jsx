@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import XFLogo from '@/components/shared/XFLogo';
+import { getStoredReferralCode, clearStoredReferralCode, processAffiliateAttribution } from '@/utils/referralUtils';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -27,6 +29,12 @@ export default function VerifyEmail() {
     }
     if (state?.password) {
       setPassword(state.password);
+    }
+    // Referral code from navigation state, with localStorage fallback
+    const refFromState = state?.referral_code;
+    const refFromStorage = getStoredReferralCode();
+    if (refFromState || refFromStorage) {
+      setReferralCode((refFromState || refFromStorage).toUpperCase());
     }
     if (state?.needsVerification) {
       toast.error('Please verify your email before logging in');
@@ -112,8 +120,26 @@ export default function VerifyEmail() {
       // Auto-login after successful verification
       if (password) {
         await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
-        
-        // Send welcome email
+
+        // ── Affiliate attribution: create the new user's AffiliateProfile and
+        // increment the referrer's total_referrals. Non-blocking — failures are
+        // logged but never break the auth flow.
+        if (referralCode) {
+          processAffiliateAttribution(email, referralCode).then((res) => {
+            if (res?.success) {
+              clearStoredReferralCode();
+              console.log('[verify-email] affiliate attribution processed');
+            }
+          });
+        } else {
+          // Even with no ref code, ensure the user gets a self-profile created
+          // later by the Affiliate dashboard (existing behaviour). Nothing to do here.
+        }
+
+        // ── Welcome email: always send once after first successful verification.
+        // Uses Base44 SendEmail so it's delivered from our verified custom domain
+        // (support@xfundedtrader.com). Wrapped in try/catch so email failures
+        // never block login.
         try {
           await base44.integrations.Core.SendEmail({
             to: email.toLowerCase().trim(),
@@ -185,7 +211,15 @@ export default function VerifyEmail() {
         // CRITICAL: Use window.location.href for guaranteed navigation
         window.location.href = '/dashboard';
       } else {
-        // No password (came from login redirect) - send to login
+        // No password (came from login-needs-verification flow) - send to login
+        // Still process affiliate attribution if a ref code is present, since
+        // the user is now verified and will have an AffiliateProfile on first
+        // dashboard visit. We attempt attribution using the email only.
+        if (referralCode) {
+          processAffiliateAttribution(email, referralCode).then((res) => {
+            if (res?.success) clearStoredReferralCode();
+          });
+        }
         toast.success('Email verified! Please log in now.');
         window.location.href = '/login';
       }
