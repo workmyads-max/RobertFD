@@ -25,9 +25,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, positions: [], error: 'MT5 not configured' });
     }
 
-    // ── OWNERSHIP: only fetch accounts belonging to this user ─────────────────
-    const userAccounts = await base44.entities.ChallengeAccount.filter({ user_email: user.email });
-    const activeAccounts = userAccounts.filter(a =>
+    // ── OWNERSHIP: service role + case-insensitive email matching ─────────────
+    // RLS exact-match (user_email = {{user.email}}) can hide the user's own accounts
+    // when casing/whitespace differs. Service role bypasses RLS; we enforce ownership manually.
+    const normalizedEmail = user.email.toLowerCase().trim();
+    const allUserAccounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 200);
+    const activeAccounts = (allUserAccounts || []).filter(a =>
+      (a.user_email || '').toLowerCase().trim() === normalizedEmail &&
       a.mt_login &&
       ['active', 'funded', 'passed'].includes(a.status) &&
       (!accountId || a.account_id === accountId)

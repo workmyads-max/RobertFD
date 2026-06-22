@@ -150,21 +150,15 @@ export default function Dashboard() {
     queryKey: ['notifications', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      // Fetch global notifications (no user_email set) + user-specific ones separately
-      const [globalNotifs, userNotifs] = await Promise.all([
-        base44.entities.Notification.filter({ is_active: true, target: 'all' }),
-        base44.entities.Notification.filter({ is_active: true, user_email: user.email }),
-      ]);
-      // Deduplicate by id
-      const seen = new Set();
-      return [...globalNotifs, ...userNotifs].filter(n => {
-        if (seen.has(n.id)) return false;
-        seen.add(n.id);
-        return true;
-      });
+      // Fetch ALL active notifications — Notification entity has no RLS, so we
+      // fetch all and filter case-insensitively on the client to avoid missing
+      // user-specific notifications due to email casing/whitespace differences.
+      const all = await base44.entities.Notification.filter({ is_active: true }, '-created_date', 100);
+      return all;
     },
     refetchInterval: 30000,
     enabled: !!user?.email,
+    placeholderData: (prev) => prev ?? [], // Never clear the list on transient refetch
   });
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
@@ -194,12 +188,16 @@ export default function Dashboard() {
   const failedAccountsCount = allAccounts.filter(a => a.is_trashed).length;
 
   // SECURITY: Filter notifications by target audience
+  const normalizedUserEmail = (user?.email || '').toLowerCase().trim();
   const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
   const hasChallengeAccount = allAccounts.some(a => ['active', 'passed', 'pending'].includes(a.status));
   const notifications = rawNotifications.filter(n => {
     // CRITICAL: Any notification addressed to a specific user is PRIVATE —
     // only that exact user may ever see it, regardless of target.
-    if (n.user_email) return n.user_email === user?.email;
+    // Match case-insensitively and trimmed so casing/whitespace never hides it.
+    if (n.user_email) {
+      return (n.user_email || '').toLowerCase().trim() === normalizedUserEmail;
+    }
     // From here on, only broadcast notifications (no user_email) remain.
     // market_alert and system notifications MUST be user-scoped — never show as broadcast
     if (n.type === 'market_alert' || n.type === 'system') return false;

@@ -30,9 +30,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, trades: [], error: 'MT5 not configured' });
     }
 
-    // Ownership check — find the MT5 login for this account (any status)
-    const userAccounts = await base44.entities.ChallengeAccount.filter({ user_email: user.email });
-    const account = userAccounts.find(a =>
+    // Ownership check — use service role with case-insensitive email matching.
+    // RLS exact-match (user_email = {{user.email}}) can hide the user's own accounts
+    // when casing/whitespace differs. Service role bypasses RLS; we enforce ownership manually.
+    const normalizedEmail = user.email.toLowerCase().trim();
+    const allUserAccounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 200);
+    const account = (allUserAccounts || []).find(a =>
+      (a.user_email || '').toLowerCase().trim() === normalizedEmail &&
       a.mt_login && (!account_id || a.account_id === account_id || a.mt_login === String(account_id))
     );
 

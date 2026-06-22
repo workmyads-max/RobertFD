@@ -93,7 +93,7 @@ function Phase1ReviewCard({ account, onApprove, onReject, loading }) {
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
             Approve → Provision Phase 2
           </button>
-          <button onClick={() => onReject(account.id)} disabled={loading}
+          <button onClick={() => onReject(account.account_id)} disabled={loading}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold disabled:opacity-40 transition-all hover:brightness-110"
             style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
             <XCircle className="w-3.5 h-3.5" /> Reject
@@ -262,10 +262,15 @@ export default function AdminFundedReview() {
   const { data: phase1Pending = [], refetch: refetchP1, isLoading: p1Loading } = useQuery({
     queryKey: ['phase1-pending-review'],
     queryFn: async () => {
-      const all = await base44.entities.ChallengeAccount.filter({ status: 'passed' }, '-created_date', 200);
+      // Use adminListAllAccounts (service role) to bypass RLS — otherwise the
+      // admin can only see their own passed accounts, missing other users' Phase 1
+      // passed accounts that need review.
+      const res = await base44.functions.invoke('adminListAllAccounts', { limit: 500 });
+      const all = res?.data?.accounts || [];
       return all.filter(a =>
+        a.status === 'passed' &&
         a.phase === 'phase1' &&
-        (a.phase_review_status === 'pending_review' || a.phase_review_status === 'none' || !a.phase_review_status) &&
+        a.phase_review_status === 'pending_review' &&
         a.challenge_type === 'two-step' // Only two-step challenges need phase1 review; instant/instant_light go straight to funded
       );
     },
@@ -279,9 +284,11 @@ export default function AdminFundedReview() {
   });
 
   const phase1RejectMutation = useMutation({
-    mutationFn: (id) => base44.entities.ChallengeAccount.update(id, { phase_review_status: 'rejected', status: 'failed' }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['phase1-pending-review'] }); toast.success('Rejected'); },
-    onError: (e) => toast.error('Failed: ' + e.message),
+    // Use phaseProgressionEngine (service role) — direct entity update is RLS-blocked
+    // for accounts belonging to other users.
+    mutationFn: (account_id) => base44.functions.invoke('phaseProgressionEngine', { action: 'reject_phase1', account_id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['phase1-pending-review'] }); toast.success('Phase 1 rejected'); },
+    onError: (e) => toast.error('Failed: ' + (e.response?.data?.error || e.message)),
   });
 
   const { data: reviews = [], isLoading, refetch } = useQuery({
@@ -376,9 +383,9 @@ export default function AdminFundedReview() {
                     if (!window.confirm(`Approve Phase 1 for ${acc.user_email}?\nThis will provision a new Phase 2 MT5 account.`)) return;
                     phase1ApproveMutation.mutate(account_id);
                   }}
-                  onReject={(id) => {
+                  onReject={(account_id) => {
                     if (!window.confirm('Reject this Phase 1 pass? This will mark the account as failed.')) return;
-                    phase1RejectMutation.mutate(id);
+                    phase1RejectMutation.mutate(account_id);
                   }}
                   loading={phase1ApproveMutation.isPending || phase1RejectMutation.isPending}
                 />

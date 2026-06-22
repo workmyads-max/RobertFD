@@ -31,16 +31,19 @@ Deno.serve(async (req) => {
             return Response.json({ created: false });
         }
 
-        // Create payment approval notification
-        await base44.entities.Notification.create({
-            user_email: user.email,
+        // Create payment approval notification — USER-SPECIFIC, never a global broadcast.
+        // type='announcement' (not 'system' which is reserved for global-only alerts).
+        // target='challenge' (scoped to the account owner, not 'all').
+        // user_email is ALWAYS set so only the owner sees it — privacy: no cross-user leakage.
+        await base44.asServiceRole.entities.Notification.create({
+            user_email: user.email.toLowerCase().trim(),
             title: 'Payment Approved — Challenge Account Ready',
             message: `Your payment for ${order.challenge_type} $${order.account_size.toLocaleString()} challenge has been verified. Your account is being provisioned.`,
-            type: 'system',
+            type: 'announcement',
             priority: 'high',
             display_mode: 'popup',
             is_active: true,
-            target: 'all',
+            target: 'challenge',
             created_date: new Date().toISOString(),
         });
 

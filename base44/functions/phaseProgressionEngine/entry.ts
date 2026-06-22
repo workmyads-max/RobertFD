@@ -356,6 +356,36 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, phase: 'phase2', credentials: result });
     }
 
+    // ── REJECT PHASE 1 REVIEW ──────────────────────────────────────────────────
+    // Admin rejects a Phase 1 pass. Uses service role (bypasses RLS) so admin can
+    // update any user's account. Creates a user-specific notification for the owner.
+    if (action === 'reject_phase1') {
+      if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+
+      const accounts = await sr.entities.ChallengeAccount.filter({ account_id });
+      const account = accounts[0];
+      if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
+
+      // Idempotency: already rejected
+      if (account.phase_review_status === 'rejected' && account.status === 'failed') {
+        return Response.json({ error: 'Phase 1 already rejected.', already_done: true }, { status: 409 });
+      }
+
+      await sr.entities.ChallengeAccount.update(account.id, {
+        phase_review_status: 'rejected',
+        status: 'failed',
+      });
+
+      await sr.entities.Notification.create({
+        user_email: account.user_email,
+        title: 'Phase 1 Review — Update',
+        message: `Your Phase 1 review was not approved. Please contact support if you have questions about your account.`,
+        type: 'announcement', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+      });
+
+      return Response.json({ success: true });
+    }
+
     // ── MANUALLY MARK PHASE 2 PASSED → PENDING FUNDED REVIEW (admin/legacy) ──
     // Auto-detection in scheduledMTSync now handles the normal path.
     // This action is kept for admin override / edge cases.
