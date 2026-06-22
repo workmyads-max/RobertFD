@@ -1033,9 +1033,10 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
 
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
+  // CRITICAL: Exclude is_trashed=true accounts — they belong ONLY in Trash.
+  const activeAccounts = accounts.filter(a => !a.is_trashed && ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
-    ? (accounts.find(a => a.id === selectedAccount.id) || selectedAccount)
+    ? (accounts.find(a => a.id === selectedAccount.id && !a.is_trashed) || activeAccounts[0] || null)
     : (activeAccounts[0] || null);
 
   // Fetch live ChallengePlan to get current min_trading_days (not stale rule_snapshot)
@@ -1204,8 +1205,8 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Discipline + Objectives */}
       <DisciplinePanel account={account} closedTrades={closedTrades} livePlan={livePlan} />
 
-      {/* Account History */}
-      <AccountHistorySection accounts={accounts} />
+      {/* Account History — trashed accounts excluded (they appear in Trash page) */}
+      <AccountHistorySection accounts={accounts.filter(a => !a.is_trashed)} />
 
       {/* Footer */}
       <Footer />

@@ -99,7 +99,9 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
   // Use KYC from parent (Dashboard) to prevent duplicate queries and loading flash
   // kyc prop is loaded once in Dashboard with proper staleTime
 
-  const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed', 'pending'].includes(a.status));
+  // CRITICAL: Exclude is_trashed=true accounts — they belong ONLY in Trash.
+  // Trashed accounts have status='passed' but are superseded; never show as live.
+  const activeAccounts = accounts.filter(a => !a.is_trashed && ['active', 'funded', 'passed', 'pending'].includes(a.status));
 
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);

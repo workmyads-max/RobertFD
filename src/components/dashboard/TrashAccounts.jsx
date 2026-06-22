@@ -74,11 +74,15 @@ export default function TrashAccounts({ onStartChallenge }) {
     queryKey: ['trash-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const all = await base44.entities.ChallengeAccount.filter({ user_email: user.email, is_trashed: true });
-      return Array.isArray(all) ? all : [];
+      // CRITICAL: Use the service-role getUserAccounts function (case-insensitive
+      // email matching, bypasses RLS) — the direct entity filter was hiding the
+      // user's own trashed accounts due to email casing/whitespace differences.
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      const all = res?.data?.accounts || [];
+      return all.filter(a => a.is_trashed === true);
     },
     enabled: !!user?.email,
-    placeholderData: (prev) => prev,
+    placeholderData: (prev) => prev ?? [],
   });
 
   const sorted = [...accounts].sort((a, b) =>

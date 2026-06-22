@@ -9,7 +9,7 @@ import AccountTimeline from '../overview/AccountTimeline';
 const STATUS_CONFIG = {
   active: { label: 'Active', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
   pending: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-  passed: { label: 'Passed — Under Review', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
+  passed: { label: 'Passed', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
   failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
   funded: { label: 'Funded', color: '#FF5C00', bg: 'rgba(255,92,0,0.08)' },
 };
@@ -82,6 +82,10 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
   const [showCreds, setShowCreds] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const statusCfg = STATUS_CONFIG[account.status] || STATUS_CONFIG.pending;
+  // Dynamic "Under Review" label: only when genuinely awaiting admin review
+  const isUnderReview = account.status === 'passed' &&
+    (account.phase_review_status === 'pending_review' || account.funded_review_status === 'pending_review');
+  const statusLabel = isUnderReview ? 'Passed — Under Review' : statusCfg.label;
   const isPnlPos = (account.pnl || 0) >= 0;
   const snap = account.rule_snapshot || {};
   const isFundedLive = account.status === 'funded';
@@ -107,7 +111,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
                 <span className="text-base font-semibold text-foreground font-mono">{account.account_id}</span>
                 <span className="px-2.5 py-1 rounded-md text-xs font-medium"
                   style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.color}25` }}>
-                  {statusCfg.label}
+                  {statusLabel}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
