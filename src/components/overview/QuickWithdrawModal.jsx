@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, X, Wallet, ExternalLink, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useKycStatus } from '@/hooks/useKycStatus';
 
 const FEE_PCT = 0.05;
 const METHODS = [
@@ -31,14 +32,8 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
 
   const savedWalletAddress = user?.payout_wallet_address || user?.usdt_trc20 || user?.bitcoin || '';
   
-  // Load KYC status from entity
-  const { data: kycData = [] } = useQuery({
-    queryKey: ['kyc-status', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-  const kycRecord = kycData[0];
-  const kycApproved = kycRecord?.status === 'approved';
+  // KYC status via shared single-source-of-truth hook (object|null, never throws)
+  const { isApproved: kycApproved } = useKycStatus(user?.email);
   
   // Eligibility checks
   const isFunded = selectedAccount?.status === 'funded';

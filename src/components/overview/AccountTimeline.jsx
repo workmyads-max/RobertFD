@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, XCircle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useKycStatus } from '@/hooks/useKycStatus';
 function fmt(n) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 // ─── timeline step ─────────────────────────────────────────────────────────────
@@ -254,15 +253,10 @@ function useTimelineSteps(account, closedTrades = []) {
 // ─── main ──────────────────────────────────────────────────────────────────────
 export default function AccountTimeline({ account, closedTrades = [], onNavigate, onRequestWithdrawal, user }) {
   const steps = useTimelineSteps(account, closedTrades);
-  
-  // Load KYC status from entity
-  const { data: kycData = [] } = useQuery({
-    queryKey: ['kyc-status', user?.email],
-    queryFn: () => base44.entities.KYCVerification.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-  const kycRecord = kycData[0];
-  const kycApproved = kycRecord?.status === 'approved';
+
+  // KYC status via the shared single-source-of-truth hook (returns object|null,
+  // never throws). Avoids the prior queryKey collision that crashed the page.
+  const { isApproved: kycApproved } = useKycStatus(user?.email);
 
   if (!account || steps.length === 0) return null;
 

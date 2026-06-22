@@ -64,6 +64,7 @@ import AccountOverview from '../components/dashboard/AccountOverview';
 import TrashAccounts from '../components/dashboard/TrashAccounts';
 
 import { base44 } from '@/api/base44Client';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useQuery } from '@tanstack/react-query';
 import { useFeatureVisibility } from '../hooks/useFeatureVisibility';
 import { useCustomAuth } from '@/lib/CustomAuthContext';
@@ -379,7 +380,9 @@ export default function Dashboard() {
                 transition={{ duration: 0.3 }}
                 className={isTerminal ? 'h-full' : ''}
               >
-                {renderPage()}
+                <ErrorBoundary resetKey={activePage}>
+                  {renderPage()}
+                </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </div>
