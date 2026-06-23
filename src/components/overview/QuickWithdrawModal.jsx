@@ -4,6 +4,7 @@ import { DollarSign, X, Wallet, ExternalLink, XCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useKycStatus } from '@/hooks/useKycStatus';
+import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import { retryWithBackoff } from '@/lib/retryWithBackoff';
 
 const FEE_PCT = 0.05;
@@ -35,11 +36,18 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
   
   // KYC status via shared single-source-of-truth hook (object|null, never throws)
   const { isApproved: kycApproved } = useKycStatus(user?.email);
-  
+
+  // Fetch closed trades for the selected account to compute trading days —
+  // matches AccountTimeline/AccountOverview logic (Math.max(unique trade days, account.trading_days))
+  const { closedTrades: selectedClosedTrades = [] } = useAccountTradeData(selectedAccount, { refetchIntervalMs: 15000 });
+  const tradingDaysFromTrades = new Set(
+    selectedClosedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
+  ).size;
+  const tradingDays = Math.max(tradingDaysFromTrades, selectedAccount?.trading_days || 0);
+
   // Eligibility checks
   const isFunded = selectedAccount?.status === 'funded';
   const hasProfit = selectedProfit > 0;
-  const tradingDays = selectedAccount?.trading_days || 0;
   const hasMinTradingDays = tradingDays >= 1;
   const isEligible = isFunded && hasProfit && hasMinTradingDays && kycApproved && savedWalletAddress;
   
