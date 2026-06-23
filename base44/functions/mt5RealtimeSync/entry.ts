@@ -307,6 +307,7 @@ Deno.serve(async (req) => {
         dd_breach_type:    breachType,
         dd_breach_value:   parseFloat(breachValue.toFixed(2)),
         dd_breach_time:    breachTime,
+        can_trade:         false,
         // Peak DD values — permanent, written here for immediate consistency
         max_drawdown_used:  persistentOverallDD,
         daily_drawdown_used: persistentDailyDD,

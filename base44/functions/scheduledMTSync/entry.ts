@@ -519,7 +519,8 @@ Deno.serve(async (req) => {
           // Immediate failure — same DB write, no waiting for automatedDDBreach
           if (breachDetected && acc.status !== 'failed') {
             updates.status = 'failed';
-            console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
+            updates.can_trade = false;
+            console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%) — trading locked`);
 
             // ── USER NOTIFICATION (user-scoped) — non-blocking ──────────────────
             const breachLabels = {
