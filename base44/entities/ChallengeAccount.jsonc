@@ -101,11 +101,18 @@
     },
     "daily_drawdown_used": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Permanent peak daily DD as % of account_size \u2014 Math.max with stored, never decreases within a trading day. Resets to 0 at daily reset."
+    },
+    "daily_low_equity": {
+      "type": "number",
+      "default": 0,
+      "description": "Lowest equity reached during the current trading day. Resets at daily reset. Used for permanent daily DD breach detection \u2014 if this ever touches the daily limit, the breach is permanent and never reversed."
     },
     "max_drawdown_used": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Permanent peak overall/max DD as % \u2014 Math.max with stored, NEVER decreases (not even on daily reset)."
     },
     "daily_start_balance": {
       "type": "number",
@@ -166,7 +173,8 @@
     },
     "dd_breach_detected": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "PERMANENT \u2014 once true, can NEVER be reset to false by any sync. The breach is final."
     },
     "dd_breach_type": {
       "type": "string",

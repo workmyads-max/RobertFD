@@ -105,7 +105,9 @@ export default function LiveDDGuard({ onBreach }) {
               if (a.account_id !== acc.account_id) return a;
               const updates = { ...a, balance: data.balance, equity: data.equity };
               // Update live DD values so Trading Objectives reflect real-time data
-              if (data.live_daily_dd != null) updates.daily_drawdown_used = data.live_daily_dd;
+              if (data.persistent_daily_dd != null) updates.daily_drawdown_used = Math.max(a.daily_drawdown_used || 0, data.persistent_daily_dd);
+              else if (data.live_daily_dd != null) updates.daily_drawdown_used = Math.max(a.daily_drawdown_used || 0, data.live_daily_dd);
+              if (data.daily_low_equity != null) updates.daily_low_equity = data.daily_low_equity;
               if (data.live_overall_dd != null) updates.max_drawdown_used = Math.max(a.max_drawdown_used || 0, data.live_overall_dd);
               if (data.profit_target_progress != null) updates.profit_target_progress = data.profit_target_progress;
               return updates;

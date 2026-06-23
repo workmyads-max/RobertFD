@@ -358,35 +358,49 @@ Deno.serve(async (req) => {
             await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
               daily_start_balance: balance,
               daily_drawdown_used: 0,
+              daily_low_equity: 0,
               daily_pnl: 0,
               daily_reset_at: nowUtc.toISOString(),
             });
             acc.daily_start_balance = balance;
             acc.daily_drawdown_used = 0;
+            acc.daily_low_equity = 0;
             acc.daily_pnl = 0;
             const resetReason = needsInit ? 'INIT' : 'RESET';
             console.log(`[DAILY-${resetReason}] ${acc.account_id} — daily_start_balance=${balance} at ${nowUtc.toISOString()}`);
           }
 
-          // ── DD CALCULATIONS (FTMO-standard formulas) ───────────────────────
+          // ── DD CALCULATIONS (PERMANENT — "touch = breach") ────────────────
+          // Track daily low equity — the LOWEST equity point of the day.
+          // This makes daily DD breach PERMANENT: if equity ever touched the
+          // daily limit, the stored low records it, and the breach is never
+          // reversed even if equity recovers above the limit.
+          const dailyLowEquity = (acc.daily_low_equity && acc.daily_low_equity > 0)
+            ? Math.min(acc.daily_low_equity, equity)
+            : equity;
+
+          // Overall DD: static floor vs original account size (or trailing vs HWM)
           const currentOverallDD = calcOverallDD(acc, equity, newHWM);
-          const dailyCalc        = calcDailyDD(acc, balance, equity);
 
-          // Overall DD: persistent (Math.max), reset if corrupted
-          const dbOverallDD = acc.max_drawdown_used || 0;
-          const dbWasCorrupted = !apiReturnedZero && dbOverallDD >= 90;
-          const persistentOverallDD = parseFloat((dbWasCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(2));
-          if (dbWasCorrupted) {
-            console.log(`[sync] ${acc.account_id} — resetting corrupted overall DD (was ${dbOverallDD}%) → real: ${currentOverallDD.toFixed(2)}%`);
-          }
+          // Daily DD: computed from the LOWEST equity of the day (not current).
+          // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$
+          // As a %: (daily_start_balance - daily_low_equity) / account_size * 100
+          const dsbForDD = acc.daily_start_balance || accountSize;
+          const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / accountSize) * 100);
 
-          const { dailyLimit, overallLimit } = getDDLimits(acc);
+          // Persistent values — NEVER decrease (daily resets at midnight UTC)
+          const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(2));
+          const persistentDailyDD   = parseFloat(Math.max(acc.daily_drawdown_used || 0, dailyDDFromLowPct).toFixed(2));
 
-          // ── BREACH DETECTION ────────────────────────────────────────────────
-          let breachDetected = dbWasCorrupted ? false : (acc.dd_breach_detected || false);
-          let breachType = dbWasCorrupted ? null : (acc.dd_breach_type || null);
-          let breachTime = dbWasCorrupted ? null : (acc.dd_breach_time || null);
-          let breachValue = dbWasCorrupted ? null : (acc.dd_breach_value || null);
+          const { dailyLimit, overallLimit, isTrailing } = getDDLimits(acc);
+
+          // ── BREACH DETECTION — PERMANENT, never reversed ──────────────────
+          // If dd_breach_detected is already true, it can NEVER be reset.
+          // Skip all breach re-evaluation — the breach is final.
+          let breachDetected = acc.dd_breach_detected || false;
+          let breachType     = acc.dd_breach_type     || null;
+          let breachTime     = acc.dd_breach_time     || null;
+          let breachValue    = acc.dd_breach_value     || null;
 
           // CRITICAL FIX #2: Check if account has a PAID ORDER matching this user's email.
           // If account has paid order BUT MT5 returns 0 balance, the broker hasn't funded it yet.
@@ -406,16 +420,16 @@ Deno.serve(async (req) => {
           if (!breachDetected && !isUnfundedPaidAccount && hasRealBalance && !isTooNew) {
             if (persistentOverallDD >= overallLimit) {
               breachDetected = true;
-              breachType = (acc.rule_snapshot?.trailing_dd ?? acc.challenge_type === 'instant_light') ? 'trailing' : 'overall';
+              breachType = isTrailing ? 'trailing' : 'overall';
               breachTime = new Date().toISOString();
               breachValue = persistentOverallDD;
               console.log(`[BREACH] ${acc.account_id} overall DD: ${persistentOverallDD.toFixed(2)}% / limit ${overallLimit}%`);
-            } else if (dailyCalc.dailyLossUsed$ > dailyCalc.effectiveDailyLimit$) {
+            } else if (persistentDailyDD >= dailyLimit) {
               breachDetected = true;
               breachType = 'daily';
               breachTime = new Date().toISOString();
-              breachValue = dailyCalc.dailyLossUsedPct;
-              console.log(`[BREACH] ${acc.account_id} daily loss: $${dailyCalc.dailyLossUsed$} > limit $${dailyCalc.effectiveDailyLimit$} (used ${dailyCalc.dailyLossUsedPct.toFixed(2)}%)`);
+              breachValue = persistentDailyDD;
+              console.log(`[BREACH] ${acc.account_id} daily DD: ${persistentDailyDD.toFixed(2)}% / limit ${dailyLimit}% (low equity: $${dailyLowEquity.toFixed(2)})`);
             }
           }
           
@@ -433,27 +447,54 @@ Deno.serve(async (req) => {
             // Only update if MT5 returned real deals; otherwise keep existing DB value.
             ...(deals.length > 0 && { trading_days: computedTradingDays }),
             max_drawdown_used: persistentOverallDD,
-            // Daily DD stored as % of accountSize used (for UI display)
-            daily_drawdown_used: dailyCalc.dailyLossUsedPct,
+            // Daily DD: permanent peak — Math.max with stored, never decreases within a day
+            daily_drawdown_used: persistentDailyDD,
+            // Daily low equity: tracks the worst equity point of the day (permanent)
+            daily_low_equity: dailyLowEquity,
             // FTMO-standard: profit target measured against BALANCE (closed trades only)
-            // Floating PnL does NOT count toward passing — only realised/closed profit counts
             profit_target_progress: parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2)),
             high_water_mark: newHWM,
             last_synced_at: new Date().toISOString(),
-            // ── BREACH FLAGS: safety-net writes — only if mt5RealtimeSync has not already set them
-            dd_breach_detected: breachDetected,
-            // If data was corrupted (API returned 0 on a real account), clear breach flags
-            ...(dbWasCorrupted && { dd_breach_type: null, dd_breach_time: null, dd_breach_value: null, status: acc.status === 'failed' ? 'active' : acc.status }),
-            // Safety-net breach flags — guarded: only write if not already set by mt5RealtimeSync
-            ...(breachType && !acc.dd_breach_detected && !acc.dd_breach_type && { dd_breach_type: breachType }),
-            ...(breachTime && !acc.dd_breach_detected && !acc.dd_breach_time && { dd_breach_time: breachTime }),
-            ...(breachValue !== null && !acc.dd_breach_detected && acc.dd_breach_value == null && { dd_breach_value: breachValue }),
           };
+
+          // ── BREACH FLAGS: only set for NEW breaches, NEVER clear existing ones ──
+          // Once dd_breach_detected is true, it is PERMANENT — no sync can reverse it.
+          if (breachDetected && !acc.dd_breach_detected) {
+            updates.dd_breach_detected = true;
+            updates.dd_breach_type    = breachType;
+            updates.dd_breach_time     = breachTime;
+            updates.dd_breach_value    = breachValue;
+          }
 
           // Immediate failure — same DB write, no waiting for automatedDDBreach
           if (breachDetected && acc.status !== 'failed') {
             updates.status = 'failed';
             console.log(`[AUTO-FAIL] ${acc.account_id} → failed (${breachType}: ${breachValue?.toFixed(2)}%)`);
+
+            // ── USER NOTIFICATION (user-scoped) — non-blocking ──────────────────
+            const breachLabels = {
+              daily: 'Daily drawdown limit exceeded',
+              overall: 'Maximum drawdown limit exceeded',
+              trailing: 'Trailing drawdown limit exceeded',
+            };
+            sr.entities.Notification.create({
+              user_email: acc.user_email,
+              title: '🚫 Challenge Account Failed',
+              message: `Account ${acc.account_id} breached: ${breachLabels[breachType] || breachType}. DD reached ${breachValue?.toFixed(2)}%. Account has been automatically closed.`,
+              type: 'market_alert', priority: 'critical',
+              display_mode: 'popup', is_active: true, target: 'challenge',
+            }).catch(() => {});
+
+            // ── RISK FLAG (audit trail) — non-blocking ──────────────────────────
+            sr.entities.RiskFlag.create({
+              user_email: acc.user_email,
+              account_id: acc.account_id,
+              flag_type: 'unusual_dd_behavior',
+              severity: 'critical',
+              description: `SCHEDULED SYNC BREACH (${breachType}): ${breachLabels[breachType]} — ${breachValue?.toFixed(2)}% (equity: $${equity.toFixed(2)}, low: $${dailyLowEquity.toFixed(2)})`,
+              status: 'active',
+              triggered_at: breachTime,
+            }).catch(() => {});
 
             // ── BROKER-SIDE DISABLE — non-blocking ─────────────────────────────
             if (acc.mt_login) {
@@ -636,10 +677,8 @@ Deno.serve(async (req) => {
             account_id: acc.account_id, ok: true,
             balance, equity,
             overall_dd: persistentOverallDD,
-            daily_dd_used_pct: dailyCalc.dailyLossUsedPct,
-            daily_dd_limit_pct: dailyCalc.effectiveDailyLimitPct,
-            daily_loss_used$: dailyCalc.dailyLossUsed$,
-            daily_loss_limit$: dailyCalc.effectiveDailyLimit$,
+            daily_dd_used_pct: persistentDailyDD,
+            daily_low_equity: dailyLowEquity,
             breached: breachDetected,
             new_trades: newDeals.length,
           };

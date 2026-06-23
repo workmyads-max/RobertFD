@@ -248,37 +248,46 @@ Deno.serve(async (req) => {
 
     const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+    // ── TRACK DAILY LOW EQUITY (permanent "touch = breach") ──────────────────
+    // The lowest equity point of the day. If equity ever touched the daily
+    // limit, this value records it permanently — the breach is never reversed
+    // even if equity recovers above the limit.
+    const dailyLowEquity = (acc.daily_low_equity && acc.daily_low_equity > 0)
+      ? Math.min(acc.daily_low_equity, equity)
+      : equity;
+
     // ── OVERALL DD (static floor vs original account size) ────────────────────
     const currentOverallDD = calcOverallDD(acc, equity, newHWM);
 
-    // ── DAILY DD (FTMO dynamic allowance formula) ─────────────────────────────
-    const dailyCalc = calcDailyDD(acc, balance, equity);
+    // ── DAILY DD (from lowest equity — permanent) ─────────────────────────────
+    // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$
+    // As %: (daily_start_balance - daily_low_equity) / account_size * 100
+    const dsbForDD = acc.daily_start_balance || accountSize;
+    const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / accountSize) * 100);
 
-    // Persistent overall DD: never decreases (Math.max), reset if corrupted
-    const dbOverallDD = acc.max_drawdown_used || 0;
-    const dbCorrupted = dbOverallDD >= 90;
-    const persistentOverallDD = parseFloat((dbCorrupted ? currentOverallDD : Math.max(dbOverallDD, currentOverallDD)).toFixed(3));
+    // Persistent values — NEVER decrease (daily resets at midnight UTC)
+    const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(3));
+    const persistentDailyDD   = parseFloat(Math.max(acc.daily_drawdown_used || 0, dailyDDFromLowPct).toFixed(3));
 
     const { dailyLimit, overallLimit, isTrailing } = getDDLimits(acc);
 
-    // ── BREACH DETECTION ──────────────────────────────────────────────────────
+    // ── BREACH DETECTION — PERMANENT, never reversed ──────────────────────────
     // Overall: breached if persistentOverallDD >= limit (static floor never resets)
-    // Daily: breached if dailyLossUsed$ > effectiveDailyLimit$ (dynamic, resets midnight)
+    // Daily: breached if persistentDailyDD >= limit (permanent from daily low equity)
     let breachType  = null;
     let breachValue = null;
 
     if (persistentOverallDD >= overallLimit) {
       breachType  = isTrailing ? 'trailing' : 'overall';
       breachValue = persistentOverallDD;
-    } else if (dailyCalc.dailyLossUsed$ > dailyCalc.effectiveDailyLimit$) {
+    } else if (persistentDailyDD >= dailyLimit) {
       breachType  = 'daily';
-      // Report as % of accountSize for consistency
-      breachValue = dailyCalc.dailyLossUsedPct;
+      breachValue = persistentDailyDD;
     }
 
     // For display metrics
     const liveOverallDD = parseFloat(currentOverallDD.toFixed(3));
-    const liveDailyDD   = parseFloat(dailyCalc.dailyLossUsedPct.toFixed(3));
+    const liveDailyDD   = parseFloat(dailyDDFromLowPct.toFixed(3));
 
     if (breachType) {
       // ── SERVER-SIDE ENFORCEMENT — atomic write ─────────────────────────────
@@ -291,7 +300,11 @@ Deno.serve(async (req) => {
         dd_breach_type:    breachType,
         dd_breach_value:   parseFloat(breachValue.toFixed(2)),
         dd_breach_time:    breachTime,
-        // Statistics fields intentionally omitted — scheduledMTSync owns all stats
+        // Peak DD values — permanent, written here for immediate consistency
+        max_drawdown_used:  persistentOverallDD,
+        daily_drawdown_used: persistentDailyDD,
+        daily_low_equity:   dailyLowEquity,
+        high_water_mark:    newHWM,
       });
 
       // RiskFlag (non-blocking)
@@ -371,6 +384,8 @@ Deno.serve(async (req) => {
       profit_target_progress: balanceBasedProgress,
       live_overall_dd: liveOverallDD,
       live_daily_dd:   liveDailyDD,
+      daily_low_equity: dailyLowEquity,
+      persistent_daily_dd: persistentDailyDD,
       is_trailing:     isTrailing,
       account_size:    accountSize,
       high_water_mark: newHWM,

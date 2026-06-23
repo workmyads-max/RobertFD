@@ -16,7 +16,7 @@
  *
  * Scans: active + passed + funded accounts
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 async function sendEmail(sr, to, type, data) {
   try {
@@ -171,6 +171,7 @@ Deno.serve(async (req) => {
           });
 
           await sr.entities.Notification.create({
+            user_email: account.user_email,
             title: '🚫 Account Breached — Challenge Failed',
             message: `Your account ${account.account_id} has been automatically closed. Reason: ${breachReason}`,
             type: 'market_alert', priority: 'critical',
