@@ -125,8 +125,35 @@ export default function Withdrawals({ user, onNavigate }) {
   });
 
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
+
+  // Fetch closed trades for each funded account to compute trading days —
+  // matches AccountTimeline logic (Math.max(unique trade days, account.trading_days))
+  const { data: accountTradingDays = {} } = useQuery({
+    queryKey: ['funded-trading-days', fundedAccounts.map(a => a.account_id)],
+    queryFn: async () => {
+      if (!fundedAccounts.length) return {};
+      const results = await Promise.all(
+        fundedAccounts.map(async acc => {
+          try {
+            const res = await base44.functions.invoke('getAccountTradeRecords', { account_id: acc.account_id });
+            const trades = Array.isArray(res?.data?.trades) ? res.data.trades : [];
+            const uniqueDays = new Set(
+              trades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
+            ).size;
+            return { [acc.account_id]: Math.max(uniqueDays, acc.trading_days || 0) };
+          } catch {
+            return { [acc.account_id]: acc.trading_days || 0 };
+          }
+        })
+      );
+      return Object.assign({}, ...results);
+    },
+    enabled: fundedAccounts.length > 0,
+    refetchInterval: 30000,
+  });
+
   // Same eligibility as AccountTimeline: funded + KYC approved + min 1 trading day
-  const eligibleAccounts = fundedAccounts.filter(a => (a.trading_days || 0) >= 1);
+  const eligibleAccounts = fundedAccounts.filter(a => (accountTradingDays[a.account_id] || a.trading_days || 0) >= 1);
 
   // Shared KYC status — single source of truth (same hook as the KYC page).
   // isLoading is true only on first load with no cached data, so we never show
@@ -151,7 +178,7 @@ export default function Withdrawals({ user, onNavigate }) {
   const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
   const youReceive = Math.max(0, autoAmount - fee5pct);
   // Eligibility check — same as AccountTimeline: funded + KYC + min 1 trading day
-  const selectedTradingDays = selectedAccount?.trading_days || 0;
+  const selectedTradingDays = accountTradingDays[selectedAccount?.account_id] || selectedAccount?.trading_days || 0;
   const isSelectedEligible = selectedAccount && kycApproved && selectedTradingDays >= 1;
 
   const openForm = (accId) => {
@@ -251,7 +278,7 @@ export default function Withdrawals({ user, onNavigate }) {
             const traderShare = profit * (split / 100);
             const firmShare = profit * ((100 - split) / 100);
             const hasPending = withdrawals.some(w => w.account_id === acc.account_id && w.status === 'pending');
-            const tradingDays = acc.trading_days || 0;
+            const tradingDays = accountTradingDays[acc.account_id] || acc.trading_days || 0;
             const isEligible = kycApproved && tradingDays >= 1;
             return (
               <div key={acc.id} className="rounded-2xl p-5 transition-all"
