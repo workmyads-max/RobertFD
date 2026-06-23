@@ -111,12 +111,17 @@ export default function Withdrawals({ user, onNavigate }) {
   const qc = useQueryClient();
 
   const { data: accounts = [] } = useQuery({
+    // CRITICAL: Same queryFn as Dashboard — getUserAccounts service-role backend
+    // (case-insensitive email match). Using a different queryFn with the same key
+    // overwrites the shared cache with RLS-filtered data that can return empty.
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 50);
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
+    placeholderData: (prev) => prev ?? [],
   });
 
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
