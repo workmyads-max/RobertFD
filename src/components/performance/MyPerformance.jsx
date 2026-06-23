@@ -36,8 +36,14 @@ export default function MyPerformance({ user }) {
   const [appealViolationType, setAppealViolationType] = useState(null);
 
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
+    },
+    enabled: !!user?.email,
+    placeholderData: (prev) => prev ?? [],
   });
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));

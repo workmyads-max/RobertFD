@@ -8,7 +8,7 @@ export default function AdminMT5Configuration() {
   const [showInstructions, setShowInstructions] = useState(false);
 
   const { data: mtAccounts = [] } = useQuery({
-    queryKey: ['mt-accounts'],
+    queryKey: ['mt5-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.filter({ platform: 'mt5' }),
     refetchInterval: 30000,
   });

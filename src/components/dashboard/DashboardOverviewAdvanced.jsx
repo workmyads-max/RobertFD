@@ -21,9 +21,15 @@ function StatCard({ label, value, sub, icon: Icon }) {
 
 export default function DashboardOverviewAdvanced({ user, onStartChallenge, onNavigate }) {
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
+    },
+    enabled: !!user?.email,
     refetchInterval: 15000,
+    placeholderData: (prev) => prev ?? [],
   });
 
   const { data: pendingOrders = [] } = useQuery({

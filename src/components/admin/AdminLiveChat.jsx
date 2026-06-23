@@ -24,7 +24,7 @@ export default function AdminLiveChat() {
   // Fetch current settings
   const { data: currentSettings, isLoading } = useQuery({
     queryKey: ['social-media-settings'],
-    queryFn: () => base44.entities.SocialMediaSettings.list().then(data => data[0]),
+    queryFn: () => base44.entities.SocialMediaSettings.filter({ setting_key: 'global' }).then(data => data[0]),
     retry: 1,
   });
 

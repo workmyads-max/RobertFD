@@ -41,7 +41,7 @@ export default function AdminMatchTrader() {
   const [checking, setChecking] = useState(false);
 
   const { data: mtAccounts = [] } = useQuery({
-    queryKey: ['mt-accounts'],
+    queryKey: ['matchtrader-accounts'],
     queryFn: () => base44.entities.ChallengeAccount.filter({ platform: 'match_trader' }),
     refetchInterval: 30000,
   });

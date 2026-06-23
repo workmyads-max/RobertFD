@@ -51,10 +51,22 @@ function AccountCard({ label, account, onSelect, isSelected, disabled }) {
 }
 
 export default function XCopier() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 60000,
+  });
+
   const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 50),
+    queryKey: ['challenge-accounts', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
+    },
+    enabled: !!currentUser?.email,
     refetchInterval: 15000,
+    placeholderData: (prev) => prev ?? [],
   });
 
   const activeAccounts = accounts.filter(a => ['active', 'funded', 'passed'].includes(a.status));
