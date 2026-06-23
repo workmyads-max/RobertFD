@@ -70,7 +70,7 @@ function AccountInfoStrip({ account }) {
 
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigate, bannerNotification }) {
+export default function FundedDashboard({ user, kyc, accounts: propAccounts, isLoading: propIsLoading, onRefetchAccounts, onStartChallenge, onNavigate, bannerNotification }) {
   // Refetch user to get latest avatar_url/profile_photo_url
   const { data: currentUser = user } = useQuery({
     queryKey: ['current-user'],
@@ -81,20 +81,11 @@ export default function FundedDashboard({ user, kyc, onStartChallenge, onNavigat
     staleTime: 30000,
   });
 
-  const { data: accounts = [], isLoading, isFetching, refetch } = useQuery({
-    // CRITICAL: Same email-scoped key as LiveDDGuard and all other account queries
-    queryKey: ['challenge-accounts', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      // Use service-role backend function with case-insensitive email matching
-      const res = await base44.functions.invoke('getUserAccounts', {});
-      return res?.data?.accounts || [];
-    },
-    enabled: !!user?.email,
-    refetchInterval: 15000, // Reduced from 5s to prevent excessive polling
-    staleTime: 30000,
-    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching — prevents empty state flash
-  });
+  // Accounts are passed from Dashboard (single source of truth, never unmounts)
+  // — eliminates empty-state flash when navigating between dashboard menus.
+  const accounts = propAccounts || [];
+  const isLoading = propIsLoading || false;
+  const refetch = onRefetchAccounts || (() => {});
 
   // Use KYC from parent (Dashboard) to prevent duplicate queries and loading flash
   // kyc prop is loaded once in Dashboard with proper staleTime

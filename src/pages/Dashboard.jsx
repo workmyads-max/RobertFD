@@ -163,7 +163,7 @@ export default function Dashboard() {
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
 
-  const { data: allAccounts = [] } = useQuery({
+  const { data: allAccounts = [], isLoading: isLoadingAccounts, refetch: refetchAccounts } = useQuery({
     // CRITICAL: Always scope the cache key by user email to prevent cross-user cache leakage
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
@@ -174,8 +174,8 @@ export default function Dashboard() {
       return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
-    refetchInterval: 60000, // 60s refetch for accounts (was 30s — reduces API load)
-    staleTime: 30000,
+    refetchInterval: 15000, // 15s — fast enough for overview real-time; single source of truth
+    staleTime: 10000,
     placeholderData: (prev) => prev ?? [], // Keep previous data while refetching - prevents flash of empty state
   });
 
@@ -278,7 +278,7 @@ export default function Dashboard() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview': return <FundedDashboard user={user} kyc={kyc} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
+      case 'overview': return <FundedDashboard user={user} kyc={kyc} accounts={allAccounts} isLoading={isLoadingAccounts} onRefetchAccounts={refetchAccounts} onStartChallenge={goToChallenge} onNavigate={setActivePage} bannerNotification={bannerNotification} />;
       case 'accounts': return <MyAccounts user={user} onStartChallenge={goToChallenge} onOpenTerminal={openTerminalForAccount} onOpenAnalytics={openAnalyticsForAccount} onNavigate={setActivePage} />;
       case 'account-overview': return <AccountOverview user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
       case 'economic-calendar': return <EconomicCalendar onNavigate={setActivePage} />;
