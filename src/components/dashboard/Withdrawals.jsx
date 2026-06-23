@@ -125,6 +125,8 @@ export default function Withdrawals({ user, onNavigate }) {
   });
 
   const fundedAccounts = accounts.filter(a => a.status === 'funded');
+  // Same eligibility as AccountTimeline: funded + KYC approved + min 1 trading day
+  const eligibleAccounts = fundedAccounts.filter(a => (a.trading_days || 0) >= 1);
 
   // Shared KYC status — single source of truth (same hook as the KYC page).
   // isLoading is true only on first load with no cached data, so we never show
@@ -148,6 +150,9 @@ export default function Withdrawals({ user, onNavigate }) {
   const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2)); // 80% share is the withdrawal amount
   const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
   const youReceive = Math.max(0, autoAmount - fee5pct);
+  // Eligibility check — same as AccountTimeline: funded + KYC + min 1 trading day
+  const selectedTradingDays = selectedAccount?.trading_days || 0;
+  const isSelectedEligible = selectedAccount && kycApproved && selectedTradingDays >= 1;
 
   const openForm = (accId) => {
     setSelectedAccountId(accId || fundedAccounts[0]?.account_id || '');
@@ -189,7 +194,7 @@ export default function Withdrawals({ user, onNavigate }) {
           <p className="text-sm text-muted-foreground font-mono mt-1">Profit payouts — Funded accounts only</p>
         </div>
         <button onClick={() => openForm('')}
-          disabled={!kycApproved || fundedAccounts.length === 0}
+          disabled={!kycApproved || eligibleAccounts.length === 0}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
           <Plus className="w-4 h-4" /> Request Payout
@@ -246,10 +251,16 @@ export default function Withdrawals({ user, onNavigate }) {
             const traderShare = profit * (split / 100);
             const firmShare = profit * ((100 - split) / 100);
             const hasPending = withdrawals.some(w => w.account_id === acc.account_id && w.status === 'pending');
+            const tradingDays = acc.trading_days || 0;
+            const isEligible = kycApproved && tradingDays >= 1;
             return (
-              <div key={acc.id} className="rounded-2xl p-5 cursor-pointer transition-all hover:border-primary/40"
-                onClick={() => kycApproved && !hasPending && openForm(acc.account_id)}
-                style={{ background: 'rgba(16,185,129,0.04)', border: `1px solid ${hasPending ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.2)'}` }}>
+              <div key={acc.id} className="rounded-2xl p-5 transition-all"
+                onClick={() => isEligible && !hasPending && openForm(acc.account_id)}
+                style={{
+                  background: 'rgba(16,185,129,0.04)',
+                  border: `1px solid ${hasPending ? 'rgba(245,158,11,0.3)' : isEligible ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                  cursor: isEligible && !hasPending ? 'pointer' : 'default',
+                }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-mono text-muted-foreground">Account</span>
                   <span className="text-xs font-bold font-mono text-foreground">{acc.account_id}</span>
@@ -270,7 +281,11 @@ export default function Withdrawals({ user, onNavigate }) {
                 </div>
                 {hasPending ? (
                   <div className="text-center text-[10px] font-mono text-yellow-400 py-1">⏳ Withdrawal Pending</div>
-                ) : kycApproved && profit > 0 ? (
+                ) : !kycApproved ? (
+                  <div className="text-center text-[10px] font-mono text-red-400 py-1">⚠ KYC required</div>
+                ) : tradingDays < 1 ? (
+                  <div className="text-center text-[10px] font-mono text-red-400 py-1">⚠ Min 1 trading day required ({tradingDays}/1)</div>
+                ) : profit > 0 ? (
                   <div className="text-center text-[10px] font-mono text-primary py-1 flex items-center justify-center gap-1">
                     <Plus className="w-3 h-3" /> Click to Request Withdrawal
                   </div>
@@ -414,6 +429,18 @@ export default function Withdrawals({ user, onNavigate }) {
                   </div>
                 )}
 
+                {/* Withdrawal requirements not met warning */}
+                {selectedAccount && !isSelectedEligible && (
+                  <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                      <span className="text-xs font-bold text-red-400">Withdrawal Requirements Not Met</span>
+                    </div>
+                    {!kycApproved && <div className="text-[11px] text-red-300 ml-6">• KYC verification not approved</div>}
+                    {selectedTradingDays < 1 && <div className="text-[11px] text-red-300 ml-6">• Minimum 1 trading day required ({selectedTradingDays}/1)</div>}
+                  </div>
+                )}
+
                 {/* Error message */}
                 {submitError && (
                   <div className="rounded-xl px-4 py-3 text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
@@ -425,7 +452,7 @@ export default function Withdrawals({ user, onNavigate }) {
                   <button onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
                     style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
                   <button onClick={() => createMutation.mutate()}
-                    disabled={!savedWalletAddress || createMutation.isPending || autoAmount <= 0}
+                    disabled={!savedWalletAddress || createMutation.isPending || autoAmount <= 0 || !isSelectedEligible}
                     className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40"
                     style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
                     {createMutation.isPending ? 'Submitting...' : 'Submit Request'}
