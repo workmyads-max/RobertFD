@@ -370,17 +370,44 @@ Deno.serve(async (req) => {
             console.log(`[DAILY-${resetReason}] ${acc.account_id} — daily_start_balance=${balance} at ${nowUtc.toISOString()}`);
           }
 
-          // ── DD CALCULATIONS (PERMANENT — "touch = breach") ────────────────
-          // Track daily low equity — the LOWEST equity point of the day.
-          // This makes daily DD breach PERMANENT: if equity ever touched the
-          // daily limit, the stored low records it, and the breach is never
-          // reversed even if equity recovers above the limit.
-          const dailyLowEquity = (acc.daily_low_equity && acc.daily_low_equity > 0)
-            ? Math.min(acc.daily_low_equity, equity)
-            : equity;
+          // ── PERIOD-LOW EQUITY (intra-sync dip detection) ────────────────
+          // MT5's EquyMin = minimum equity within the current trading day,
+          // INCLUDING floating dips that recovered before this sync. Use it as
+          // the primary source so intra-period dips are never missed.
+          //
+          // Fallback: if EquyMin is unavailable, reconstruct the period-low from
+          // closed-deal history since the daily reset (captures realized PnL dips).
+          const equyMin = parseFloat(mtData?.EquyMin ?? mtData?.equyMin ?? mtData?.equy_min ?? 0) || 0;
 
-          // Overall DD: static floor vs original account size (or trailing vs HWM)
-          const currentOverallDD = calcOverallDD(acc, equity, newHWM);
+          let reconLow = equity;
+          if (equyMin <= 0 && deals.length > 0) {
+            // Reconstruct equity curve from closed deals since daily reset
+            const dsb = acc.daily_start_balance || accountSize;
+            const resetMs = acc.daily_reset_at ? new Date(acc.daily_reset_at).getTime() : 0;
+            const sinceDeals = deals
+              .map(d => ({
+                time: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time),
+                profit: parseFloat(d.profit ?? d.Profit ?? 0),
+              }))
+              .filter(d => d.time && d.time.getTime() >= resetMs)
+              .sort((a, b) => a.time.getTime() - b.time.getTime());
+            let runningBalance = dsb;
+            for (const d of sinceDeals) {
+              runningBalance += d.profit;
+              reconLow = Math.min(reconLow, runningBalance);
+            }
+          }
+
+          // Period-low: worst of EquyMin, deal-history reconstruction, stored low, current equity
+          const dailyLowEquity = Math.min(
+            equity,
+            equyMin > 0 ? equyMin : equity,
+            reconLow,
+            (acc.daily_low_equity && acc.daily_low_equity > 0) ? acc.daily_low_equity : equity,
+          );
+
+          // Overall DD: use period-low equity to catch intra-sync dips
+          const currentOverallDD = calcOverallDD(acc, dailyLowEquity, newHWM);
 
           // Daily DD: computed from the LOWEST equity of the day (not current).
           // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$

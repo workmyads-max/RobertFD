@@ -191,12 +191,14 @@ Deno.serve(async (req) => {
 
     let balance = null;
     let equity  = null;
+    let equyMin = 0; // MT5 daily minimum equity (includes floating dips that recovered)
 
     if (infoRes.ok) {
       const r   = await infoRes.json().catch(() => ({}));
       const mtd = r?.data || r?.User || r?.Data || r || {};
       balance = parseFloat(mtd?.Balance ?? mtd?.balance ?? 0) || null;
       equity  = parseFloat(mtd?.Equity  ?? mtd?.equity  ?? 0) || null;
+      equyMin = parseFloat(mtd?.EquyMin ?? mtd?.equyMin ?? mtd?.equy_min ?? 0) || 0;
     }
 
     // ── GLITCH PROTECTION ─────────────────────────────────────────────────────
@@ -248,16 +250,21 @@ Deno.serve(async (req) => {
 
     const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
-    // ── TRACK DAILY LOW EQUITY (permanent "touch = breach") ──────────────────
-    // The lowest equity point of the day. If equity ever touched the daily
-    // limit, this value records it permanently — the breach is never reversed
-    // even if equity recovers above the limit.
-    const dailyLowEquity = (acc.daily_low_equity && acc.daily_low_equity > 0)
-      ? Math.min(acc.daily_low_equity, equity)
-      : equity;
+    // ── PERIOD-LOW EQUITY (intra-sync dip detection) ──────────────────────────
+    // MT5's EquyMin = minimum equity within the current trading day, INCLUDING
+    // floating dips that recovered before this sync. This is the primary source
+    // for breach detection so intra-period dips are never missed.
+    //
+    // We take the worst of: EquyMin (MT5 daily low), stored daily_low_equity
+    // (worst seen in prior syncs today), and current equity (current floating).
+    const dailyLowEquity = Math.min(
+      equity,
+      equyMin > 0 ? equyMin : equity,
+      (acc.daily_low_equity && acc.daily_low_equity > 0) ? acc.daily_low_equity : equity,
+    );
 
-    // ── OVERALL DD (static floor vs original account size) ────────────────────
-    const currentOverallDD = calcOverallDD(acc, equity, newHWM);
+    // ── OVERALL DD — use period-low equity to catch intra-sync dips ──────────
+    const currentOverallDD = calcOverallDD(acc, dailyLowEquity, newHWM);
 
     // ── DAILY DD (from lowest equity — permanent) ─────────────────────────────
     // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$
