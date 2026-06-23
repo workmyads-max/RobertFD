@@ -145,6 +145,7 @@ function ReviewCard({ review, onAction }) {
           </div>
           <div className="text-[11px] text-white/35 font-mono">
             {review.account_id} · ${(review.account_size || 0).toLocaleString()} · {review.challenge_type || 'two-step'}
+            {review.mt_login && <span className="text-white/55"> · MT5: {review.mt_login}</span>}
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -293,9 +294,23 @@ export default function AdminFundedReview() {
 
   const { data: reviews = [], isLoading, refetch } = useQuery({
     queryKey: ['funded-reviews', statusFilter],
-    queryFn: () => statusFilter === 'all'
-      ? base44.entities.FundedAccountReview.list('-created_date', 100)
-      : base44.entities.FundedAccountReview.filter({ status: statusFilter }),
+    queryFn: async () => {
+      const list = statusFilter === 'all'
+        ? await base44.entities.FundedAccountReview.list('-created_date', 100)
+        : await base44.entities.FundedAccountReview.filter({ status: statusFilter });
+      // FundedAccountReview doesn't store mt_login — fetch from ChallengeAccount
+      if (!list.length) return list;
+      const accountIds = [...new Set(list.map(r => r.account_id).filter(Boolean))];
+      const accounts = await Promise.all(
+        accountIds.map(id => base44.entities.ChallengeAccount.filter({ account_id: id }))
+      );
+      const accountMap = {};
+      accountIds.forEach((id, i) => {
+        const acc = accounts[i]?.[0];
+        if (acc) accountMap[id] = acc;
+      });
+      return list.map(r => ({ ...r, mt_login: accountMap[r.account_id]?.mt_login || '', mt_server: accountMap[r.account_id]?.mt_server || accountMap[r.account_id]?.server || '' }));
+    },
     refetchInterval: 15000,
   });
 
