@@ -60,6 +60,17 @@ Deno.serve(async (req) => {
         admin_notes: admin_notes || rejection_reason || w.admin_notes || '',
       });
 
+      // Unlock the account so the trader can resume trading (payout declined).
+      // Affiliate payouts (account_id='affiliate') have no account to unlock.
+      if (w.account_id && w.account_id !== 'affiliate') {
+        try {
+          const accs = await sr.entities.ChallengeAccount.filter({ account_id: w.account_id });
+          if (accs[0] && !accs[0].is_trashed) {
+            await sr.entities.ChallengeAccount.update(accs[0].id, { can_trade: true });
+          }
+        } catch (e) { console.error('adminApproveWithdrawal: unlock failed (non-blocking):', e.message); }
+      }
+
       // Notify the user — scoped to their email, never null
       if (w.user_email) {
         await sr.entities.Notification.create({
@@ -135,6 +146,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── NEW ACCOUNT PER PAYOUT (Track A — challenge accounts only) ──────────
+    // Retire the funded account this payout came from and issue a fresh funded
+    // account of the same size/leverage. Affiliate payouts never reach this —
+    // they only move money (handled by the affiliate commission flow).
+    // Uses the user-scoped client so the admin's identity is forwarded.
+    let renewal = null;
+    if (w.account_id && w.account_id !== 'affiliate') {
+      try {
+        const renewRes = await base44.functions.invoke('phaseProgressionEngine', {
+          action: 'renew_funded_account',
+          account_id: w.account_id,
+        });
+        renewal = renewRes?.data || null;
+        if (renewal?.error && !renewal?.already_done) {
+          console.error('[adminApproveWithdrawal] account renewal failed:', renewal.error);
+        }
+      } catch (e) {
+        console.error('[adminApproveWithdrawal] renewal invoke error (non-blocking):', e.message);
+      }
+    }
+
     // First payout certificate — IDEMPOTENT (one per user_email + type)
     if (w.account_id !== 'affiliate' && w.user_email) {
       const existing = await sr.entities.Certificate.filter({ user_email: w.user_email, type: 'first_payout' });
@@ -185,6 +217,7 @@ Deno.serve(async (req) => {
       status: 'approved',
       final_amount: finalAmount,
       breakdown: { gross, traderShare, companyShare, fee, finalAmount },
+      renewal,
     });
   } catch (error) {
     console.error('adminApproveWithdrawal error:', error.message);

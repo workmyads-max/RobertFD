@@ -28,7 +28,14 @@ export default function AdminWithdrawals() {
   const [selected, setSelected] = useState(null);
   const [editFee, setEditFee] = useState('');
   const [editSplit, setEditSplit] = useState('');
+  const [copied, setCopied] = useState('');
   const qc = useQueryClient();
+
+  const copy = (val, key) => {
+    navigator.clipboard.writeText(val).catch(() => {});
+    setCopied(key);
+    setTimeout(() => setCopied(''), 1600);
+  };
 
   const { data: withdrawals = [], isLoading } = useQuery({
     queryKey: ['admin-withdrawals'],
@@ -84,29 +91,34 @@ export default function AdminWithdrawals() {
     staleTime: 120000,
   });
 
-  const filtered = withdrawals.filter(w =>
+  // Track A — challenge profit payouts ONLY. Affiliate/commission payouts
+  // (account_id === 'affiliate') are managed separately and never mixed in here.
+  const challengeWithdrawals = withdrawals.filter(w => w.account_id && w.account_id !== 'affiliate');
+
+  const filtered = challengeWithdrawals.filter(w =>
     !search || w.account_id?.toLowerCase().includes(search.toLowerCase()) || w.user_email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPending = withdrawals.filter(w => w.status === 'pending').reduce((s, w) => s + (w.amount || 0), 0);
-  const totalPaid = withdrawals.filter(w => w.status === 'paid').reduce((s, w) => s + (w.final_amount || 0), 0);
+  const totalPending = challengeWithdrawals.filter(w => w.status === 'pending').reduce((s, w) => s + (w.amount || 0), 0);
+  const totalPaid = challengeWithdrawals.filter(w => w.status === 'paid').reduce((s, w) => s + (w.final_amount || 0), 0);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
-            <DollarSign className="w-6 h-6 text-primary" /> Withdrawal Requests
+            <DollarSign className="w-6 h-6 text-primary" /> Challenge Profit Payouts
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">${totalPending.toLocaleString()} pending • ${totalPaid.toLocaleString()} paid</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-1">Track A — trading profit payouts only. Affiliate/commission payouts are managed separately.</p>
         </div>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-6">
         {STATUS_OPTS.map(s => {
-          const count = withdrawals.filter(w => w.status === s).length;
-          const total = withdrawals.filter(w => w.status === s).reduce((acc, w) => acc + (w.amount || 0), 0);
+          const count = challengeWithdrawals.filter(w => w.status === s).length;
+          const total = challengeWithdrawals.filter(w => w.status === s).reduce((acc, w) => acc + (w.amount || 0), 0);
           const sc = STATUS_COLOR[s];
           return (
             <div key={s} className="rounded-xl p-3 text-center" style={{ background: `${sc}0a`, border: `1px solid ${sc}20` }}>
@@ -145,7 +157,8 @@ export default function AdminWithdrawals() {
             <div key={w.id} className="grid grid-cols-7 gap-2 px-5 py-4 border-b border-white/[0.04] hover:bg-white/[0.02] items-center transition-colors">
               <div className="col-span-2 min-w-0">
                 <div className="text-xs font-mono font-bold text-foreground">{w.account_id}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{w.user_email || w.wallet_address?.slice(0,20)}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{w.user_email}</div>
+                {w.wallet_address && <div className="text-[10px] font-mono text-primary/70 truncate" title={w.wallet_address}>💳 {w.wallet_address}</div>}
               </div>
               <span className="text-sm font-bold text-foreground">${(w.amount || 0).toLocaleString()}</span>
               <span className="text-sm font-bold text-emerald-400">${(w.final_amount || 0).toFixed(2)}</span>
@@ -190,6 +203,35 @@ export default function AdminWithdrawals() {
                 <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-xl">×</button>
               </div>
               <div className="p-5 space-y-4">
+                {/* Payout destination — clearly visible for sending the payout */}
+                <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <div className="text-xs font-bold text-emerald-400 flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /> Send Payout To</div>
+                  {[
+                    { l: 'Trader Name', v: detailData?.trader_name || selected.user_email },
+                    { l: 'MT5 Current Account', v: detailData?.mt_login || '—' },
+                    { l: `Wallet (${selected.method?.replace('_', ' ') || 'n/a'})`, v: selected.wallet_address },
+                  ].map(({ l, v }) => (
+                    <div key={l} className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase">{l}</div>
+                        <div className="text-xs font-semibold text-foreground break-all">{v || '—'}</div>
+                      </div>
+                      {v && v !== '—' && (
+                        <button onClick={() => copy(v, l)}
+                          className="shrink-0 text-[10px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-muted-foreground transition-colors">
+                          {copied === l ? '✓ Copied' : 'Copy'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* New Account per Payout notice */}
+                <div className="rounded-xl px-4 py-3 text-[11px] leading-relaxed"
+                  style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.2)', color: 'rgba(255,255,255,0.7)' }}>
+                  ⚡ Approving this payout retires the trader's current funded account and automatically issues a <span className="text-primary font-bold">fresh funded account of the same size</span> (New Account per Payout).
+                </div>
+
                 {/* Info */}
                 <div className="grid grid-cols-2 gap-3">
                   {[

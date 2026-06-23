@@ -795,6 +795,103 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, ...riskData });
     }
 
+    // ── RENEW FUNDED ACCOUNT (New Account per Payout) ──────────────────────────
+    // Called by adminApproveWithdrawal after a challenge profit payout is approved.
+    // Retires the funded account the payout came from (frozen snapshot) and
+    // provisions a brand new funded account of the SAME size/leverage.
+    // Mirrors approve_funded, but the source is an existing funded account.
+    if (action === 'renew_funded_account') {
+      if (user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+
+      const accounts = await sr.entities.ChallengeAccount.filter({ account_id });
+      const account = accounts[0];
+      if (!account) return Response.json({ error: 'Account not found' }, { status: 404 });
+
+      // Idempotency — old account already retired
+      if (account.is_trashed) {
+        return Response.json({ error: 'Account already renewed.', already_done: true }, { status: 409 });
+      }
+
+      // ── PROVISION FRESH FUNDED MT5 (create + deposit, BOTH validated) ──
+      const creds = await loadMT5Creds(sr);
+      const groupName = Deno.env.get('MT5_FUNDED_GROUP') || '';
+      if (!creds || !creds.apiKey || !creds.apiBase || !groupName) {
+        return Response.json({ error: 'MT5 credentials or MT5_FUNDED_GROUP not configured. No changes applied.' }, { status: 500 });
+      }
+      const lev = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
+      const sizeLabel = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
+      const result = await provisionMT5Account(creds, account.user_email, groupName, lev, account.account_size, `${sizeLabel} Funded XFunded Trader`);
+      if (!result.success) {
+        console.error('[renew_funded_account] provisioning failed:', result.error);
+        return Response.json({ success: false, error: `Renewal provisioning failed: ${result.error}. No changes applied — please retry.` }, { status: 500 });
+      }
+
+      const nowIso = new Date().toISOString();
+      const fundedId = `FUNDED-${Date.now()}`;
+
+      // Step (a): Retire the old funded account — frozen read-only snapshot.
+      await sr.entities.ChallengeAccount.update(account.id, {
+        status: 'passed',
+        is_trashed: true,
+        trashed_at: nowIso,
+        trash_reason: 'superseded',
+        can_trade: false,
+      });
+      console.log(`[renew_funded_account] Old funded account ${account.account_id} retired (superseded by payout)`);
+
+      // Step (b): Create a NEW fresh funded account, same size/leverage.
+      const newAccountId = genAccountId();
+      await sr.entities.ChallengeAccount.create({
+        account_id: newAccountId,
+        user_email: account.user_email,
+        challenge_type: account.challenge_type,
+        account_type: account.account_type || 'standard',
+        account_size: account.account_size,
+        platform: account.platform || 'xtrading',
+        leverage: account.leverage || '1:100',
+        status: 'funded',
+        phase: 'funded',
+        phase_review_status: 'approved',
+        funded_review_status: 'approved',
+        funded_account_id: fundedId,
+        mt_login: result.mt_login,
+        mt_password: result.mt_password,
+        mt_server: result.mt_server,
+        mt_group: result.mt_group,
+        login_credentials: `Login: ${result.mt_login} | Password: ${result.mt_password} | Server: ${result.mt_server}`,
+        server: result.mt_server,
+        provisioned_at: nowIso,
+        balance: account.account_size,
+        equity: account.account_size,
+        high_water_mark: account.account_size,
+        daily_start_balance: account.account_size,
+        pnl: 0, daily_pnl: 0,
+        daily_drawdown_used: 0, max_drawdown_used: 0,
+        profit_target_progress: 0,
+        win_rate: 0, total_trades: 0, trading_days: 0,
+        can_trade: true,
+        rule_snapshot: account.rule_snapshot || {},
+        country: account.country || '',
+        is_trashed: false,
+      });
+      console.log(`[renew_funded_account] ✅ New funded account ${newAccountId} (mt_login=${result.mt_login}) replacing ${account.account_id}`);
+
+      await sr.entities.Notification.create({
+        user_email: account.user_email,
+        title: '🎉 New Funded Account Issued',
+        message: `Your payout has been approved! A fresh funded account (${newAccountId}) of $${account.account_size.toLocaleString()} is now active. Your previous account has been retired. Your new credentials are available in your dashboard.`,
+        type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'funded',
+      });
+
+      await sendEmail(sr, account.user_email, 'funded_approved', {
+        name: account.user_email,
+        account_size: account.account_size,
+        credentials: result,
+      });
+
+      return Response.json({ success: true, new_account_id: newAccountId, credentials: result });
+    }
+
     return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
     console.error('phaseProgressionEngine error:', error.message);

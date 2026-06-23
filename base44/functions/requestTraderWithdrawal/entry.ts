@@ -133,6 +133,16 @@ Deno.serve(async (req) => {
       notes: `Backend-validated withdrawal. Profit split: ${profitSplitPct}% from rule_snapshot. Fee: 5% of trader share ($${withdrawalFee}).`,
     });
 
+    // ── LOCK TRADING UNTIL REVIEW (New Account per Payout model) ────────────
+    // The trader may not place trades on this account while the payout is being
+    // reviewed. On approval the account is retired and replaced with a fresh
+    // funded account; on rejection the lock is lifted.
+    try {
+      await base44.asServiceRole.entities.ChallengeAccount.update(account.id, { can_trade: false });
+    } catch (e) {
+      console.error('requestTraderWithdrawal: failed to lock account (non-blocking):', e.message);
+    }
+
     return Response.json({
       success: true,
       withdrawal_id: withdrawalId,
