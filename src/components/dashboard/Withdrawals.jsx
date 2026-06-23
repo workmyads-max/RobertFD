@@ -5,6 +5,7 @@ import { AlertCard } from '@/components/ui/alert-card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useKycStatus } from '@/hooks/useKycStatus';
+import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import { retryWithBackoff } from '@/lib/retryWithBackoff';
 
 const STATUS_CFG = {
@@ -177,8 +178,19 @@ export default function Withdrawals({ user, onNavigate }) {
   const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2)); // 80% share is the withdrawal amount
   const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
   const youReceive = Math.max(0, autoAmount - fee5pct);
-  // Eligibility check — same as AccountTimeline: funded + KYC + min 1 trading day
-  const selectedTradingDays = accountTradingDays[selectedAccount?.account_id] || selectedAccount?.trading_days || 0;
+  // Use the SAME data source as AccountOverview/AccountTimeline — useAccountTradeData
+  // fetches via getAccountTradeRecords with keepPreviousData, so it's always populated.
+  // The separate accountTradingDays query can be stale/not-yet-resolved when the modal
+  // opens, causing a false (0/1) mismatch.
+  const { closedTrades: selectedClosedTrades } = useAccountTradeData(selectedAccount, { refetchIntervalMs: 15000 });
+  const selectedTradingDaysFromTrades = new Set(
+    (selectedClosedTrades || []).filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
+  ).size;
+  const selectedTradingDays = Math.max(
+    selectedTradingDaysFromTrades,
+    accountTradingDays[selectedAccount?.account_id] || 0,
+    selectedAccount?.trading_days || 0
+  );
   const isSelectedEligible = selectedAccount && kycApproved && selectedTradingDays >= 1;
 
   const openForm = (accId) => {
