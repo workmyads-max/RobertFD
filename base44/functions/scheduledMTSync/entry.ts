@@ -504,7 +504,7 @@ Deno.serve(async (req) => {
               overall: 'Maximum drawdown limit exceeded',
               trailing: 'Trailing drawdown limit exceeded',
             };
-            sr.entities.Notification.create({
+            base44.asServiceRole.entities.Notification.create({
               user_email: acc.user_email,
               title: '🚫 Challenge Account Failed',
               message: `Account ${acc.account_id} breached: ${breachLabels[breachType] || breachType}. DD reached ${breachValue?.toFixed(2)}%. Account has been automatically closed.`,
@@ -513,7 +513,7 @@ Deno.serve(async (req) => {
             }).catch(() => {});
 
             // ── RISK FLAG (audit trail) — non-blocking ──────────────────────────
-            sr.entities.RiskFlag.create({
+            base44.asServiceRole.entities.RiskFlag.create({
               user_email: acc.user_email,
               account_id: acc.account_id,
               flag_type: 'unusual_dd_behavior',

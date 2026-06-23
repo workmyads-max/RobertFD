@@ -378,9 +378,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── NO BREACH — return live equity for dashboard display ──────────────────
-    // profit_target_progress uses BALANCE (closed trades only) — FTMO standard
+    // ── NO BREACH — MIRROR MT5 BALANCE/EQUITY TO DB (overwrite, not increment) ─
+    // Every sync writes MT5's live values to DB so that decreases (withdrawals,
+    // Manager minus operations) are reflected immediately — not just increases.
+    // pnl and profit_target_progress are recomputed from the mirrored balance.
     const balanceBasedProgress = parseFloat(Math.max(0, (balance - accountSize) / accountSize * 100).toFixed(2));
+    const mirroredPnl = parseFloat((balance - accountSize).toFixed(2));
+
+    base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+      balance,
+      equity,
+      pnl: mirroredPnl,
+      profit_target_progress: balanceBasedProgress,
+      daily_low_equity: dailyLowEquity,
+      max_drawdown_used: persistentOverallDD,
+      daily_drawdown_used: persistentDailyDD,
+      high_water_mark: newHWM,
+      last_synced_at: new Date().toISOString(),
+    }).catch(() => {});
 
     return Response.json({
       success:         true,
