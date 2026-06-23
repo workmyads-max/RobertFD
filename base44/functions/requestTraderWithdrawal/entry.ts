@@ -133,14 +133,57 @@ Deno.serve(async (req) => {
       notes: `Backend-validated withdrawal. Profit split: ${profitSplitPct}% from rule_snapshot. Fee: 5% of trader share ($${withdrawalFee}).`,
     });
 
-    // ── LOCK TRADING UNTIL REVIEW (New Account per Payout model) ────────────
-    // The trader may not place trades on this account while the payout is being
-    // reviewed. On approval the account is retired and replaced with a fresh
-    // funded account; on rejection the lock is lifted.
+    // ── LOCK TRADING AT BROKER LEVEL (New Account per Payout model) ──────────
+    // The trader may not place trades while the payout is under review.
+    // This sends the actual move-disabled command to MT5 — the trader's
+    // terminal will reject all new orders immediately. can_trade=false is
+    // also set in DB so scheduledMTSync re-enforces the lock if it ever
+    // gets reversed at the broker level.
+    const sr = base44.asServiceRole;
     try {
-      await base44.asServiceRole.entities.ChallengeAccount.update(account.id, { can_trade: false });
+      await sr.entities.ChallengeAccount.update(account.id, { can_trade: false });
+      console.log(`[requestTraderWithdrawal] can_trade=false set for ${account.account_id}`);
     } catch (e) {
-      console.error('requestTraderWithdrawal: failed to lock account (non-blocking):', e.message);
+      console.error('requestTraderWithdrawal: failed to set can_trade (non-blocking):', e.message);
+    }
+
+    // Send move-disabled to MT5 broker immediately (non-blocking but awaited)
+    if (account.mt_login) {
+      try {
+        const providers = await sr.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
+        const mt5 = providers[0];
+        const mt5Base = mt5?.server_url || Deno.env.get('MT5_API_BASE_URL');
+        const mt5Key  = mt5?.api_key     || Deno.env.get('MT5_API_KEY');
+        const mgrLogin = mt5?.manager_login || '';
+        const mgrPass  = mt5?.manager_password || '';
+
+        if (mt5Base && mt5Key && mgrLogin && mgrPass) {
+          const mt5Headers = {
+            'Content-Type': 'application/json',
+            'ApiKey': mt5Key,
+            'ManagerLogin': mgrLogin,
+            'ManagerPassword': mgrPass,
+          };
+          const loginNum = parseInt(account.mt_login);
+          const disableRes = await fetch(`${mt5Base}/api/v1/user/move-disabled`, {
+            method: 'POST', headers: mt5Headers,
+            body: JSON.stringify({ Login: loginNum, apikey: mt5Key }),
+          });
+          const disableData = await disableRes.json().catch(() => ({}));
+          const errCode = disableData?.data?.errorcode;
+          if (errCode === 3) {
+            console.warn(`[requestTraderWithdrawal] MT5 move-disabled: no disabled sub-group configured for ${account.mt_login}. DB-only lock applied.`);
+          } else if (errCode != null && errCode !== 0 && errCode !== 10009) {
+            console.warn(`[requestTraderWithdrawal] MT5 move-disabled returned errorcode=${errCode} for ${account.mt_login}`);
+          } else {
+            console.log(`[requestTraderWithdrawal] ✅ MT5 account ${account.mt_login} disabled at broker — trader cannot open new trades`);
+          }
+        } else {
+          console.warn(`[requestTraderWithdrawal] MT5 credentials incomplete — cannot disable broker-side. DB-only lock applied for ${account.account_id}`);
+        }
+      } catch (e) {
+        console.error(`[requestTraderWithdrawal] MT5 move-disabled failed (non-blocking) for ${account.mt_login}:`, e.message);
+      }
     }
 
     return Response.json({

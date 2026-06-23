@@ -65,8 +65,43 @@ Deno.serve(async (req) => {
       if (w.account_id && w.account_id !== 'affiliate') {
         try {
           const accs = await sr.entities.ChallengeAccount.filter({ account_id: w.account_id });
-          if (accs[0] && !accs[0].is_trashed) {
-            await sr.entities.ChallengeAccount.update(accs[0].id, { can_trade: true });
+          const acc = accs[0];
+          if (acc && !acc.is_trashed) {
+            await sr.entities.ChallengeAccount.update(acc.id, { can_trade: true });
+
+            // Re-enable at MT5 broker level — move account back to its original group
+            if (acc.mt_login && acc.mt_group) {
+              try {
+                const providers = await sr.entities.TradingPlatformProvider.filter({ platform_name: 'mt5', is_active: true });
+                const mt5 = providers[0];
+                const mt5Base = mt5?.server_url || Deno.env.get('MT5_API_BASE_URL');
+                const mt5Key  = mt5?.api_key     || Deno.env.get('MT5_API_KEY');
+                const mgrLogin = mt5?.manager_login || '';
+                const mgrPass  = mt5?.manager_password || '';
+                if (mt5Base && mt5Key && mgrLogin && mgrPass) {
+                  const mt5Headers = {
+                    'Content-Type': 'application/json',
+                    'ApiKey': mt5Key,
+                    'ManagerLogin': mgrLogin,
+                    'ManagerPassword': mgrPass,
+                  };
+                  // Tritech: move account back to its original group to re-enable trading
+                  const reEnableRes = await fetch(`${mt5Base}/api/v1/user/move-group`, {
+                    method: 'POST', headers: mt5Headers,
+                    body: JSON.stringify({ Login: parseInt(acc.mt_login), Group: acc.mt_group, apikey: mt5Key }),
+                  });
+                  const reEnableData = await reEnableRes.json().catch(() => ({}));
+                  const rErrCode = reEnableData?.data?.errorcode;
+                  if (rErrCode != null && rErrCode !== 0 && rErrCode !== 10009) {
+                    console.warn(`[adminApproveWithdrawal] MT5 move-group returned errorcode=${rErrCode} for ${acc.mt_login} — admin may need to re-enable manually on MT5 Manager`);
+                  } else {
+                    console.log(`[adminApproveWithdrawal] ✅ MT5 account ${acc.mt_login} re-enabled (moved back to group ${acc.mt_group})`);
+                  }
+                }
+              } catch (e) {
+                console.warn(`[adminApproveWithdrawal] MT5 re-enable failed (non-blocking) for ${acc.mt_login}:`, e.message);
+              }
+            }
           }
         } catch (e) { console.error('adminApproveWithdrawal: unlock failed (non-blocking):', e.message); }
       }

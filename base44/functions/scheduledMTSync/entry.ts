@@ -192,6 +192,29 @@ Deno.serve(async (req) => {
             'ManagerPassword': managerPassword,
           };
           const loginNum = parseInt(acc.mt_login);
+
+          // ── WITHDRAWAL LOCK ENFORCEMENT ────────────────────────────────────
+          // If can_trade=false (withdrawal pending), re-enforce the broker-side
+          // disable so the trader cannot open new trades. This catches cases where
+          // the broker reversed the disable or the initial move-disabled failed.
+          if (acc.can_trade === false && !acc.is_trashed) {
+            try {
+              const lockRes = await fetch(`${apiBase}/api/v1/user/move-disabled`, {
+                method: 'POST', headers,
+                body: JSON.stringify({ Login: loginNum, apikey: apiKey }),
+              });
+              const lockData = await lockRes.json().catch(() => ({}));
+              const lockCode = lockData?.data?.errorcode;
+              if (lockCode === 3) {
+                console.warn(`[WITHDRAWAL-LOCK] ${acc.account_id}: no disabled sub-group configured on MT5 Manager`);
+              } else {
+                console.log(`[WITHDRAWAL-LOCK] ${acc.account_id}: move-disabled re-enforced (code=${lockCode})`);
+              }
+            } catch (e) {
+              console.warn(`[WITHDRAWAL-LOCK] ${acc.account_id}: move-disabled failed (non-blocking):`, e.message);
+            }
+          }
+
           // Use provisioning date as start (same as getClosedTrades) — ensures no trades missed.
           // Fall back to 365 days if provisioned_at not set.
           const fromDate = acc.provisioned_at
