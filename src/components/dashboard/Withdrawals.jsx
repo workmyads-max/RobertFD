@@ -174,7 +174,10 @@ export default function Withdrawals({ user, onNavigate }) {
 
   // Selected account for withdrawal form
   const selectedAccount = fundedAccounts.find(a => a.account_id === selectedAccountId) || fundedAccounts[0];
-  const selectedProfit = Math.max(0, selectedAccount?.pnl || 0);
+  // Instant accounts: use withdrawable_profit (spillover-capped); others use raw pnl
+  const selectedProfit = selectedAccount?.challenge_type === 'instant_account'
+    ? Math.max(0, selectedAccount?.withdrawable_profit || 0)
+    : Math.max(0, selectedAccount?.pnl || 0);
   const profitSplitPct = selectedAccount?.rule_snapshot?.profit_split ?? 80;
   const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2)); // 80% share is the withdrawal amount
   const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
@@ -290,7 +293,10 @@ export default function Withdrawals({ user, onNavigate }) {
       {fundedAccounts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {fundedAccounts.map(acc => {
-            const profit = Math.max(0, acc.pnl || 0);
+            // Instant accounts: show withdrawable_profit (spillover-capped) instead of raw pnl
+            const profit = acc.challenge_type === 'instant_account'
+              ? Math.max(0, acc.withdrawable_profit || 0)
+              : Math.max(0, acc.pnl || 0);
             const split = acc.rule_snapshot?.profit_split ?? 80;
             const traderShare = profit * (split / 100);
             const firmShare = profit * ((100 - split) / 100);
@@ -350,7 +356,7 @@ export default function Withdrawals({ user, onNavigate }) {
         <div>
           <div className="text-base font-black text-foreground mb-1">80/20 Profit Split</div>
           <div className="text-sm text-muted-foreground">
-            ${fundedAccounts.reduce((s, a) => s + Math.max(0, a.pnl || 0), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit.
+            ${fundedAccounts.reduce((s, a) => s + (a.challenge_type === 'instant_account' ? Math.max(0, a.withdrawable_profit || 0) : Math.max(0, a.pnl || 0)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit.
             You keep 80% — only a 5% processing fee is deducted from your share. No affiliate deductions.
           </div>
         </div>
@@ -389,7 +395,9 @@ export default function Withdrawals({ user, onNavigate }) {
                     <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase">Select Account</label>
                     <div className="space-y-2">
                       {fundedAccounts.map(acc => {
-                        const profit = Math.max(0, acc.pnl || 0);
+                        const profit = acc.challenge_type === 'instant_account'
+                          ? Math.max(0, acc.withdrawable_profit || 0)
+                          : Math.max(0, acc.pnl || 0);
                         const split = acc.rule_snapshot?.profit_split ?? 80;
                         const share = (profit * (split / 100)).toFixed(2);
                         return (

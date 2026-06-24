@@ -90,8 +90,12 @@ Deno.serve(async (req) => {
     }
 
     // 7. Amount <= available profit
-    const availableProfit = Math.max(0, account.pnl || 0);
-    if (gross > availableProfit) {
+    // Instant accounts: use withdrawable_profit (spillover-capped) — NOT raw pnl.
+    // Funded/other accounts: use raw pnl as before.
+    const availableProfit = account.challenge_type === 'instant_account'
+      ? Math.max(0, account.withdrawable_profit || 0)
+      : Math.max(0, account.pnl || 0);
+    if (gross > availableProfit + 0.01) { // 0.01 tolerance for floating point
       return Response.json({
         error: `Requested amount $${gross} exceeds available profit $${availableProfit.toFixed(2)}`,
       }, { status: 400 });
