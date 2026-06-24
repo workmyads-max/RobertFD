@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Info, Settings, Download, ExternalLink, Plus, BookOpen } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import JournalEntryForm from './JournalEntryForm';
 import JournalAnalytics from './JournalAnalytics';
@@ -568,36 +570,22 @@ export default function TradingJournal({ user }) {
 
   const userEmail = user?.email || '';
 
-  // FILTER BY USER — prevent cross-user data leakage
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['challenge-accounts-journal', userEmail],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: userEmail }, '-created_date', 50),
+  // Use getUserAccounts backend function (case-insensitive email match) — same as Dashboard
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['challenge-accounts', userEmail],
+    queryFn: async () => {
+      if (!userEmail) return [];
+      const res = await base44.functions.invoke('getUserAccounts', {});
+      return res?.data?.accounts || [];
+    },
     enabled: !!userEmail,
-    select: d => d.filter(a => ['active', 'funded', 'passed'].includes(a.status)),
+    select: d => d.filter(a => !a.is_trashed && ['active', 'funded', 'passed'].includes(a.status)),
   });
 
   const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
 
-  // Fetch closed trades directly from MT5 API (TradeRecord entity is not populated)
-  const { data: trades = [], isLoading } = useQuery({
-    queryKey: ['closed-trades-journal', account?.account_id],
-    queryFn: async () => {
-      try {
-        const res = await base44.functions.invoke('getClosedTrades', {
-          account_id: account.account_id,
-          page_size: 200,
-        });
-        const rawTrades = res?.data?.trades || [];
-        // getClosedTrades already returns: trade_id, symbol, type, lots, entry, close, pnl, pips, open_time, close_time, status:'closed'
-        // Just add `id` for React key compatibility
-        return rawTrades.map(t => ({ ...t, id: t.trade_id }));
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!account?.account_id,
-    refetchInterval: 60000,
-  });
+  // Use centralized trade data hook — same as AccountOverview (getAccountTradeRecords backend)
+  const { closedTrades: trades = [], isLoading } = useAccountTradeData(account, { refetchIntervalMs: 15000 });
 
   // ── Actual journal entries (TradingJournalEntry entity) ──────────────────
   const qc = useQueryClient();
@@ -664,7 +652,7 @@ export default function TradingJournal({ user }) {
       )}
 
       {/* Content */}
-      {accounts.length === 0 ? null : isLoading ? (
+      {accounts.length === 0 ? null : (isLoading || accountsLoading) ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
@@ -729,6 +717,7 @@ export default function TradingJournal({ user }) {
               )}
 
               {showEntryForm && (
+                <AnimatePresence>
                 <JournalEntryForm
                   entry={editingEntry}
                   accountId={account?.account_id}
@@ -740,6 +729,7 @@ export default function TradingJournal({ user }) {
                     qc.invalidateQueries({ queryKey: ['journal-entries', userEmail, account?.account_id] });
                   }}
                 />
+                </AnimatePresence>
               )}
             </div>
           )}

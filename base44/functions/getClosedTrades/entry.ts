@@ -34,8 +34,8 @@ Deno.serve(async (req) => {
     // RLS exact-match (user_email = {{user.email}}) can hide the user's own accounts
     // when casing/whitespace differs. Service role bypasses RLS; we enforce ownership manually.
     const normalizedEmail = user.email.toLowerCase().trim();
-    const allUserAccounts = await base44.asServiceRole.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 200);
-    const account = (allUserAccounts || []).find(a =>
+    const allAccounts = await base44.asServiceRole.entities.ChallengeAccount.list('-created_date', 200);
+    const account = (allAccounts || []).find(a =>
       (a.user_email || '').toLowerCase().trim() === normalizedEmail &&
       a.mt_login && (!account_id || a.account_id === account_id || a.mt_login === String(account_id))
     );
