@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { Shield, Users, ShoppingBag, DollarSign, TrendingUp, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import AdminPendingBanner from './AdminPendingBanner';
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onNavigate }) {
   // Admin-scoped fetch via service-role backend function — bypasses per-user RLS
   // so admins see ALL users' orders/accounts/withdrawals/tickets. Normal-user
   // isolation (RLS by user_email) remains fully intact for non-admin callers.
@@ -33,6 +34,9 @@ export default function AdminDashboard() {
         </h1>
         <p className="text-sm text-muted-foreground font-mono mt-1">Robert Funds — Admin Control Center</p>
       </div>
+
+      {/* Pending Reviews Banner — surfaces actionable items across 6 admin queues */}
+      <AdminPendingBanner onNavigate={onNavigate} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

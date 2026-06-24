@@ -295,7 +295,7 @@ export default function Dashboard() {
       case 'support': return <Support />;
       case 'settings': return <DashboardSettings user={user} />;
       case 'notifications': return <NotificationCenter notifications={notifications} />;
-      case 'admin-overview': return isAdmin ? <AdminDashboard /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-overview': return isAdmin ? <AdminDashboard onNavigate={setActivePage} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-dashboard': return isAdmin ? <AdminDashboardFull onNavigate={setActivePage} /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-orders': return isAdmin ? <AdminOrders /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-accounts': return isAdmin ? <AdminAccounts /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
