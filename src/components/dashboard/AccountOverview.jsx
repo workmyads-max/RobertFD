@@ -126,7 +126,9 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const isFundedLive = account.status === 'funded';
   const challengeTypeLabel = isFundedLive ? 'FUNDED'
     : account.challenge_type === 'two-step' ? '2-STEP'
-    : account.challenge_type === 'instant' ? 'INSTANT' : 'INST. LIGHT';
+    : account.challenge_type === 'instant' ? 'INSTANT'
+    : account.challenge_type === 'instant_account' ? 'INSTANT ACCOUNT'
+    : 'INST. LIGHT';
   const isTwoStep = account.challenge_type === 'two-step';
   // Don't show phase label for funded live accounts
   const phaseLabel = (!isFundedLive && isTwoStep) ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
@@ -228,7 +230,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="grid grid-cols-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
         {[
           { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
-          { label: 'TYPE', value: isFundedLive ? 'Funded Live' : challengeTypeLabel === '2-STEP' ? 'Two-Step' : challengeTypeLabel === 'INSTANT' ? 'Instant' : 'Inst. Light' },
+          { label: 'TYPE', value: isFundedLive ? 'Funded Live' : account.challenge_type === 'two-step' ? 'Two-Step' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light' },
           { label: 'MODEL', value: modelLabel, highlight: true },
           { label: 'PHASE', value: isFundedLive ? 'Funded' : isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
@@ -284,7 +286,7 @@ function AccountHistorySection({ accounts }) {
             : acc.status === 'passed' ? { label: 'Passed', color: '#60a5fa' }
             : acc.status === 'funded' ? { label: 'Funded', color: '#FF5C00' }
             : { label: 'Not Passed', color: '#ef4444' };
-          const cLabel = acc.challenge_type === 'two-step' ? '2-Step' : acc.challenge_type === 'instant' ? 'Instant' : 'Inst. Light';
+          const cLabel = acc.challenge_type === 'two-step' ? '2-Step' : acc.challenge_type === 'instant' ? 'Instant' : acc.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light';
           return (
             <div key={acc.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.02] border-b last:border-0"
               style={{ borderColor: 'rgba(255,255,255,0.04)' }}>

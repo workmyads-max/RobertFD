@@ -5,7 +5,7 @@
  */
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, Target } from 'lucide-react';
 
 function daysSince(dateStr) {
   if (!dateStr) return null;
@@ -37,6 +37,52 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
   const daysSinceFirstTrade = daysSince(sortedTrades[0]?.open_time || null);
   const isFunded = status === 'funded';
   const withdrawalEligible = isFunded && daysSinceFirstTrade !== null && daysSinceFirstTrade >= 14;
+
+  if (challengeType === 'instant_account') {
+    const bufferTargetPct = snap.buffer_zone_target ?? 5;
+    const accountSize = account?.account_size || 0;
+    const bufferTargetVal = accountSize * (1 + bufferTargetPct / 100);
+    const bufferActivated = account?.buffer_zone_activated || false;
+    const consistencyPct = snap.consistency_rule_pct ?? 35;
+    const minProfitableDays = snap.min_profitable_days ?? 7;
+    const profitableDaysCount = account?.profitable_days_count || 0;
+    const consistencyPassed = account?.consistency_passed || false;
+    const payoutEligible = account?.instant_payout_eligible || false;
+    const dailyDdIA = snap.daily_dd_limit ?? 4;
+    const maxDdIA = snap.max_dd_limit ?? 8;
+    const bestDay = account?.best_day_profit || 0;
+    const requiredTotal = account?.required_total_profit || 0;
+    const fmt0 = (n) => (n ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+    return [
+      { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
+      {
+        key: 'buffer', label: 'Buffer Zone Target',
+        desc: bufferActivated ? `✓ $${fmt0(bufferTargetVal)} locked — DD reference updated`
+          : `Reach $${fmt0(bufferTargetVal)} (${bufferTargetPct}%) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
+        status: bufferActivated ? 'done' : (status === 'active' ? 'active' : 'pending'), icon: Zap,
+      },
+      {
+        key: 'consistency', label: 'Consistency Rule',
+        desc: !bufferActivated ? 'Activated after buffer zone target'
+          : consistencyPassed ? `✓ Passed (best day $${fmt0(bestDay)} → required $${fmt0(requiredTotal)})`
+          : `Best day $${fmt0(bestDay)} → need $${fmt0(requiredTotal)} total · ${consistencyPct}% rule`,
+        status: !bufferActivated ? 'pending' : consistencyPassed ? 'done' : 'active', icon: Target,
+      },
+      {
+        key: 'profitable_days', label: 'Profitable Days',
+        desc: !bufferActivated ? 'Tracking starts after buffer zone'
+          : `${profitableDaysCount}/${minProfitableDays} profitable days`,
+        status: !bufferActivated ? 'pending' : (profitableDaysCount >= minProfitableDays ? 'done' : 'active'), icon: Clock,
+      },
+      {
+        key: 'payout', label: 'Payout Eligible',
+        desc: payoutEligible ? `✓ Eligible for withdrawals · ${profitSplit}% profit split`
+          : 'First payout after buffer zone + consistency + profitable days',
+        status: payoutEligible ? 'done' : 'pending', icon: DollarSign,
+      },
+    ];
+  }
 
   if (challengeType === 'instant' || challengeType === 'instant_light') {
     return [
