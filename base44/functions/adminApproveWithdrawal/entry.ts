@@ -139,10 +139,15 @@ Deno.serve(async (req) => {
 
     // ── APPROVE ACTION (default) ────────────────────────────────────────────
 
-    // Recalculate with overrides or stored values
-    const splitPct = override_split_pct ?? w.profit_split_pct ?? 80;
-    const fee = override_fee ?? w.withdrawal_fee ?? 25;
+    // Recalculate with overrides or stored values.
+    // Affiliate withdrawals (Track B) have NO profit split — the affiliate keeps
+    // 100% of their commission minus the flat 5% processing fee set at request time.
     const gross = w.amount || 0;
+    const isAffiliate = w.account_id === 'affiliate';
+    const splitPct = isAffiliate ? 100 : (override_split_pct ?? w.profit_split_pct ?? 80);
+    const fee = isAffiliate
+      ? (w.withdrawal_fee ?? parseFloat((gross * 0.05).toFixed(2)))
+      : (override_fee ?? w.withdrawal_fee ?? 25);
     const traderShare = parseFloat((gross * (splitPct / 100)).toFixed(2));
     const companyShare = parseFloat((gross - traderShare).toFixed(2));
     // NO affiliate deduction from trader's payout — affiliate reward is a
@@ -179,6 +184,31 @@ Deno.serve(async (req) => {
         is_active: true,
         target: 'funded',
       });
+    }
+
+    // ── AFFILIATE WITHDRAWAL SETTLEMENT (Track B — affiliate payouts only) ──
+    // Mark the covered approved commissions as paid so the same balance can't be
+    // withdrawn twice, and update the affiliate profile's paid total.
+    if (isAffiliate && w.user_email) {
+      try {
+        const comms = await sr.entities.AffiliateCommission.filter({ affiliate_email: w.user_email, status: 'approved' });
+        let remaining = gross;
+        for (const c of comms) {
+          if (remaining <= 0) break;
+          await sr.entities.AffiliateCommission.update(c.id, { status: 'paid' });
+          remaining -= (c.commission_amount || 0);
+        }
+        const affProfiles = await sr.entities.AffiliateProfile.filter({ user_email: w.user_email });
+        const affProfile = affProfiles[0];
+        if (affProfile) {
+          await sr.entities.AffiliateProfile.update(affProfile.id, {
+            total_paid: parseFloat(((affProfile.total_paid || 0) + gross).toFixed(2)),
+            total_pending: Math.max(0, parseFloat(((affProfile.total_pending || 0) - gross).toFixed(2))),
+          });
+        }
+      } catch (e) {
+        console.error('[adminApproveWithdrawal] affiliate settlement failed (non-blocking):', e.message);
+      }
     }
 
     // ── NEW ACCOUNT PER PAYOUT (Track A — challenge accounts only) ──────────

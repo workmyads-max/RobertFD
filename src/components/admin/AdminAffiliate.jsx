@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Settings, DollarSign, BarChart3, Shield,
-  Edit3, Save, X, TrendingUp
+  Edit3, Save, X, TrendingUp, Wallet
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +12,14 @@ const GLOBAL_DEFAULTS = {
   payout_tier_0_rate: 7, payout_tier_10_rate: 11,
   payout_tier_25_rate: 17, payout_tier_50_rate: 25,
   min_withdrawal: 50, withdrawal_fee: 0,
+};
+
+const WD_STATUS = {
+  pending: { color: '#f59e0b', label: 'Pending' },
+  approved: { color: '#60a5fa', label: 'Approved' },
+  processing: { color: '#a78bfa', label: 'Processing' },
+  paid: { color: '#10b981', label: 'Paid' },
+  rejected: { color: '#ef4444', label: 'Rejected' },
 };
 
 function RateInput({ label, value, onChange, suffix = '%', color = '#FF5C00' }) {
@@ -46,6 +54,11 @@ export default function AdminAffiliate() {
     queryFn: () => base44.entities.AffiliateCommission.list('-created_date', 200),
   });
 
+  const { data: affiliateWithdrawals = [] } = useQuery({
+    queryKey: ['affiliate-withdrawals-admin'],
+    queryFn: () => base44.entities.WithdrawalRequest.filter({ account_id: 'affiliate' }, '-created_date', 100),
+  });
+
   const { data: globalSettings = [] } = useQuery({
     queryKey: ['affiliate-settings'],
     queryFn: async () => {
@@ -64,6 +77,25 @@ export default function AdminAffiliate() {
     mutationFn: ({ id, new_status }) =>
       base44.functions.invoke('adminApproveCommission', { commission_id: id, new_status }),
     onSuccess: () => qc.invalidateQueries(['all-commissions']),
+  });
+
+  // Affiliate payout requests are approved/rejected via the same backend function
+  // as trader payouts — it detects account_id='affiliate', pays 100% (no profit
+  // split) minus the 5% fee, and settles the covered commissions as paid.
+  const affiliateWithdrawalMutation = useMutation({
+    mutationFn: async ({ id, action }) => {
+      const res = await base44.functions.invoke('adminApproveWithdrawal', {
+        withdrawal_id: id,
+        ...(action === 'reject' ? { action: 'reject' } : {}),
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries(['affiliate-withdrawals-admin']);
+      qc.invalidateQueries(['all-commissions']);
+      qc.invalidateQueries(['all-affiliate-profiles']);
+    },
   });
 
   const saveSettings = async () => {
@@ -88,6 +120,7 @@ export default function AdminAffiliate() {
     { id: 'settings', label: 'Global Settings', icon: Settings },
     { id: 'affiliates', label: 'Affiliates', icon: Users },
     { id: 'commissions', label: 'Commissions', icon: DollarSign },
+    { id: 'withdrawals', label: 'Withdrawal Requests', icon: Wallet },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   ];
 
@@ -306,6 +339,69 @@ export default function AdminAffiliate() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* WITHDRAWAL REQUESTS */}
+          {activeTab === 'withdrawals' && (
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="px-5 py-3 border-b border-white/5 text-xs font-bold flex items-center justify-between"
+                style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <span>Affiliate Payout Requests ({affiliateWithdrawals.length})</span>
+                <span className="text-[10px] font-mono text-amber-400">
+                  {affiliateWithdrawals.filter(w => w.status === 'pending').length} pending
+                </span>
+              </div>
+              {affiliateWithdrawals.length === 0 ? (
+                <div className="py-10 text-center text-sm text-muted-foreground">No affiliate withdrawal requests yet.</div>
+              ) : affiliateWithdrawals.map((w) => {
+                const st = WD_STATUS[w.status] || WD_STATUS.pending;
+                const isFinal = w.status === 'approved' || w.status === 'paid' || w.status === 'rejected';
+                const net = w.net_payout ?? ((w.amount || 0) - (w.withdrawal_fee || 0));
+                return (
+                  <div key={w.id} className="px-5 py-4 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-foreground">{w.user_email}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+                          {w.method?.replace(/_/g, ' ').toUpperCase()} · {new Date(w.created_date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-mono text-primary/80 truncate" title={w.wallet_address}>💳 {w.wallet_address || '—'}</span>
+                          {w.wallet_address && (
+                            <button onClick={() => navigator.clipboard.writeText(w.wallet_address).catch(() => {})}
+                              className="text-[9px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-muted-foreground transition-colors">Copy</button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-emerald-400">${(w.amount || 0).toFixed(2)}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground">
+                          fee ${(w.withdrawal_fee || 0).toFixed(2)} · net ${net.toFixed(2)}
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize"
+                        style={{ background: `${st.color}15`, color: st.color, border: `1px solid ${st.color}30` }}>
+                        {st.label}
+                      </span>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => affiliateWithdrawalMutation.mutate({ id: w.id, action: 'approve' })}
+                          disabled={isFinal || affiliateWithdrawalMutation.isPending}
+                          className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-30"
+                          style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
+                          ✓ Approve &amp; Pay
+                        </button>
+                        <button onClick={() => affiliateWithdrawalMutation.mutate({ id: w.id, action: 'reject' })}
+                          disabled={w.status === 'rejected' || w.status === 'paid' || affiliateWithdrawalMutation.isPending}
+                          className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-30"
+                          style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+                          ✕ Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 

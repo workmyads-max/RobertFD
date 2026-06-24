@@ -116,15 +116,18 @@ Deno.serve(async (req) => {
         commission_rate: rate,
         commission_amount: commissionAmount,
         order_id: order_id || '',
-        status: 'pending',
-        notes: `L${level} commission: ${rate}% of $${order_price} (${challenge_type} $${account_size})${affProfile?.custom_l1_rate || affProfile?.custom_l2_rate || affProfile?.custom_l3_rate ? ' [custom rate]' : ''}`,
+        // AUTO-APPROVED: this function only runs AFTER the referred user's purchase
+        // payment has been verified/approved by the admin, so the direct purchase
+        // commission needs no separate approval — it's immediately withdrawable.
+        status: 'approved',
+        notes: `L${level} commission: ${rate}% of $${order_price} (${challenge_type} $${account_size}) — auto-approved on verified purchase${affProfile?.custom_l1_rate || affProfile?.custom_l2_rate || affProfile?.custom_l3_rate ? ' [custom rate]' : ''}`,
       });
 
-      // Update affiliate profile totals
+      // Update affiliate profile totals — auto-approved commission is part of the
+      // withdrawable (approved) balance immediately, so it does NOT go to pending.
       if (affProfile) {
         await sr.entities.AffiliateProfile.update(affProfile.id, {
           total_earned: parseFloat(((affProfile.total_earned || 0) + commissionAmount).toFixed(2)),
-          total_pending: parseFloat(((affProfile.total_pending || 0) + commissionAmount).toFixed(2)),
           total_purchase_commissions: parseFloat(((affProfile.total_purchase_commissions || 0) + commissionAmount).toFixed(2)),
           conversions: (affProfile.conversions || 0) + 1,
         });
