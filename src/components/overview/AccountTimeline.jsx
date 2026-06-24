@@ -228,9 +228,9 @@ function useTimelineSteps(account, closedTrades = []) {
           icon: DollarSign,
           label: 'Payout Eligible',
           desc: payoutEligible
-            ? `✓ Eligible for withdrawals · ${profitSplit}% profit split`
+            ? `✓ Withdrawable: $${fmt(account.withdrawable_profit || 0)} · ${profitSplit}% profit split`
             : bufferActivated
-              ? `${profitableDaysCount}/${minProfitableDays} days · ${consistencyPassed ? '✓' : '✗'} consistency`
+              ? `${profitableDaysCount}/${minProfitableDays} days · ${consistencyPassed ? '✓' : '✗'} consistency · $${fmt(account.withdrawable_profit || 0)} pending`
               : 'First payout after buffer zone + consistency + profitable days',
           status: payoutEligible ? 'done' : 'pending',
         },

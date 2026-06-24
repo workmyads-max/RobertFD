@@ -214,7 +214,7 @@
     "best_day_profit": {
       "type": "number",
       "default": 0,
-      "description": "instant_account only \u2014 highest single-day net closed PnL. Updates dynamically from MT5 trade history."
+      "description": "instant_account only \u2014 highest single-day net closed PnL from POST-buffer trades only. Updates dynamically from MT5 trade history."
     },
     "required_total_profit": {
       "type": "number",
@@ -224,7 +224,7 @@
     "consistency_passed": {
       "type": "boolean",
       "default": false,
-      "description": "instant_account only \u2014 TRUE when total profit >= required_total_profit"
+      "description": "instant_account only \u2014 TRUE when withdrawable_profit >= required_total_profit"
     },
     "profitable_days_list": {
       "type": "array",
@@ -240,12 +240,17 @@
         }
       },
       "default": [],
-      "description": "instant_account only \u2014 array of {date, profit} for each day where net daily closed PnL > 0"
+      "description": "instant_account only \u2014 array of {date, profit} for each POST-buffer day where net daily closed PnL > 0"
     },
     "profitable_days_count": {
       "type": "number",
       "default": 0,
-      "description": "instant_account only \u2014 count of profitable days (length of profitable_days_list)"
+      "description": "instant_account only \u2014 count of profitable post-buffer days (length of profitable_days_list)"
+    },
+    "withdrawable_profit": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 sum of PnL from trades closed AFTER buffer zone activation. This is the only profit eligible for withdrawal. Excludes the spillover from the trade that activated the buffer zone."
     },
     "instant_payout_eligible": {
       "type": "boolean",

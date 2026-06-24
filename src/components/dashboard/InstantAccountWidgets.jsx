@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, Calendar, CheckCircle2, Lock, Info, Zap, Award } from 'lucide-react';
+import { Target, TrendingUp, Calendar, CheckCircle2, Lock, Info, Zap, Award, Wallet, ArrowRight } from 'lucide-react';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -99,9 +99,10 @@ function ConsistencyCard({ account, closedTrades }) {
   const accountSize = account?.account_size || 0;
   const isBufferActivated = account?.buffer_zone_activated || false;
 
-  // Compute best day profit from POST-BUFFER trades only.
-  // Profit after buffer lock = balance - buffer_zone_lock_balance (NOT balance - account_size).
-  const lockBalance = account?.buffer_zone_lock_balance || accountSize;
+  // Use the authoritative withdrawable_profit stored by scheduledMTSync.
+  // This is the sum of PnL from trades closed AFTER buffer zone activation,
+  // EXCLUDING the spillover from the activation trade.
+  // Fall back to computing from closedTrades if not yet synced.
   const { bestDayProfit, totalProfit } = useMemo(() => {
     if (!closedTrades || closedTrades.length === 0) return { bestDayProfit: 0, totalProfit: 0 };
     // Only trades closed AFTER buffer zone activation
@@ -109,15 +110,15 @@ function ConsistencyCard({ account, closedTrades }) {
     const postBufferTrades = bufferDate
       ? closedTrades.filter(t => t.close_time && new Date(t.close_time) >= bufferDate)
       : [];
+    // withdrawable_profit = sum of post-buffer trades' PnL only (no spillover)
+    const total = postBufferTrades.reduce((s, t) => s + (t.pnl || 0), 0);
     const byDay = {};
     postBufferTrades.forEach(t => {
       const day = new Date(t.close_time).toISOString().split('T')[0];
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
     });
-    // Profit after buffer lock = current balance - locked balance
-    const total = (account?.balance || account?.equity || 0) - lockBalance;
-    // Cap each day's PnL at total post-buffer profit — handles trades spanning buffer activation
+    // Cap each day's PnL at total withdrawable profit
     const cap = Math.max(0, total);
     for (const day of Object.keys(byDay)) {
       byDay[day] = Math.min(byDay[day], cap);
@@ -125,11 +126,11 @@ function ConsistencyCard({ account, closedTrades }) {
     const dailyProfits = Object.values(byDay);
     const best = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
     return { bestDayProfit: best, totalProfit: total };
-  }, [closedTrades, account, lockBalance]);
+  }, [closedTrades, account]);
 
   // Use stored values if available (from scheduledMTSync), otherwise compute live
   const effectiveBestDay = account?.best_day_profit || bestDayProfit;
-  const effectiveTotalProfit = totalProfit;
+  const effectiveTotalProfit = account?.withdrawable_profit != null ? account.withdrawable_profit : totalProfit;
   const requiredProfit = effectiveBestDay > 0 ? effectiveBestDay / (consistencyPct / 100) : 0;
   const remaining = Math.max(0, requiredProfit - effectiveTotalProfit);
   const isPassed = effectiveTotalProfit >= requiredProfit && requiredProfit > 0;
@@ -229,9 +230,11 @@ function ProfitableDaysCard({ account, closedTrades }) {
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
     });
-    // Cap each day's PnL at total post-buffer profit — handles trades spanning buffer activation
-    const lockBal = account?.buffer_zone_lock_balance || account?.account_size || 0;
-    const totalPostBuffer = Math.max(0, (account?.balance || account?.equity || 0) - lockBal);
+    // Cap each day's PnL at total withdrawable profit (stored by scheduledMTSync)
+    // Falls back to sum of post-buffer trades if not yet synced
+    const totalPostBuffer = account?.withdrawable_profit != null
+      ? Math.max(0, account.withdrawable_profit)
+      : Math.max(0, postBufferTrades.reduce((s, t) => s + (t.pnl || 0), 0));
     for (const day of Object.keys(byDay)) {
       byDay[day] = Math.min(byDay[day], totalPostBuffer);
     }
@@ -322,6 +325,80 @@ function ProfitableDaysCard({ account, closedTrades }) {
   );
 }
 
+// ── WITHDRAWABLE PROFIT CARD ──────────────────────────────────────────────────
+function WithdrawableProfitCard({ account }) {
+  const snap = account?.rule_snapshot || {};
+  const profitSplit = snap.profit_split ?? 80;
+  const withdrawableProfit = account?.withdrawable_profit || 0;
+  const isEligible = account?.instant_payout_eligible || false;
+  const isBufferActivated = account?.buffer_zone_activated || false;
+  const traderShare = withdrawableProfit * (profitSplit / 100);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: isEligible ? 'rgba(16,185,129,0.06)' : 'rgba(12,12,18,0.95)',
+        border: `1px solid ${isEligible ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+      }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isEligible ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)' }}>
+            <Wallet className={`w-3.5 h-3.5 ${isEligible ? 'text-emerald-400' : 'text-white/30'}`} />
+          </div>
+          <span className="text-sm font-bold text-foreground">Withdrawable Profit</span>
+        </div>
+        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
+          style={{
+            background: isEligible ? 'rgba(16,185,129,0.12)' : isBufferActivated ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.05)',
+            color: isEligible ? '#10b981' : isBufferActivated ? '#FF5C00' : 'rgba(255,255,255,0.3)',
+            border: `1px solid ${isEligible ? 'rgba(16,185,129,0.25)' : isBufferActivated ? 'rgba(255,92,0,0.2)' : 'rgba(255,255,255,0.08)'}`,
+          }}>
+          {isEligible ? '✅ Eligible' : isBufferActivated ? 'Pending Rules' : 'Locked'}
+        </span>
+      </div>
+
+      <div className="p-5">
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Your Share ({profitSplit}%)</div>
+            <div className={`text-3xl font-black tracking-tight ${withdrawableProfit > 0 ? 'text-emerald-400' : 'text-white/30'}`}>
+              ${fmt(traderShare)}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Total Profit</div>
+            <div className="text-lg font-bold text-white/60">${fmt(withdrawableProfit)}</div>
+          </div>
+        </div>
+
+        {!isBufferActivated ? (
+          <div className="rounded-xl p-3 text-center text-[11px] text-white/30" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <Lock className="w-3.5 h-3.5 inline mr-1 text-white/20" />
+            Activate Buffer Zone to unlock withdrawable profit tracking
+          </div>
+        ) : isEligible ? (
+          <button
+            onClick={() => {
+              sessionStorage.setItem('selectedAccountId', account.account_id);
+              window.location.hash = '#/dashboard?tab=withdrawals';
+              window.location.href = '/dashboard?tab=withdrawals';
+            }}
+            className="w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(90deg, #10b981, #34d399)', color: '#fff' }}
+          >
+            Request Withdrawal <ArrowRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <div className="rounded-xl p-3 text-center text-[11px] leading-relaxed" style={{ background: 'rgba(255,92,0,0.04)', border: '1px solid rgba(255,92,0,0.1)', color: 'rgba(255,255,255,0.4)' }}>
+            Complete consistency rule and {snap.min_profitable_days ?? 7} profitable days to unlock withdrawals
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── PAYOUT ELIGIBILITY BANNER ─────────────────────────────────────────────────
 function PayoutEligibilityBanner({ account, closedTrades }) {
   const snap = account?.rule_snapshot || {};
@@ -391,6 +468,8 @@ export default function InstantAccountWidgets({ account, closedTrades = [] }) {
         <ConsistencyCard account={account} closedTrades={closedTrades} />
         <ProfitableDaysCard account={account} closedTrades={closedTrades} />
       </div>
+
+      <WithdrawableProfitCard account={account} />
     </div>
   );
 }

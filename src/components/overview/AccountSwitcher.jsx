@@ -85,10 +85,13 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
   const profitTargetPct = account.rule_snapshot?.phase1_target ?? 10;
 
   const isFundedLive = account.status === 'funded';
+  const isTwoStep = account.challenge_type === 'two-step';
   const challengeType = isFundedLive ? 'FUNDED'
     : account.challenge_type === 'instant' ? 'INSTANT'
+    : account.challenge_type === 'instant_account' ? 'INSTANT ACCT'
     : account.challenge_type === 'instant_light' ? 'INST. LIGHT' : '2-STEP';
-  const phaseLabel = isFundedLive ? '' : (account.phase || 'phase1').replace('phase', 'PH ');
+  // Only show phase label for two-step challenge accounts (not instant types)
+  const phaseLabel = (!isFundedLive && isTwoStep) ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
   const statusLabel = account.status === 'active' ? 'Active'
     : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Funded' : account.status;

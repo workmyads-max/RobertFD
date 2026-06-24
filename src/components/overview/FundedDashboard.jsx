@@ -47,9 +47,9 @@ function AccountInfoStrip({ account }) {
   if (!account) return null;
   const items = [
     { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type',     value: account.status === 'funded' ? 'Funded Live' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
+    { label: 'Type',     value: account.status === 'funded' ? 'Funded Live' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
     { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase',    value: account.status === 'funded' ? 'Funded' : (account.phase || 'phase1').replace('phase', 'Phase ') },
+    { label: 'Phase',    value: account.status === 'funded' ? 'Funded' : account.challenge_type === 'two-step' ? (account.phase || 'phase1').replace('phase', 'Phase ') : 'N/A' },
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Platform', value: account.platform || 'MT5' },
   ];
@@ -237,10 +237,10 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
         </div>
       </div>
 
-      {/* Quick Withdraw Modal */}
+      {/* Quick Withdraw Modal — includes funded accounts + instant accounts that are payout-eligible */}
       {showWithdrawModal && (
         <QuickWithdrawModal
-          accounts={activeAccounts.filter(a => a.status === 'funded')}
+          accounts={activeAccounts.filter(a => a.status === 'funded' || (a.challenge_type === 'instant_account' && a.instant_payout_eligible))}
           user={currentUser}
           onClose={() => setShowWithdrawModal(false)}
           onSuccess={() => { setShowWithdrawModal(false); onNavigate?.('withdrawals'); }}

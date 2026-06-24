@@ -794,17 +794,15 @@ Deno.serve(async (req) => {
                 }
               }
 
-              // Profit AFTER buffer lock = balance - locked balance (NOT balance - account_size)
-              const lockBalance = acc.buffer_zone_lock_balance || accountSize;
-              const totalProfit = parseFloat((balance - lockBalance).toFixed(2));
-              // CRITICAL: Cap each day's PnL at total post-buffer profit.
-              // Trades opened BEFORE buffer activation but closed AFTER have their
-              // full PnL counted in the daily sum, but only the portion earned after
-              // buffer activation counts toward consistency. Capping ensures the
-              // best day profit never exceeds what was actually earned post-buffer.
-              const totalPostBufferProfit = Math.max(0, totalProfit);
+              // WITHDRAWABLE PROFIT = sum of PnL from trades closed AFTER buffer zone activation.
+              // CRITICAL: This EXCLUDES the spillover from the trade that activated the buffer zone.
+              // The activation trade's close_time is before buffer_zone_activated_at, so it's
+              // correctly filtered out of postBufferTrades. Only subsequent trades count.
+              const withdrawableProfit = parseFloat(postBufferTrades.reduce((s, d) => s + parseFloat(d.profit ?? d.Profit ?? 0), 0).toFixed(2));
+              const totalProfit = Math.max(0, withdrawableProfit);
+              // Cap each day's PnL at total withdrawable profit (handles multi-day crossovers)
               for (const day of Object.keys(byDay)) {
-                byDay[day] = Math.min(byDay[day], totalPostBufferProfit);
+                byDay[day] = Math.min(byDay[day], totalProfit);
               }
 
               const dailyProfits = Object.values(byDay);
@@ -829,10 +827,11 @@ Deno.serve(async (req) => {
                 consistency_passed: consistencyPassed,
                 profitable_days_list: profitableDaysList,
                 profitable_days_count: profitableDaysCount,
+                withdrawable_profit: withdrawableProfit,
                 instant_payout_eligible: instantPayoutEligible,
               });
 
-              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, total_profit=${totalProfit.toFixed(2)} (post-buffer), required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
+              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, withdrawable=${withdrawableProfit.toFixed(2)} (post-buffer), required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
             } catch (e) {
               console.warn(`[INSTANT-SYNC] ${acc.account_id} consistency calc failed (non-blocking):`, e.message);
             }
