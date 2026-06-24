@@ -43,7 +43,7 @@ function BufferZoneCard({ account }) {
             <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.12)' }}>
               <CheckCircle2 className="w-6 h-6 text-emerald-400" />
             </div>
-            <div className="text-base font-black text-emerald-400 mb-1">🎉 Buffer Zone Activated</div>
+            <div className="text-base font-black text-emerald-400 mb-1">Buffer Zone Activated</div>
             <div className="text-[11px] text-white/40 font-mono">
               Activated at: {account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
             </div>
