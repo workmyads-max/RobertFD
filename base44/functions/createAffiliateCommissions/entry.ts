@@ -125,12 +125,18 @@ Deno.serve(async (req) => {
 
       // Update affiliate profile totals — auto-approved commission is part of the
       // withdrawable (approved) balance immediately, so it does NOT go to pending.
+      // conversions only increments on the FIRST purchase by this referred_email
+      // (unique referral conversion), NOT on every subsequent purchase.
       if (affProfile) {
-        await sr.entities.AffiliateProfile.update(affProfile.id, {
+        const isFirstConversion = !existingComms.some(c => c.referred_email === user_email);
+        const updateData = {
           total_earned: parseFloat(((affProfile.total_earned || 0) + commissionAmount).toFixed(2)),
           total_purchase_commissions: parseFloat(((affProfile.total_purchase_commissions || 0) + commissionAmount).toFixed(2)),
-          conversions: (affProfile.conversions || 0) + 1,
-        });
+        };
+        if (isFirstConversion && level === 1) {
+          updateData.conversions = (affProfile.conversions || 0) + 1;
+        }
+        await sr.entities.AffiliateProfile.update(affProfile.id, updateData);
       }
       created++;
     }

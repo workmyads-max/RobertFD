@@ -640,70 +640,29 @@ Deno.serve(async (req) => {
         type: 'payout', priority: 'critical', display_mode: 'popup', is_active: true, target: 'funded',
       });
 
-      // ── Payout Reward Commissions (for referrers) + active_funded_traders ────
-      // Use the NEW funded account_id for commission linkage
+      // ── ACTIVE FUNDED TRADERS COUNTER (L1 direct referrer only) ─────────────
+      // When a trader gets a funded account, increment the L1 referrer's
+      // active_funded_traders counter. This counter determines the payout-reward
+      // tier (7% / 11% / 17% / 25%) when the trader eventually withdraws profit.
+      //
+      // NOTE: NO payout-reward commission is created here. Payout rewards are
+      // ONLY created by processPayoutRewardCommission, triggered when the
+      // trader's WITHDRAWAL REQUEST is approved by admin. The commission is
+      // calculated as tier_rate% × trader's_net_withdrawal (NOT account_size).
       try {
         const buyerProfiles = await sr.entities.AffiliateProfile.filter({ user_email: account.user_email });
         const buyerProfile = buyerProfiles[0];
-        
         if (buyerProfile?.referred_by_email) {
-          const settingsList = await sr.entities.AffiliateSettings.filter({ setting_key: 'global_config' });
-          const settings = settingsList[0];
-          const allFunded = await sr.entities.ChallengeAccount.filter({ status: 'funded' });
-          
-          const chain = [];
           const l1Affs = await sr.entities.AffiliateProfile.filter({ user_email: buyerProfile.referred_by_email });
           if (l1Affs[0]) {
-            let l1Rate = settings?.payout_reward_rate ?? 9;
-            if (l1Affs[0].custom_payout_rate) l1Rate = l1Affs[0].custom_payout_rate;
-            chain.push({ level: 1, email: l1Affs[0].user_email, rate: l1Rate, profile: l1Affs[0] });
-            
-            if (l1Affs[0].referred_by_email) {
-              const l2Affs = await sr.entities.AffiliateProfile.filter({ user_email: l1Affs[0].referred_by_email });
-              if (l2Affs[0]) {
-                let l2Rate = 2;
-                chain.push({ level: 2, email: l2Affs[0].user_email, rate: l2Rate, profile: l2Affs[0] });
-                
-                if (l2Affs[0].referred_by_email) {
-                  const l3Affs = await sr.entities.AffiliateProfile.filter({ user_email: l2Affs[0].referred_by_email });
-                  if (l3Affs[0]) {
-                    let l3Rate = 1;
-                    chain.push({ level: 3, email: l3Affs[0].user_email, rate: l3Rate, profile: l3Affs[0] });
-                  }
-                }
-              }
-            }
-          }
-          
-          for (const { level, email, rate, profile } of chain) {
-            const commissionAmount = parseFloat(((account.account_size * rate) / 100).toFixed(2));
-            if (commissionAmount <= 0) continue;
-            
-            await sr.entities.AffiliateCommission.create({
-              affiliate_email: email,
-              referred_email: account.user_email,
-              commission_type: 'payout_reward',
-              level,
-              source_amount: account.account_size,
-              commission_rate: rate,
-              commission_amount: commissionAmount,
-              account_id: newAccountId,
-              status: 'pending',
-              notes: `Payout reward L${level}: ${rate}% of $${account.account_size.toLocaleString()} funded account`,
+            await sr.entities.AffiliateProfile.update(l1Affs[0].id, {
+              active_funded_traders: (l1Affs[0].active_funded_traders || 0) + 1,
             });
-            
-            await sr.entities.AffiliateProfile.update(profile.id, {
-              total_earned: parseFloat(((profile.total_earned || 0) + commissionAmount).toFixed(2)),
-              total_pending: parseFloat(((profile.total_pending || 0) + commissionAmount).toFixed(2)),
-              total_payout_commissions: parseFloat(((profile.total_payout_commissions || 0) + commissionAmount).toFixed(2)),
-              active_funded_traders: (profile.active_funded_traders || 0) + 1,
-            });
-            
-            console.log(`[phaseProgressionEngine] Payout reward L${level} created for ${email}: $${commissionAmount}`);
+            console.log(`[phaseProgressionEngine] active_funded_traders incremented for L1 referrer ${l1Affs[0].user_email}`);
           }
         }
       } catch (e) {
-        console.error('[phaseProgressionEngine] Payout reward creation failed (non-blocking):', e.message);
+        console.error('[phaseProgressionEngine] active_funded_traders increment failed (non-blocking):', e.message);
       }
 
       // ── CERTIFICATE: Phase 2 Evaluation passed ────────────────────────────
