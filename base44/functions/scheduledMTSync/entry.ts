@@ -334,7 +334,13 @@ Deno.serve(async (req) => {
           }
           // Tritech get-deal-history returns only CLOSED deals — all records are closed trades
           // type: 0=BUY, 1=SELL. volume is raw (e.g. 60000 = 0.60 lots), divide by 100000
-          const closedTrades = deals.filter(d => d.deal_id != null || d.Ticket != null);
+          // CRITICAL: Exclude deposit/withdrawal balance operations — they have no symbol and 0 volume.
+          // These are NOT trades and must never be counted in PnL, win rate, or trading days.
+          const closedTrades = deals.filter(d =>
+            (d.deal_id != null || d.Ticket != null) &&
+            (d.symbol ?? d.Symbol ?? '') !== '' &&
+            parseFloat(d.volume ?? d.Volume ?? 0) > 0
+          );
           const wins = closedTrades.filter(d => parseFloat(d.profit ?? d.Profit ?? 0) > 0).length;
           const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
           const accountSize = acc.account_size || 100000;
