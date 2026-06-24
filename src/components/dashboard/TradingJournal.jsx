@@ -112,7 +112,7 @@ function DailyPnLTab({ trades }) {
 
         {/* Weeks */}
         {[0, 1, 2, 3, 4, 5].map(week => (
-          <div key={week} className="grid grid-cols-7 border-b last:border-b-0" style={{ borderColor: 'rgba(255,255,255,0.06)', minHeight: '90px' }}>
+          <div key={week} className="grid grid-cols-7 border-b last:border-b-0 min-h-[64px] sm:min-h-[90px]" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             {cells.slice(week * 7, week * 7 + 7).map((cell, idx) => {
               if (!cell) return <div key={idx} className="border-r last:border-r-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }} />;
               const dateKey = cell.current
@@ -199,9 +199,9 @@ function TradeRow({ trade, index }) {
             {pnl >= 0 ? '+' : ''}{fmt(pnl)}
           </span>
         </td>
-        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground">{pips > 0 ? pips.toFixed(1) : '—'}</td>
-        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground">{duration}</td>
-        <td className="px-3 py-3 text-center">
+        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground hidden sm:table-cell">{pips > 0 ? pips.toFixed(1) : '—'}</td>
+        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground hidden sm:table-cell">{duration}</td>
+        <td className="px-3 py-3 text-center hidden sm:table-cell">
           <button className="p-1 rounded hover:bg-white/10">
             <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
@@ -410,7 +410,7 @@ function ClosedTradesTab({ trades }) {
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}>
                 {['Type', 'Volume', 'Symbol', 'PnL', 'Pips', 'Duration', '', ''].map((h, i) => (
-                  <th key={i} className="px-3 py-2.5 text-left text-[10px] font-medium text-muted-foreground">{h}</th>
+                  <th key={i} className={`px-3 py-2.5 text-left text-[10px] font-medium text-muted-foreground ${i >= 4 && i <= 6 ? 'hidden sm:table-cell' : ''}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -649,10 +649,10 @@ export default function TradingJournal({ user }) {
 
       {/* Tabs — only show when accounts exist */}
       {accounts.length > 0 && (
-        <div className="flex border-b mb-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="flex border-b mb-6 overflow-x-auto scrollbar-hide" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors mr-1"
+              className="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors mr-1 whitespace-nowrap flex-shrink-0"
               style={{
                 borderBottomColor: tab === t ? '#3b82f6' : 'transparent',
                 color: tab === t ? '#3b82f6' : '#94a3b8',

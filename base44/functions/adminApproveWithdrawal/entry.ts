@@ -239,9 +239,13 @@ Deno.serve(async (req) => {
         // Fetch trader full name + challenge_type from the account
         let traderName = w.user_email;
         let challengeType = '';
+        let accountSize = 0;
         try {
           const accs = await sr.entities.ChallengeAccount.filter({ account_id: w.account_id });
-          if (accs[0]) challengeType = accs[0].challenge_type || '';
+          if (accs[0]) {
+            challengeType = accs[0].challenge_type || '';
+            accountSize = accs[0].account_size || 0;
+          }
         } catch { /* keep defaults */ }
         try {
           const users = await sr.entities.User.filter({ email: w.user_email });
@@ -254,7 +258,8 @@ Deno.serve(async (req) => {
           type: 'first_payout',
           title: 'First Withdrawal',
           account_id: w.account_id,
-          account_size: w.amount,
+          account_size: accountSize || w.amount,
+          withdrawal_amount: finalAmount,
           challenge_type: challengeType,
           issue_date: new Date().toISOString().split('T')[0],
           is_verified: true,

@@ -278,41 +278,29 @@ function LeaderRow({ trader, rank }) {
 export default function Leaderboard() {
   const [country, setCountry] = useState('all');
   const [sizeFilter, setSizeFilter] = useState(0);
+  const [sortBy, setSortBy] = useState('profit');
 
-  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
-    queryKey: ['leaderboard-accounts'],
+  // Fetch ALL accounts + payouts via service-role backend function.
+  // ChallengeAccount and WithdrawalRequest both have RLS that restricts
+  // reads to the current user — direct entity queries can't see other
+  // traders' data, so the leaderboard would only ever show yourself.
+  const { data, isLoading: loadingAccounts } = useQuery({
+    queryKey: ['leaderboard-data'],
     queryFn: async () => {
-      const [funded, instant, instantLight] = await Promise.all([
-        base44.entities.ChallengeAccount.filter({ status: 'funded' }, '-pnl', 200),
-        base44.entities.ChallengeAccount.filter({ status: 'active', challenge_type: 'instant' }, '-pnl', 100),
-        base44.entities.ChallengeAccount.filter({ status: 'active', challenge_type: 'instant_light' }, '-pnl', 100),
-      ]);
-      return [...funded, ...instant, ...instantLight];
+      const res = await base44.functions.invoke('getLeaderboardData', {});
+      return res?.data || { accounts: [], payoutMap: {}, totalPaidOut: 0 };
     },
     refetchInterval: 30000,
   });
 
-  // Fetch real payout data
-  const { data: payouts = [] } = useQuery({
-    queryKey: ['leaderboard-payouts'],
-    queryFn: () => base44.entities.WithdrawalRequest.filter({ status: 'paid' }, '-created_date', 500),
-    refetchInterval: 60000,
-  });
-
-  // Build payout map: account_id → total paid out
-  const payoutMap = useMemo(() => {
-    const map = {};
-    payouts.forEach(p => {
-      if (p.account_id) map[p.account_id] = (map[p.account_id] || 0) + (p.trader_share || p.amount || 0);
-    });
-    return map;
-  }, [payouts]);
+  const accounts = data?.accounts || [];
+  const payoutMap = data?.payoutMap || {};
 
   const CHALLENGE_LABELS = { 'instant_light': 'Instant Light', 'instant': 'Instant', 'two-step': 'Two-Step' };
 
   const sorted = useMemo(() => (
     [...accounts]
-      .filter(a => (a.pnl || 0) > 0)
+      .filter(a => sortBy === 'payout' ? (payoutMap[a.account_id] || 0) > 0 : (a.pnl || 0) > 0)
       .map(a => ({
         ...a,
         username: maskTraderName(a),
@@ -320,8 +308,8 @@ export default function Leaderboard() {
         totalPayout: payoutMap[a.account_id] || 0,
         challengeLabel: CHALLENGE_LABELS[a.challenge_type] || 'Funded',
       }))
-      .sort((x, y) => y.profitRatio - x.profitRatio)
-  ), [accounts, payoutMap]);
+      .sort((x, y) => sortBy === 'payout' ? y.totalPayout - x.totalPayout : y.profitRatio - x.profitRatio)
+  ), [accounts, payoutMap, sortBy]);
 
   const afterSize = sizeFilter === 0 ? sorted : sorted.filter(t => t.account_size === sizeFilter);
   const filtered = country === 'all' ? afterSize : afterSize.filter(t => t.country?.toUpperCase() === country);
@@ -337,7 +325,7 @@ export default function Leaderboard() {
 
   const totalCapital = sorted.reduce((s, t) => s + (t.account_size || 0), 0);
   const avgProfit = sorted.length > 0 ? sorted.reduce((s, t) => s + t.profitRatio, 0) / sorted.length : 0;
-  const totalPaidOut = sorted.reduce((s, t) => s + t.totalPayout, 0);
+  const totalPaidOut = data?.totalPaidOut || sorted.reduce((s, t) => s + t.totalPayout, 0);
 
   return (
     <div className="space-y-6">
@@ -388,8 +376,26 @@ export default function Leaderboard() {
         })}
       </div>
 
-      {/* Account size filter */}
+      {/* Sort toggle */}
       <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/30 mr-1">
+          <Filter className="w-3 h-3" /> Sort by:
+        </div>
+        <button onClick={() => setSortBy('profit')}
+          className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+          style={{
+            background: sortBy === 'profit' ? 'rgba(255,92,0,0.18)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${sortBy === 'profit' ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            color: sortBy === 'profit' ? '#FF5C00' : 'rgba(255,255,255,0.4)',
+          }}>Top Profit %</button>
+        <button onClick={() => setSortBy('payout')}
+          className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+          style={{
+            background: sortBy === 'payout' ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${sortBy === 'payout' ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            color: sortBy === 'payout' ? '#10b981' : 'rgba(255,255,255,0.4)',
+          }}>Top Payouts</button>
+        <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/30 mr-1">
           <Filter className="w-3 h-3" /> Account Size:
         </div>
