@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       sr.entities.ChallengeAccount.filter({ status: 'passed' }),
       sr.entities.ChallengeAccount.filter({ status: 'funded' }),
     ]);
-    const activeAccounts = [...active, ...passed, ...funded];
+    const activeAccounts = [...active, ...passed, ...funded].filter(a => !a.is_trashed);
 
     const breached = [];
     const errors = [];

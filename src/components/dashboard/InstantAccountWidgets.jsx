@@ -115,10 +115,15 @@ function ConsistencyCard({ account, closedTrades }) {
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
     });
-    const dailyProfits = Object.values(byDay);
-    const best = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
     // Profit after buffer lock = current balance - locked balance
     const total = (account?.balance || account?.equity || 0) - lockBalance;
+    // Cap each day's PnL at total post-buffer profit — handles trades spanning buffer activation
+    const cap = Math.max(0, total);
+    for (const day of Object.keys(byDay)) {
+      byDay[day] = Math.min(byDay[day], cap);
+    }
+    const dailyProfits = Object.values(byDay);
+    const best = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
     return { bestDayProfit: best, totalProfit: total };
   }, [closedTrades, account, lockBalance]);
 
@@ -224,6 +229,12 @@ function ProfitableDaysCard({ account, closedTrades }) {
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
     });
+    // Cap each day's PnL at total post-buffer profit — handles trades spanning buffer activation
+    const lockBal = account?.buffer_zone_lock_balance || account?.account_size || 0;
+    const totalPostBuffer = Math.max(0, (account?.balance || account?.equity || 0) - lockBal);
+    for (const day of Object.keys(byDay)) {
+      byDay[day] = Math.min(byDay[day], totalPostBuffer);
+    }
     return Object.entries(byDay)
       .filter(([, profit]) => profit > 0)
       .map(([date, profit]) => ({ date, profit }))

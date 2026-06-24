@@ -794,11 +794,21 @@ Deno.serve(async (req) => {
                 }
               }
 
-              const dailyProfits = Object.values(byDay);
-              const bestDayProfit = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
               // Profit AFTER buffer lock = balance - locked balance (NOT balance - account_size)
               const lockBalance = acc.buffer_zone_lock_balance || accountSize;
               const totalProfit = parseFloat((balance - lockBalance).toFixed(2));
+              // CRITICAL: Cap each day's PnL at total post-buffer profit.
+              // Trades opened BEFORE buffer activation but closed AFTER have their
+              // full PnL counted in the daily sum, but only the portion earned after
+              // buffer activation counts toward consistency. Capping ensures the
+              // best day profit never exceeds what was actually earned post-buffer.
+              const totalPostBufferProfit = Math.max(0, totalProfit);
+              for (const day of Object.keys(byDay)) {
+                byDay[day] = Math.min(byDay[day], totalPostBufferProfit);
+              }
+
+              const dailyProfits = Object.values(byDay);
+              const bestDayProfit = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
               const requiredTotalProfit = bestDayProfit > 0 ? parseFloat((bestDayProfit / (consistencyPct / 100)).toFixed(2)) : 0;
               const consistencyPassed = totalProfit >= requiredTotalProfit && requiredTotalProfit > 0;
 

@@ -75,7 +75,8 @@ Deno.serve(async (req) => {
             b.id !== a.id &&
             !b.is_trashed &&
             ['active', 'funded'].includes(b.status) &&
-            (b.created_date ? new Date(b.created_date).getTime() : 0) > aCreated
+            (b.created_date ? new Date(b.created_date).getTime() : 0) > aCreated &&
+            (b.previous_account_id === a.account_id || a.new_account_id === b.account_id)
           );
           if (superseded) reason = 'superseded';
         }
