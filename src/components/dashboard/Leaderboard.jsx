@@ -5,11 +5,20 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import confetti from 'canvas-confetti';
 
-const FLAG = code => {
+const FLAG = (rawCode) => {
+  const code = resolveCountryCode(rawCode);
   if (!code) return '🌍';
   const c = code.toUpperCase();
   try { return String.fromCodePoint(...[...c].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)); }
   catch { return '🌍'; }
+};
+
+// Resolve country display name from ISO code or full name
+const COUNTRY_LABEL = (rawCode) => {
+  const code = resolveCountryCode(rawCode);
+  if (code) return COUNTRY_NAMES[code] || code;
+  // It's a full name we don't have — return as-is
+  return rawCode || 'Global';
 };
 
 const COUNTRY_NAMES = {
@@ -19,7 +28,40 @@ const COUNTRY_NAMES = {
   ID: 'Indonesia', MY: 'Malaysia', PH: 'Philippines', EG: 'Egypt', SA: 'Saudi Arabia',
   TR: 'Turkey', IT: 'Italy', ES: 'Spain', NL: 'Netherlands', SE: 'Sweden', NZ: 'New Zealand',
   KE: 'Kenya', GH: 'Ghana', AO: 'Angola', RO: 'Romania', HU: 'Hungary',
+  VN: 'Vietnam', BD: 'Bangladesh', LK: 'Sri Lanka', NP: 'Nepal', BH: 'Bahrain',
+  QA: 'Qatar', KW: 'Kuwait', OM: 'Oman', JO: 'Jordan', LB: 'Lebanon', MA: 'Morocco',
+  DZ: 'Algeria', TN: 'Tunisia', LY: 'Libya', SD: 'Sudan', TZ: 'Tanzania', UG: 'Uganda',
+  RW: 'Rwanda', CI: 'Ivory Coast', SN: 'Senegal', CM: 'Cameroon', ET: 'Ethiopia',
+  ZM: 'Zambia', ZW: 'Zimbabwe', NA: 'Namibia', BW: 'Botswana', MZ: 'Mozambique',
+  AR: 'Argentina', CL: 'Chile', CO: 'Colombia', PE: 'Peru', VE: 'Venezuela',
+  EC: 'Ecuador', PY: 'Paraguay', UY: 'Uruguay', BO: 'Bolivia', DO: 'Dominican Republic',
+  GT: 'Guatemala', HN: 'Honduras', SV: 'El Salvador', CR: 'Costa Rica', PA: 'Panama',
+  KR: 'South Korea', CN: 'China', HK: 'Hong Kong', TW: 'Taiwan', KH: 'Cambodia',
+  LA: 'Laos', MM: 'Myanmar', KZ: 'Kazakhstan', UZ: 'Uzbekistan', AZ: 'Azerbaijan',
+  GE: 'Georgia', AM: 'Armenia', BY: 'Belarus', UA: 'Ukraine', PL: 'Poland',
+  CZ: 'Czech Republic', SK: 'Slovakia', SI: 'Slovenia', HR: 'Croatia', RS: 'Serbia',
+  BG: 'Bulgaria', GR: 'Greece', PT: 'Portugal', CH: 'Switzerland', AT: 'Austria',
+  BE: 'Belgium', IE: 'Ireland', DK: 'Denmark', NO: 'Norway', FI: 'Finland',
+  LT: 'Lithuania', LV: 'Latvia', EE: 'Estonia', IS: 'Iceland', LU: 'Luxembourg',
+  MT: 'Malta', CY: 'Cyprus', RU: 'Russia', MD: 'Moldova', AL: 'Albania', BA: 'Bosnia',
 };
+
+// Reverse lookup: full country name → ISO code (for flag emoji generation)
+const NAME_TO_CODE = Object.entries(COUNTRY_NAMES).reduce((acc, [code, name]) => {
+  acc[name.toLowerCase()] = code;
+  return acc;
+}, {});
+
+// Resolve a country value (ISO code or full name) to a 2-letter ISO code
+function resolveCountryCode(val) {
+  if (!val) return null;
+  const v = String(val).trim();
+  // Already a 2-letter code?
+  if (/^[A-Za-z]{2}$/.test(v)) return v.toUpperCase();
+  // Try reverse lookup by full name
+  const code = NAME_TO_CODE[v.toLowerCase()];
+  return code || null;
+}
 
 const MEDALS = {
   1: { color: '#FFD700', glow: 'rgba(255,215,0,0.5)', bg: 'rgba(255,215,0,0.09)', border: 'rgba(255,215,0,0.4)', label: '1ST', emoji: '🥇', title: '🏆 CHAMPION', crown: '👑' },
@@ -101,7 +143,7 @@ function PodiumCard({ trader, rank, onCelebrate }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.1, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => onCelebrate(rank)}
-      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center`}
+      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[220px]`}
     >
       {/* Crown above card */}
       <motion.div
@@ -143,7 +185,7 @@ function PodiumCard({ trader, rank, onCelebrate }) {
 
         <div className="text-sm font-black text-white truncate max-w-full px-1">{trader.username}</div>
         <div className="text-[10px] font-mono mb-1" style={{ color: m.color }}>
-          {COUNTRY_NAMES[trader.country?.toUpperCase()] || trader.country || 'Global'}
+          {COUNTRY_LABEL(trader.country)}
         </div>
         <div className="text-[9px] px-2 py-0.5 rounded-full mb-3"
           style={{ background: `${plt.color}18`, color: plt.color, border: `1px solid ${plt.color}30` }}>
@@ -209,7 +251,7 @@ function LeaderRow({ trader, rank }) {
         <span className="text-xl flex-shrink-0">{FLAG(trader.country)}</span>
         <div className="min-w-0">
           <div className="text-sm font-bold text-white truncate">{trader.username}</div>
-          <div className="text-[10px] font-mono text-white/30">{COUNTRY_NAMES[trader.country?.toUpperCase()] || 'Global'}</div>
+          <div className="text-[10px] font-mono text-white/30">{COUNTRY_LABEL(trader.country)}</div>
         </div>
       </div>
 
@@ -312,9 +354,9 @@ export default function Leaderboard() {
   ), [accounts, payoutMap, sortBy]);
 
   const afterSize = sizeFilter === 0 ? sorted : sorted.filter(t => t.account_size === sizeFilter);
-  const filtered = country === 'all' ? afterSize : afterSize.filter(t => t.country?.toUpperCase() === country);
+  const filtered = country === 'all' ? afterSize : afterSize.filter(t => resolveCountryCode(t.country) === country);
 
-  const countries = [...new Set(sorted.map(t => t.country?.toUpperCase()).filter(Boolean))].slice(0, 14);
+  const countries = [...new Set(sorted.map(t => resolveCountryCode(t.country)).filter(Boolean))].slice(0, 14);
   const top3 = filtered.slice(0, 3);
   const rest = filtered.slice(3, 50);
 
@@ -422,7 +464,7 @@ export default function Leaderboard() {
             <button key={c} onClick={() => setCountry(c)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-mono transition-all"
               style={{ background: country === c ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${country === c ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.07)'}`, color: country === c ? '#FF5C00' : 'rgba(255,255,255,0.35)' }}>
-              <span>{FLAG(c)}</span><span>{COUNTRY_NAMES[c] || c}</span>
+              <span>{FLAG(c)}</span><span>{COUNTRY_LABEL(c)}</span>
             </button>
           ))}
         </div>
@@ -455,7 +497,7 @@ export default function Leaderboard() {
           <Trophy className="w-12 h-12 text-white/10 mx-auto mb-3" />
           <div className="text-base font-bold text-white/40">No traders ranked yet</div>
           <div className="text-xs font-mono text-white/20 mt-1">
-            {sizeFilter > 0 ? `No funded traders with $${sizeFilter.toLocaleString()} account` : country !== 'all' ? `No funded traders from ${COUNTRY_NAMES[country] || country} yet` : 'Complete a funded challenge to appear here'}
+            {sizeFilter > 0 ? `No funded traders with $${sizeFilter.toLocaleString()} account` : country !== 'all' ? `No funded traders from ${COUNTRY_LABEL(country)} yet` : 'Complete a funded challenge to appear here'}
           </div>
         </motion.div>
       ) : (
@@ -466,7 +508,7 @@ export default function Leaderboard() {
               <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-5 flex items-center gap-2">
                 <Crown className="w-3 h-3 text-yellow-400" /> Top Performers
               </div>
-              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+              <div className="flex flex-wrap justify-center items-end gap-4 max-w-2xl mx-auto">
                 {top3.map((t, i) => <PodiumCard key={t.id} trader={t} rank={i + 1} onCelebrate={fireCelebration} />)}
               </div>
             </div>

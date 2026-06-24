@@ -27,6 +27,28 @@ Deno.serve(async (req) => {
     // Fetch ALL paid trader withdrawals (exclude affiliate payouts)
     const payouts = await sr.entities.WithdrawalRequest.filter({ status: 'paid' }, '-created_date', 500);
 
+    // Fetch KYC records to use nationality as a country fallback for accounts
+    // that don't have the country field populated from the purchase order.
+    const kycRecords = await sr.entities.KYCVerification.filter({ status: 'approved' }, '-submitted_at', 500);
+    const kycCountryMap = {};
+    kycRecords.forEach(k => {
+      if (k.user_email && k.nationality) {
+        const email = k.user_email.toLowerCase().trim();
+        // nationality may be full country name or ISO code — store as-is
+        kycCountryMap[email] = k.nationality;
+      }
+    });
+
+    // Fetch paid orders as a secondary country fallback (from checkout billing address)
+    const paidOrders = await sr.entities.Order.filter({ payment_status: 'paid' }, '-created_date', 500);
+    const orderCountryMap = {};
+    paidOrders.forEach(o => {
+      if (o.email && o.country) {
+        const email = o.email.toLowerCase().trim();
+        orderCountryMap[email] = o.country;
+      }
+    });
+
     // Build payout map: account_id → total actually paid out to trader
     const payoutMap = {};
     let totalPaidOut = 0;
@@ -38,7 +60,14 @@ Deno.serve(async (req) => {
       }
     });
 
-    const accounts = [...funded, ...instant, ...instantLight];
+    const accounts = [...funded, ...instant, ...instantLight].map(a => {
+      // Enrich: if account has no country, try KYC nationality → then order country
+      const email = (a.user_email || '').toLowerCase().trim();
+      if (!a.country && email) {
+        a.country = kycCountryMap[email] || orderCountryMap[email] || '';
+      }
+      return a;
+    });
 
     return Response.json({
       accounts,
