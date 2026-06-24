@@ -346,6 +346,13 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+          // Time parser for MT5 deal timestamps (ISO string or Unix timestamp)
+          const parseTime = (t) => {
+            if (!t) return null;
+            if (typeof t === 'string' && t.includes('T')) return new Date(t);
+            return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1));
+          };
+
           // ── INSTANT ACCOUNT BUFFER ZONE ACTIVATION ──────────────────────────
           if (acc.challenge_type === 'instant_account' && !acc.buffer_zone_activated && balance > 0) {
             const bufferTargetPct = acc.rule_snapshot?.buffer_zone_target ?? 5;
@@ -353,17 +360,27 @@ Deno.serve(async (req) => {
             if (balance >= bufferTargetBal) {
               const lockBalance = parseFloat(bufferTargetBal.toFixed(2));
               const nowIso = new Date().toISOString();
+              // Find activation trade = most recent closed deal
+              const sortedDeals = closedTrades
+                .map(d => ({ id: String(d.deal_id ?? d.Ticket ?? ''), t: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime) }))
+                .filter(d => d.t && !isNaN(d.t.getTime()))
+                .sort((a, b) => b.t.getTime() - a.t.getTime());
+              const activationTradeId = sortedDeals[0]?.id || null;
               await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
                 buffer_zone_activated: true,
                 buffer_zone_activated_at: nowIso,
                 buffer_zone_lock_balance: lockBalance,
                 dd_reference_balance: lockBalance,
+                balance_at_activation: balance,
+                activation_trade_id: activationTradeId,
               });
               acc.buffer_zone_activated = true;
               acc.buffer_zone_activated_at = nowIso;
               acc.buffer_zone_lock_balance = lockBalance;
               acc.dd_reference_balance = lockBalance;
-              console.log(`[BUFFER-ZONE] ${acc.account_id} activated at balance=${balance}, lock=${lockBalance}`);
+              acc.balance_at_activation = balance;
+              acc.activation_trade_id = activationTradeId;
+              console.log(`[BUFFER-ZONE] ${acc.account_id} activated at balance=${balance}, lock=${lockBalance}, activation_trade=${activationTradeId}`);
               base44.asServiceRole.entities.Notification.create({
                 user_email: acc.user_email,
                 title: '🎉 Buffer Zone Activated!',
@@ -377,11 +394,6 @@ Deno.serve(async (req) => {
           // CRITICAL: Only count unique dates that have at least one closed deal.
           // NEVER fall back to a hardcoded value — 0 is correct when there are no trades.
           const tradingDaySet = new Set();
-          const parseTime = (t) => {
-            if (!t) return null;
-            if (typeof t === 'string' && t.includes('T')) return new Date(t);
-            return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1));
-          };
           for (const d of closedTrades) {
             const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
             if (closeT && !isNaN(closeT.getTime())) {
@@ -767,25 +779,65 @@ Deno.serve(async (req) => {
           }
 
           // ── INSTANT ACCOUNT: CONSISTENCY, PROFITABLE DAYS, PAYOUT ELIGIBILITY ──
-          // CRITICAL: All calculations use ONLY trades closed AFTER buffer zone activation.
-          // Profit is measured as (balance - buffer_zone_lock_balance), NOT (balance - account_size).
-          if (acc.challenge_type === 'instant_account' && !breachDetected && closedTrades.length > 0) {
+          // SPILLOVER MODEL:
+          //   - The activation trade's entire profit is ignored (including spillover above buffer lock).
+          //   - spillover = balance_at_activation - buffer_zone_lock_balance (e.g. $128 on $26,378 activation)
+          //   - Post-activation losses consume the spillover first: remaining_spillover = max(0, spillover - total_losses)
+          //   - withdrawable_profit = max(0, current_balance - buffer_lock - remaining_spillover)
+          //   - Consistency & profitable days use ONLY trades opened AFTER the activation trade.
+          if (acc.challenge_type === 'instant_account' && !breachDetected && acc.buffer_zone_activated && deals.length > 0) {
             try {
               const consistencyPct = acc.rule_snapshot?.consistency_rule_pct ?? 35;
               const minProfitableDays = acc.rule_snapshot?.min_profitable_days ?? 7;
+              const bufferLock = acc.buffer_zone_lock_balance || 0;
 
-              // Only consider trades closed AFTER buffer zone activation timestamp
-              const bufferDate = acc.buffer_zone_activated_at ? new Date(acc.buffer_zone_activated_at) : null;
-              const postBufferTrades = bufferDate
+              // MIGRATION: set balance_at_activation for existing accounts that don't have it
+              if (!acc.balance_at_activation || acc.balance_at_activation === 0) {
+                const sortedMigration = closedTrades
+                  .map(d => ({ id: String(d.deal_id ?? d.Ticket ?? ''), t: parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime) }))
+                  .filter(d => d.t && !isNaN(d.t.getTime()))
+                  .sort((a, b) => b.t.getTime() - a.t.getTime());
+                const migrationTradeId = sortedMigration[0]?.id || null;
+                await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                  balance_at_activation: balance,
+                  activation_trade_id: migrationTradeId,
+                });
+                acc.balance_at_activation = balance;
+                acc.activation_trade_id = migrationTradeId;
+                console.log(`[INSTANT-MIGRATE] ${acc.account_id}: set balance_at_activation=${balance}, activation_trade=${migrationTradeId}`);
+              }
+
+              const balanceAtActivation = acc.balance_at_activation || balance;
+              const spillover = Math.max(0, balanceAtActivation - bufferLock);
+
+              // Find activation trade close time to filter post-activation trades
+              const activationTradeId = acc.activation_trade_id;
+              let activationCloseTime = null;
+              if (activationTradeId) {
+                const at = closedTrades.find(d => String(d.deal_id ?? d.Ticket ?? '') === activationTradeId);
+                if (at) activationCloseTime = parseTime(at.closeTime ?? at.TimeMsc ?? at.Time ?? at.openTime);
+              }
+
+              // Post-activation trades: opened AFTER the activation trade closed (activation trade excluded)
+              const postActivationTrades = (activationCloseTime && !isNaN(activationCloseTime.getTime()))
                 ? closedTrades.filter(d => {
-                    const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
-                    return closeT && !isNaN(closeT.getTime()) && closeT >= bufferDate;
+                    const openT = parseTime(d.openTime ?? d.closeTime ?? d.Time);
+                    return openT && !isNaN(openT.getTime()) && openT > activationCloseTime;
                   })
                 : [];
 
-              // Group POST-BUFFER deals by day and calculate daily PnL
+              // Total post-activation losses (consume spillover)
+              const totalPostLosses = postActivationTrades
+                .filter(d => parseFloat(d.profit ?? d.Profit ?? 0) < 0)
+                .reduce((s, d) => s + Math.abs(parseFloat(d.profit ?? d.Profit ?? 0)), 0);
+              const remainingSpillover = Math.max(0, spillover - totalPostLosses);
+
+              // Withdrawable profit = max(0, current_balance - buffer_lock - remaining_spillover)
+              const withdrawableProfit = parseFloat(Math.max(0, balance - bufferLock - remainingSpillover).toFixed(2));
+
+              // Group post-activation deals by day for consistency & profitable days
               const byDay = {};
-              for (const d of postBufferTrades) {
+              for (const d of postActivationTrades) {
                 const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
                 if (closeT && !isNaN(closeT.getTime())) {
                   const dayKey = closeT.toISOString().split('T')[0];
@@ -794,23 +846,12 @@ Deno.serve(async (req) => {
                 }
               }
 
-              // WITHDRAWABLE PROFIT = sum of PnL from trades closed AFTER buffer zone activation.
-              // CRITICAL: This EXCLUDES the spillover from the trade that activated the buffer zone.
-              // The activation trade's close_time is before buffer_zone_activated_at, so it's
-              // correctly filtered out of postBufferTrades. Only subsequent trades count.
-              const withdrawableProfit = parseFloat(postBufferTrades.reduce((s, d) => s + parseFloat(d.profit ?? d.Profit ?? 0), 0).toFixed(2));
-              const totalProfit = Math.max(0, withdrawableProfit);
-              // Cap each day's PnL at total withdrawable profit (handles multi-day crossovers)
-              for (const day of Object.keys(byDay)) {
-                byDay[day] = Math.min(byDay[day], totalProfit);
-              }
-
               const dailyProfits = Object.values(byDay);
               const bestDayProfit = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
               const requiredTotalProfit = bestDayProfit > 0 ? parseFloat((bestDayProfit / (consistencyPct / 100)).toFixed(2)) : 0;
-              const consistencyPassed = totalProfit >= requiredTotalProfit && requiredTotalProfit > 0;
+              const consistencyPassed = withdrawableProfit >= requiredTotalProfit && requiredTotalProfit > 0;
 
-              // Profitable days (net daily PnL > 0) — only post-buffer days
+              // Profitable days (net daily PnL > 0) — only post-activation days
               const profitableDaysList = Object.entries(byDay)
                 .filter(([, profit]) => profit > 0)
                 .map(([date, profit]) => ({ date, profit: parseFloat(profit.toFixed(2)) }))
@@ -831,9 +872,9 @@ Deno.serve(async (req) => {
                 instant_payout_eligible: instantPayoutEligible,
               });
 
-              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, withdrawable=${withdrawableProfit.toFixed(2)} (post-buffer), required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
+              console.log(`[INSTANT-SYNC] ${acc.account_id}: spillover=${spillover.toFixed(2)}, remaining=${remainingSpillover.toFixed(2)}, withdrawable=${withdrawableProfit.toFixed(2)}, best_day=${bestDayProfit.toFixed(2)}, required=${requiredTotalProfit.toFixed(2)}, post_trades=${postActivationTrades.length}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
             } catch (e) {
-              console.warn(`[INSTANT-SYNC] ${acc.account_id} consistency calc failed (non-blocking):`, e.message);
+              console.warn(`[INSTANT-SYNC] ${acc.account_id} calculation failed (non-blocking):`, e.message);
             }
           }
 

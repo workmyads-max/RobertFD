@@ -206,6 +206,15 @@
       "default": 0,
       "description": "instant_account only \u2014 the locked balance at buffer zone activation (e.g. 105000). DD reference after activation."
     },
+    "balance_at_activation": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 the actual balance at the moment buffer zone was activated. Used to compute spillover and withdrawable profit."
+    },
+    "activation_trade_id": {
+      "type": "string",
+      "description": "instant_account only \u2014 trade_id of the trade that activated the buffer zone. Excluded from all post-activation calculations."
+    },
     "dd_reference_balance": {
       "type": "number",
       "default": 0,
@@ -214,7 +223,7 @@
     "best_day_profit": {
       "type": "number",
       "default": 0,
-      "description": "instant_account only \u2014 highest single-day net closed PnL from POST-buffer trades only. Updates dynamically from MT5 trade history."
+      "description": "instant_account only \u2014 highest single-day net closed PnL from POST-activation trades only. Updates dynamically from MT5 trade history."
     },
     "required_total_profit": {
       "type": "number",
@@ -240,17 +249,17 @@
         }
       },
       "default": [],
-      "description": "instant_account only \u2014 array of {date, profit} for each POST-buffer day where net daily closed PnL > 0"
+      "description": "instant_account only \u2014 array of {date, profit} for each POST-activation day where net daily closed PnL > 0"
     },
     "profitable_days_count": {
       "type": "number",
       "default": 0,
-      "description": "instant_account only \u2014 count of profitable post-buffer days (length of profitable_days_list)"
+      "description": "instant_account only \u2014 count of profitable post-activation days (length of profitable_days_list)"
     },
     "withdrawable_profit": {
       "type": "number",
       "default": 0,
-      "description": "instant_account only \u2014 sum of PnL from trades closed AFTER buffer zone activation. This is the only profit eligible for withdrawal. Excludes the spillover from the trade that activated the buffer zone."
+      "description": "instant_account only \u2014 max(0, current_balance - buffer_lock - remaining_spillover). The only profit eligible for withdrawal. Spillover = balance_at_activation - buffer_lock, consumed by post-activation losses."
     },
     "instant_payout_eligible": {
       "type": "boolean",

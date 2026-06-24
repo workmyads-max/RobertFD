@@ -105,12 +105,16 @@ function ConsistencyCard({ account, closedTrades }) {
   // Fall back to computing from closedTrades if not yet synced.
   const { bestDayProfit, totalProfit } = useMemo(() => {
     if (!closedTrades || closedTrades.length === 0) return { bestDayProfit: 0, totalProfit: 0 };
-    // Only trades closed AFTER buffer zone activation
-    const bufferDate = account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at) : null;
-    const postBufferTrades = bufferDate
-      ? closedTrades.filter(t => t.close_time && new Date(t.close_time) >= bufferDate)
+    // Find activation trade and its close time
+    const activationTrade = account?.activation_trade_id
+      ? closedTrades.find(t => t.trade_id === account.activation_trade_id)
+      : null;
+    const activationCloseTime = activationTrade?.close_time ? new Date(activationTrade.close_time) : null;
+    // Post-activation trades: opened AFTER the activation trade closed (activation trade excluded)
+    const postBufferTrades = activationCloseTime
+      ? closedTrades.filter(t => t.open_time && new Date(t.open_time) > activationCloseTime)
       : [];
-    // withdrawable_profit = sum of post-buffer trades' PnL only (no spillover)
+    // withdrawable_profit = sum of post-activation trades' PnL (fallback; sync stores spillover-adjusted value)
     const total = postBufferTrades.reduce((s, t) => s + (t.pnl || 0), 0);
     const byDay = {};
     postBufferTrades.forEach(t => {
@@ -219,10 +223,13 @@ function ProfitableDaysCard({ account, closedTrades }) {
   // Compute profitable days from POST-BUFFER trades only
   const profitableDays = useMemo(() => {
     if (!closedTrades || closedTrades.length === 0) return [];
-    // Only trades closed AFTER buffer zone activation
-    const bufferDate = account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at) : null;
-    const postBufferTrades = bufferDate
-      ? closedTrades.filter(t => t.close_time && new Date(t.close_time) >= bufferDate)
+    // Find activation trade and filter post-activation trades only
+    const activationTrade = account?.activation_trade_id
+      ? closedTrades.find(t => t.trade_id === account.activation_trade_id)
+      : null;
+    const activationCloseTime = activationTrade?.close_time ? new Date(activationTrade.close_time) : null;
+    const postBufferTrades = activationCloseTime
+      ? closedTrades.filter(t => t.open_time && new Date(t.open_time) > activationCloseTime)
       : [];
     const byDay = {};
     postBufferTrades.forEach(t => {
