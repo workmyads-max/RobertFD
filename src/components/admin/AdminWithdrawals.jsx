@@ -163,7 +163,20 @@ export default function AdminWithdrawals() {
               <span className="text-sm font-bold text-foreground">${(w.amount || 0).toLocaleString()}</span>
               <span className="text-sm font-bold text-emerald-400">${(w.final_amount || 0).toFixed(2)}</span>
               <span className="text-xs text-muted-foreground capitalize">{w.method?.replace('_', ' ')}</span>
-              <select value={w.status} onChange={e => updateMutation.mutate({ id: w.id, data: { status: e.target.value } })}
+              <select value={w.status} onChange={e => {
+                  const newStatus = e.target.value;
+                  // "approved" and "rejected" MUST go through the backend function
+                  // (adminApproveWithdrawal) — it handles MT5 account renewal, balance
+                  // deduction, notifications, certificates, and audit trail. A direct
+                  // entity update would skip all of that and leave the payout half-processed.
+                  if (newStatus === 'approved') {
+                    approveMutation.mutate(w);
+                  } else if (newStatus === 'rejected') {
+                    rejectMutation.mutate(w);
+                  } else {
+                    updateMutation.mutate({ id: w.id, data: { status: newStatus } });
+                  }
+                }}
                 className="text-[10px] font-mono px-2 py-1 rounded-lg outline-none capitalize"
                 style={{ background: `${sc}15`, color: sc, border: `1px solid ${sc}30` }}>
                 {STATUS_OPTS.map(s => <option key={s} value={s} className="bg-[#0e0e10] text-foreground">{s}</option>)}
