@@ -99,24 +99,32 @@ function ConsistencyCard({ account, closedTrades }) {
   const accountSize = account?.account_size || 0;
   const isBufferActivated = account?.buffer_zone_activated || false;
 
-  // Compute best day profit and total profit from closed trades (only after buffer zone activated)
+  // Compute best day profit from POST-BUFFER trades only.
+  // Profit after buffer lock = balance - buffer_zone_lock_balance (NOT balance - account_size).
+  const lockBalance = account?.buffer_zone_lock_balance || accountSize;
   const { bestDayProfit, totalProfit } = useMemo(() => {
     if (!closedTrades || closedTrades.length === 0) return { bestDayProfit: 0, totalProfit: 0 };
+    // Only trades closed AFTER buffer zone activation
+    const bufferDate = account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at) : null;
+    const postBufferTrades = bufferDate
+      ? closedTrades.filter(t => t.close_time && new Date(t.close_time) >= bufferDate)
+      : [];
     const byDay = {};
-    closedTrades.filter(t => t.close_time).forEach(t => {
+    postBufferTrades.forEach(t => {
       const day = new Date(t.close_time).toISOString().split('T')[0];
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
     });
     const dailyProfits = Object.values(byDay);
     const best = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
-    const total = dailyProfits.reduce((s, v) => s + v, 0);
+    // Profit after buffer lock = current balance - locked balance
+    const total = (account?.balance || account?.equity || 0) - lockBalance;
     return { bestDayProfit: best, totalProfit: total };
-  }, [closedTrades]);
+  }, [closedTrades, account, lockBalance]);
 
   // Use stored values if available (from scheduledMTSync), otherwise compute live
   const effectiveBestDay = account?.best_day_profit || bestDayProfit;
-  const effectiveTotalProfit = account?.pnl || totalProfit;
+  const effectiveTotalProfit = totalProfit;
   const requiredProfit = effectiveBestDay > 0 ? effectiveBestDay / (consistencyPct / 100) : 0;
   const remaining = Math.max(0, requiredProfit - effectiveTotalProfit);
   const isPassed = effectiveTotalProfit >= requiredProfit && requiredProfit > 0;
@@ -202,11 +210,16 @@ function ProfitableDaysCard({ account, closedTrades }) {
   const minDays = snap.min_profitable_days ?? 7;
   const isBufferActivated = account?.buffer_zone_activated || false;
 
-  // Compute profitable days from closed trades
+  // Compute profitable days from POST-BUFFER trades only
   const profitableDays = useMemo(() => {
     if (!closedTrades || closedTrades.length === 0) return [];
+    // Only trades closed AFTER buffer zone activation
+    const bufferDate = account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at) : null;
+    const postBufferTrades = bufferDate
+      ? closedTrades.filter(t => t.close_time && new Date(t.close_time) >= bufferDate)
+      : [];
     const byDay = {};
-    closedTrades.filter(t => t.close_time).forEach(t => {
+    postBufferTrades.forEach(t => {
       const day = new Date(t.close_time).toISOString().split('T')[0];
       if (!byDay[day]) byDay[day] = 0;
       byDay[day] += (t.pnl || 0);
@@ -215,7 +228,7 @@ function ProfitableDaysCard({ account, closedTrades }) {
       .filter(([, profit]) => profit > 0)
       .map(([date, profit]) => ({ date, profit }))
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [closedTrades]);
+  }, [closedTrades, account]);
 
   const count = profitableDays.length;
   const isComplete = count >= minDays;

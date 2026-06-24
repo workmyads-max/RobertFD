@@ -761,14 +761,25 @@ Deno.serve(async (req) => {
           }
 
           // ── INSTANT ACCOUNT: CONSISTENCY, PROFITABLE DAYS, PAYOUT ELIGIBILITY ──
+          // CRITICAL: All calculations use ONLY trades closed AFTER buffer zone activation.
+          // Profit is measured as (balance - buffer_zone_lock_balance), NOT (balance - account_size).
           if (acc.challenge_type === 'instant_account' && !breachDetected && closedTrades.length > 0) {
             try {
               const consistencyPct = acc.rule_snapshot?.consistency_rule_pct ?? 35;
               const minProfitableDays = acc.rule_snapshot?.min_profitable_days ?? 7;
 
-              // Group deals by day and calculate daily PnL
+              // Only consider trades closed AFTER buffer zone activation timestamp
+              const bufferDate = acc.buffer_zone_activated_at ? new Date(acc.buffer_zone_activated_at) : null;
+              const postBufferTrades = bufferDate
+                ? closedTrades.filter(d => {
+                    const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
+                    return closeT && !isNaN(closeT.getTime()) && closeT >= bufferDate;
+                  })
+                : [];
+
+              // Group POST-BUFFER deals by day and calculate daily PnL
               const byDay = {};
-              for (const d of closedTrades) {
+              for (const d of postBufferTrades) {
                 const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
                 if (closeT && !isNaN(closeT.getTime())) {
                   const dayKey = closeT.toISOString().split('T')[0];
@@ -779,14 +790,15 @@ Deno.serve(async (req) => {
 
               const dailyProfits = Object.values(byDay);
               const bestDayProfit = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
-              const totalProfit = parseFloat((balance - accountSize).toFixed(2));
+              // Profit AFTER buffer lock = balance - locked balance (NOT balance - account_size)
+              const lockBalance = acc.buffer_zone_lock_balance || accountSize;
+              const totalProfit = parseFloat((balance - lockBalance).toFixed(2));
               const requiredTotalProfit = bestDayProfit > 0 ? parseFloat((bestDayProfit / (consistencyPct / 100)).toFixed(2)) : 0;
               const consistencyPassed = totalProfit >= requiredTotalProfit && requiredTotalProfit > 0;
 
-              // Profitable days (net daily PnL > 0) — only count days on/after buffer zone activation
-              const bufferDate = acc.buffer_zone_activated_at ? new Date(acc.buffer_zone_activated_at).toISOString().split('T')[0] : null;
+              // Profitable days (net daily PnL > 0) — only post-buffer days
               const profitableDaysList = Object.entries(byDay)
-                .filter(([date, profit]) => profit > 0 && (!bufferDate || date >= bufferDate))
+                .filter(([, profit]) => profit > 0)
                 .map(([date, profit]) => ({ date, profit: parseFloat(profit.toFixed(2)) }))
                 .sort((a, b) => b.date.localeCompare(a.date));
               const profitableDaysCount = profitableDaysList.length;
@@ -804,7 +816,7 @@ Deno.serve(async (req) => {
                 instant_payout_eligible: instantPayoutEligible,
               });
 
-              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
+              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, total_profit=${totalProfit.toFixed(2)} (post-buffer), required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
             } catch (e) {
               console.warn(`[INSTANT-SYNC] ${acc.account_id} consistency calc failed (non-blocking):`, e.message);
             }
