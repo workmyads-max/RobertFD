@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, XCircle } from 'lucide-react';
+import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, XCircle, Target } from 'lucide-react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 function fmt(n) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
@@ -175,6 +175,68 @@ function useTimelineSteps(account, closedTrades = []) {
       ];
     }
 
+    // ─── INSTANT ACCOUNT ────────────────────────────────────────────────────────
+    if (challengeType === 'instant_account') {
+      const bufferTargetPct = ruleSnapshot.buffer_zone_target ?? 5;
+      const bufferTargetVal = account.account_size * (1 + bufferTargetPct / 100);
+      const bufferActivated = account.buffer_zone_activated || false;
+      const consistencyPct = ruleSnapshot.consistency_rule_pct ?? 35;
+      const minProfitableDays = ruleSnapshot.min_profitable_days ?? 7;
+      const profitableDaysCount = account.profitable_days_count || 0;
+      const consistencyPassed = account.consistency_passed || false;
+      const payoutEligible = account.instant_payout_eligible || false;
+      const dailyDdIA = ruleSnapshot.daily_dd_limit ?? 4;
+      const maxDdIA = ruleSnapshot.max_dd_limit ?? 8;
+      const bestDay = account.best_day_profit || 0;
+      const requiredTotal = account.required_total_profit || 0;
+      const currentEquity = account.equity || account.balance || account.account_size;
+
+      return [
+        {
+          icon: CheckCircle2,
+          label: 'Challenge Purchased',
+          desc: `$${fmt(account.account_size)} Instant Account issued`,
+          status: 'done',
+        },
+        {
+          icon: Zap,
+          label: 'Buffer Zone Target',
+          desc: bufferActivated
+            ? `✓ $${fmt(bufferTargetVal)} locked — DD reference updated`
+            : `Reach $${fmt(bufferTargetVal)} (${bufferTargetPct}% profit) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
+          status: bufferActivated ? 'done' : 'active',
+        },
+        {
+          icon: Target,
+          label: 'Consistency & Profitable Days',
+          desc: bufferActivated
+            ? (consistencyPassed
+              ? `✓ Consistency passed (best day $${fmt(bestDay)} → required $${fmt(requiredTotal)})`
+              : `Best day $${fmt(bestDay)} → need $${fmt(requiredTotal)} total · ${consistencyPct}% consistency rule`)
+            : 'Activated after buffer zone target',
+          status: !bufferActivated ? 'pending' : consistencyPassed ? 'done' : 'active',
+        },
+        {
+          icon: Clock,
+          label: 'Profitable Days',
+          desc: bufferActivated
+            ? `${profitableDaysCount}/${minProfitableDays} profitable days`
+            : 'Tracking starts after buffer zone',
+          status: !bufferActivated ? 'pending' : (profitableDaysCount >= minProfitableDays ? 'done' : 'active'),
+        },
+        {
+          icon: DollarSign,
+          label: 'Payout Eligible',
+          desc: payoutEligible
+            ? `✓ Eligible for withdrawals · ${profitSplit}% profit split`
+            : bufferActivated
+              ? `${profitableDaysCount}/${minProfitableDays} days · ${consistencyPassed ? '✓' : '✗'} consistency`
+              : 'First payout after buffer zone + consistency + profitable days',
+          status: payoutEligible ? 'done' : 'pending',
+        },
+      ];
+    }
+
     // ─── TWO-STEP ───────────────────────────────────────────────────────────────
     const phase1Target = ruleSnapshot.phase1_target ?? 10;
     const phase2Target = ruleSnapshot.phase2_target ?? 5;
@@ -261,18 +323,32 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
   if (!account || steps.length === 0) return null;
 
   const isFunded = account?.status === 'funded';
+  const isInstantAccount = account?.challenge_type === 'instant_account';
   // Eligibility: funded + KYC approved + at least 1 trading day (from entity or closed trades)
   const tradingDaysFromTrades = new Set(
     closedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
   ).size;
   const tradingDays = Math.max(tradingDaysFromTrades, account?.trading_days || 0);
-  const isEligible = isFunded && kycApproved && tradingDays >= 1;
+  const isEligible = isInstantAccount
+    ? (account?.instant_payout_eligible && kycApproved)
+    : (isFunded && kycApproved && tradingDays >= 1);
 
   // Build eligibility requirements list
   const requirements = [];
-  if (!isFunded) requirements.push({ label: 'Funded account status', met: false });
-  if (isFunded && !kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
-  if (isFunded && kycApproved && tradingDays < 1) requirements.push({ label: `Minimum 1 trading day (${tradingDays}/1)`, met: false });
+  if (isInstantAccount) {
+    if (!account?.buffer_zone_activated) requirements.push({ label: 'Buffer zone target not reached', met: false });
+    if (account?.buffer_zone_activated && !account?.consistency_passed) requirements.push({ label: 'Consistency rule not met', met: false });
+    if (account?.buffer_zone_activated) {
+      const minPD = account?.rule_snapshot?.min_profitable_days ?? 7;
+      const pdCount = account?.profitable_days_count || 0;
+      if (pdCount < minPD) requirements.push({ label: `Profitable days (${pdCount}/${minPD})`, met: false });
+    }
+    if (!kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
+  } else {
+    if (!isFunded) requirements.push({ label: 'Funded account status', met: false });
+    if (isFunded && !kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
+    if (isFunded && kycApproved && tradingDays < 1) requirements.push({ label: `Minimum 1 trading day (${tradingDays}/1)`, met: false });
+  }
   
   const hasRequirements = requirements.length > 0 && !isEligible;
 
