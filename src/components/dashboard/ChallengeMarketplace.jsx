@@ -228,7 +228,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
-                    src="https://media.base44.com/images/public/69ff44f98e27baf8957d0676/5fd49743c_image.png"
+                    src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=200&q=80&fit=crop"
                     alt="MetaTrader 5"
                     className="w-10 h-10 object-contain"
                   />

@@ -24,12 +24,12 @@ import { captureReferralCode } from '@/utils/referralUtils';
 
 const IMAGES = {
   hero: 'https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?w=1800&q=80&fit=crop',
-  dashboard: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/075fdda4e_generated_image.png',
-  infrastructure: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/680576437_generated_16455ac0.png',
-  mobile: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/4636aef08_generated_image.png',
-  singapore: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/bce196e7d_generated_bc3a5017.png',
-  trading: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/efd854044_generated_0307144f.png',
-  mascot: 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/3b2ee3a7d_generated_image.png',
+  dashboard: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80&fit=crop',
+  infrastructure: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80&fit=crop',
+  mobile: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80&fit=crop',
+  singapore: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&q=80&fit=crop',
+  trading: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7d29f?w=1200&q=80&fit=crop',
+  mascot: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80&fit=crop',
 };
 
 export default function Home() {
