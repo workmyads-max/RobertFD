@@ -125,7 +125,8 @@ export default function Withdrawals({ user, onNavigate }) {
     placeholderData: (prev) => prev ?? [],
   });
 
-  const fundedAccounts = accounts.filter(a => a.status === 'funded');
+  // Include funded accounts AND active instant_account accounts (payout eligible if instant_payout_eligible=true)
+  const fundedAccounts = accounts.filter(a => a.status === 'funded' || (a.challenge_type === 'instant_account' && a.status === 'active'));
 
   // Fetch closed trades for each funded account to compute trading days —
   // matches AccountTimeline logic (Math.max(unique trade days, account.trading_days))
@@ -191,7 +192,11 @@ export default function Withdrawals({ user, onNavigate }) {
     accountTradingDays[selectedAccount?.account_id] || 0,
     selectedAccount?.trading_days || 0
   );
-  const isSelectedEligible = selectedAccount && kycApproved && selectedTradingDays >= 1;
+  const isSelectedEligible = selectedAccount && kycApproved && (
+    selectedAccount.challenge_type === 'instant_account'
+      ? (selectedAccount.instant_payout_eligible === true)
+      : (selectedTradingDays >= 1)
+  );
 
   const openForm = (accId) => {
     setSelectedAccountId(accId || fundedAccounts[0]?.account_id || '');
@@ -291,7 +296,9 @@ export default function Withdrawals({ user, onNavigate }) {
             const firmShare = profit * ((100 - split) / 100);
             const hasPending = withdrawals.some(w => w.account_id === acc.account_id && w.status === 'pending');
             const tradingDays = accountTradingDays[acc.account_id] || acc.trading_days || 0;
-            const isEligible = kycApproved && tradingDays >= 1;
+            const isEligible = acc.challenge_type === 'instant_account'
+              ? (kycApproved && acc.instant_payout_eligible)
+              : (kycApproved && tradingDays >= 1);
             return (
               <div key={acc.id} className="rounded-2xl p-5 transition-all"
                 onClick={() => isEligible && !hasPending && openForm(acc.account_id)}
@@ -322,7 +329,9 @@ export default function Withdrawals({ user, onNavigate }) {
                   <div className="text-center text-[10px] font-mono text-yellow-400 py-1">⏳ Withdrawal Pending</div>
                 ) : !kycApproved ? (
                   <div className="text-center text-[10px] font-mono text-red-400 py-1">⚠ KYC required</div>
-                ) : tradingDays < 1 ? (
+                ) : acc.challenge_type === 'instant_account' && !acc.instant_payout_eligible ? (
+                  <div className="text-center text-[10px] font-mono text-red-400 py-1">⚠ Payout requirements not met</div>
+                ) : acc.challenge_type !== 'instant_account' && tradingDays < 1 ? (
                   <div className="text-center text-[10px] font-mono text-red-400 py-1">⚠ Min 1 trading day required ({tradingDays}/1)</div>
                 ) : profit > 0 ? (
                   <div className="text-center text-[10px] font-mono text-primary py-1 flex items-center justify-center gap-1">
@@ -476,7 +485,12 @@ export default function Withdrawals({ user, onNavigate }) {
                       <span className="text-xs font-bold text-red-400">Withdrawal Requirements Not Met</span>
                     </div>
                     {!kycApproved && <div className="text-[11px] text-red-300 ml-6">• KYC verification not approved</div>}
-                    {selectedTradingDays < 1 && <div className="text-[11px] text-red-300 ml-6">• Minimum 1 trading day required ({selectedTradingDays}/1)</div>}
+                    {selectedAccount?.challenge_type === 'instant_account' && !selectedAccount?.instant_payout_eligible && (
+                      <div className="text-[11px] text-red-300 ml-6">• Instant Account payout requirements not met (Buffer Zone, Consistency, Profitable Days)</div>
+                    )}
+                    {selectedAccount?.challenge_type !== 'instant_account' && selectedTradingDays < 1 && (
+                      <div className="text-[11px] text-red-300 ml-6">• Minimum 1 trading day required ({selectedTradingDays}/1)</div>
+                    )}
                   </div>
                 )}
 

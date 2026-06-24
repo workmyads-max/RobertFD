@@ -100,6 +100,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       news_trading: plan.news_trading,
       hedging: plan.hedging,
       profit_split: plan.profit_split,
+      buffer_zone_target: plan.buffer_zone_target,
+      consistency_rule_pct: plan.consistency_rule_pct,
+      min_profitable_days: plan.min_profitable_days,
     };
     const order = {
       challenge_type: challengeType,
@@ -179,6 +182,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
             { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
             { id: 'instant', label: 'Instant', desc: '1 phase', icon: Zap },
             { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: Zap },
+            { id: 'instant_account', label: 'Inst. Account', desc: 'Buffer Zone', icon: Target },
           ].map((t, idx) => {
             const isSelected = challengeType === t.id;
             const Icon = t.icon;

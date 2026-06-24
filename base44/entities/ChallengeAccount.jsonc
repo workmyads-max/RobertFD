@@ -16,7 +16,8 @@
       "enum": [
         "two-step",
         "instant",
-        "instant_light"
+        "instant_light",
+        "instant_account"
       ],
       "default": "two-step"
     },
@@ -190,6 +191,75 @@
     "dd_breach_value": {
       "type": "number"
     },
+    "buffer_zone_activated": {
+      "type": "boolean",
+      "default": false,
+      "description": "instant_account only \u2014 TRUE once equity reaches the buffer zone target (e.g. $105K on 100K). Permanently locked once activated."
+    },
+    "buffer_zone_activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when buffer zone was activated (instant_account only)"
+    },
+    "buffer_zone_lock_balance": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 the locked balance at buffer zone activation (e.g. 105000). DD reference after activation."
+    },
+    "dd_reference_balance": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 the balance used as DD reference. Equals account_size before buffer zone, equals buffer_zone_lock_balance after activation."
+    },
+    "best_day_profit": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 highest single-day net closed PnL. Updates dynamically from MT5 trade history."
+    },
+    "required_total_profit": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 best_day_profit / (consistency_rule_pct/100). Dynamic \u2014 recalculated whenever best_day_profit changes."
+    },
+    "consistency_passed": {
+      "type": "boolean",
+      "default": false,
+      "description": "instant_account only \u2014 TRUE when total profit >= required_total_profit"
+    },
+    "profitable_days_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "profit": {
+            "type": "number"
+          }
+        }
+      },
+      "default": [],
+      "description": "instant_account only \u2014 array of {date, profit} for each day where net daily closed PnL > 0"
+    },
+    "profitable_days_count": {
+      "type": "number",
+      "default": 0,
+      "description": "instant_account only \u2014 count of profitable days (length of profitable_days_list)"
+    },
+    "instant_payout_eligible": {
+      "type": "boolean",
+      "default": false,
+      "description": "instant_account only \u2014 TRUE when ALL conditions met: buffer_zone_activated + consistency_passed + profitable_days_count >= min_profitable_days + no DD breach + status active"
+    },
+    "previous_account_id": {
+      "type": "string",
+      "description": "instant_account only \u2014 ID of the previous account this one replaced (set on renewal after payout)"
+    },
+    "new_account_id": {
+      "type": "string",
+      "description": "instant_account only \u2014 ID of the new account provisioned after payout approval"
+    },
     "country": {
       "type": "string",
       "description": "Two-letter country code from the purchase order (e.g. US, GB, AE)"
@@ -235,6 +305,15 @@
           "type": "boolean"
         },
         "profit_split": {
+          "type": "number"
+        },
+        "buffer_zone_target": {
+          "type": "number"
+        },
+        "consistency_rule_pct": {
+          "type": "number"
+        },
+        "min_profitable_days": {
           "type": "number"
         }
       }

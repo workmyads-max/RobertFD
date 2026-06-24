@@ -70,6 +70,9 @@ export default function Checkout() {
             news_trading: match.news_trading,
             hedging: match.hedging,
             profit_split: match.profit_split,
+            buffer_zone_target: match.buffer_zone_target,
+            consistency_rule_pct: match.consistency_rule_pct,
+            min_profitable_days: match.min_profitable_days,
           };
         }
       } catch (e) {

@@ -37,8 +37,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  */
 function getDDLimits(acc) {
   const snap = acc.rule_snapshot || {};
-  const dailyLimit = snap.daily_dd_limit ?? 5;
-  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : 10);
+  const dailyLimit = snap.daily_dd_limit ?? (acc.challenge_type === 'instant_account' ? 4 : 5);
+  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : acc.challenge_type === 'instant_account' ? 8 : 10);
   const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
   return { dailyLimit, overallLimit, isTrailing };
 }
@@ -54,6 +54,10 @@ function calcOverallDD(acc, equity, newHWM) {
   if (isTrailing) {
     const hwm = newHWM || accountSize;
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
+  }
+  // instant_account: after buffer zone activation, DD is relative to locked balance
+  if (acc.challenge_type === 'instant_account' && acc.buffer_zone_activated && (acc.dd_reference_balance || 0) > 0) {
+    return Math.max(0, ((acc.dd_reference_balance - equity) / acc.dd_reference_balance) * 100);
   }
   // Static floor: always relative to original account size
   return Math.max(0, ((accountSize - equity) / accountSize) * 100);
@@ -336,6 +340,33 @@ Deno.serve(async (req) => {
           const accountSize = acc.account_size || 100000;
           const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+          // ── INSTANT ACCOUNT BUFFER ZONE ACTIVATION ──────────────────────────
+          if (acc.challenge_type === 'instant_account' && !acc.buffer_zone_activated && balance > 0) {
+            const bufferTargetPct = acc.rule_snapshot?.buffer_zone_target ?? 5;
+            const bufferTargetBal = accountSize * (1 + bufferTargetPct / 100);
+            if (balance >= bufferTargetBal) {
+              const lockBalance = parseFloat(bufferTargetBal.toFixed(2));
+              const nowIso = new Date().toISOString();
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                buffer_zone_activated: true,
+                buffer_zone_activated_at: nowIso,
+                buffer_zone_lock_balance: lockBalance,
+                dd_reference_balance: lockBalance,
+              });
+              acc.buffer_zone_activated = true;
+              acc.buffer_zone_activated_at = nowIso;
+              acc.buffer_zone_lock_balance = lockBalance;
+              acc.dd_reference_balance = lockBalance;
+              console.log(`[BUFFER-ZONE] ${acc.account_id} activated at balance=${balance}, lock=${lockBalance}`);
+              base44.asServiceRole.entities.Notification.create({
+                user_email: acc.user_email,
+                title: '🎉 Buffer Zone Activated!',
+                message: `Your Instant Account has reached the buffer zone target. Your drawdown reference is now locked at $${lockBalance.toLocaleString()}. Consistency and Profitable Days tracking are now active.`,
+                type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+              }).catch(() => {});
+            }
+          }
+
           // ── TRADING DAYS — counted from actual closed deal dates (UTC) ─────
           // CRITICAL: Only count unique dates that have at least one closed deal.
           // NEVER fall back to a hardcoded value — 0 is correct when there are no trades.
@@ -435,8 +466,11 @@ Deno.serve(async (req) => {
           // Daily DD: computed from the LOWEST equity of the day (not current).
           // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$
           // As a %: (daily_start_balance - daily_low_equity) / account_size * 100
-          const dsbForDD = acc.daily_start_balance || accountSize;
-          const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / accountSize) * 100);
+          // instant_account: use dd_reference_balance (locked at buffer zone) for DD calculations
+          const ddRefBal = (acc.challenge_type === 'instant_account' && acc.buffer_zone_activated && (acc.dd_reference_balance || 0) > 0)
+            ? acc.dd_reference_balance : accountSize;
+          const dsbForDD = acc.daily_start_balance || ddRefBal;
+          const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / ddRefBal) * 100);
 
           // Persistent values — NEVER decrease (daily resets at midnight UTC)
           const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(2));
@@ -597,6 +631,7 @@ Deno.serve(async (req) => {
 
           if (
             !breachDetected &&
+            acc.challenge_type !== 'instant_account' &&
             acc.status === 'active' &&
             acc.phase === 'phase1' &&
             (!acc.phase_review_status || acc.phase_review_status === 'none')
@@ -629,6 +664,7 @@ Deno.serve(async (req) => {
           // Phase 2 pass detection — only for active phase2 accounts not yet in funded review
           if (
             !breachDetected &&
+            acc.challenge_type !== 'instant_account' &&
             acc.status === 'active' &&
             acc.phase === 'phase2' &&
             (!acc.funded_review_status || acc.funded_review_status === 'none')
@@ -722,6 +758,56 @@ Deno.serve(async (req) => {
               }).catch(() => null);
             }));
             console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);
+          }
+
+          // ── INSTANT ACCOUNT: CONSISTENCY, PROFITABLE DAYS, PAYOUT ELIGIBILITY ──
+          if (acc.challenge_type === 'instant_account' && !breachDetected && closedTrades.length > 0) {
+            try {
+              const consistencyPct = acc.rule_snapshot?.consistency_rule_pct ?? 35;
+              const minProfitableDays = acc.rule_snapshot?.min_profitable_days ?? 7;
+
+              // Group deals by day and calculate daily PnL
+              const byDay = {};
+              for (const d of closedTrades) {
+                const closeT = parseTime(d.closeTime ?? d.TimeMsc ?? d.Time ?? d.openTime);
+                if (closeT && !isNaN(closeT.getTime())) {
+                  const dayKey = closeT.toISOString().split('T')[0];
+                  if (!byDay[dayKey]) byDay[dayKey] = 0;
+                  byDay[dayKey] += parseFloat(d.profit ?? d.Profit ?? 0);
+                }
+              }
+
+              const dailyProfits = Object.values(byDay);
+              const bestDayProfit = dailyProfits.length > 0 ? Math.max(...dailyProfits) : 0;
+              const totalProfit = parseFloat((balance - accountSize).toFixed(2));
+              const requiredTotalProfit = bestDayProfit > 0 ? parseFloat((bestDayProfit / (consistencyPct / 100)).toFixed(2)) : 0;
+              const consistencyPassed = totalProfit >= requiredTotalProfit && requiredTotalProfit > 0;
+
+              // Profitable days (net daily PnL > 0) — only count days on/after buffer zone activation
+              const bufferDate = acc.buffer_zone_activated_at ? new Date(acc.buffer_zone_activated_at).toISOString().split('T')[0] : null;
+              const profitableDaysList = Object.entries(byDay)
+                .filter(([date, profit]) => profit > 0 && (!bufferDate || date >= bufferDate))
+                .map(([date, profit]) => ({ date, profit: parseFloat(profit.toFixed(2)) }))
+                .sort((a, b) => b.date.localeCompare(a.date));
+              const profitableDaysCount = profitableDaysList.length;
+
+              // Payout eligibility: ALL conditions must be met
+              const instantPayoutEligible = acc.buffer_zone_activated && consistencyPassed &&
+                profitableDaysCount >= minProfitableDays && !breachDetected && acc.status === 'active';
+
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                best_day_profit: parseFloat(bestDayProfit.toFixed(2)),
+                required_total_profit: requiredTotalProfit,
+                consistency_passed: consistencyPassed,
+                profitable_days_list: profitableDaysList,
+                profitable_days_count: profitableDaysCount,
+                instant_payout_eligible: instantPayoutEligible,
+              });
+
+              console.log(`[INSTANT-SYNC] ${acc.account_id}: best_day=${bestDayProfit.toFixed(2)}, required=${requiredTotalProfit.toFixed(2)}, profitable_days=${profitableDaysCount}/${minProfitableDays}, eligible=${instantPayoutEligible}`);
+            } catch (e) {
+              console.warn(`[INSTANT-SYNC] ${acc.account_id} consistency calc failed (non-blocking):`, e.message);
+            }
           }
 
           return {

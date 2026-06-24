@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Layers, Zap, Lightbulb, ArrowRight, CheckCircle2, XCircle,
+  Layers, Zap, Lightbulb, Target, ArrowRight, CheckCircle2, XCircle,
   Shield, ChevronDown, ChevronUp } from
 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -84,6 +84,32 @@ const CHALLENGES = [
   { ok: true, label: '80/20 Profit Split' }],
 
   cta: 'Get Instant Light'
+},
+{
+  id: 'instant_account',
+  icon: Target,
+  title: 'Instant Account',
+  subtitle: 'Buffer Zone · Dynamic Rules',
+  badge: 'NEW',
+  color: '#10b981',
+  description: 'Reach your buffer zone target to lock your drawdown reference. Then unlock consistency and profitable day tracking for payout eligibility.',
+  stats: [
+  { label: 'Buffer Zone', value: '5%' },
+  { label: 'Daily DD', value: '4%' },
+  { label: 'Max DD', value: '8%' },
+  { label: 'Consistency', value: '35%' },
+  { label: 'Min Profit Days', value: '7' },
+  { label: 'Profit Split', value: '80%' }],
+
+  features: [
+  { ok: true, label: 'Buffer Zone Lock Protection' },
+  { ok: true, label: 'Dynamic Consistency Rule' },
+  { ok: true, label: '7 Profitable Days Required' },
+  { ok: true, label: 'New Account After Each Payout' },
+  { ok: true, label: 'Instant Account Access' },
+  { ok: true, label: '80/20 Profit Split' }],
+
+  cta: 'Get Instant Account'
 }];
 
 
@@ -247,7 +273,7 @@ export default function ChallengeTypes() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {CHALLENGES.map((c, i) =>
           <ChallengeCard
             key={c.id}

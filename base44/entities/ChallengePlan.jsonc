@@ -21,7 +21,8 @@
       "enum": [
         "two-step",
         "instant",
-        "instant_light"
+        "instant_light",
+        "instant_account"
       ],
       "description": "Challenge type"
     },
@@ -56,7 +57,7 @@
     "phase2_target": {
       "type": "number",
       "default": 5,
-      "description": "0 for instant/instant_light"
+      "description": "0 for instant/instant_light/instant_account"
     },
     "daily_dd": {
       "type": "number",
@@ -94,6 +95,21 @@
     "hedging": {
       "type": "boolean",
       "default": false
+    },
+    "buffer_zone_target": {
+      "type": "number",
+      "default": 5,
+      "description": "Profit % needed to activate buffer zone (instant_account only). e.g. 5% on 100K = $5K profit to reach $105K lock."
+    },
+    "consistency_rule_pct": {
+      "type": "number",
+      "default": 35,
+      "description": "Consistency rule percentage (instant_account only). Required total profit = best_day_profit / (pct/100)"
+    },
+    "min_profitable_days": {
+      "type": "number",
+      "default": 7,
+      "description": "Minimum profitable days for payout eligibility (instant_account only). A profitable day = net daily closed PnL > 0"
     },
     "is_active": {
       "type": "boolean",

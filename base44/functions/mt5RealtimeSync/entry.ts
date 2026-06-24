@@ -44,8 +44,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 function getDDLimits(acc) {
   const snap = acc.rule_snapshot || {};
-  const dailyLimit   = snap.daily_dd_limit ?? 5;
-  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : 10);
+  const dailyLimit   = snap.daily_dd_limit ?? (acc.challenge_type === 'instant_account' ? 4 : 5);
+  const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : acc.challenge_type === 'instant_account' ? 8 : 10);
   const isTrailing   = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
   return { dailyLimit, overallLimit, isTrailing };
 }
@@ -64,6 +64,10 @@ function calcOverallDD(acc, equity, hwm) {
   const isTrailing  = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
   if (isTrailing) {
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
+  }
+  // instant_account: after buffer zone activation, DD is relative to locked balance
+  if (acc.challenge_type === 'instant_account' && acc.buffer_zone_activated && (acc.dd_reference_balance || 0) > 0) {
+    return Math.max(0, ((acc.dd_reference_balance - equity) / acc.dd_reference_balance) * 100);
   }
   // Static floor: always relative to original account size
   return Math.max(0, ((accountSize - equity) / accountSize) * 100);
@@ -250,6 +254,35 @@ Deno.serve(async (req) => {
 
     const newHWM = Math.max(acc.high_water_mark || 0, balance);
 
+    // ── INSTANT ACCOUNT BUFFER ZONE ACTIVATION ────────────────────────────────
+    // When equity reaches account_size + buffer_zone_target%, lock the buffer zone.
+    // DD reference permanently shifts to the locked balance (e.g. $105K on 100K).
+    if (acc.challenge_type === 'instant_account' && !acc.buffer_zone_activated && equity > 0) {
+      const bufferTargetPct = acc.rule_snapshot?.buffer_zone_target ?? 5;
+      const bufferTargetBal = accountSize * (1 + bufferTargetPct / 100);
+      if (equity >= bufferTargetBal) {
+        const lockBalance = parseFloat(bufferTargetBal.toFixed(2));
+        const nowIso = new Date().toISOString();
+        await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+          buffer_zone_activated: true,
+          buffer_zone_activated_at: nowIso,
+          buffer_zone_lock_balance: lockBalance,
+          dd_reference_balance: lockBalance,
+        });
+        acc.buffer_zone_activated = true;
+        acc.buffer_zone_activated_at = nowIso;
+        acc.buffer_zone_lock_balance = lockBalance;
+        acc.dd_reference_balance = lockBalance;
+        console.log(`[BUFFER-ZONE] ${account_id} activated at equity=${equity}, lock=${lockBalance}`);
+        base44.asServiceRole.entities.Notification.create({
+          user_email: acc.user_email,
+          title: '🎉 Buffer Zone Activated!',
+          message: `Your Instant Account has reached the buffer zone target. Your drawdown reference is now locked at $${lockBalance.toLocaleString()}. Consistency and Profitable Days tracking are now active.`,
+          type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+        }).catch(() => {});
+      }
+    }
+
     // ── PERIOD-LOW EQUITY (intra-sync dip detection) ──────────────────────────
     // MT5's EquyMin = minimum equity within the current trading day, INCLUDING
     // floating dips that recovered before this sync. This is the primary source
@@ -269,8 +302,11 @@ Deno.serve(async (req) => {
     // ── DAILY DD (from lowest equity — permanent) ─────────────────────────────
     // FTMO formula simplifies to: breach = equity < daily_start_balance - daily_limit_$
     // As %: (daily_start_balance - daily_low_equity) / account_size * 100
-    const dsbForDD = acc.daily_start_balance || accountSize;
-    const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / accountSize) * 100);
+    // instant_account: use dd_reference_balance (locked at buffer zone) for DD calculations
+    const ddRefBal = (acc.challenge_type === 'instant_account' && acc.buffer_zone_activated && (acc.dd_reference_balance || 0) > 0)
+      ? acc.dd_reference_balance : accountSize;
+    const dsbForDD = acc.daily_start_balance || ddRefBal;
+    const dailyDDFromLowPct = Math.max(0, ((dsbForDD - dailyLowEquity) / ddRefBal) * 100);
 
     // Persistent values — NEVER decrease (daily resets at midnight UTC)
     const persistentOverallDD = parseFloat(Math.max(acc.max_drawdown_used || 0, currentOverallDD).toFixed(3));
@@ -379,6 +415,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    const dailyCalc = calcDailyDD(acc, balance, equity);
+
     // ── NO BREACH — MIRROR MT5 BALANCE/EQUITY TO DB (overwrite, not increment) ─
     // Every sync writes MT5's live values to DB so that decreases (withdrawals,
     // Manager minus operations) are reflected immediately — not just increases.
@@ -396,6 +434,11 @@ Deno.serve(async (req) => {
       daily_drawdown_used: persistentDailyDD,
       high_water_mark: newHWM,
       last_synced_at: new Date().toISOString(),
+      ...(acc.challenge_type === 'instant_account' && {
+        buffer_zone_activated: acc.buffer_zone_activated || false,
+        buffer_zone_lock_balance: acc.buffer_zone_lock_balance || 0,
+        dd_reference_balance: acc.dd_reference_balance || 0,
+      }),
     }).catch(() => {});
 
     return Response.json({

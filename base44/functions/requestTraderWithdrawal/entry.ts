@@ -41,9 +41,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: You do not own this account' }, { status: 403 });
     }
 
-    // 2. Account must be funded
-    if (account.status !== 'funded') {
-      return Response.json({ error: 'Withdrawals are only available for funded accounts' }, { status: 400 });
+    // 2. Account must be funded OR instant_account with payout eligibility
+    if (account.status !== 'funded' && !(account.challenge_type === 'instant_account' && account.status === 'active' && account.instant_payout_eligible)) {
+      return Response.json({ error: 'Withdrawals are only available for funded accounts or instant accounts with payout eligibility' }, { status: 400 });
     }
 
     // 3. KYC must be approved
@@ -62,33 +62,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'A pending withdrawal already exists for this account' }, { status: 409 });
     }
 
-    // 5. Minimum 1 trading day — OPTIMIZED: skip the expensive TradeRecord query
-    // when the account already indicates trading has occurred (trading_days field
-    // or positive profit). This eliminates a potentially large query in 99% of
-    // withdrawal requests, keeping the submit to 4 SDK calls instead of 5+.
-    const tradingDaysFromAccount = account.trading_days || 0;
-    const hasRealProfit = (account.pnl || 0) > 0 || (account.balance || 0) > (account.account_size || 0);
-    let tradingDaysCompleted;
-    if (tradingDaysFromAccount >= 1 || hasRealProfit) {
-      // Fast path — no TradeRecord query needed
-      tradingDaysCompleted = Math.max(tradingDaysFromAccount, hasRealProfit ? 1 : 0);
-    } else {
-      // Fallback: count unique trading days from closed trades
-      const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
-      const tradingDaySet = new Set();
-      for (const t of tradeRecords) {
-        const closeTime = t.close_time;
-        if (closeTime) {
-          const d = new Date(closeTime);
-          if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
+    // 5. Minimum 1 trading day — only for funded accounts (instant_account uses
+    //    profitable days tracking instead, and payout eligibility is already verified above)
+    if (account.challenge_type !== 'instant_account') {
+      const tradingDaysFromAccount = account.trading_days || 0;
+      const hasRealProfit = (account.pnl || 0) > 0 || (account.balance || 0) > (account.account_size || 0);
+      let tradingDaysCompleted;
+      if (tradingDaysFromAccount >= 1 || hasRealProfit) {
+        tradingDaysCompleted = Math.max(tradingDaysFromAccount, hasRealProfit ? 1 : 0);
+      } else {
+        const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
+        const tradingDaySet = new Set();
+        for (const t of tradeRecords) {
+          const closeTime = t.close_time;
+          if (closeTime) {
+            const d = new Date(closeTime);
+            if (!isNaN(d.getTime())) tradingDaySet.add(d.toISOString().split('T')[0]);
+          }
         }
+        tradingDaysCompleted = Math.max(tradingDaySet.size, tradingDaysFromAccount, hasRealProfit ? 1 : 0);
       }
-      tradingDaysCompleted = Math.max(tradingDaySet.size, tradingDaysFromAccount, hasRealProfit ? 1 : 0);
-    }
-    if (tradingDaysCompleted < 1) {
-      return Response.json({
-        error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s). Please complete at least 1 trading day on your funded account first.`,
-      }, { status: 400 });
+      if (tradingDaysCompleted < 1) {
+        return Response.json({
+          error: `Withdrawal requires at least 1 completed trading day. You currently have ${tradingDaysCompleted} trading day(s). Please complete at least 1 trading day on your funded account first.`,
+        }, { status: 400 });
+      }
     }
 
     // 7. Amount <= available profit

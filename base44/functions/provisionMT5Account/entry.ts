@@ -81,6 +81,9 @@ Deno.serve(async (req) => {
             news_trading:      plan.news_trading ?? false,
             hedging:           plan.hedging ?? false,
             profit_split:      plan.profit_split ?? 80,
+            buffer_zone_target: plan.buffer_zone_target ?? 5,
+            consistency_rule_pct: plan.consistency_rule_pct ?? 35,
+            min_profitable_days: plan.min_profitable_days ?? 7,
           };
           console.log(`[provisionMT5Account] ✅ rule_snapshot built from plan "${plan.name}" (min_trading_days=${rule_snapshot.min_trading_days})`);
         } else {
@@ -111,7 +114,7 @@ Deno.serve(async (req) => {
     const leverageInt = typeof leverage === 'string' ? parseInt(leverage.replace('1:', '')) : 100;
     // MT5 group mapping per challenge type
     // Phase1 (two-step): HAR\MAN15\contest.1 | Instant: HAR\MAN15\LiveG.1 | Instant Light: HAR\MAN15\contest.3
-    const groupName = challenge_type === 'instant'
+    const groupName = challenge_type === 'instant' || challenge_type === 'instant_account'
       ? 'HAR\\MAN15\\LiveG.1'
       : challenge_type === 'instant_light'
         ? 'HAR\\MAN15\\contest.3'
@@ -125,9 +128,11 @@ Deno.serve(async (req) => {
     const brandName = 'XFunded Trader';
     const accountName = challenge_type === 'instant'
       ? `${sizeK} Instant ${brandName}`
-      : challenge_type === 'instant_light'
-        ? `${sizeK} Instant Light ${brandName}`
-        : `${sizeK} Phase 1 ${brandName} 2-Step`; // two-step default
+      : challenge_type === 'instant_account'
+        ? `${sizeK} Instant Account ${brandName}`
+        : challenge_type === 'instant_light'
+          ? `${sizeK} Instant Light ${brandName}`
+          : `${sizeK} Phase 1 ${brandName} 2-Step`; // two-step default
 
     console.log(`[provisionMT5Account] Creating account: name="${accountName}", email=${user_email}, group=${groupName}, leverage=${leverageInt}`);
 

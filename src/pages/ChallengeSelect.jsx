@@ -33,6 +33,7 @@ const CHALLENGE_TYPES = [
   { key: 'two-step', label: 'Two-Step Challenge' },
   { key: 'instant', label: 'Instant Funding' },
   { key: 'instant_light', label: 'Instant Light' },
+  { key: 'instant_account', label: 'Instant Account' },
 ];
 
 function formatSize(n) {
@@ -198,13 +199,16 @@ export default function ChallengeSelect() {
 
                       <div className="space-y-2 mb-5">
                         {[
-                          { label: 'Phase 1 Target', value: `${plan.phase1_target}%` },
-                          (challengeType === 'two-step') && { label: 'Phase 2 Target', value: `${plan.phase2_target}%` },
-                          { label: 'Max Drawdown', value: `${plan.max_dd}%` },
-                          { label: 'Daily Drawdown', value: `${plan.daily_dd}%` },
-                          { label: 'Leverage', value: leverage },
-                          { label: 'Profit Split', value: `${plan.profit_split}%` },
-                        ].filter(Boolean).map(({ label, value }) => (
+                           challengeType !== 'instant_account' && { label: 'Phase 1 Target', value: `${plan.phase1_target}%` },
+                           (challengeType === 'two-step') && { label: 'Phase 2 Target', value: `${plan.phase2_target}%` },
+                           { label: 'Max Drawdown', value: `${plan.max_dd}%` },
+                           { label: 'Daily Drawdown', value: `${plan.daily_dd}%` },
+                           challengeType === 'instant_account' && { label: 'Buffer Zone', value: `${plan.buffer_zone_target ?? 5}%` },
+                           challengeType === 'instant_account' && { label: 'Consistency', value: `${plan.consistency_rule_pct ?? 35}%` },
+                           challengeType === 'instant_account' && { label: 'Min Profit Days', value: `${plan.min_profitable_days ?? 7}` },
+                           { label: 'Leverage', value: leverage },
+                           { label: 'Profit Split', value: `${plan.profit_split}%` },
+                         ].filter(Boolean).map(({ label, value }) => (
                           <div key={label} className="flex justify-between text-xs">
                             <span className="text-muted-foreground font-mono">{label}</span>
                             <span className="text-foreground font-semibold">{value}</span>

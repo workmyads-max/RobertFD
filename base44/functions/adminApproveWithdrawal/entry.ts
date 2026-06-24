@@ -219,8 +219,15 @@ Deno.serve(async (req) => {
     let renewal = null;
     if (w.account_id && w.account_id !== 'affiliate') {
       try {
+        // Fetch the account to determine challenge_type — instant_account uses
+        // a different renewal action than funded accounts.
+        const accs = await sr.entities.ChallengeAccount.filter({ account_id: w.account_id });
+        const acc = accs[0];
+        const renewAction = acc?.challenge_type === 'instant_account'
+          ? 'renew_instant_account'
+          : 'renew_funded_account';
         const renewRes = await base44.functions.invoke('phaseProgressionEngine', {
-          action: 'renew_funded_account',
+          action: renewAction,
           account_id: w.account_id,
         });
         renewal = renewRes?.data || null;

@@ -32,8 +32,8 @@ async function sendEmail(sr, to, type, data) {
  */
 function getDDLimits(account) {
   const snap = account.rule_snapshot || {};
-  const dailyLimit = snap.daily_dd_limit ?? 5;
-  const overallLimit = snap.max_dd_limit ?? (account.challenge_type === 'instant_light' ? 6 : 10);
+  const dailyLimit = snap.daily_dd_limit ?? (account.challenge_type === 'instant_account' ? 4 : 5);
+  const overallLimit = snap.max_dd_limit ?? (account.challenge_type === 'instant_light' ? 6 : account.challenge_type === 'instant_account' ? 8 : 10);
   const isTrailing = snap.trailing_dd ?? (account.challenge_type === 'instant_light');
   return { dailyLimit, overallLimit, isTrailing };
 }

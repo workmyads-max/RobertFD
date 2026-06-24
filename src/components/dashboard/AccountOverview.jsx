@@ -16,6 +16,7 @@ import AccountPerformanceMetrics from './AccountPerformanceMetrics';
 import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
+import InstantAccountWidgets from './InstantAccountWidgets';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1144,6 +1145,11 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
+
+      {/* Instant Account Widgets — only for instant_account type */}
+      {account?.challenge_type === 'instant_account' && (
+        <InstantAccountWidgets account={account} closedTrades={closedTrades} />
+      )}
 
       {/* Phase passed / under review banners */}
       {account?.status === 'passed' && account?.phase === 'phase1' && account?.phase_review_status === 'pending_review' && (

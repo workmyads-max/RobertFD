@@ -5,18 +5,34 @@ import { ChevronDown, ChevronUp, CheckCircle2, XCircle, Shield } from 'lucide-re
 export default function ChallengeCard({ plan, onSelect, badge }) {
   const [showRules, setShowRules] = useState(false);
 
-  const includedFeatures = [
-    `${plan.phase1_target}% Phase 1 Target`,
-    `${plan.phase2_target}% Phase 2 Target`,
-    `${plan.daily_dd}% Daily Drawdown`,
-    `${plan.max_dd}% Maximum Drawdown`,
-  ];
+  const isInstantAccount = plan.type === 'instant_account';
 
-  const excludedFeatures = [
-    'Instant Funding',
-    'Daily Payouts',
-    'No Evaluation',
-  ];
+  const typeLabel = plan.type === 'two-step' ? 'Two-Step'
+    : plan.type === 'instant' ? 'Instant'
+    : plan.type === 'instant_light' ? 'Instant Light'
+    : plan.type === 'instant_account' ? 'Instant Account'
+    : 'Challenge';
+
+  const includedFeatures = isInstantAccount
+    ? [
+        `${plan.buffer_zone_target ?? 5}% Buffer Zone Target`,
+        `${plan.daily_dd}% Daily Drawdown`,
+        `${plan.max_dd}% Maximum Drawdown`,
+        `${plan.consistency_rule_pct ?? 35}% Consistency Rule`,
+        `${plan.min_profitable_days ?? 7} Profitable Days Required`,
+      ]
+    : [
+        `${plan.phase1_target}% Phase 1 Target`,
+        ...(plan.type === 'two-step' ? [`${plan.phase2_target}% Phase 2 Target`] : []),
+        `${plan.daily_dd}% Daily Drawdown`,
+        `${plan.max_dd}% Maximum Drawdown`,
+      ];
+
+  const excludedFeatures = isInstantAccount
+    ? ['No Evaluation Phases']
+    : plan.type === 'two-step'
+      ? ['Instant Funding', 'Daily Payouts', 'No Evaluation']
+      : ['Phase 1 Evaluation', 'Phase 2 Evaluation'];
 
   return (
     <motion.div
@@ -41,12 +57,12 @@ export default function ChallengeCard({ plan, onSelect, badge }) {
         {/* Plan Name */}
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-[#a1a1aa]" />
-          <span className="text-sm font-medium text-[#a1a1aa]">Two-Step</span>
+          <span className="text-sm font-medium text-[#a1a1aa]">{typeLabel}</span>
         </div>
 
         {/* Title */}
         <h3 className="text-xl font-bold text-white mb-3">
-          Two-Step <span className="text-[#FF4500]">${plan.size / 1000}K</span>
+          {typeLabel} <span className="text-[#FF4500]">${plan.size / 1000}K</span>
         </h3>
 
         {/* CTA Button */}
