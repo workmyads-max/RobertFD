@@ -91,7 +91,7 @@ function useTimelineSteps(account, closedTrades = []) {
 
     const profitTargetPct = ruleSnapshot.phase1_target ?? 10;
     const profitTargetMet = (account.profit_target_progress || 0) >= profitTargetPct;
-    const profitSplit = ruleSnapshot.profit_split ?? (challengeType === 'instant_light' ? 88 : 80);
+    const profitSplit = ruleSnapshot.profit_split ?? (challengeType === 'instant_light' ? 88 : challengeType === 'one_step' ? 90 : 80);
 
     const tradingDaySet = new Set(
       closedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
