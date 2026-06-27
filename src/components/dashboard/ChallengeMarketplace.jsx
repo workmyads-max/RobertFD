@@ -90,7 +90,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     const ruleSnapshot = {
       daily_dd_limit: plan.daily_dd,
       max_dd_limit: plan.max_dd,
-      trailing_dd: plan.type === 'instant_light',
+      trailing_dd: plan.type === 'instant_light' || plan.type === 'one_step',
       phase1_target: plan.phase1_target,
       phase2_target: plan.phase2_target,
       min_trading_days: plan.min_trading_days ?? 4,
@@ -104,6 +104,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       buffer_zone_target: plan.buffer_zone_target,
       consistency_rule_pct: plan.consistency_rule_pct,
       min_profitable_days: plan.min_profitable_days,
+      best_day_rule_pct: plan.best_day_rule_pct,
     };
     const order = {
       challenge_type: challengeType,
@@ -136,12 +137,21 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   // Build rules dynamically from the selected/first displayed plan's DB values
   const displayPlan = plans[0] || null;
   const CHALLENGE_RULES = displayPlan ? [
-    { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: `Max ${displayPlan.daily_dd}% loss per trading day. Resets at 3:00 AM GMT+4 daily.` },
-    { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: `Total equity must never fall more than ${displayPlan.max_dd}% below starting balance. This does NOT reset.` },
+    { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: `Max ${displayPlan.daily_dd}% loss per trading day. Resets at 3:00 AM GMT+4 daily. Evaluated on EQUITY (balance + floating P/L).` },
+    { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: displayPlan.type === 'one_step'
+      ? `${displayPlan.max_dd}% EOD TRAILING drawdown — the limit trails your equity high-water mark and locks at end of day. A touch is a PERMANENT breach.`
+      : `Total equity must never fall more than ${displayPlan.max_dd}% below starting balance. This does NOT reset.` },
     { icon: Target, color: '#10b981', title: 'Reward Target', body: displayPlan.type === 'two-step'
       ? `Phase 1: ${displayPlan.phase1_target}% target. Phase 2: ${displayPlan.phase2_target}% target.`
-      : `Target: ${displayPlan.phase1_target}%. Maintain profitable operation.` },
-    { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
+      : displayPlan.type === 'one_step'
+        ? `Single-phase: reach ${displayPlan.phase1_target}% reward target to pass and receive a Simulation Funded Account.`
+        : `Target: ${displayPlan.phase1_target}%. Maintain profitable operation.` },
+    ...(displayPlan.type === 'one_step' ? [
+      { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'No minimum trading days required. Pass at your own pace — there is no time limit.' },
+      { icon: TrendingUp, color: '#3b82f6', title: 'Best Day Rule (50%)', body: `No single trading day's reward may exceed 50% of your total reward. This is a payout-eligibility condition reviewed at payout — NOT an auto-breach.` },
+    ] : [
+      { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
+    ]),
     { icon: Ban, color: '#ef4444', title: 'News Trading', body: displayPlan.news_trading
       ? 'News trading is ALLOWED on this account type.'
       : 'Positions may not be held during high-impact news events (NFP, FOMC, CPI).' },
@@ -180,6 +190,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
           {[
             { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
+            { id: 'one_step', label: 'One-Step', desc: '1 phase · 90%', icon: Target },
             { id: 'instant_account', label: 'Inst. Account', desc: 'Buffer Zone', icon: Target },
           ].map((t, idx) => {
             const isSelected = challengeType === t.id;

@@ -17,7 +17,8 @@
         "two-step",
         "instant",
         "instant_light",
-        "instant_account"
+        "instant_account",
+        "one_step"
       ],
       "default": "two-step"
     },
@@ -328,6 +329,9 @@
           "type": "number"
         },
         "min_profitable_days": {
+          "type": "number"
+        },
+        "best_day_rule_pct": {
           "type": "number"
         }
       }

@@ -22,7 +22,8 @@
         "two-step",
         "instant",
         "instant_light",
-        "instant_account"
+        "instant_account",
+        "one_step"
       ],
       "description": "Challenge type"
     },
@@ -57,7 +58,7 @@
     "phase2_target": {
       "type": "number",
       "default": 5,
-      "description": "0 for instant/instant_light/instant_account"
+      "description": "0 for instant/instant_light/instant_account/one_step"
     },
     "daily_dd": {
       "type": "number",
@@ -110,6 +111,11 @@
       "type": "number",
       "default": 7,
       "description": "Minimum profitable days for payout eligibility (instant_account only). A profitable day = net daily closed PnL > 0"
+    },
+    "best_day_rule_pct": {
+      "type": "number",
+      "default": 50,
+      "description": "Best Day Rule percentage (one_step only). No single day's reward may exceed this % of total reward. Pass/payout-eligibility condition, not auto-breach."
     },
     "is_active": {
       "type": "boolean",

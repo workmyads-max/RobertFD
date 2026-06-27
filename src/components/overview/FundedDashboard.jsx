@@ -47,9 +47,9 @@ function AccountInfoStrip({ account }) {
   if (!account) return null;
   const items = [
     { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type',     value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : account.challenge_type === 'instant_light' ? 'Inst.Light' : 'Two-Step' },
+    { label: 'Type',     value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : account.challenge_type === 'instant_light' ? 'Inst.Light' : account.challenge_type === 'one_step' ? 'One-Step' : 'Two-Step' },
     { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase',    value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'two-step' ? (account.phase || 'phase1').replace('phase', 'Phase ') : 'N/A' },
+    { label: 'Phase',    value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'two-step' ? (account.phase || 'phase1').replace('phase', 'Phase ') : account.challenge_type === 'one_step' ? (account.phase === 'phase1' ? 'Evaluation' : 'Funded') : 'N/A' },
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Platform', value: account.platform || 'MT5' },
   ];

@@ -33,6 +33,7 @@ const ACCOUNT_TYPES = {
 
 const CHALLENGE_TYPES = [
   { key: 'two-step', label: 'Two-Step Challenge' },
+  { key: 'one_step', label: 'One-Step Challenge' },
   { key: 'instant_account', label: 'Instant Account' },
 ];
 
@@ -45,7 +46,7 @@ function formatSize(n) {
 export default function ChallengeSelect() {
   const urlParams = new URLSearchParams(window.location.search);
   const requestedType = urlParams.get('type');
-  const defaultType = ['two-step', 'instant_account'].includes(requestedType) ? requestedType : 'two-step';
+  const defaultType = ['two-step', 'instant_account', 'one_step'].includes(requestedType) ? requestedType : 'two-step';
   const [challengeType, setChallengeType] = useState(defaultType);
   const [accountType, setAccountType] = useState('standard');
   const [selected, setSelected] = useState(null);
@@ -204,15 +205,16 @@ export default function ChallengeSelect() {
 
                       <div className="space-y-2 mb-5">
                         {[
-                           challengeType !== 'instant_account' && { label: 'Phase 1 Target', value: `${plan.phase1_target}%` },
+                           challengeType !== 'instant_account' && { label: 'Reward Target', value: `${plan.phase1_target}%` },
                            (challengeType === 'two-step') && { label: 'Phase 2 Target', value: `${plan.phase2_target}%` },
-                           { label: 'Max Drawdown', value: `${plan.max_dd}%` },
+                           { label: 'Max Drawdown', value: challengeType === 'one_step' ? `${plan.max_dd}% Trailing` : `${plan.max_dd}%` },
                            { label: 'Daily Drawdown', value: `${plan.daily_dd}%` },
                            challengeType === 'instant_account' && { label: 'Buffer Zone', value: `${plan.buffer_zone_target ?? 5}%` },
                            challengeType === 'instant_account' && { label: 'Consistency', value: `${plan.consistency_rule_pct ?? 35}%` },
                            challengeType === 'instant_account' && { label: 'Min Profit Days', value: `${plan.min_profitable_days ?? 7}` },
+                           challengeType === 'one_step' && { label: 'Best Day Rule', value: `${plan.best_day_rule_pct ?? 50}%` },
                            { label: 'Leverage', value: leverage },
-                           { label: 'Profit Split', value: `${plan.profit_split}%` },
+                           { label: 'Reward Split', value: `${plan.profit_split}%` },
                          ].filter(Boolean).map(({ label, value }) => (
                           <div key={label} className="flex justify-between text-xs">
                             <span className="text-muted-foreground font-mono">{label}</span>

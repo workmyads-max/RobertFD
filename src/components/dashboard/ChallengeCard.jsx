@@ -6,11 +6,13 @@ export default function ChallengeCard({ plan, onSelect, badge }) {
   const [showRules, setShowRules] = useState(false);
 
   const isInstantAccount = plan.type === 'instant_account';
+  const isOneStep = plan.type === 'one_step';
 
   const typeLabel = plan.type === 'two-step' ? 'Two-Step'
     : plan.type === 'instant' ? 'Instant'
     : plan.type === 'instant_light' ? 'Instant Light'
     : plan.type === 'instant_account' ? 'Instant Account'
+    : plan.type === 'one_step' ? 'One-Step'
     : 'Challenge';
 
   const includedFeatures = isInstantAccount
@@ -21,18 +23,28 @@ export default function ChallengeCard({ plan, onSelect, badge }) {
         `${plan.consistency_rule_pct ?? 35}% Consistency Rule`,
         `${plan.min_profitable_days ?? 7} Profitable Days Required`,
       ]
-    : [
-        `${plan.phase1_target}% Phase 1 Target`,
-        ...(plan.type === 'two-step' ? [`${plan.phase2_target}% Phase 2 Target`] : []),
-        `${plan.daily_dd}% Daily Drawdown`,
-        `${plan.max_dd}% Maximum Drawdown`,
-      ];
+    : isOneStep
+      ? [
+          `${plan.phase1_target}% Reward Target`,
+          `${plan.daily_dd}% Daily Drawdown`,
+          `${plan.max_dd}% EOD Trailing Drawdown`,
+          `${plan.profit_split}% Reward Split`,
+          `Best Day Rule ${plan.best_day_rule_pct ?? 50}%`,
+        ]
+      : [
+          `${plan.phase1_target}% Phase 1 Target`,
+          ...(plan.type === 'two-step' ? [`${plan.phase2_target}% Phase 2 Target`] : []),
+          `${plan.daily_dd}% Daily Drawdown`,
+          `${plan.max_dd}% Maximum Drawdown`,
+        ];
 
   const excludedFeatures = isInstantAccount
     ? ['No Evaluation Phases']
-    : plan.type === 'two-step'
-      ? ['Instant Funding', 'Daily Payouts', 'No Evaluation']
-      : ['Phase 1 Evaluation', 'Phase 2 Evaluation'];
+    : isOneStep
+      ? ['No Phase 2', 'No Time Limit', 'No Min Trading Days']
+      : plan.type === 'two-step'
+        ? ['Instant Funding', 'Daily Payouts', 'No Evaluation']
+        : ['Phase 1 Evaluation', 'Phase 2 Evaluation'];
 
   return (
     <motion.div

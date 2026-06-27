@@ -86,6 +86,32 @@ const CHALLENGES = [
   cta: 'Get Instant Light'
 },
 {
+  id: 'one_step',
+  icon: Target,
+  title: 'One-Step',
+  subtitle: 'Single Evaluation · 90% Split',
+  badge: 'BEST VALUE',
+  color: '#3b82f6',
+  description: 'Pass a single-phase evaluation with an 8% reward target. No Phase 2, no time limit, no minimum trading days. Keep 90% of your rewards on a Simulation Funded Account.',
+  stats: [
+  { label: 'Reward Target', value: '8%' },
+  { label: 'Daily DD', value: '4%' },
+  { label: 'Max DD', value: '8% Trailing' },
+  { label: 'Best Day Rule', value: '50%' },
+  { label: 'Min Days', value: 'None' },
+  { label: 'Reward Split', value: '90%' }],
+
+  features: [
+  { ok: true, label: 'Single-Phase Evaluation' },
+  { ok: true, label: 'No Time Limit' },
+  { ok: true, label: 'No Min Trading Days' },
+  { ok: true, label: '90% Reward Split' },
+  { ok: true, label: 'EOD Trailing Drawdown' },
+  { ok: true, label: 'Simulation Funded Account' }],
+
+  cta: 'Start One-Step'
+},
+{
   id: 'instant_account',
   icon: Target,
   title: 'Instant Account',
@@ -262,8 +288,8 @@ export default function ChallengeTypes() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
-          {CHALLENGES.filter((c) => c.id === 'two-step' || c.id === 'instant_account').map((c, i) =>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {CHALLENGES.filter((c) => c.id === 'two-step' || c.id === 'one_step' || c.id === 'instant_account').map((c, i) =>
           <ChallengeCard
             key={c.id}
             c={c}

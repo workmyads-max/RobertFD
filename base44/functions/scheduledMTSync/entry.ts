@@ -39,7 +39,7 @@ function getDDLimits(acc) {
   const snap = acc.rule_snapshot || {};
   const dailyLimit = snap.daily_dd_limit ?? (acc.challenge_type === 'instant_account' ? 4 : 5);
   const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : acc.challenge_type === 'instant_account' ? 8 : 10);
-  const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  const isTrailing = snap.trailing_dd ?? (acc.challenge_type === 'instant_light' || acc.challenge_type === 'one_step');
   return { dailyLimit, overallLimit, isTrailing };
 }
 
@@ -50,7 +50,7 @@ function getDDLimits(acc) {
  */
 function calcOverallDD(acc, equity, newHWM) {
   const accountSize = acc.account_size || 100000;
-  const isTrailing = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  const isTrailing = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light' || acc.challenge_type === 'one_step');
   if (isTrailing) {
     const hwm = newHWM || accountSize;
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
@@ -647,9 +647,54 @@ Deno.serve(async (req) => {
             }
           } catch (_) { /* keep fallback */ }
 
+          // ── ONE-STEP: single phase → go straight to funded review (no Phase 2) ──
+          if (
+            !breachDetected &&
+            acc.challenge_type === 'one_step' &&
+            acc.status === 'active' &&
+            acc.phase === 'phase1' &&
+            (!acc.funded_review_status || acc.funded_review_status === 'none')
+          ) {
+            const oneStepTarget = acc.rule_snapshot?.phase1_target ?? 8;
+            const currentProgress = updates.profit_target_progress;
+            if (currentProgress >= oneStepTarget) {
+              console.log(`[ONE-STEP-PASS] ${acc.account_id} — progress ${currentProgress.toFixed(2)}% >= target ${oneStepTarget}%`);
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                status: 'passed',
+                funded_review_status: 'pending_review',
+                phase_passed_at: new Date().toISOString(),
+              });
+              const existingReviews1s = await base44.asServiceRole.entities.FundedAccountReview.filter({ account_id: acc.account_id });
+              if (existingReviews1s.length === 0) {
+                await base44.asServiceRole.entities.FundedAccountReview.create({
+                  account_id: acc.account_id,
+                  user_email: acc.user_email,
+                  trader_name: acc.user_email,
+                  phase_passed: 'phase1',
+                  status: 'pending_review',
+                  account_size: acc.account_size,
+                  challenge_type: acc.challenge_type,
+                  total_trades: updates.total_trades,
+                  win_rate: updates.win_rate,
+                  max_dd_used: persistentOverallDD,
+                  trading_days: computedTradingDays,
+                  gross_pnl: updates.pnl,
+                });
+              }
+              base44.asServiceRole.entities.Notification.create({
+                user_email: acc.user_email,
+                title: '🎉 One-Step Passed — Under Review',
+                message: 'Congratulations! You passed the One-Step evaluation. Your Simulation Funded Account is under review. Expected processing: 3–5 business days.',
+                type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'challenge',
+              }).catch(() => {});
+              console.log(`[ONE-STEP-PASS] ${acc.account_id} → status=passed, funded_review_status=pending_review`);
+            }
+          }
+
           if (
             !breachDetected &&
             acc.challenge_type !== 'instant_account' &&
+            acc.challenge_type !== 'one_step' &&
             acc.status === 'active' &&
             acc.phase === 'phase1' &&
             (!acc.phase_review_status || acc.phase_review_status === 'none')

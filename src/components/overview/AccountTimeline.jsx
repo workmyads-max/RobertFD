@@ -175,6 +175,58 @@ function useTimelineSteps(account, closedTrades = []) {
       ];
     }
 
+    // ─── ONE-STEP ────────────────────────────────────────────────────────────────
+    if (challengeType === 'one_step') {
+      const target = ruleSnapshot.phase1_target ?? 8;
+      const dailyDd = ruleSnapshot.daily_dd_limit ?? 4;
+      const maxDd = ruleSnapshot.max_dd_limit ?? 8;
+      const bestDayPct = ruleSnapshot.best_day_rule_pct ?? 50;
+
+      const evalReviewStatus = account.funded_review_status || 'none';
+      const isEvalPassed = (status === 'passed' && evalReviewStatus !== 'none') || status === 'funded';
+      const isEvalUnderReview = status === 'passed' && evalReviewStatus === 'pending_review';
+      const isEvalActive = status === 'active' && phase === 'phase1';
+
+      return [
+        {
+          icon: CheckCircle2,
+          label: 'Challenge Purchased',
+          desc: `$${fmt(account.account_size)} One-Step account issued`,
+          status: 'done',
+        },
+        {
+          icon: Target,
+          label: 'Evaluation',
+          desc: isEvalUnderReview
+            ? `✓ ${target}% target met — XFT Team review in progress`
+            : isEvalPassed
+              ? `✓ ${target}% reward · ${dailyDd}% daily DD · ${maxDd}% trailing DD`
+              : `${target}% reward target · ${dailyDd}% daily DD · ${maxDd}% trailing DD · Best Day ${bestDayPct}%`,
+          status: isEvalUnderReview ? 'review' : isEvalPassed ? 'done' : isEvalActive ? 'active' : 'pending',
+        },
+        {
+          icon: DollarSign,
+          label: 'Simulation Funded Account',
+          desc: isFunded
+            ? `Live capital · ${profitSplit}% reward split`
+            : isEvalUnderReview
+              ? 'Pending simulation funded account approval by XFT Trader Team'
+              : 'Pending evaluation completion',
+          status: isFunded ? 'done' : (isEvalUnderReview ? 'review' : 'pending'),
+        },
+        {
+          icon: Clock,
+          label: 'Withdrawal Eligible',
+          desc: withdrawalEligible
+            ? '✓ Eligible for withdrawals'
+            : isFunded
+              ? `Complete 1 trading day (${tradingDaysCount}/1 done)`
+              : 'First payout available after simulation funded status',
+          status: withdrawalEligible ? 'active' : 'pending',
+        },
+      ];
+    }
+
     // ─── INSTANT ACCOUNT ────────────────────────────────────────────────────────
     if (challengeType === 'instant_account') {
       const bufferTargetPct = ruleSnapshot.buffer_zone_target ?? 5;
@@ -237,7 +289,7 @@ function useTimelineSteps(account, closedTrades = []) {
       ];
     }
 
-    // ─── TWO-STEP ───────────────────────────────────────────────────────────────
+    // ─── TWO-STEP / ONE-STEP (handled above) ────────────────────────────────────
     const phase1Target = ruleSnapshot.phase1_target ?? 10;
     const phase2Target = ruleSnapshot.phase2_target ?? 5;
     const minDays = ruleSnapshot.min_trading_days ?? 4;
@@ -324,6 +376,7 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
 
   const isFunded = account?.status === 'funded';
   const isInstantAccount = account?.challenge_type === 'instant_account';
+  const isOneStep = account?.challenge_type === 'one_step';
   // Eligibility: funded + KYC approved + at least 1 trading day (from entity or closed trades)
   const tradingDaysFromTrades = new Set(
     closedTrades.filter(t => t.close_time).map(t => new Date(t.close_time).toISOString().split('T')[0])
@@ -331,7 +384,9 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
   const tradingDays = Math.max(tradingDaysFromTrades, account?.trading_days || 0);
   const isEligible = isInstantAccount
     ? (account?.instant_payout_eligible && kycApproved)
-    : (isFunded && kycApproved && tradingDays >= 1);
+    : isOneStep
+      ? (isFunded && kycApproved && tradingDays >= 1)
+      : (isFunded && kycApproved && tradingDays >= 1);
 
   // Build eligibility requirements list
   const requirements = [];
