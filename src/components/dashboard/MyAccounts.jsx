@@ -30,7 +30,7 @@ function CredentialsModal({ account, onClose }) {
     { label: 'Account ID', value: account.account_id, copyable: true },
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Account size', value: `$${(account.account_size || 0).toLocaleString()}` },
-    { label: 'Type', value: account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant' },
+    { label: 'Type', value: account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'one_step' ? 'One-Step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant' },
     { label: 'Status', value: account.status?.toUpperCase() },
   ];
 
@@ -115,7 +115,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="capitalize">{account.status === 'funded' ? 'Simulation Funded' : account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
+                <span className="capitalize">{account.status === 'funded' ? 'Simulation Funded' : account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'one_step' ? 'One-Step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
                 <span>•</span>
                 <span className="capitalize">{account.account_type}</span>
                 <span>•</span>
@@ -348,7 +348,7 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {o.challenge_type === 'two-step' ? 'Two-step' : o.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'} · ${(o.account_size||0).toLocaleString()} · {o.account_type}
+                  {o.challenge_type === 'two-step' ? 'Two-step' : o.challenge_type === 'one_step' ? 'One-Step' : o.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'} · ${(o.account_size||0).toLocaleString()} · {o.account_type}
                 </div>
               </div>
               <div className="text-right">

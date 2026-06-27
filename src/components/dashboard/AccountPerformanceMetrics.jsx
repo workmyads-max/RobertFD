@@ -29,7 +29,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
 
   const profitTargetPct = snap.phase1_target ?? 10;
   const profitTargetMet = (account?.profit_target_progress || 0) >= profitTargetPct;
-  const profitSplit = snap.profit_split ?? (challengeType === 'instant_light' ? 88 : 80);
+  const profitSplit = snap.profit_split ?? (challengeType === 'instant_light' ? 88 : challengeType === 'one_step' ? 90 : 80);
 
   const sortedTrades = [...closedTrades].filter(t => t.open_time).sort(
     (a, b) => new Date(a.open_time).getTime() - new Date(b.open_time).getTime()
@@ -80,6 +80,41 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
         desc: payoutEligible ? `✓ Eligible for withdrawals · ${profitSplit}% reward split`
           : 'First payout after buffer zone + consistency + profitable days',
         status: payoutEligible ? 'done' : 'pending', icon: DollarSign,
+      },
+    ];
+  }
+
+  if (challengeType === 'one_step') {
+    const target = snap.phase1_target ?? 8;
+    const dailyDd = snap.daily_dd_limit ?? 4;
+    const maxDd = snap.max_dd_limit ?? 8;
+    const bestDayPct = snap.best_day_rule_pct ?? 50;
+    const evalReviewStatus = account?.funded_review_status || 'none';
+    const isEvalPassed = (status === 'passed' && evalReviewStatus !== 'none') || isFunded;
+    const isEvalUnderReview = status === 'passed' && evalReviewStatus === 'pending_review';
+    const isEvalActive = status === 'active' && phase === 'phase1';
+
+    return [
+      { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
+      {
+        key: 'eval', label: 'Evaluation',
+        desc: isEvalUnderReview ? `✓ ${target}% target met — review in progress`
+          : isEvalPassed ? `✓ ${target}% reward · ${dailyDd}% daily DD · ${maxDd}% trailing DD`
+          : `${target}% reward target · ${dailyDd}% daily DD · ${maxDd}% trailing DD · Best Day ${bestDayPct}%`,
+        status: isEvalUnderReview ? 'waiting' : isEvalPassed ? 'done' : (isEvalActive ? 'active' : 'pending'), icon: Target,
+      },
+      {
+        key: 'funded', label: 'Simulation Funded Account',
+        desc: isFunded ? `Live capital · ${profitSplit}% reward split`
+          : isEvalUnderReview ? 'Pending simulation funded account approval'
+          : 'Pending evaluation completion',
+        status: isFunded ? 'done' : (isEvalUnderReview ? 'waiting' : 'pending'), icon: DollarSign,
+      },
+      {
+        key: 'payout', label: 'Withdrawal Eligible',
+        desc: withdrawalEligible ? '✓ Eligible for withdrawals'
+          : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
+        status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
       },
     ];
   }

@@ -87,7 +87,9 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
   const statusColor = account?.status === 'active' ? '#10b981' : account?.status === 'funded' ? '#FF5C00' : '#60a5fa';
 
   const challengeLabel = account?.challenge_type === 'two-step' ? '2-Step'
+    : account?.challenge_type === 'one_step' ? 'One-Step'
     : account?.challenge_type === 'instant' ? 'Instant'
+    : account?.challenge_type === 'instant_account' ? 'Instant Account'
     : 'Instant Light';
 
   return (

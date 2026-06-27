@@ -87,6 +87,7 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
   const isFundedLive = account.status === 'funded';
   const isTwoStep = account.challenge_type === 'two-step';
   const challengeType = isFundedLive ? 'SIM FUNDED'
+    : account.challenge_type === 'one_step' ? '1-STEP'
     : account.challenge_type === 'instant' ? 'INSTANT'
     : account.challenge_type === 'instant_account' ? 'INSTANT ACCT'
     : account.challenge_type === 'instant_light' ? 'INST. LIGHT' : '2-STEP';
