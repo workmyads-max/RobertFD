@@ -59,6 +59,7 @@ import AdminFirstTimeDiscount from '../components/admin/AdminFirstTimeDiscount';
 import MarketsHub from '../components/dashboard/MarketsHub';
 import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
+import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
@@ -389,6 +390,8 @@ export default function Dashboard() {
                 </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
+            {/* Risk Disclaimer — collapsible, site-wide on all dashboard & admin pages */}
+            {!isTerminal && <RiskDisclaimer variant="compact" />}
           </div>
         </main>
       </div>

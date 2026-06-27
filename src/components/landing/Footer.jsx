@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import XFLogo from '@/components/shared/XFLogo';
+import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 import { Mail, MapPin, Phone, ExternalLink, Twitter, MessageCircle, Send, Instagram, Linkedin } from 'lucide-react';
 
 const PRODUCT_LINKS = [
@@ -192,24 +193,8 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Risk Disclosure Block */}
-        <div className="rounded-2xl p-6 mb-0"
-        style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="flex items-start gap-4">
-            <div className="w-1.5 flex-shrink-0 self-stretch rounded-full bg-primary/40 mt-1" />
-            <div>
-              <div className="text-xs font-mono uppercase tracking-widest text-primary/70 mb-3">Risk Disclosure</div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Trading leveraged financial instruments including foreign exchange, CFDs, and cryptocurrencies carries a 
-                significant level of risk and may not be suitable for all investors. You may lose all invested capital. 
-                We are a proprietary trading firm and do not manage client funds or provide investment advice. 
-                Our challenges and funded accounts are simulated trading environments designed to evaluate trader performance. 
-                Past performance of any trader or strategy does not guarantee or predict future results. Please ensure you 
-                fully understand the risks involved and seek independent financial advice if necessary.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Risk Disclaimer — full text (centralized in RiskDisclaimer component) */}
+        <RiskDisclaimer variant="full" />
       </div>
 
       {/* Bottom copyright bar */}

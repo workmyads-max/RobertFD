@@ -5,6 +5,7 @@ import CheckoutStep2 from '../components/checkout/CheckoutStep2';
 import CheckoutStep3 from '../components/checkout/CheckoutStep3';
 import CheckoutStep4 from '../components/checkout/CheckoutStep4';
 import TermsModal from '../components/checkout/TermsModal';
+import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -236,6 +237,7 @@ export default function Checkout() {
           </motion.div>
         </AnimatePresence>
       </div>
+      <RiskDisclaimer variant="compact" />
     </div>
   );
 }

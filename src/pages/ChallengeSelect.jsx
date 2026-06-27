@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, TrendingUp, Clock, BarChart2, Zap, Shield, Loader2 } from 'lucide-react';
 import Navbar from '../components/landing/Navbar';
+import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import PlatformSelectCard from '../components/checkout/PlatformSelectCard';
@@ -263,6 +264,7 @@ export default function ChallengeSelect() {
           })}
         </motion.div>
       </div>
+      <RiskDisclaimer variant="compact" />
     </div>
   );
 }
