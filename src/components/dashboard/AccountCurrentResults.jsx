@@ -83,7 +83,7 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
   const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const phaseLabel = account?.phase === 'funded' ? 'Funded' : account?.phase === 'phase2' ? 'Phase 2' : 'Phase 1';
-  const statusLabel = account?.status === 'active' ? 'Ongoing' : account?.status === 'passed' ? 'Passed' : account?.status === 'funded' ? 'Funded' : account?.status || 'Active';
+  const statusLabel = account?.status === 'active' ? 'Ongoing' : account?.status === 'passed' ? 'Passed' : account?.status === 'funded' ? 'Sim Funded' : account?.status || 'Active';
   const statusColor = account?.status === 'active' ? '#10b981' : account?.status === 'funded' ? '#FF5C00' : '#60a5fa';
 
   const challengeLabel = account?.challenge_type === 'two-step' ? '2-Step'

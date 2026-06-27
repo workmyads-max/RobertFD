@@ -124,7 +124,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const todayPnl = account.daily_pnl ?? 0;
   const accountSize = account.account_size || 0;
   const isFundedLive = account.status === 'funded';
-  const challengeTypeLabel = isFundedLive ? 'FUNDED'
+  const challengeTypeLabel = isFundedLive ? 'SIM FUNDED'
     : account.challenge_type === 'two-step' ? '2-STEP'
     : account.challenge_type === 'instant' ? 'INSTANT'
     : account.challenge_type === 'instant_account' ? 'INSTANT ACCOUNT'
@@ -138,7 +138,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const statusLabel = isUnderPhase1Review ? 'Phase 1 Passed — Under Review'
     : isUnderFundedReview ? 'Phase 2 Passed — Funded Review'
     : account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
-    : account.status === 'funded' ? 'Funded' : account.status;
+    : account.status === 'funded' ? 'Simulation Funded' : account.status;
   const isActive = account.status === 'active';
   const isFunded = account.status === 'funded';
   const statusColor = (isUnderPhase1Review || isUnderFundedReview) ? '#60a5fa' : isActive ? '#10b981' : isFunded ? '#FF5C00' : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
@@ -192,7 +192,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
         {!isFundedLive && profitTargetPct && (
           <div className="mb-6">
             <div className="flex items-center justify-between text-[11px] mb-2">
-              <span className="text-white/35 font-medium tracking-wide">PROFIT TARGET</span>
+              <span className="text-white/35 font-medium tracking-wide">REWARD TARGET</span>
               <span className="font-semibold" style={{ color: '#FF5C00' }}>{(account.profit_target_progress || 0).toFixed(1)}% / {profitTargetPct}%</span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
@@ -230,9 +230,9 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="grid grid-cols-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
         {[
           { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
-          { label: 'TYPE', value: isFundedLive ? 'Funded Live' : account.challenge_type === 'two-step' ? 'Two-Step' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light' },
+          { label: 'TYPE', value: isFundedLive ? 'Sim Funded' : account.challenge_type === 'two-step' ? 'Two-Step' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light' },
           { label: 'MODEL', value: modelLabel, highlight: true },
-          { label: 'PHASE', value: isFundedLive ? 'Funded' : isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
+          { label: 'PHASE', value: isFundedLive ? 'Sim Funded' : isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : 'N/A' },
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
         ].map((item, i) => (
           <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
@@ -284,7 +284,7 @@ function AccountHistorySection({ accounts }) {
         ) : filtered.map((acc, i) => {
           const sc = acc.status === 'active' ? { label: 'Active', color: '#10b981' }
             : acc.status === 'passed' ? { label: 'Passed', color: '#60a5fa' }
-            : acc.status === 'funded' ? { label: 'Funded', color: '#FF5C00' }
+            : acc.status === 'funded' ? { label: 'Sim Funded', color: '#FF5C00' }
             : { label: 'Not Passed', color: '#ef4444' };
           const cLabel = acc.challenge_type === 'two-step' ? '2-Step' : acc.challenge_type === 'instant' ? 'Instant' : acc.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light';
           return (
@@ -352,14 +352,14 @@ function StatisticsPanel({ account, closedTrades = [] }) {
     { label: 'Equity', value: `$${fmt(equity)}`, color: equity >= accountSize ? '#10b981' : '#ef4444', bar: true, barPct: (equity / accountSize) * 50 },
     { label: 'Balance', value: `$${fmt(balance)}`, color: '#60a5fa' },
     { label: 'Win Rate', value: winRate > 0 ? `${winRate.toFixed(1)}%` : '0%', color: winRate >= 50 ? '#10b981' : '#f59e0b', bar: true, barPct: winRate },
-    { label: 'Avg. Profit', value: avgWin > 0 ? `+$${fmt(avgWin)}` : '—', color: '#10b981' },
+    { label: 'Avg. Reward', value: avgWin > 0 ? `+$${fmt(avgWin)}` : '—', color: '#10b981' },
     { label: 'Avg. Loss', value: avgLoss > 0 ? `-$${fmt(avgLoss)}` : '—', color: '#ef4444' },
     { label: 'Total Trades', value: totalTrades || '0', color: '#f1f5f9' },
     { label: 'Lots Traded', value: totalLots > 0 ? totalLots.toFixed(2) : '0', color: '#f1f5f9' },
     { label: 'Total P&L', value: totalPnl >= 0 ? `+$${fmt(totalPnl)}` : `-$${fmt(Math.abs(totalPnl))}`, color: totalPnl >= 0 ? '#10b981' : '#ef4444' },
     { label: 'Avg. RRR', value: rrrAvg > 0 ? rrrAvg.toFixed(2) : '—', color: '#f1f5f9' },
     { label: 'Expectancy', value: expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '—', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Profit Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
+    { label: 'Reward Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
   ];
 
   return (
@@ -569,7 +569,7 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: false, danger: dailyDDUsed >= dailyDDLimit, forceRed: true, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
     { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: false, danger: maxDDUsed >= maxDDLimit, forceRed: true, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
     ...(!isFundedAccount ? [
-      { label: `Profit Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / (profitTarget || 1)) * 100, 100), icon: Target },
+      { label: `Reward Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / (profitTarget || 1)) * 100, 100), icon: Target },
     ] : []),
   ];
 
@@ -646,7 +646,7 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
               { label: 'Trading Days', score: scores[0] },
               { label: 'Daily DD', score: scores[1] },
               { label: 'Max DD', score: scores[2] },
-              { label: 'Profit Target', score: scores[3] },
+              { label: 'Reward Target', score: scores[3] },
             ].map(s => (
               <div key={s.label} className="flex items-center gap-3 text-xs">
                 <span className="text-white/40 w-24 shrink-0">{s.label}</span>
@@ -1167,7 +1167,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-bold mb-0.5" style={{ color: '#60a5fa' }}>⚡ Phase 1 Target Met — Under Review</div>
             <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Congratulations! You have successfully met the Phase 1 profit target. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is currently reviewing your account. Once approved, your Phase 2 account credentials will be issued automatically. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>1–3 business days</span>.
+              Congratulations! You have successfully met the Phase 1 reward target. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is currently reviewing your account. Once approved, your Phase 2 account credentials will be issued automatically. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>1–3 business days</span>.
             </div>
           </div>
         </motion.div>
@@ -1184,9 +1184,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
             </motion.div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#FF5C00' }}>🏆 Phase 2 Complete — Funded Account Review</div>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#FF5C00' }}>🏆 Phase 2 Complete — Simulation Funded Account Review</div>
             <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Outstanding! You have passed Phase 2. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is conducting a risk review before issuing your live funded account. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>3–5 business days</span>.
+              Outstanding! You have passed Phase 2. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is conducting a risk review before issuing your live simulation funded account. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>3–5 business days</span>.
             </div>
           </div>
         </motion.div>

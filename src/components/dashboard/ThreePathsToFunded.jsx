@@ -18,7 +18,7 @@ const CHALLENGE_PATHS = [
       { label: 'DAILY DD', value: '5%' },
       { label: 'MAX DD', value: '10%' },
       { label: 'LEVERAGE', value: '1:100 / 1:30' },
-      { label: 'PROFIT SPLIT', value: '80%', highlight: true },
+      { label: 'REWARD SPLIT', value: '80%', highlight: true },
     ],
     buttonStyle: 'outline',
     buttonText: 'Start Challenge →',
@@ -40,7 +40,7 @@ const CHALLENGE_PATHS = [
       { label: 'MAX DD', value: '10%' },
       { label: 'LEVERAGE', value: '1:30' },
       { label: 'PAYOUTS', value: 'Daily' },
-      { label: 'PROFIT SPLIT', value: '80%', highlight: true },
+      { label: 'REWARD SPLIT', value: '80%', highlight: true },
     ],
     buttonStyle: 'solid',
     buttonText: 'Get Instant Funding →',
@@ -63,7 +63,7 @@ const CHALLENGE_PATHS = [
       { label: 'DAILY DD', value: '5%' },
       { label: 'LEVERAGE', value: '1:30' },
       { label: 'PRICE', value: '50% Off', highlight: true },
-      { label: 'PROFIT SPLIT', value: '80%', highlight: true },
+      { label: 'REWARD SPLIT', value: '80%', highlight: true },
     ],
     buttonStyle: 'solid',
     buttonText: 'Get Instant Light →',
@@ -83,7 +83,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
           Three Paths to <span style={{ color: '#F56C2C' }}>Funded</span> <span style={{ color: '#CCFF00' }}>Trading</span>
         </h2>
         <p className="text-sm text-[#808080] max-w-md mx-auto leading-relaxed">
-          Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to 80% profit split.
+          Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to 80% reward split.
         </p>
       </div>
       {/* Cards Grid */}

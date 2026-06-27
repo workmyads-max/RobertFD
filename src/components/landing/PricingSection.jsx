@@ -19,7 +19,7 @@ const instantPlans = [
   { capital: '$200,000', price: '$4,850', raw: 200000 },
 ];
 
-const twoStepFeatures = ['Limited Time Offer', 'Best Pricing Worldwide', 'Professional Risk Management', 'Up to 80/20 Profit Split'];
+const twoStepFeatures = ['Limited Time Offer', 'Best Pricing Worldwide', 'Professional Risk Management', 'Up to 80/20 Reward Split'];
 const instantFeatures = ['Instant Payouts', 'Daily Withdrawal Requests', 'No Waiting Period', 'Trade Freely'];
 
 function PricingCard({ plan, index, isInstant }) {

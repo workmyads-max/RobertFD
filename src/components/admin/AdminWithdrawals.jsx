@@ -107,10 +107,10 @@ export default function AdminWithdrawals() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
-            <DollarSign className="w-6 h-6 text-primary" /> Challenge Profit Payouts
+            <DollarSign className="w-6 h-6 text-primary" /> Challenge Reward Payouts
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">${totalPending.toLocaleString()} pending • ${totalPaid.toLocaleString()} paid</p>
-          <p className="text-[11px] text-muted-foreground/70 mt-1">Track A — trading profit payouts only. Affiliate/commission payouts are managed separately.</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-1">Track A — trading reward payouts only. Affiliate/commission payouts are managed separately.</p>
         </div>
       </div>
 
@@ -242,7 +242,7 @@ export default function AdminWithdrawals() {
                 {/* New Account per Payout notice */}
                 <div className="rounded-xl px-4 py-3 text-[11px] leading-relaxed"
                   style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.2)', color: 'rgba(255,255,255,0.7)' }}>
-                  ⚡ Approving this payout retires the trader's current funded account and automatically issues a <span className="text-primary font-bold">fresh funded account of the same size</span> (New Account per Payout).
+                  ⚡ Approving this payout retires the trader's current simulation funded account and automatically issues a <span className="text-primary font-bold">fresh simulation funded account of the same size</span> (New Account per Payout).
                 </div>
 
                 {/* Info */}

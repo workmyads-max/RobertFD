@@ -86,7 +86,7 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
 
   const isFundedLive = account.status === 'funded';
   const isTwoStep = account.challenge_type === 'two-step';
-  const challengeType = isFundedLive ? 'FUNDED'
+  const challengeType = isFundedLive ? 'SIM FUNDED'
     : account.challenge_type === 'instant' ? 'INSTANT'
     : account.challenge_type === 'instant_account' ? 'INSTANT ACCT'
     : account.challenge_type === 'instant_light' ? 'INST. LIGHT' : '2-STEP';
@@ -94,7 +94,7 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
   const phaseLabel = (!isFundedLive && isTwoStep) ? (account.phase || 'phase1').replace('phase', 'PH ') : '';
   const statusLabel = account.status === 'active' ? 'Active'
     : account.status === 'passed' ? 'Passed'
-    : account.status === 'funded' ? 'Funded' : account.status;
+    : account.status === 'funded' ? 'Sim Funded' : account.status;
   const statusColor = account.status === 'active' ? '#10b981'
     : account.status === 'funded' ? '#FF5C00'
     : account.status === 'passed' ? '#60a5fa' : '#94a3b8';
@@ -169,7 +169,7 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
         {/* Progress */}
         <div className="mb-3">
           <div className="flex justify-between text-[9px] font-mono mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            <span>Profit Target</span>
+            <span>Reward Target</span>
             <span style={{ color: '#FF5C00' }}>{progress.toFixed(1)}% / {profitTargetPct}%</span>
           </div>
           <div className="h-px rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>

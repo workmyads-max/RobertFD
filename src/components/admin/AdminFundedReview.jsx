@@ -49,7 +49,7 @@ function Phase1ReviewCard({ account, onApprove, onReject, loading }) {
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-[10px] text-white/30 uppercase tracking-wide mb-0.5">Profit</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wide mb-0.5">Reward</div>
             <div className="text-base font-black text-emerald-400">{(account.profit_target_progress || 0).toFixed(1)}%</div>
           </div>
         </div>
@@ -218,7 +218,7 @@ function ReviewCard({ review, onAction }) {
                   <button onClick={() => onAction('approve', review.id, notes, null)}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:brightness-110"
                     style={{ background: '#10b981', color: '#fff' }}>
-                    <CheckCircle className="w-3.5 h-3.5" /> Approve Funded
+                    <CheckCircle className="w-3.5 h-3.5" /> Approve Sim Funded
                   </button>
                   <button onClick={() => onAction('reject', review.id, notes, rejectReason)}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:brightness-110"
@@ -331,7 +331,7 @@ export default function AdminFundedReview() {
   });
 
   const handleAction = (type, reviewId, notes, reason) => {
-    if (type === 'approve' && !window.confirm('Approve this trader for a funded live account?')) return;
+    if (type === 'approve' && !window.confirm('Approve this trader for a simulation funded live account?')) return;
     if (type === 'reject' && !reason) { toast.error('Please provide a rejection reason'); return; }
     actionMutation.mutate({ type, reviewId, notes, reason });
   };
@@ -356,8 +356,8 @@ export default function AdminFundedReview() {
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-white leading-none">Phase Review &amp; Funded Approvals</h1>
-            <p className="text-xs text-white/30 font-mono mt-1">Phase 1→2 provisioning and funded account review queue</p>
+            <h1 className="text-xl font-black text-white leading-none">Phase Review &amp; Simulation Funded Approvals</h1>
+            <p className="text-xs text-white/30 font-mono mt-1">Phase 1→2 provisioning and simulation funded account review queue</p>
           </div>
         </div>
         <button onClick={() => { refetch(); refetchP1(); }}
@@ -416,7 +416,7 @@ export default function AdminFundedReview() {
         <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: 'rgba(16,185,129,0.12)', background: 'rgba(16,185,129,0.04)' }}>
           <div className="flex items-center gap-2.5">
             <TrendingUp className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-bold text-emerald-400">Phase 2 → Funded Approvals</span>
+            <span className="text-sm font-bold text-emerald-400">Phase 2 → Simulation Funded Approvals</span>
           </div>
           {/* Filter tabs */}
           <div className="flex gap-1 flex-wrap">

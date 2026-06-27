@@ -180,15 +180,15 @@ function ConsistencyCard({ account, closedTrades }) {
       <div className="p-5 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Best Day Profit</div>
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Best Day Reward</div>
             <div className="text-sm font-bold text-emerald-400">${fmt(effectiveBestDay)}</div>
           </div>
           <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Current Profit</div>
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Current Reward</div>
             <div className="text-sm font-bold text-foreground">${fmt(effectiveTotalProfit)}</div>
           </div>
           <div className="rounded-xl p-3" style={{ background: 'rgba(255,92,0,0.05)' }}>
-            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Required Profit</div>
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Required Reward</div>
             <div className="text-sm font-bold text-primary">${fmt(requiredProfit)}</div>
           </div>
           <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
@@ -207,7 +207,7 @@ function ConsistencyCard({ account, closedTrades }) {
 
         <div className="rounded-xl p-3 text-[11px] leading-relaxed" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.45)' }}>
           <Info className="w-3 h-3 inline mr-1 text-white/30" />
-          Based on your current Best Day Profit of <span className="text-foreground font-semibold">${fmt(effectiveBestDay)}</span>, your total profit must reach <span className="text-primary font-semibold">${fmt(requiredProfit)}</span> to satisfy the {consistencyPct}% Consistency Rule. Your current profit is <span className="text-foreground font-semibold">${fmt(effectiveTotalProfit)}</span>, therefore you need an additional <span className="text-primary font-semibold">${fmt(remaining)}</span> before becoming eligible. These calculations update automatically whenever your Best Day Profit changes.
+          Based on your current Best Day Reward of <span className="text-foreground font-semibold">${fmt(effectiveBestDay)}</span>, your total reward must reach <span className="text-primary font-semibold">${fmt(requiredProfit)}</span> to satisfy the {consistencyPct}% Consistency Rule. Your current reward is <span className="text-foreground font-semibold">${fmt(effectiveTotalProfit)}</span>, therefore you need an additional <span className="text-primary font-semibold">${fmt(remaining)}</span> before becoming eligible. These calculations update automatically whenever your Best Day Reward changes.
         </div>
       </div>
     </motion.div>
@@ -353,7 +353,7 @@ function WithdrawableProfitCard({ account }) {
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: isEligible ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)' }}>
             <Wallet className={`w-3.5 h-3.5 ${isEligible ? 'text-emerald-400' : 'text-white/30'}`} />
           </div>
-          <span className="text-sm font-bold text-foreground">Withdrawable Profit</span>
+          <span className="text-sm font-bold text-foreground">Withdrawable Reward</span>
         </div>
         <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
           style={{
@@ -374,7 +374,7 @@ function WithdrawableProfitCard({ account }) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Total Profit</div>
+            <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide mb-1">Total Reward</div>
             <div className="text-lg font-bold text-white/60">${fmt(withdrawableProfit)}</div>
           </div>
         </div>
@@ -382,7 +382,7 @@ function WithdrawableProfitCard({ account }) {
         {!isBufferActivated ? (
           <div className="rounded-xl p-3 text-center text-[11px] text-white/30" style={{ background: 'rgba(255,255,255,0.02)' }}>
             <Lock className="w-3.5 h-3.5 inline mr-1 text-white/20" />
-            Activate Buffer Zone to unlock withdrawable profit tracking
+            Activate Buffer Zone to unlock withdrawable reward tracking
           </div>
         ) : isEligible ? (
           <button

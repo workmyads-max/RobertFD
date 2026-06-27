@@ -21,12 +21,12 @@ const CHALLENGES = [
   { label: 'Daily DD', value: '5%' },
   { label: 'Max DD', value: '10%' },
   { label: 'Leverage', value: '1:100 / 1:30' },
-  { label: 'Profit Split', value: '80%' }],
+  { label: 'Reward Split', value: '80%' }],
 
   features: [
   { ok: true, label: 'High Leverage 1:100' },
   { ok: true, label: 'No Consistency Rules' },
-  { ok: true, label: 'Up to 80% Profit Split' },
+  { ok: true, label: 'Up to 80% Reward Split' },
   { ok: true, label: 'News Trading (1:30 mode)' },
   { ok: false, label: 'News Trading (1:100 mode)' },
   { ok: false, label: 'Overnight Holding (1:100)' }],
@@ -47,11 +47,11 @@ const CHALLENGES = [
   { label: 'Max DD', value: '10%' },
   { label: 'Leverage', value: '1:30' },
   { label: 'Payouts', value: 'Daily' },
-  { label: 'Profit Split', value: '80%' }],
+  { label: 'Reward Split', value: '80%' }],
 
   features: [
   { ok: true, label: 'No Evaluation Phase' },
-  { ok: true, label: 'Instant Funded Account' },
+  { ok: true, label: 'Instant Simulation Funded Account' },
   { ok: true, label: 'Daily Payout Requests' },
   { ok: true, label: 'News Trading Allowed' },
   { ok: true, label: 'Overnight Holding' },
@@ -73,7 +73,7 @@ const CHALLENGES = [
   { label: 'Daily DD', value: '5%' },
   { label: 'Leverage', value: '1:30' },
   { label: 'Price', value: '50% Off' },
-  { label: 'Profit Split', value: '80%' }],
+  { label: 'Reward Split', value: '80%' }],
 
   features: [
   { ok: true, label: 'No Evaluation Required' },
@@ -81,7 +81,7 @@ const CHALLENGES = [
   { ok: true, label: '50% Cheaper Pricing' },
   { ok: true, label: 'Instant Account Access' },
   { ok: true, label: 'Trade From Day One' },
-  { ok: true, label: '80/20 Profit Split' }],
+  { ok: true, label: '80/20 Reward Split' }],
 
   cta: 'Get Instant Light'
 },
@@ -98,8 +98,8 @@ const CHALLENGES = [
   { label: 'Daily DD', value: '4%' },
   { label: 'Max DD', value: '8%' },
   { label: 'Consistency', value: '35%' },
-  { label: 'Min Profit Days', value: '7' },
-  { label: 'Profit Split', value: '80%' }],
+  { label: 'Min Reward Days', value: '7' },
+  { label: 'Reward Split', value: '80%' }],
 
   features: [
   { ok: true, label: 'Buffer Zone Lock Protection' },
@@ -107,7 +107,7 @@ const CHALLENGES = [
   { ok: true, label: '7 Profitable Days Required' },
   { ok: true, label: 'New Account After Each Payout' },
   { ok: true, label: 'Instant Account Access' },
-  { ok: true, label: '80/20 Profit Split' }],
+  { ok: true, label: '80/20 Reward Split' }],
 
   cta: 'Get Instant Account'
 }];
@@ -246,7 +246,7 @@ export default function ChallengeTypes() {
   { label: 'Leverage', values: [{ text: '1:100' }, { text: '1:30' }, { text: '1:30' }] },
   { label: 'Payouts', values: [{ text: 'Bi-weekly' }, { text: 'Daily', color: 'text-emerald-400' }, { text: 'Daily', color: 'text-emerald-400' }] },
   { label: 'Price', values: [{ text: 'Standard' }, { text: 'Standard' }, { text: '50% Off', color: 'text-lime-400' }] },
-  { label: 'Profit Split', values: [{ text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }] }];
+  { label: 'Reward Split', values: [{ text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }] }];
 
 
   return (
@@ -268,7 +268,7 @@ export default function ChallengeTypes() {
             Choose your funding path
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Select the evaluation model that fits your trading style. All plans include transparent rules and up to 80% profit split.
+            Select the evaluation model that fits your trading style. All plans include transparent rules and up to 80% reward split.
           </p>
         </motion.div>
 
@@ -326,7 +326,7 @@ export default function ChallengeTypes() {
         <div className="text-center">
           <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Leverage varies by account size and instrument. All challenge types require adherence to risk management rules. 
-            Profit split applies to funded accounts only.
+            Reward split applies to simulation funded accounts only.
           </p>
         </div>
       </div>

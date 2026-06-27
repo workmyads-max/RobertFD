@@ -6,7 +6,7 @@ import DashboardPreview from './DashboardPreview';
 const stats = [
 { label: 'Traders worldwide', value: '14,200+', icon: Users },
 { label: 'Total payouts', value: '$742M+', icon: DollarSign },
-{ label: 'Funded accounts', value: '8,450+', icon: TrendingUp },
+{ label: 'Simulation funded accounts', value: '8,450+', icon: TrendingUp },
 { label: 'Daily volume', value: '$2.4B+', icon: BarChart3 }];
 
 

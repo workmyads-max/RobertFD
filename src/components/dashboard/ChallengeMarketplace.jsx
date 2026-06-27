@@ -137,7 +137,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const CHALLENGE_RULES = displayPlan ? [
     { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: `Max ${displayPlan.daily_dd}% loss per trading day. Resets at 3:00 AM GMT+4 daily.` },
     { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: `Total equity must never fall more than ${displayPlan.max_dd}% below starting balance. This does NOT reset.` },
-    { icon: Target, color: '#10b981', title: 'Profit Target', body: displayPlan.type === 'two-step'
+    { icon: Target, color: '#10b981', title: 'Reward Target', body: displayPlan.type === 'two-step'
       ? `Phase 1: ${displayPlan.phase1_target}% target. Phase 2: ${displayPlan.phase2_target}% target.`
       : `Target: ${displayPlan.phase1_target}%. Maintain profitable operation.` },
     { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
@@ -151,7 +151,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     { icon: TrendingUp, color: '#FF5C00', title: 'Max Lots', body: `Maximum position size: ${displayPlan.max_lots} lots per trade.` },
     { icon: Users, color: '#0ea5e9', title: 'Prohibited Activities', body: 'No tick scalping, arbitrage, copy trading (without approval), HFT, or price manipulation tools.' },
     { icon: Shield, color: '#10b981', title: 'Account Security', body: 'Credentials are personal and non-transferable. Account sharing or selling = immediate termination.' },
-    { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: `${displayPlan.profit_split}% profit split for funded accounts. KYC required. Min 1 profitable cycle before withdrawal.` },
+    { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: `${displayPlan.profit_split}% reward split for simulation funded accounts. KYC required. Min 1 profitable cycle before withdrawal.` },
   ] : [];
 
   return (
@@ -360,7 +360,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           boxShadow: '0 4px 30px rgba(255,92,0,0.1)',
         }}>
         {[
-          { icon: TrendingUp, title: 'Profit Split', desc: 'Up to 80% profit split. Scaling plan available on all funded accounts.' },
+          { icon: TrendingUp, title: 'Reward Split', desc: 'Up to 80% reward split. Scaling plan available on all simulation funded accounts.' },
           { icon: Clock, title: 'Payout Schedule', desc: 'Request payouts every 14 days. Processed within 24-48 hours.' },
           { icon: BarChart2, title: 'Trading Rules', desc: `${accCfg.label}: ${accCfg.leverage} leverage. ${accountType === 'swing' ? 'News & overnight trading allowed.' : 'Standard trading model.'}` },
         ].map((f, i) => {

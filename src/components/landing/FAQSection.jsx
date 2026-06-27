@@ -11,11 +11,11 @@ import {
 const faqs = [
   {
     q: 'How does funding work?',
-    a: 'You can choose between our Two-Step Challenge, Instant Funding, or Instant Light. With the Two-Step Challenge, you pass two evaluation phases (10% target in Phase 1, 5% in Phase 2) to prove your trading skills, then receive a funded account. With Instant Funding, you get immediate access to a funded account without any evaluation. Instant Light offers the same benefits at 50% lower cost with trailing drawdown protection.',
+    a: 'You can choose between our Two-Step Challenge, Instant Funding, or Instant Light. With the Two-Step Challenge, you pass two evaluation phases (10% target in Phase 1, 5% in Phase 2) to prove your trading skills, then receive a simulation funded account. With Instant Funding, you get immediate access to a simulation funded account without any evaluation. Instant Light offers the same benefits at 50% lower cost with trailing drawdown protection.',
   },
   {
-    q: 'What are the profit targets for each phase?',
-    a: 'For the Two-Step Challenge: Phase 1 requires a 10% profit target, and Phase 2 requires a 5% profit target. There are no consistency rules - you can achieve these targets in any trading style you prefer. Instant Funding and Instant Light have no profit targets since there\'s no evaluation phase.',
+    q: 'What are the reward targets for each phase?',
+    a: 'For the Two-Step Challenge: Phase 1 requires a 10% reward target, and Phase 2 requires a 5% reward target. There are no consistency rules - you can achieve these targets in any trading style you prefer. Instant Funding and Instant Light have no reward targets since there\'s no evaluation phase.',
   },
   {
     q: 'What are the drawdown rules?',
@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: 'How are payouts processed?',
-    a: 'Payouts are processed within 24 hours of your withdrawal request. Two-Step Challenge accounts have bi-weekly payout schedules, while Instant Funding and Instant Light accounts enjoy daily payout requests. We support bank transfers, crypto (BTC, USDT TRC20), and other popular payment methods. You keep 80% of your profits on all plans.',
+    a: 'Payouts are processed within 24 hours of your withdrawal request. Two-Step Challenge accounts have bi-weekly payout schedules, while Instant Funding and Instant Light accounts enjoy daily payout requests. We support bank transfers, crypto (BTC, USDT TRC20), and other popular payment methods. You keep 80% of your rewards on all plans.',
   },
   {
     q: 'Which platforms are supported?',
@@ -63,11 +63,11 @@ const faqs = [
   },
   {
     q: 'Is there a time limit to pass the challenge?',
-    a: 'No, there is no time limit to pass the Two-Step Challenge. You can take as long as you need to reach the profit targets. However, we recommend having a structured trading plan and maintaining consistent risk management throughout your evaluation.',
+    a: 'No, there is no time limit to pass the Two-Step Challenge. You can take as long as you need to reach the reward targets. However, we recommend having a structured trading plan and maintaining consistent risk management throughout your evaluation.',
   },
   {
-    q: 'What is the profit split?',
-    a: 'All plans offer an 80/20 profit split - you keep 80% of the profits you generate, and the company retains 20%. This is one of the most competitive splits in the prop trading industry. Profit splits are calculated on realized P&L from closed positions.',
+    q: 'What is the reward split?',
+    a: 'All plans offer an 80/20 reward split - you keep 80% of the rewards you generate, and the company retains 20%. This is one of the most competitive splits in the prop trading industry. Reward splits are calculated on realized P&L from closed positions.',
   },
   {
     q: 'Can I upgrade my account size later?',

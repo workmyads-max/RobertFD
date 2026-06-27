@@ -79,7 +79,7 @@ function WithdrawalCard({ w, i }) {
         {expanded && (
           <div className="mt-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
             {[
-              { label: 'Gross Profit', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
+              { label: 'Gross Reward', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
               { label: `Company Share (${100 - (w.profit_split_pct||80)}%)`, val: `-$${companyShare.toFixed(2)}`, color: 'text-red-400' },
               { label: `Trader Share (${w.profit_split_pct||80}%)`, val: `$${traderShare.toFixed(2)}`, color: 'text-emerald-400' },
               { label: 'Processing Fee (5%)', val: `-$${fee.toFixed(2)}`, color: 'text-yellow-400' },
@@ -238,7 +238,7 @@ export default function Withdrawals({ user, onNavigate }) {
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <DollarSign className="w-6 h-6 text-primary" /> Withdrawals
           </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Profit payouts — Funded accounts only</p>
+          <p className="text-sm text-muted-foreground font-mono mt-1">Reward payouts — Simulation Funded accounts only</p>
         </div>
         <button onClick={() => openForm('')}
           disabled={!kycApproved || eligibleAccounts.length === 0}
@@ -280,8 +280,8 @@ export default function Withdrawals({ user, onNavigate }) {
         <div className="flex justify-center mb-5">
           <AlertCard
             isVisible={true}
-            title="No Funded Accounts"
-            description="Withdrawals are only available for live funded accounts. Complete your challenge to unlock payouts."
+            title="No Simulation Funded Accounts"
+            description="Withdrawals are only available for live simulation funded accounts. Complete your challenge to unlock payouts."
             buttonText="Buy Challenge"
             onButtonClick={() => onNavigate?.('marketplace')}
             icon={<Bell className="h-6 w-6 text-white" />}
@@ -318,7 +318,7 @@ export default function Withdrawals({ user, onNavigate }) {
                   <span className="text-xs font-bold font-mono text-foreground">{acc.account_id}</span>
                 </div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono text-muted-foreground">Total Profit</span>
+                  <span className="text-xs font-mono text-muted-foreground">Total Reward</span>
                   <span className="text-sm font-black text-emerald-400">${profit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
@@ -354,9 +354,9 @@ export default function Withdrawals({ user, onNavigate }) {
       <div className="rounded-2xl p-5 mb-6 flex items-center justify-between gap-4"
         style={{ background: 'linear-gradient(135deg,rgba(255,92,0,0.12),rgba(255,92,0,0.05))', border: '1px solid rgba(255,92,0,0.25)' }}>
         <div>
-          <div className="text-base font-black text-foreground mb-1">80/20 Profit Split</div>
+          <div className="text-base font-black text-foreground mb-1">80/20 Reward Split</div>
           <div className="text-sm text-muted-foreground">
-            ${fundedAccounts.reduce((s, a) => s + (a.challenge_type === 'instant_account' ? Math.max(0, a.withdrawable_profit || 0) : Math.max(0, a.pnl || 0)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available profit.
+            ${fundedAccounts.reduce((s, a) => s + (a.challenge_type === 'instant_account' ? Math.max(0, a.withdrawable_profit || 0) : Math.max(0, a.pnl || 0)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available reward.
             You keep 80% — only a 5% processing fee is deducted from your share. No affiliate deductions.
           </div>
         </div>
@@ -422,7 +422,7 @@ export default function Withdrawals({ user, onNavigate }) {
                   <div className="w-full rounded-xl px-4 py-3 text-sm font-black text-emerald-400 cursor-not-allowed"
                     style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)' }}>
                     ${autoAmount.toFixed(2)}
-                    <span className="text-xs font-normal text-muted-foreground ml-2">(fixed — 80% of ${selectedProfit.toFixed(2)} profit)</span>
+                    <span className="text-xs font-normal text-muted-foreground ml-2">(fixed — 80% of ${selectedProfit.toFixed(2)} reward)</span>
                   </div>
                 </div>
 
@@ -467,7 +467,7 @@ export default function Withdrawals({ user, onNavigate }) {
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase bg-white/[0.02]">Payout Breakdown</div>
                     {[
-                      { label: 'Gross Profit', val: `$${selectedProfit.toFixed(2)}`, color: 'text-foreground' },
+                      { label: 'Gross Reward', val: `$${selectedProfit.toFixed(2)}`, color: 'text-foreground' },
                       { label: `Company Share (${100 - profitSplitPct}%)`, val: `-$${(selectedProfit * ((100 - profitSplitPct) / 100)).toFixed(2)}`, color: 'text-red-400' },
                       { label: `Your Share (${profitSplitPct}%)`, val: `$${autoAmount.toFixed(2)}`, color: 'text-emerald-400' },
                       { label: 'Processing Fee (5% of your share)', val: `-$${fee5pct.toFixed(2)}`, color: 'text-yellow-400' },

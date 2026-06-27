@@ -38,7 +38,7 @@ const FLOW_STEPS = [
 {
   step: '03', icon: Award, color: '#CCFF00',
   title: 'Trader Gets Funded',
-  desc: 'When your referral receives a profit payout — you earn a bonus too.',
+  desc: 'When your referral receives a reward payout — you earn a bonus too.',
   earn: 'Up to 25% Reward'
 },
 {
@@ -68,7 +68,7 @@ const EXAMPLE_CARDS = [
 },
 {
   scenario: 'Funded Payout Reward',
-  amount: '$10,000 profit',
+  amount: '$10,000 reward',
   commission: '+$2,500',
   rate: '25%',
   color: '#CCFF00',
@@ -203,7 +203,7 @@ export default function AffiliateSection() {
           </div>
           <div className="mt-4 rounded-xl p-4 text-center text-xs text-muted-foreground"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <span className="text-primary font-semibold">Example:</span> Trader earns $10,000 profit.
+            <span className="text-primary font-semibold">Example:</span> Trader earns $10,000 reward.
             Platinum IB (50+ live) earns <span className="text-emerald-400 font-bold">$2,500 extra reward</span> on top of their challenge sale commissions.
           </div>
         </div>

@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
   passed: { label: 'Passed', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
   failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
-  funded: { label: 'Funded', color: '#FF5C00', bg: 'rgba(255,92,0,0.08)' },
+  funded: { label: 'Simulation Funded', color: '#FF5C00', bg: 'rgba(255,92,0,0.08)' },
 };
 
 function CredentialsModal({ account, onClose }) {
@@ -115,7 +115,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="capitalize">{account.status === 'funded' ? 'Funded' : account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
+                <span className="capitalize">{account.status === 'funded' ? 'Simulation Funded' : account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
                 <span>•</span>
                 <span className="capitalize">{account.account_type}</span>
                 <span>•</span>
@@ -166,7 +166,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
           {!isFundedLive && profitTarget && (
             <div className="mb-5">
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-muted-foreground">Profit target</span>
+                <span className="text-muted-foreground">Reward target</span>
                 <motion.span className="text-primary font-medium"
                   key={account.profit_target_progress}
                   initial={{ scale: 1.1, opacity: 0 }}
@@ -314,7 +314,7 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Active', count: accounts.filter(a => a.status === 'active').length, color: '#10b981' },
-          { label: 'Funded', count: accounts.filter(a => a.status === 'funded').length, color: '#FF5C00' },
+          { label: 'Simulation Funded', count: accounts.filter(a => a.status === 'funded').length, color: '#FF5C00' },
           { label: 'Passed', count: accounts.filter(a => a.status === 'passed').length, color: '#60a5fa' },
           { label: 'Pending', count: pendingOrders.length, color: '#f59e0b' },
         ].map((s) => (

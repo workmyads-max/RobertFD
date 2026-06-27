@@ -77,7 +77,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
       },
       {
         key: 'payout', label: 'Payout Eligible',
-        desc: payoutEligible ? `✓ Eligible for withdrawals · ${profitSplit}% profit split`
+        desc: payoutEligible ? `✓ Eligible for withdrawals · ${profitSplit}% reward split`
           : 'First payout after buffer zone + consistency + profitable days',
         status: payoutEligible ? 'done' : 'pending', icon: DollarSign,
       },
@@ -88,19 +88,19 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     return [
       { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
       {
-        key: 'target', label: 'One-Time Profit Target',
-        desc: profitTargetMet ? `✓ ${profitTargetPct}% target achieved` : `${profitTargetPct}% profit · ${snap.daily_dd_limit ?? 5}% daily DD`,
+        key: 'target', label: 'One-Time Reward Target',
+        desc: profitTargetMet ? `✓ ${profitTargetPct}% target achieved` : `${profitTargetPct}% reward · ${snap.daily_dd_limit ?? 5}% daily DD`,
         status: profitTargetMet ? 'done' : (status === 'active' ? 'active' : 'pending'), icon: Zap,
       },
       {
-        key: 'funded', label: 'Funded Account',
-        desc: isFunded ? `Live capital · ${profitSplit}% profit split` : 'Pending profit target completion',
+        key: 'funded', label: 'Simulation Funded Account',
+        desc: isFunded ? `Live capital · ${profitSplit}% reward split` : 'Pending reward target completion',
         status: isFunded ? 'done' : (profitTargetMet ? 'active' : 'pending'), icon: DollarSign,
       },
       {
         key: 'payout', label: 'Withdrawal Eligible',
         desc: withdrawalEligible ? '✓ Eligible for withdrawals'
-          : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after funded status',
+          : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
         status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
       },
     ];
@@ -147,29 +147,29 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     {
       key: 'phase1', label: 'Phase 1',
       desc: isPhase1UnderReview ? `✓ ${phase1Target}% target met — review in progress`
-        : isPhase1Done ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
-        : `${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`,
+        : isPhase1Done ? `✓ ${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`
+        : `${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`,
       status: phase1Status, icon: Zap,
     },
     {
       key: 'phase2', label: 'Phase 2',
       desc: isPhase2UnderReview ? `✓ ${phase2Target}% target met — funded review in progress`
-        : isPhase2Done ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
+        : isPhase2Done ? `✓ ${phase2Target}% reward · ${dailyDd}% daily DD`
         : isPhase1UnderReview ? 'Pending Phase 1 approval'
-        : `${phase2Target}% profit · ${dailyDd}% daily DD`,
+        : `${phase2Target}% reward · ${dailyDd}% daily DD`,
       status: phase2Status, icon: Zap,
     },
     {
-      key: 'funded', label: 'Funded Account',
-      desc: isFunded ? `Live capital · ${profitSplit}% profit split`
-        : isPhase2UnderReview ? 'Pending funded account approval'
+      key: 'funded', label: 'Simulation Funded Account',
+      desc: isFunded ? `Live capital · ${profitSplit}% reward split`
+        : isPhase2UnderReview ? 'Pending simulation funded account approval'
         : 'Pending Phase 2 completion',
       status: fundedStatus, icon: DollarSign,
     },
     {
       key: 'payout', label: 'Withdrawal Eligible',
       desc: withdrawalEligible ? '✓ Eligible for withdrawals'
-        : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after funded status',
+        : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
       status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
     },
   ];
@@ -266,7 +266,7 @@ function PerformanceMetrics({ stats }) {
   const { avgProfit, avgLoss, profitFactor, expectancy, rrr, lots, wins, losses, totalTrades, openPositions } = stats;
 
   const rows = [
-    { label: 'Profit Factor', value: isFinite(profitFactor) && profitFactor > 0 ? profitFactor.toFixed(2) : '0.00', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
+    { label: 'Reward Factor', value: isFinite(profitFactor) && profitFactor > 0 ? profitFactor.toFixed(2) : '0.00', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
     { label: 'Expectancy', value: isFinite(expectancy) ? `$${expectancy.toFixed(2)}` : '—', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
     { label: 'Avg RR Ratio', value: rrr > 0 ? `1:${rrr.toFixed(2)}` : '—', color: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
     { label: 'Avg Win', value: avgProfit > 0 ? `$${avgProfit.toFixed(2)}` : '—', color: '#10b981' },

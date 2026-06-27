@@ -123,8 +123,8 @@ function useTimelineSteps(account, closedTrades = []) {
           },
           {
             icon: DollarSign,
-            label: 'Funded Account',
-            desc: `Live capital · ${profitSplit}% profit split`,
+            label: 'Simulation Funded Account',
+            desc: `Live capital · ${profitSplit}% reward split`,
             status: 'done',
           },
           {
@@ -156,9 +156,9 @@ function useTimelineSteps(account, closedTrades = []) {
         },
         {
           icon: DollarSign,
-          label: 'Funded Account',
+          label: 'Simulation Funded Account',
           desc: trailingTargetMet
-            ? `Live capital · ${profitSplit}% profit split`
+            ? `Live capital · ${profitSplit}% reward split`
             : 'Pending trailing target completion',
           status: trailingTargetMet ? 'done' : 'pending',
         },
@@ -203,7 +203,7 @@ function useTimelineSteps(account, closedTrades = []) {
           label: 'Buffer Zone Target',
           desc: bufferActivated
             ? `✓ $${fmt(bufferTargetVal)} locked — DD reference updated`
-            : `Reach $${fmt(bufferTargetVal)} (${bufferTargetPct}% profit) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
+            : `Reach $${fmt(bufferTargetVal)} (${bufferTargetPct}% reward) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
           status: bufferActivated ? 'done' : 'active',
         },
         {
@@ -228,7 +228,7 @@ function useTimelineSteps(account, closedTrades = []) {
           icon: DollarSign,
           label: 'Payout Eligible',
           desc: payoutEligible
-            ? `✓ Withdrawable: $${fmt(account.withdrawable_profit || 0)} · ${profitSplit}% profit split`
+            ? `✓ Withdrawable: $${fmt(account.withdrawable_profit || 0)} · ${profitSplit}% reward split`
             : bufferActivated
               ? `${profitableDaysCount}/${minProfitableDays} days · ${consistencyPassed ? '✓' : '✗'} consistency · $${fmt(account.withdrawable_profit || 0)} pending`
               : 'First payout after buffer zone + consistency + profitable days',
@@ -272,8 +272,8 @@ function useTimelineSteps(account, closedTrades = []) {
         desc: isPhase1UnderReview
           ? `✓ ${phase1Target}% target met — XFT Team review in progress`
           : isPhase1Done
-            ? `✓ ${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`
-            : `${phase1Target}% profit · ${dailyDd}% daily DD · ${minDays} min days`,
+            ? `✓ ${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`
+            : `${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`,
         status: isPhase1UnderReview ? 'review' : isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending',
       },
       {
@@ -282,19 +282,19 @@ function useTimelineSteps(account, closedTrades = []) {
         desc: isPhase2UnderReview
           ? `✓ ${phase2Target}% target met — XFT Team review in progress`
           : isPhase2Done
-            ? `✓ ${phase2Target}% profit · ${dailyDd}% daily DD`
+            ? `✓ ${phase2Target}% reward · ${dailyDd}% daily DD`
             : isPhase1UnderReview
               ? 'Pending Phase 1 approval by XFT Trader Team'
-              : `${phase2Target}% profit · ${dailyDd}% daily DD`,
+              : `${phase2Target}% reward · ${dailyDd}% daily DD`,
         status: isPhase2UnderReview ? 'review' : isPhase2Done ? 'done' : isPhase2Active ? 'active' : 'pending',
       },
       {
         icon: DollarSign,
-        label: 'Funded Account',
+        label: 'Simulation Funded Account',
         desc: isFunded
-          ? `Live capital · ${profitSplit}% profit split`
+          ? `Live capital · ${profitSplit}% reward split`
           : isPhase2UnderReview
-            ? 'Pending funded account approval by XFT Trader Team'
+            ? 'Pending simulation funded account approval by XFT Trader Team'
             : 'Pending Phase 2 completion',
         status: isFunded ? 'done' : (isPhase2UnderReview ? 'review' : 'pending'),
       },
@@ -305,7 +305,7 @@ function useTimelineSteps(account, closedTrades = []) {
           ? '✓ Eligible for withdrawals'
           : isFunded
             ? `Complete 1 trading day (${tradingDaysCount}/1 done)`
-            : 'First payout available after funded status',
+            : 'First payout available after simulation funded status',
         status: withdrawalEligible ? 'active' : 'pending',
       },
     ];
@@ -345,7 +345,7 @@ export default function AccountTimeline({ account, closedTrades = [], onNavigate
     }
     if (!kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
   } else {
-    if (!isFunded) requirements.push({ label: 'Funded account status', met: false });
+    if (!isFunded) requirements.push({ label: 'Simulation funded account status', met: false });
     if (isFunded && !kycApproved) requirements.push({ label: 'KYC verification approved', met: false });
     if (isFunded && kycApproved && tradingDays < 1) requirements.push({ label: `Minimum 1 trading day (${tradingDays}/1)`, met: false });
   }

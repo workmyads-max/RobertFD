@@ -6,7 +6,7 @@ const rules = [
   {
     icon: TrendingDown,
     title: 'Daily Drawdown Limits',
-    description: 'A maximum daily loss limit protects your funded account and enforces disciplined risk management.',
+    description: 'A maximum daily loss limit protects your simulation funded account and enforces disciplined risk management.',
   },
   {
     icon: Shield,
@@ -15,8 +15,8 @@ const rules = [
   },
   {
     icon: Target,
-    title: 'Profit Targets',
-    description: 'Clear profit targets for each evaluation phase so you always know exactly what to aim for.',
+    title: 'Reward Targets',
+    description: 'Clear reward targets for each evaluation phase so you always know exactly what to aim for.',
   },
   {
     icon: Newspaper,
