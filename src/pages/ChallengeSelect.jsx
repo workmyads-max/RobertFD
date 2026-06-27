@@ -6,6 +6,7 @@ import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import PlatformSelectCard from '../components/checkout/PlatformSelectCard';
+import FeeRefundNote from '@/components/shared/FeeRefundNote';
 
 const ACCOUNT_TYPES = {
   standard: {
@@ -32,8 +33,6 @@ const ACCOUNT_TYPES = {
 
 const CHALLENGE_TYPES = [
   { key: 'two-step', label: 'Two-Step Challenge' },
-  { key: 'instant', label: 'Instant Funding' },
-  { key: 'instant_light', label: 'Instant Light' },
   { key: 'instant_account', label: 'Instant Account' },
 ];
 
@@ -45,7 +44,8 @@ function formatSize(n) {
 
 export default function ChallengeSelect() {
   const urlParams = new URLSearchParams(window.location.search);
-  const defaultType = urlParams.get('type') || 'two-step';
+  const requestedType = urlParams.get('type');
+  const defaultType = ['two-step', 'instant_account'].includes(requestedType) ? requestedType : 'two-step';
   const [challengeType, setChallengeType] = useState(defaultType);
   const [accountType, setAccountType] = useState('standard');
   const [selected, setSelected] = useState(null);
@@ -148,6 +148,10 @@ export default function ChallengeSelect() {
             </motion.button>
           ))}
         </div>
+
+        {challengeType === 'two-step' && (
+          <div className="max-w-3xl mx-auto mb-8"><FeeRefundNote /></div>
+        )}
 
         {/* Plans grid */}
         {isLoading ? (

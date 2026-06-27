@@ -152,14 +152,6 @@ export default function PricingSection() {
             >
               Two-Step
             </button>
-            <button
-              onClick={() => setActiveTab('instant')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'instant' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Instant
-            </button>
           </div>
         </motion.div>
 

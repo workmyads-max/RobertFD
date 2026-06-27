@@ -7,6 +7,7 @@ import CheckoutStep3 from '../checkout/CheckoutStep3';
 import CheckoutStep4 from '../checkout/CheckoutStep4';
 import PlatformSelectStep from '../checkout/PlatformSelectStep';
 import CouponInput from '../checkout/CouponInput';
+import FeeRefundNote from '@/components/shared/FeeRefundNote';
 
 // ONLY logged-in users can purchase - guest checkout is disabled
 const STEPS = ['Platform', 'Payment Method', 'Payment', 'Confirmation'];
@@ -72,6 +73,8 @@ export default function DashboardCheckout({ initialOrder, onBack, onComplete }) 
 
   return (
     <div>
+      {order.challenge_type === 'two-step' && <FeeRefundNote className="mb-6" />}
+
       {/* Coupon Input - Step 2 & 3 */}
       {(step === 2 || step === 3) && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

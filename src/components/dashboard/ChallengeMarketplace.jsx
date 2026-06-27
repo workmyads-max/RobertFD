@@ -7,6 +7,7 @@ import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
+import FeeRefundNote from '@/components/shared/FeeRefundNote';
 
 const ACCOUNT_TYPES = {
   standard: {
@@ -148,7 +149,6 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         displayPlan.overnight_holding ? 'Overnight holding ALLOWED.' : 'No overnight holding.',
         displayPlan.weekend_holding ? 'Weekend holding ALLOWED.' : 'Positions must be closed before Friday 21:00 GMT.',
       ].join(' ') },
-    { icon: TrendingUp, color: '#FF5C00', title: 'Max Lots', body: `Maximum position size: ${displayPlan.max_lots} lots per trade.` },
     { icon: Users, color: '#0ea5e9', title: 'Prohibited Activities', body: 'No tick scalping, arbitrage, copy trading (without approval), HFT, or price manipulation tools.' },
     { icon: Shield, color: '#10b981', title: 'Account Security', body: 'Credentials are personal and non-transferable. Account sharing or selling = immediate termination.' },
     { icon: Wallet, color: '#FF5C00', title: 'Payout Policy', body: `${displayPlan.profit_split}% reward split for simulation funded accounts. KYC required. Min 1 profitable cycle before withdrawal.` },
@@ -180,8 +180,6 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
           {[
             { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
-            { id: 'instant', label: 'Instant', desc: '1 phase', icon: Zap },
-            { id: 'instant_light', label: 'Light', desc: 'Simplified', icon: Zap },
             { id: 'instant_account', label: 'Inst. Account', desc: 'Buffer Zone', icon: Target },
           ].map((t, idx) => {
             const isSelected = challengeType === t.id;
@@ -314,6 +312,8 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
           );
         })}
       </div>
+
+      {challengeType === 'two-step' && <FeeRefundNote className="mb-6" />}
 
       {/* Plans grid */}
       {plansLoading ? (

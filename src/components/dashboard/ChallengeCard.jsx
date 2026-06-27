@@ -98,10 +98,6 @@ export default function ChallengeCard({ plan, onSelect, badge }) {
 
         {/* Excluded Features / Rules */}
         <ul className="space-y-2.5">
-          <li className="flex items-start gap-3 text-sm text-[#a1a1aa]">
-            <span className="text-[#a1a1aa] flex-shrink-0 mt-0.5">•</span>
-            <span>Max Lots: {plan.max_lots}</span>
-          </li>
           {plan.news_trading && (
             <li className="flex items-start gap-3 text-sm text-[#a1a1aa]">
               <CheckCircle2 className="w-4 h-4 text-[#22c55e] flex-shrink-0 mt-0.5" />

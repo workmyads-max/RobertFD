@@ -234,20 +234,9 @@ function CompareRow({ label, values }) {
 export default function ChallengeTypes() {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState({});
-  const [showCompare, setShowCompare] = useState(false);
 
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   const handleNavigate = () => navigate('/challenges');
-
-  const compareRows = [
-  { label: 'Evaluation', values: [{ text: 'Phase 1+2', color: 'text-orange-400' }, { text: 'None', color: 'text-emerald-400' }, { text: 'None', color: 'text-emerald-400' }] },
-  { label: 'Daily DD', values: [{ text: '5%' }, { text: '5%' }, { text: '5%' }] },
-  { label: 'Max DD', values: [{ text: '10%' }, { text: '10%' }, { text: 'Trailing' }] },
-  { label: 'Leverage', values: [{ text: '1:100' }, { text: '1:30' }, { text: '1:30' }] },
-  { label: 'Payouts', values: [{ text: 'Bi-weekly' }, { text: 'Daily', color: 'text-emerald-400' }, { text: 'Daily', color: 'text-emerald-400' }] },
-  { label: 'Price', values: [{ text: 'Standard' }, { text: 'Standard' }, { text: '50% Off', color: 'text-lime-400' }] },
-  { label: 'Reward Split', values: [{ text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }, { text: '80%', color: 'text-orange-400' }] }];
-
 
   return (
     <section id="challenge" className="relative py-20 md:py-32 overflow-hidden">
@@ -273,8 +262,8 @@ export default function ChallengeTypes() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {CHALLENGES.map((c, i) =>
+        <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
+          {CHALLENGES.filter((c) => c.id === 'two-step' || c.id === 'instant_account').map((c, i) =>
           <ChallengeCard
             key={c.id}
             c={c}
@@ -285,42 +274,6 @@ export default function ChallengeTypes() {
 
           )}
         </div>
-
-        {/* Compare toggle */}
-        <div className="flex justify-center mb-8">
-          <button
-            onClick={() => setShowCompare(!showCompare)}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'hsl(var(--foreground))' }}>
-            
-            {showCompare ? 'Hide comparison' : 'Compare all plans'}
-            {showCompare ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {/* Comparison table */}
-        <AnimatePresence>
-          {showCompare &&
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.3 }}
-            className="rounded-xl overflow-hidden mb-12"
-            style={{ background: '#16181d', border: '1px solid rgba(255,255,255,0.06)' }}>
-            
-              <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <span className="text-xs text-muted-foreground pl-3">Feature</span>
-                <span className="text-center text-xs font-semibold" style={{ color: '#FF5C00' }}>Two-Step</span>
-                <span className="text-center text-xs font-semibold" style={{ color: '#FF5C00' }}>Instant</span>
-                <span className="text-center text-xs font-semibold" style={{ color: '#CCFF00' }}>Instant Light</span>
-              </div>
-              {compareRows.map((row, i) =>
-            <CompareRow key={i} {...row} />
-            )}
-            </motion.div>
-          }
-        </AnimatePresence>
 
         {/* Disclaimer */}
         <div className="text-center">
