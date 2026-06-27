@@ -79,10 +79,21 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
   const equityData = useMemo(() => buildEquityCurve(trades, accountSize), [trades, accountSize]);
 
   const provisioned = account?.provisioned_at ? new Date(account.provisioned_at) : new Date();
-  const endDate = new Date(provisioned.getTime() + 30 * 24 * 60 * 60 * 1000);
   const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const phaseLabel = account?.phase === 'funded' ? 'Funded' : account?.phase === 'phase2' ? 'Phase 2' : 'Phase 1';
+  // One-Step, Instant, and Instant Account have NO time limit — hide "End" date
+  const isNoTimeLimit = account?.challenge_type === 'one_step'
+    || account?.challenge_type === 'instant'
+    || account?.challenge_type === 'instant_account'
+    || account?.challenge_type === 'instant_light';
+  const endDate = isNoTimeLimit ? null : new Date(provisioned.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  // Phase label — One-Step uses "Evaluation" not "Phase 1"
+  const isOneStep = account?.challenge_type === 'one_step';
+  const phaseLabel = account?.phase === 'funded' ? 'Funded'
+    : account?.phase === 'phase2' ? 'Phase 2'
+    : isOneStep ? 'Evaluation'
+    : 'Phase 1';
   const statusLabel = account?.status === 'active' ? 'Ongoing' : account?.status === 'passed' ? 'Passed' : account?.status === 'funded' ? 'Sim Funded' : account?.status || 'Active';
   const statusColor = account?.status === 'active' ? '#10b981' : account?.status === 'funded' ? '#FF5C00' : '#60a5fa';
 
@@ -214,14 +225,21 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
               value: <span className="font-mono font-bold text-foreground">{account?.mt_login || '—'}</span>,
             },
             { label: 'Start:', value: <span className="font-semibold text-foreground">{fmtDate(provisioned)}</span> },
-            {
+            ...(endDate ? [{
               label: 'End:',
               value: (
                 <span className="flex items-center gap-1 font-semibold text-foreground">
                   {fmtDate(endDate)} <InfoTip text="Challenge end date — 30 days from account activation." />
                 </span>
               ),
-            },
+            }] : [{
+              label: 'Time Limit:',
+              value: (
+                <span className="flex items-center gap-1 font-semibold text-emerald-400">
+                  Unlimited <InfoTip text="This challenge type has no time limit. Trade at your own pace." />
+                </span>
+              ),
+            }]),
             {
               label: 'Account size:',
               value: <span className="font-bold text-foreground">${(accountSize).toLocaleString()}.00</span>,

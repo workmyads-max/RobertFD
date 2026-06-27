@@ -7,11 +7,6 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Zap, DollarSign, Clock, ArrowRight, Target } from 'lucide-react';
 
-function daysSince(dateStr) {
-  if (!dateStr) return null;
-  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
-}
-
 // ─── Progress Timeline ─────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   done:    { line: 'rgba(16,185,129,0.15)',  ring: 'rgba(16,185,129,0.25)',  bg: 'rgba(16,185,129,0.06)', color: '#10b981', label: null },
@@ -34,9 +29,14 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
   const sortedTrades = [...closedTrades].filter(t => t.open_time).sort(
     (a, b) => new Date(a.open_time).getTime() - new Date(b.open_time).getTime()
   );
-  const daysSinceFirstTrade = daysSince(sortedTrades[0]?.open_time || null);
   const isFunded = status === 'funded';
-  const withdrawalEligible = isFunded && daysSinceFirstTrade !== null && daysSinceFirstTrade >= 14;
+  // Withdrawal eligibility: funded + at least 1 trading day (from actual closed trades).
+  // One-Step, Two-Step, Instant all use 1 trading day — NOT 14 calendar days.
+  const tradingDaySet = new Set(
+    sortedTrades.map(t => new Date(t.close_time || t.open_time).toISOString().split('T')[0])
+  );
+  const tradingDaysCount = Math.max(tradingDaySet.size, account?.trading_days || 0);
+  const withdrawalEligible = isFunded && tradingDaysCount >= 1;
 
   if (challengeType === 'instant_account') {
     const bufferTargetPct = snap.buffer_zone_target ?? 5;
@@ -113,7 +113,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
       {
         key: 'payout', label: 'Withdrawal Eligible',
         desc: withdrawalEligible ? '✓ Eligible for withdrawals'
-          : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
+          : isFunded ? `Complete 1 trading day (${tradingDaysCount}/1 done)` : 'First payout available after simulation funded status',
         status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
       },
     ];
@@ -135,7 +135,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
       {
         key: 'payout', label: 'Withdrawal Eligible',
         desc: withdrawalEligible ? '✓ Eligible for withdrawals'
-          : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
+          : isFunded ? `Complete 1 trading day (${tradingDaysCount}/1 done)` : 'First payout available after simulation funded status',
         status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
       },
     ];
@@ -204,7 +204,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     {
       key: 'payout', label: 'Withdrawal Eligible',
       desc: withdrawalEligible ? '✓ Eligible for withdrawals'
-        : isFunded ? `${14 - daysSinceFirstTrade} days remaining` : 'First payout available after simulation funded status',
+        : isFunded ? `Complete 1 trading day (${tradingDaysCount}/1 done)` : 'First payout available after simulation funded status',
       status: withdrawalEligible ? 'active' : 'pending', icon: Clock,
     },
   ];

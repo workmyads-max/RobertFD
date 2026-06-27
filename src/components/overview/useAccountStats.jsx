@@ -75,6 +75,31 @@ export function useAccountStats(account, trades = []) {
     const maxDDPct = maxDD > 0 ? maxDD : Math.abs((size - Math.min(equity, size)) / size) * 100;
     const profitTargetPct = profitProgress > 0 ? profitProgress : (pnl / size) * 100;
 
+    // ── BEST DAY RULE (one_step) — no single day's profit may exceed 50% of total ──
+    // Computed for ALL account types; the UI decides whether to show it.
+    // Only considers days with NET positive PnL (loss days don't count as "best day").
+    let bestDayProfit = 0;
+    let bestDayPct = 0;
+    let bestDayDate = null;
+    if (closedTrades.length > 0 && closedPnl > 0) {
+      const dailyPnlMap = {};
+      closedTrades.forEach(t => {
+        if (!t.close_time) return;
+        const d = new Date(t.close_time);
+        if (isNaN(d.getTime())) return;
+        const day = d.toISOString().split('T')[0];
+        if (!dailyPnlMap[day]) dailyPnlMap[day] = 0;
+        dailyPnlMap[day] += (t.pnl || 0);
+      });
+      for (const [day, dayPnl] of Object.entries(dailyPnlMap)) {
+        if (dayPnl > bestDayProfit) {
+          bestDayProfit = dayPnl;
+          bestDayDate = day;
+        }
+      }
+      bestDayPct = bestDayProfit > 0 ? (bestDayProfit / closedPnl) * 100 : 0;
+    }
+
     return {
       // Core
       size, balance, equity, pnl, dailyPnl: realDailyPnl, floatingPnl, closedPnl,
@@ -86,6 +111,8 @@ export function useAccountStats(account, trades = []) {
       // Advanced
       avgProfit, avgLoss, profitFactor, expectancy, rrr,
       openPositions: openTrades.length,
+      // Best Day Rule (one_step)
+      bestDayProfit, bestDayPct, bestDayDate,
     };
   }, [account, trades]);
 }

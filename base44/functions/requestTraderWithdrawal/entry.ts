@@ -62,6 +62,38 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'A pending withdrawal already exists for this account' }, { status: 409 });
     }
 
+    // ── BEST DAY RULE VALIDATION (one_step only) ──────────────────────────────
+    // No single day's profit may exceed best_day_rule_pct% (default 50%) of total profit.
+    // This is a REVIEW-ONLY rule — checked at payout, NOT auto-breach.
+    // If exceeded, the withdrawal is rejected with guidance to continue trading.
+    if (account.challenge_type === 'one_step') {
+      const bestDayRulePct = account.rule_snapshot?.best_day_rule_pct ?? 50;
+      const tradeRecords = await base44.asServiceRole.entities.TradeRecord.filter({ account_id, status: 'closed' });
+      const totalClosedPnl = tradeRecords.reduce((s, t) => s + (t.pnl || 0), 0);
+      if (totalClosedPnl > 0) {
+        const dailyPnlMap = {};
+        for (const t of tradeRecords) {
+          if (!t.close_time) continue;
+          const d = new Date(t.close_time);
+          if (isNaN(d.getTime())) continue;
+          const day = d.toISOString().split('T')[0];
+          if (!dailyPnlMap[day]) dailyPnlMap[day] = 0;
+          dailyPnlMap[day] += (t.pnl || 0);
+        }
+        let bestDayProfit = 0;
+        for (const dayPnl of Object.values(dailyPnlMap)) {
+          if (dayPnl > bestDayProfit) bestDayProfit = dayPnl;
+        }
+        const bestDayPct = bestDayProfit > 0 ? (bestDayProfit / totalClosedPnl) * 100 : 0;
+        if (bestDayPct > bestDayRulePct) {
+          const additionalProfitNeeded = bestDayProfit / (bestDayRulePct / 100) - totalClosedPnl;
+          return Response.json({
+            error: `Best Day Rule exceeded: Your best day ($${bestDayProfit.toFixed(2)}) is ${bestDayPct.toFixed(1)}% of total profit, exceeding the ${bestDayRulePct}% limit. Please continue trading to dilute this ratio. You need approximately $${additionalProfitNeeded.toFixed(2)} more total profit to become compliant.`,
+          }, { status: 400 });
+        }
+      }
+    }
+
     // 5. Minimum 1 trading day — only for funded accounts (instant_account uses
     //    profitable days tracking instead, and payout eligibility is already verified above)
     if (account.challenge_type !== 'instant_account') {

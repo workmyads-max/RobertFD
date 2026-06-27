@@ -17,6 +17,7 @@ import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
 import InstantAccountWidgets from './InstantAccountWidgets';
+import BestDayMonitor from './BestDayMonitor';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1153,6 +1154,11 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Instant Account Widgets — only for instant_account type */}
       {account?.challenge_type === 'instant_account' && (
         <InstantAccountWidgets account={account} closedTrades={closedTrades} />
+      )}
+
+      {/* Best Day Rule Monitor — only for one_step type (shows during eval AND funded) */}
+      {account?.challenge_type === 'one_step' && (
+        <BestDayMonitor account={account} stats={stats} closedTrades={closedTrades} />
       )}
 
       {/* Phase passed / under review banners */}
