@@ -1,10 +1,37 @@
 /**
- * mt5TerminalQuotes — Live bid/ask for a list of symbols from the MT5 price feed.
- * Tries the batch symbol/list endpoint first, then falls back to per-symbol tick/last.
+ * mt5TerminalQuotes — Live bid/ask for a list of symbols.
+ *
+ * The Tritech MT5 manager API does not expose market-data / quote endpoints
+ * (only account & deal management). We fetch live prices from Yahoo Finance
+ * (free, no API key) and map MT5 symbol names to Yahoo ticker symbols.
  *
  * Returns: [{ symbol, bid, ask, spread, timestamp }]
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+// MT5 symbol → Yahoo Finance ticker
+const YAHOO_MAP = {
+  'EURUSD': 'EURUSD=X', 'GBPUSD': 'GBPUSD=X', 'USDJPY': 'USDJPY=X',
+  'USDCHF': 'USDCHF=X', 'AUDUSD': 'AUDUSD=X', 'USDCAD': 'USDCAD=X',
+  'XAUUSD': 'GC=F', 'XAGUSD': 'SI=F',
+  'BTCUSD': 'BTC-USD',
+  'US500': '^GSPC', 'US30': '^DJI', 'USTEC': '^IXIC',
+};
+
+// Synthetic spread per instrument type (in price units) — for display only.
+// Actual trade execution uses real MT5 prices via the trade function.
+const SPREAD_MAP = {
+  'EURUSD': 0.00008, 'GBPUSD': 0.00010, 'USDJPY': 0.012,
+  'USDCHF': 0.00009, 'AUDUSD': 0.00008, 'USDCAD': 0.00009,
+  'XAUUSD': 0.25, 'XAGUSD': 0.015,
+  'BTCUSD': 15,
+  'US500': 0.25, 'US30': 1.5, 'USTEC': 2.5,
+};
+
+function roundTo(n, digits) {
+  const f = Math.pow(10, digits);
+  return Math.round(n * f) / f;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -13,111 +40,44 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const symbols: string[] = (body.symbols || []).map((s: string) => String(s).toUpperCase());
-
-    const MT5_BASE = Deno.env.get('MT5_API_BASE_URL');
-    const MT5_KEY  = Deno.env.get('MT5_API_KEY');
-    if (!MT5_BASE || !MT5_KEY) {
-      return Response.json({ error: 'MT5 not configured' }, { status: 500 });
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${MT5_KEY}`,
-      'ApiKey': MT5_KEY,
-    };
+    const symbols = (body.symbols || []).map((s) => String(s).toUpperCase());
 
     const now = new Date().toISOString();
-    const quotes: any[] = [];
+    const quotes = [];
 
-    // ── Attempt 1: /api/v1/symbol/list (batch — all symbols at once) ──────────
-    let listMap: Record<string, any> = {};
-    try {
-      const res = await fetch(`${MT5_BASE}/api/v1/symbol/list`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ apikey: MT5_KEY }),
-      });
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const arr = data?.data || data?.symbols || [];
-        if (Array.isArray(arr)) {
-          for (const s of arr) {
-            const sym = String(s.symbol || s.Symbol || s.name || '').toUpperCase();
-            if (sym) listMap[sym] = s;
-          }
-        }
-      }
-    } catch (_) {}
-
-    // If the batch endpoint returned all requested symbols, use them
-    if (Object.keys(listMap).length > 0) {
-      for (const sym of symbols) {
-        const s = listMap[sym];
-        if (s) {
-          const bid = parseFloat(s.bid ?? s.Bid ?? 0);
-          const ask = parseFloat(s.ask ?? s.Ask ?? 0);
-          if (bid > 0 && ask > 0) {
-            quotes.push({
-              symbol: sym,
-              bid: Math.round(bid * 100000) / 100000,
-              ask: Math.round(ask * 100000) / 100000,
-              spread: Math.round((ask - bid) * 100000) / 100000,
-              timestamp: now,
-            });
-          }
-        }
-      }
-      if (quotes.length === symbols.length) {
-        return Response.json({ success: true, quotes });
-      }
-    }
-
-    // ── Attempt 2: per-symbol /api/v1/symbol/get ──────────────────────────────
+    // Fetch each symbol's price from Yahoo Finance chart endpoint (no key needed)
     await Promise.all(symbols.map(async (sym) => {
-      if (quotes.find(q => q.symbol === sym)) return; // already have it
-      let bid = 0, ask = 0;
+      const yTicker = YAHOO_MAP[sym];
+      if (!yTicker) return;
+
       try {
-        const res = await fetch(`${MT5_BASE}/api/v1/symbol/get`, {
-          method: 'POST', headers,
-          body: JSON.stringify({ symbol: sym, apikey: MT5_KEY }),
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yTicker)}?interval=1m&range=1d`;
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'User-Agent': 'Mozilla/5.0' },
         });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          const d = data?.data || data;
-          bid = parseFloat(d?.bid ?? d?.Bid ?? 0);
-          ask = parseFloat(d?.ask ?? d?.Ask ?? 0);
-        }
-      } catch (_) {}
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (!meta) return;
 
-      // Fallback: /api/v1/tick/last
-      if (bid === 0 || ask === 0) {
-        try {
-          const res = await fetch(`${MT5_BASE}/api/v1/tick/last`, {
-            method: 'POST', headers,
-            body: JSON.stringify({ symbol: sym, apikey: MT5_KEY }),
-          });
-          if (res.ok) {
-            const data = await res.json().catch(() => ({}));
-            const d = data?.data || data;
-            bid = parseFloat(d?.bid ?? d?.Bid ?? 0);
-            ask = parseFloat(d?.ask ?? d?.Ask ?? 0);
-          }
-        } catch (_) {}
-      }
+        const price = parseFloat(meta.regularMarketPrice ?? meta.chartPreviousClose ?? 0);
+        if (price <= 0) return;
 
-      if (bid > 0 && ask > 0) {
+        const spread = SPREAD_MAP[sym] || (price * 0.0002);
+        const digits = price >= 100 ? 2 : 5;
+
         quotes.push({
           symbol: sym,
-          bid: Math.round(bid * 100000) / 100000,
-          ask: Math.round(ask * 100000) / 100000,
-          spread: Math.round((ask - bid) * 100000) / 100000,
+          bid: roundTo(price - spread / 2, digits),
+          ask: roundTo(price + spread / 2, digits),
+          spread: roundTo(spread, digits),
           timestamp: now,
         });
-      }
+      } catch (_) { /* skip this symbol */ }
     }));
 
     return Response.json({ success: true, quotes });
-
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
