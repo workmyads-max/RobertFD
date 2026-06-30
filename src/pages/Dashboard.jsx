@@ -60,6 +60,7 @@ import MarketsHub from '../components/dashboard/MarketsHub';
 import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
 import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
+import MT5Terminal from '../components/mt5terminal/MT5Terminal';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
@@ -286,6 +287,7 @@ export default function Dashboard() {
       case 'trash': return <TrashAccounts onStartChallenge={goToChallenge} />;
       case 'analytics': return <Analytics onStartChallenge={goToChallenge} />;
       case 'markets': return <MarketsHub />;
+      case 'mt5-terminal': return <MT5Terminal />;
       case 'leaderboard': return <Leaderboard />;
       case 'journal': return <TradingJournal user={user} />;
       case 'billing': return <Billing />;
@@ -334,7 +336,7 @@ export default function Dashboard() {
     }
   };
 
-  const isTerminal  = activePage === 'terminal';
+  const isTerminal  = activePage === 'terminal' || activePage === 'mt5-terminal';
   const isOverview  = activePage === 'overview';
 
   return (

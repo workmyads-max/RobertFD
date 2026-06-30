@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard, Trash2, CalendarClock } from 'lucide-react';
+import { ChevronRight, Menu, X, PanelLeftOpen, LogOut, Zap, Shield, ShoppingBag, Wallet, DollarSign, HeadphonesIcon, Users, Bell, ShieldCheck, MessageCircle, Activity, Globe, Cpu, Sliders, AlertTriangle, Tag, Share2, Mail, BarChart2, BookOpen, Trophy, Award, CreditCard, Gift, LayoutDashboard, Trash2, CalendarClock, LineChart } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import XFLogo from '../shared/XFLogo';
@@ -22,6 +22,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'economic-calendar', label: 'Economic Calendar', icon: CalendarClock },
     { id: 'markets', label: 'Markets', icon: Globe },
+    { id: 'mt5-terminal', label: 'MetaTrader 5', icon: LineChart, highlight: true },
     { id: 'journal', label: 'Journal', icon: BookOpen },
     { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true, limeGreen: true },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
