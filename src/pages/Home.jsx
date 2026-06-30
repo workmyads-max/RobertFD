@@ -60,7 +60,7 @@ export default function Home() {
             Trade with Real Capital
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-            Experience the power of funded trading with live animations and real-time analytics
+            Experience the power of funded trading with real-time analytics
           </p>
         </div>
         <FundedShowcaseDemo />
