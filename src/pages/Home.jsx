@@ -5,6 +5,7 @@ import TrustBar from '../components/landing/TrustBar';
 import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
 import FundedShowcaseDemo from '../components/landing/FundedShowcaseDemo';
+import FundedTraderExperience from '../components/landing/FundedTraderExperience';
 import ChallengeHub from '../components/landing/ChallengeHub';
 import ChallengeExamples from '../components/landing/ChallengeExamples';
 import RulesSection from '../components/landing/RulesSection';
@@ -65,6 +66,7 @@ export default function Home() {
         </div>
         <FundedShowcaseDemo />
       </section>
+      <FundedTraderExperience />
       <ChallengeHub />
       <ChallengeExamples />
       <RulesSection />
