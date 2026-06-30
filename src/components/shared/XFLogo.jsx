@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 /**
- * XFunded Logo — clean modern mark with bold wordmark
+ * XFunded Logo - clean modern mark with bold wordmark
  * 
  * Icon: A bold angular "X" inside a rounded-square,
  *       with a sharp orange slash accent and subtle glow.
@@ -48,13 +48,13 @@ function LogoIcon({ px, animate }) {
         <rect x="2" y="2" width="96" height="96" rx="22" fill="url(#xfIconBg)" />
         <rect x="2" y="2" width="96" height="96" rx="22" fill="none" stroke="rgba(255,92,0,0.45)" strokeWidth="1.5" />
 
-        {/* Bold X — two crossing strokes */}
+        {/* Bold X - two crossing strokes */}
         {/* Top-left → Bottom-right */}
         <line x1="22" y1="22" x2="78" y2="78" stroke="url(#xfOrange)" strokeWidth="15" strokeLinecap="round" filter="url(#xfGlow)" />
         {/* Top-right → Bottom-left */}
         <line x1="78" y1="22" x2="22" y2="78" stroke="url(#xfOrange)" strokeWidth="15" strokeLinecap="round" filter="url(#xfGlow)" />
 
-        {/* Crisp white slash accent — top-right diagonal */}
+        {/* Crisp white slash accent - top-right diagonal */}
         <line x1="62" y1="18" x2="84" y2="50" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.9" />
 
         {/* Small orange dot at center intersection */}
@@ -77,7 +77,7 @@ export default function XFLogo({ size = 'md', animate = false }) {
     <div className="flex items-center gap-3">
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
-        {/* "XFunded" — bold, tight tracking */}
+        {/* "XFunded" - bold, tight tracking */}
         <div
           style={{
             fontSize: name,

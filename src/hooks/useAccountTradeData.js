@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { filterRealTrades } from './useAccountTrades';
 
 /**
- * useAccountTradeData — CENTRALIZED trade-data loader for Account Overview.
+ * useAccountTradeData - CENTRALIZED trade-data loader for Account Overview.
  *
  * This is the SINGLE source of truth for ALL trade-derived sections:
  *   - Closed Trades section
@@ -17,11 +17,11 @@ import { filterRealTrades } from './useAccountTrades';
  * Guarantees:
  *   1. Waits until account.account_id is resolved before fetching.
  *   2. Re-fetches automatically when the selected account changes.
- *   3. NEVER blanks already-loaded data on a transient error or empty refetch —
+ *   3. NEVER blanks already-loaded data on a transient error or empty refetch -
  *      keeps the last good result (keepPreviousData). Empty state only shows
  *      when the account genuinely has zero matching records.
  *   4. Excludes MT5 deposit/balance pseudo-records uniformly across ALL derived data.
- *   5. Works identically for every account status — active, passed, under-review, funded.
+ *   5. Works identically for every account status - active, passed, under-review, funded.
  *   6. mt_login-scoped: the backend function filters by the account's CURRENT mt_login,
  *      ensuring per-MT5-account data isolation (Phase 1 trades never leak into Phase 2).
  *
@@ -58,7 +58,7 @@ export function useAccountTradeData(account, { refetchIntervalMs = 10000 } = {})
     [rawTrades, account]
   );
 
-  // Derive closed trades — sorted newest-first by close_time
+  // Derive closed trades - sorted newest-first by close_time
   const closedTrades = useMemo(
     () => allTrades
       .filter(t => t.status === 'closed')

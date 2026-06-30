@@ -53,7 +53,7 @@ export default function KYC({ user }) {
   const [uploading, setUploading] = useState(null);
   const [form, setForm] = useState({ id_type: 'passport', full_name: user?.full_name || '', date_of_birth: '', nationality: '' });
 
-  // Shared KYC status — single source of truth (also used by Withdrawals).
+  // Shared KYC status - single source of truth (also used by Withdrawals).
   // Shows a loading indicator until the real status arrives; never renders a
   // stale default "pending" state.
   const { kyc, status, isLoading, invalidate: invalidateKyc } = useKycStatus(user?.email);

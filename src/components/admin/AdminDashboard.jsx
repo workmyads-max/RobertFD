@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import AdminPendingBanner from './AdminPendingBanner';
 
 export default function AdminDashboard({ onNavigate }) {
-  // Admin-scoped fetch via service-role backend function — bypasses per-user RLS
+  // Admin-scoped fetch via service-role backend function - bypasses per-user RLS
   // so admins see ALL users' orders/accounts/withdrawals/tickets. Normal-user
   // isolation (RLS by user_email) remains fully intact for non-admin callers.
   const { data: adminData } = useQuery({
@@ -32,10 +32,10 @@ export default function AdminDashboard({ onNavigate }) {
         <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
           <Shield className="w-6 h-6 text-primary" /> Admin Dashboard
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">Robert Funds — Admin Control Center</p>
+        <p className="text-sm text-muted-foreground font-mono mt-1">Robert Funds - Admin Control Center</p>
       </div>
 
-      {/* Pending Reviews Banner — surfaces actionable items across 6 admin queues */}
+      {/* Pending Reviews Banner - surfaces actionable items across 6 admin queues */}
       <AdminPendingBanner onNavigate={onNavigate} />
 
       {/* Stats */}

@@ -31,7 +31,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
   );
   const isFunded = status === 'funded';
   // Withdrawal eligibility: funded + at least 1 trading day (from actual closed trades).
-  // One-Step, Two-Step, Instant all use 1 trading day — NOT 14 calendar days.
+  // One-Step, Two-Step, Instant all use 1 trading day - NOT 14 calendar days.
   const tradingDaySet = new Set(
     sortedTrades.map(t => new Date(t.close_time || t.open_time).toISOString().split('T')[0])
   );
@@ -58,7 +58,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
       { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
       {
         key: 'buffer', label: 'Buffer Zone Target',
-        desc: bufferActivated ? `✓ $${fmt0(bufferTargetVal)} locked — DD reference updated`
+        desc: bufferActivated ? `✓ $${fmt0(bufferTargetVal)} locked - DD reference updated`
           : `Reach $${fmt0(bufferTargetVal)} (${bufferTargetPct}%) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
         status: bufferActivated ? 'done' : (status === 'active' ? 'active' : 'pending'), icon: Zap,
       },
@@ -98,7 +98,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
       { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
       {
         key: 'eval', label: 'Evaluation',
-        desc: isEvalUnderReview ? `✓ ${target}% target met — review in progress`
+        desc: isEvalUnderReview ? `✓ ${target}% target met - review in progress`
           : isEvalPassed ? `✓ ${target}% reward · ${dailyDd}% daily DD · ${maxDd}% trailing DD`
           : `${target}% reward target · ${dailyDd}% daily DD · ${maxDd}% trailing DD · Best Day ${bestDayPct}%`,
         status: isEvalUnderReview ? 'waiting' : isEvalPassed ? 'done' : (isEvalActive ? 'active' : 'pending'), icon: Target,
@@ -171,7 +171,7 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     : isPhase1Done ? 'done' : isPhase1Active ? 'active' : 'pending';
   const phase2Status = isPhase2UnderReview ? 'waiting'
     : isPhase2Done ? 'done' : isPhase2Active ? 'active' : (isPhase1Done ? 'active' : 'pending');
-  // Funded Account is NEVER 'active' — only 'done' when actually funded,
+  // Funded Account is NEVER 'active' - only 'done' when actually funded,
   // 'waiting' when under funded review, otherwise 'pending'.
   const fundedStatus = isFunded ? 'done'
     : isPhase2UnderReview ? 'waiting'
@@ -181,14 +181,14 @@ function buildTimelineSteps(account, closedTrades = [], livePlan = null) {
     { key: 'purchased', label: 'Challenge Purchased', desc: 'Account credentials issued', status: 'done', icon: CheckCircle2 },
     {
       key: 'phase1', label: 'Phase 1',
-      desc: isPhase1UnderReview ? `✓ ${phase1Target}% target met — review in progress`
+      desc: isPhase1UnderReview ? `✓ ${phase1Target}% target met - review in progress`
         : isPhase1Done ? `✓ ${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`
         : `${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`,
       status: phase1Status, icon: Zap,
     },
     {
       key: 'phase2', label: 'Phase 2',
-      desc: isPhase2UnderReview ? `✓ ${phase2Target}% target met — funded review in progress`
+      desc: isPhase2UnderReview ? `✓ ${phase2Target}% target met - funded review in progress`
         : isPhase2Done ? `✓ ${phase2Target}% reward · ${dailyDd}% daily DD`
         : isPhase1UnderReview ? 'Pending Phase 1 approval'
         : `${phase2Target}% reward · ${dailyDd}% daily DD`,
@@ -302,10 +302,10 @@ function PerformanceMetrics({ stats }) {
 
   const rows = [
     { label: 'Reward Factor', value: isFinite(profitFactor) && profitFactor > 0 ? profitFactor.toFixed(2) : '0.00', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
-    { label: 'Expectancy', value: isFinite(expectancy) ? `$${expectancy.toFixed(2)}` : '—', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Avg RR Ratio', value: rrr > 0 ? `1:${rrr.toFixed(2)}` : '—', color: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
-    { label: 'Avg Win', value: avgProfit > 0 ? `$${avgProfit.toFixed(2)}` : '—', color: '#10b981' },
-    { label: 'Avg Loss', value: avgLoss > 0 ? `$${avgLoss.toFixed(2)}` : '—', color: '#ef4444' },
+    { label: 'Expectancy', value: isFinite(expectancy) ? `$${expectancy.toFixed(2)}` : '-', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Avg RR Ratio', value: rrr > 0 ? `1:${rrr.toFixed(2)}` : '-', color: rrr >= 1.5 ? '#10b981' : '#FF5C00' },
+    { label: 'Avg Win', value: avgProfit > 0 ? `$${avgProfit.toFixed(2)}` : '-', color: '#10b981' },
+    { label: 'Avg Loss', value: avgLoss > 0 ? `$${avgLoss.toFixed(2)}` : '-', color: '#ef4444' },
     { label: 'Total Lots', value: lots > 0 ? lots.toFixed(2) : '0', color: 'rgba(255,255,255,0.6)' },
     { label: 'Winning Trades', value: wins, color: '#10b981' },
     { label: 'Losing Trades', value: losses, color: '#ef4444' },

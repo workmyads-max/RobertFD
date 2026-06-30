@@ -91,7 +91,7 @@ export default function AdminWithdrawals() {
     staleTime: 120000,
   });
 
-  // Track A — challenge profit payouts ONLY. Affiliate/commission payouts
+  // Track A - challenge profit payouts ONLY. Affiliate/commission payouts
   // (account_id === 'affiliate') are managed separately and never mixed in here.
   const challengeWithdrawals = withdrawals.filter(w => w.account_id && w.account_id !== 'affiliate');
 
@@ -110,7 +110,7 @@ export default function AdminWithdrawals() {
             <DollarSign className="w-6 h-6 text-primary" /> Challenge Reward Payouts
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">${totalPending.toLocaleString()} pending • ${totalPaid.toLocaleString()} paid</p>
-          <p className="text-[11px] text-muted-foreground/70 mt-1">Track A — trading reward payouts only. Affiliate/commission payouts are managed separately.</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-1">Track A - trading reward payouts only. Affiliate/commission payouts are managed separately.</p>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export default function AdminWithdrawals() {
               <select value={w.status} onChange={e => {
                   const newStatus = e.target.value;
                   // "approved" and "rejected" MUST go through the backend function
-                  // (adminApproveWithdrawal) — it handles MT5 account renewal, balance
+                  // (adminApproveWithdrawal) - it handles MT5 account renewal, balance
                   // deduction, notifications, certificates, and audit trail. A direct
                   // entity update would skip all of that and leave the payout half-processed.
                   if (newStatus === 'approved') {
@@ -216,20 +216,20 @@ export default function AdminWithdrawals() {
                 <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-xl">×</button>
               </div>
               <div className="p-5 space-y-4">
-                {/* Payout destination — clearly visible for sending the payout */}
+                {/* Payout destination - clearly visible for sending the payout */}
                 <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
                   <div className="text-xs font-bold text-emerald-400 flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /> Send Payout To</div>
                   {[
                     { l: 'Trader Name', v: detailData?.trader_name || selected.user_email },
-                    { l: 'MT5 Current Account', v: detailData?.mt_login || '—' },
+                    { l: 'MT5 Current Account', v: detailData?.mt_login || '-' },
                     { l: `Wallet (${selected.method?.replace('_', ' ') || 'n/a'})`, v: selected.wallet_address },
                   ].map(({ l, v }) => (
                     <div key={l} className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase">{l}</div>
-                        <div className="text-xs font-semibold text-foreground break-all">{v || '—'}</div>
+                        <div className="text-xs font-semibold text-foreground break-all">{v || '-'}</div>
                       </div>
-                      {v && v !== '—' && (
+                      {v && v !== '-' && (
                         <button onClick={() => copy(v, l)}
                           className="shrink-0 text-[10px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-muted-foreground transition-colors">
                           {copied === l ? '✓ Copied' : 'Copy'}
@@ -248,10 +248,10 @@ export default function AdminWithdrawals() {
                 {/* Info */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { l: 'Trader Name', v: detailData?.trader_name || '—' },
+                    { l: 'Trader Name', v: detailData?.trader_name || '-' },
                     { l: 'User Email', v: selected.user_email },
                     { l: 'Account ID', v: selected.account_id },
-                    { l: 'MT5 Login', v: detailData?.mt_login || '—' },
+                    { l: 'MT5 Login', v: detailData?.mt_login || '-' },
                     { l: 'Amount', v: `$${selected.amount}` },
                     { l: 'Method', v: selected.method?.replace('_', ' ') },
                     { l: 'Wallet Address', v: selected.wallet_address },
@@ -259,7 +259,7 @@ export default function AdminWithdrawals() {
                   ].map(({ l, v }) => (
                     <div key={l}>
                       <div className="text-[10px] font-mono text-muted-foreground mb-0.5 uppercase">{l}</div>
-                      <div className="text-xs font-semibold text-foreground break-all">{v || '—'}</div>
+                      <div className="text-xs font-semibold text-foreground break-all">{v || '-'}</div>
                     </div>
                   ))}
                 </div>

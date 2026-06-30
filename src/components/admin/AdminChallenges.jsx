@@ -102,7 +102,7 @@ export default function AdminChallenges() {
           <h1 className="text-3xl font-black text-foreground flex items-center gap-3 mb-1">
             <Zap className="w-6 h-6 text-primary" /> Manage Challenges
           </h1>
-          <p className="text-sm text-muted-foreground font-mono">All challenge plans — synced with Supabase</p>
+          <p className="text-sm text-muted-foreground font-mono">All challenge plans - synced with Supabase</p>
         </div>
         {saved && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}

@@ -86,11 +86,11 @@ export default function AdminKYC() {
           return (
             <div key={k.id} className="grid grid-cols-5 gap-2 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] items-center">
               <div className="col-span-2 min-w-0">
-                <div className="text-xs font-semibold text-foreground">{k.full_name || '—'}</div>
+                <div className="text-xs font-semibold text-foreground">{k.full_name || '-'}</div>
                 <div className="text-[11px] text-muted-foreground truncate">{k.user_email}</div>
               </div>
-              <span className="text-xs text-muted-foreground capitalize">{k.id_type?.replace('_', ' ') || '—'}</span>
-              <span className="text-[11px] text-muted-foreground font-mono">{k.submitted_at ? new Date(k.submitted_at).toLocaleDateString() : '—'}</span>
+              <span className="text-xs text-muted-foreground capitalize">{k.id_type?.replace('_', ' ') || '-'}</span>
+              <span className="text-[11px] text-muted-foreground font-mono">{k.submitted_at ? new Date(k.submitted_at).toLocaleDateString() : '-'}</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono px-2 py-1 rounded-lg" style={{ background: `${sc.color}15`, color: sc.color, border: `1px solid ${sc.color}30` }}>{sc.label}</span>
                 <button onClick={() => { setSelected(k); setNotes(k.admin_notes || ''); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
@@ -111,7 +111,7 @@ export default function AdminKYC() {
               className="w-full max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto"
               style={{ background: '#0e0e10', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center justify-between p-5 border-b border-white/5">
-                <h2 className="text-base font-black">KYC Review — {selected.full_name || selected.user_email}</h2>
+                <h2 className="text-base font-black">KYC Review - {selected.full_name || selected.user_email}</h2>
                 <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-xl">×</button>
               </div>
               <div className="p-5">
@@ -126,7 +126,7 @@ export default function AdminKYC() {
                   ].map(({ l, v }) => (
                     <div key={l}>
                       <div className="text-[10px] font-mono text-muted-foreground mb-0.5 uppercase">{l}</div>
-                      <div className="text-xs font-semibold text-foreground">{v || '—'}</div>
+                      <div className="text-xs font-semibold text-foreground">{v || '-'}</div>
                     </div>
                   ))}
                 </div>

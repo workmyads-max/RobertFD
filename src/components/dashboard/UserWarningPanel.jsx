@@ -20,7 +20,7 @@ const VIOLATION_DESCRIPTIONS = {
   hedge_abuse:            'Prohibited hedging activity detected on Standard account.',
   copy_trading_signal:    'Possible copy trading or signal service usage detected.',
   toxic_flow:             'Abnormal stop-hunt ratio flagged.',
-  unusual_dd_behavior:    'Drawdown usage approaching limit — review your risk management.',
+  unusual_dd_behavior:    'Drawdown usage approaching limit - review your risk management.',
   overnight_violation:    'Overnight position holding violation on Standard account.',
   synthetic_arbitrage:    'Synthetic arbitrage via correlated instruments detected.',
   news_trading_violation: 'News trading detected during high-impact event blackout.',
@@ -33,7 +33,7 @@ const VIOLATION_DESCRIPTIONS = {
 // and never set can_trade=false. Only a REAL Daily DD or Overall/Max DD breach
 // (handled server-side by mt5RealtimeSync / scheduledMTSync / automatedDDBreach)
 // may automatically fail an account. The user-facing breach modal (DDBreachModal)
-// already handles real breaches — so this panel renders nothing.
+// already handles real breaches - so this panel renders nothing.
 // Admins still see all risk_score/risk_level/risk_flags in the Admin Risk Center.
 export default function UserWarningPanel() {
   return null;

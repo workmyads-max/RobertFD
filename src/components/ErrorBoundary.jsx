@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 /**
- * ErrorBoundary — catches render errors in its subtree and shows a clean,
+ * ErrorBoundary - catches render errors in its subtree and shows a clean,
  * branded fallback instead of a blank screen. Provides manual Reload + Home.
  *
  * Reset behavior: pass a changing `resetKey` prop (e.g. the active page key) so
@@ -42,7 +42,7 @@ export default class ErrorBoundary extends React.Component {
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">Something went wrong</h2>
           <p className="text-sm text-muted-foreground mb-7 leading-relaxed">
-            This section ran into an unexpected error. Your data is safe — try reloading the page.
+            This section ran into an unexpected error. Your data is safe - try reloading the page.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button onClick={() => window.location.reload()}

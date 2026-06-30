@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://wpzgwvimupbbuflsbkvc.supabase.co';
-// Real Supabase anon/public key — safe for browser (RLS enforces security)
+// Real Supabase anon/public key - safe for browser (RLS enforces security)
 const supabaseAnonKey = 'sb_publishable_WtyPv8akefzovYvz9hacAg__hvfbUOg';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

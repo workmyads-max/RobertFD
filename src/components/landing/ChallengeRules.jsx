@@ -211,14 +211,14 @@ export default function ChallengeRules() {
               className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
             >
               <RulesCard
-                title="Phase 1 — Evaluation"
+                title="Phase 1 - Evaluation"
                 phase="Two-Step Challenge"
                 data={twoStepPhase1}
                 glowColor="#FF5C00"
                 delay={0}
               />
               <RulesCard
-                title="Phase 2 — Verification"
+                title="Phase 2 - Verification"
                 phase="Two-Step Challenge"
                 data={twoStepPhase2}
                 glowColor="#FF8A3D"

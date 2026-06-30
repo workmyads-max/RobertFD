@@ -79,7 +79,7 @@ export default function CouponInput({ order, updateOrder }) {
           <CheckCircle className="w-4 h-4 text-emerald-400" />
           <div>
             <span className="text-xs font-black text-emerald-400 font-mono">{code}</span>
-            <span className="text-xs text-muted-foreground ml-2">— save ${order.discount_amount}</span>
+            <span className="text-xs text-muted-foreground ml-2">- save ${order.discount_amount}</span>
           </div>
         </div>
         <button onClick={handleRemove} className="text-muted-foreground hover:text-red-400 transition-colors text-xs font-mono">Remove</button>

@@ -7,7 +7,7 @@ import { base44 } from '@/api/base44Client';
 /**
  * Confirm payment and provision MT5 account via manualCryptoReview backend.
  * This is the SAME path used by AdminPaymentReview and all automatic webhooks.
- * No duplicate ChallengeAccount creation — provisionMT5Account handles it.
+ * No duplicate ChallengeAccount creation - provisionMT5Account handles it.
  */
 async function confirmAndProvisionAccount(order) {
   const res = await base44.functions.invoke('manualCryptoReview', {
@@ -134,7 +134,7 @@ export default function AdminOrders() {
             <div key={o.id} className="grid grid-cols-7 gap-2 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] items-center transition-colors">
               <div className="col-span-2 min-w-0">
                 <div className="text-xs font-mono font-bold text-foreground truncate">{o.order_id || `ORD-${o.id?.slice(0,8)}`}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{o.full_name || o.email || '—'}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{o.full_name || o.email || '-'}</div>
               </div>
               <span className="text-xs text-muted-foreground capitalize">{o.challenge_type === 'two-step' ? '2-Step' : 'Instant'}</span>
               <span className="text-xs text-foreground">${(o.account_size||0).toLocaleString()}</span>
@@ -188,7 +188,7 @@ export default function AdminOrders() {
                 ].map(({ l, v }) => (
                   <div key={l}>
                     <div className="text-[10px] font-mono text-muted-foreground mb-0.5 uppercase">{l}</div>
-                    <div className="text-xs font-semibold text-foreground break-all">{v || '—'}</div>
+                    <div className="text-xs font-semibold text-foreground break-all">{v || '-'}</div>
                   </div>
                 ))}
               </div>

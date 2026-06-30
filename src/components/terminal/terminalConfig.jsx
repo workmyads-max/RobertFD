@@ -57,7 +57,7 @@ export const INSTRUMENTS = [
 ];
 
 // ── Leverage by category ─────────────────────────────────────────────────────
-// Default leverage config — can be overridden by admin settings
+// Default leverage config - can be overridden by admin settings
 export const DEFAULT_LEVERAGE_CONFIG = {
   fx:        { default: 100, options: [10, 20, 30, 50, 100, 200, 500] },
   metal:     { default: 100, options: [10, 20, 50, 100, 200] },
@@ -207,7 +207,7 @@ export function calcRequiredMargin(symbol, lots, leverage, currentPrice) {
   const inst = INSTRUMENTS.find(i => i.symbol === symbol);
   if (!inst || !currentPrice || lots <= 0) return 0;
 
-  // Effective leverage — capped per instrument type
+  // Effective leverage - capped per instrument type
   const lev = getLeverageForInstrument(symbol, leverage || 100);
 
   if (inst.type === 'fx') {
@@ -215,13 +215,13 @@ export function calcRequiredMargin(symbol, lots, leverage, currentPrice) {
     const [base, quote] = symbol.split('/');
     let notional;
     if (quote === 'USD') {
-      // EUR/USD, GBP/USD, AUD/USD, NZD/USD — notional already in USD
+      // EUR/USD, GBP/USD, AUD/USD, NZD/USD - notional already in USD
       notional = lots * inst.contractSize * currentPrice;
     } else if (base === 'USD') {
-      // USD/JPY, USD/CHF, USD/CAD, USD/MXN — notional in quote ccy, convert to USD
+      // USD/JPY, USD/CHF, USD/CAD, USD/MXN - notional in quote ccy, convert to USD
       notional = lots * inst.contractSize; // USD notional = lots * contractSize / 1 (base is USD)
     } else {
-      // Cross pairs EUR/GBP, EUR/JPY, GBP/JPY etc. — approximate in USD via current price
+      // Cross pairs EUR/GBP, EUR/JPY, GBP/JPY etc. - approximate in USD via current price
       notional = lots * inst.contractSize * currentPrice;
     }
     return parseFloat((notional / lev).toFixed(2));
@@ -277,7 +277,7 @@ export function calcPnl(pos, currentPrice) {
       // USD/JPY, USD/CHF etc: diff in quote ccy, convert to USD via close price
       pnl = (diff / currentPrice) * pos.lots * inst.contractSize;
     } else {
-      // Cross pairs — approximate: diff × lots × contractSize × currentPrice
+      // Cross pairs - approximate: diff × lots × contractSize × currentPrice
       pnl = diff * pos.lots * inst.contractSize;
     }
   } else if (inst.type === 'metal' || inst.type === 'commodity') {
@@ -285,7 +285,7 @@ export function calcPnl(pos, currentPrice) {
     // Oil:  diff × lots × contractSize (100 bbl/lot)
     pnl = diff * pos.lots * inst.contractSize;
   } else {
-    // Indices, stocks, crypto — contractSize = 1 for most; formula still applies
+    // Indices, stocks, crypto - contractSize = 1 for most; formula still applies
     pnl = diff * pos.lots * inst.contractSize;
   }
 
@@ -368,15 +368,15 @@ export function getMarketClosedReason(symbol) {
   const utcTime = utcHour + utcMin / 60;
 
   if (inst.type === 'fx' || inst.type === 'metal') {
-    if (utcDay === 6 && utcTime >= 22) return 'Forex market closed — Weekend';
-    if (utcDay === 0 && utcTime < 22) return 'Forex market closed — Sunday (reopens 22:00 UTC)';
+    if (utcDay === 6 && utcTime >= 22) return 'Forex market closed - Weekend';
+    if (utcDay === 0 && utcTime < 22) return 'Forex market closed - Sunday (reopens 22:00 UTC)';
   }
 
-  if (utcDay === 0 || utcDay === 6) return `${symbol} closed — Weekend`;
+  if (utcDay === 0 || utcDay === 6) return `${symbol} closed - Weekend`;
 
   if (['AAPL','TSLA','AMZN','MSFT','GOOGL','META','NFLX','NVDA','AMD','BABA','DIS','JPM','NAS100','US30','SPX500','VIX'].includes(symbol)) {
-    if (utcTime < 13.5) return `${symbol} pre-market — Opens 13:30 UTC`;
-    if (utcTime >= 20)  return `${symbol} after-hours — Closed at 20:00 UTC`;
+    if (utcTime < 13.5) return `${symbol} pre-market - Opens 13:30 UTC`;
+    if (utcTime >= 20)  return `${symbol} after-hours - Closed at 20:00 UTC`;
   }
 
   return null;

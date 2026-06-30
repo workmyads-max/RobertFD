@@ -70,7 +70,7 @@ export default function SessionAnalytics({ trades = [] }) {
                   <span className="text-xl">{session.icon}</span>
                   <div>
                     <div className="text-sm font-black text-foreground">{session.label}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{session.hours[0]}:00 – {session.hours[1]}:00 UTC</div>
+                    <div className="text-[10px] font-mono text-muted-foreground">{session.hours[0]}:00 - {session.hours[1]}:00 UTC</div>
                   </div>
                 </div>
                 {isBest && <span className="px-2 py-0.5 rounded-full text-[9px] font-black text-white" style={{ background: session.color }}>BEST</span>}

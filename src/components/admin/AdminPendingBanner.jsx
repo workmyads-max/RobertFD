@@ -5,12 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 /**
- * AdminPendingBanner — shows pending counts across 6 admin review queues.
+ * AdminPendingBanner - shows pending counts across 6 admin review queues.
  * Only rendered on the Admin Dashboard (admin-overview). Each card is clickable
  * and navigates to the corresponding admin sub-page via onNavigate.
  */
 export default function AdminPendingBanner({ onNavigate }) {
-  // Fetch all 6 pending counts in parallel — each query is independent.
+  // Fetch all 6 pending counts in parallel - each query is independent.
   const { data: fundedReviews = [] } = useQuery({
     queryKey: ['admin-pending-funded-reviews'],
     queryFn: () => base44.entities.FundedAccountReview.filter({ status: 'pending_review' }, '-created_date', 200),

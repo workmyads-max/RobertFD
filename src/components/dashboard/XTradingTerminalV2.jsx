@@ -315,7 +315,7 @@ export default function XTradingTerminalV2({ account }) {
                           </span>
                         </div>
                         <div className="text-sm font-mono font-bold text-white">
-                          {p?.bid ? p.bid.toFixed(inst.digits) : '—'}
+                          {p?.bid ? p.bid.toFixed(inst.digits) : '-'}
                         </div>
                       </motion.button>
                     );
@@ -441,7 +441,7 @@ export default function XTradingTerminalV2({ account }) {
                     {item.label}
                   </div>
                   <div className="text-lg font-bold text-white">
-                    {item.value ? item.value.toFixed(selected?.digits) : '—'}
+                    {item.value ? item.value.toFixed(selected?.digits) : '-'}
                   </div>
                 </motion.div>
               ))}

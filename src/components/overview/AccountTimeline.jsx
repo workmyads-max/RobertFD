@@ -150,7 +150,7 @@ function useTimelineSteps(account, closedTrades = []) {
           icon: Zap,
           label: 'Trailing Target (5%)',
           desc: trailingTargetMet
-            ? `✓ $${fmt(trailingTargetValue)} hit — Trailing DD now active`
+            ? `✓ $${fmt(trailingTargetValue)} hit - Trailing DD now active`
             : `Reach $${fmt(trailingTargetValue)} · 5% daily DD · 10% trailing DD`,
           status: trailingTargetMet ? 'done' : 'active',
         },
@@ -198,7 +198,7 @@ function useTimelineSteps(account, closedTrades = []) {
           icon: Target,
           label: 'Evaluation',
           desc: isEvalUnderReview
-            ? `✓ ${target}% target met — XFT Team review in progress`
+            ? `✓ ${target}% target met - XFT Team review in progress`
             : isEvalPassed
               ? `✓ ${target}% reward · ${dailyDd}% daily DD · ${maxDd}% trailing DD`
               : `${target}% reward target · ${dailyDd}% daily DD · ${maxDd}% trailing DD · Best Day ${bestDayPct}%`,
@@ -254,7 +254,7 @@ function useTimelineSteps(account, closedTrades = []) {
           icon: Zap,
           label: 'Buffer Zone Target',
           desc: bufferActivated
-            ? `✓ $${fmt(bufferTargetVal)} locked — DD reference updated`
+            ? `✓ $${fmt(bufferTargetVal)} locked - DD reference updated`
             : `Reach $${fmt(bufferTargetVal)} (${bufferTargetPct}% reward) · ${dailyDdIA}% daily DD · ${maxDdIA}% max DD`,
           status: bufferActivated ? 'done' : 'active',
         },
@@ -322,7 +322,7 @@ function useTimelineSteps(account, closedTrades = []) {
         icon: Zap,
         label: 'Phase 1',
         desc: isPhase1UnderReview
-          ? `✓ ${phase1Target}% target met — XFT Team review in progress`
+          ? `✓ ${phase1Target}% target met - XFT Team review in progress`
           : isPhase1Done
             ? `✓ ${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`
             : `${phase1Target}% reward · ${dailyDd}% daily DD · ${minDays} min days`,
@@ -332,7 +332,7 @@ function useTimelineSteps(account, closedTrades = []) {
         icon: Zap,
         label: 'Phase 2',
         desc: isPhase2UnderReview
-          ? `✓ ${phase2Target}% target met — XFT Team review in progress`
+          ? `✓ ${phase2Target}% target met - XFT Team review in progress`
           : isPhase2Done
             ? `✓ ${phase2Target}% reward · ${dailyDd}% daily DD`
             : isPhase1UnderReview

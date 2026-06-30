@@ -92,9 +92,9 @@ Provide exactly 3 bullet points:
       setGenerated(true);
     } catch {
       setInsight(
-        `• Strong risk management foundation — daily DD usage of ${dd.toFixed(2)}% shows disciplined approach.\n` +
-        `• Win rate of ${realWinRate.toFixed(1)}% needs improvement — aim for 55%+ with better entry timing.\n` +
-        `• Action: Focus on R:R ratio above 1.5:1. ${rr < 1.5 ? 'Currently below target — tighten stop losses and extend take profits.' : 'Good — maintain this discipline.'}`
+        `• Strong risk management foundation - daily DD usage of ${dd.toFixed(2)}% shows disciplined approach.\n` +
+        `• Win rate of ${realWinRate.toFixed(1)}% needs improvement - aim for 55%+ with better entry timing.\n` +
+        `• Action: Focus on R:R ratio above 1.5:1. ${rr < 1.5 ? 'Currently below target - tighten stop losses and extend take profits.' : 'Good - maintain this discipline.'}`
       );
       setGenerated(true);
     }

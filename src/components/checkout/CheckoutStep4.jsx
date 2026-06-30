@@ -16,8 +16,8 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
     { label: 'Challenge Type', value: order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding' },
     { label: 'Account Model', value: order.account_type === 'swing' ? 'Swing Account' : 'Standard Account' },
     { label: 'Leverage', value: order.leverage || '1:100' },
-    { label: 'Delivery Email', value: order.email || '—', mono: true },
-    { label: 'Est. Delivery', value: '1–24 hours after confirmation' },
+    { label: 'Delivery Email', value: order.email || '-', mono: true },
+    { label: 'Est. Delivery', value: '1-24 hours after confirmation' },
   ];
 
   return (
@@ -93,7 +93,7 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
             color: 'text-muted-foreground',
             bg: 'rgba(255,255,255,0.04)',
             border: 'rgba(255,255,255,0.08)',
-            text: 'Delivery is typically completed within 1–24 hours after blockchain confirmation.',
+            text: 'Delivery is typically completed within 1-24 hours after blockchain confirmation.',
           },
           {
             icon: Shield,

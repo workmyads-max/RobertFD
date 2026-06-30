@@ -7,16 +7,16 @@ function fmt(n, d = 2) {
 }
 
 function fmtDate(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 /**
- * BestDayMonitor — Real-time tracker for the One-Step "Best Day Rule".
+ * BestDayMonitor - Real-time tracker for the One-Step "Best Day Rule".
  *
  * Rule: No single trading day's profit may exceed best_day_rule_pct% (default 50%)
  * of the account's total profit. This is a REVIEW-ONLY rule (not auto-breach),
- * checked at payout eligibility — not during trading.
+ * checked at payout eligibility - not during trading.
  *
  * Shows:
  *  - Current best day P&L + date
@@ -44,7 +44,7 @@ export default function BestDayMonitor({ account, stats, closedTrades = [] }) {
   // - If no profit yet: "Not Started" (grey)
   // - If bestDayPct <= rulePct: "Compliant" (green)
   // - If bestDayPct > rulePct but within 10% of threshold: "Warning" (amber)
-  // - If bestDayPct > rulePct: "Exceeded" (red) — payout will be blocked
+  // - If bestDayPct > rulePct: "Exceeded" (red) - payout will be blocked
   let status, statusColor, statusIcon, statusText;
   if (totalProfit <= 0) {
     status = 'idle';
@@ -60,7 +60,7 @@ export default function BestDayMonitor({ account, stats, closedTrades = [] }) {
     status = 'warning';
     statusColor = '#f59e0b';
     statusIcon = AlertTriangle;
-    statusText = 'Warning — Near limit';
+    statusText = 'Warning - Near limit';
   } else {
     status = 'exceeded';
     statusColor = '#ef4444';
@@ -76,9 +76,9 @@ export default function BestDayMonitor({ account, stats, closedTrades = [] }) {
   if (status === 'idle') {
     guidance = 'Start trading to build profit. The best day rule activates once you have closed-trade profit.';
   } else if (status === 'compliant') {
-    guidance = `Your best day represents ${bestDayPct.toFixed(1)}% of total profit — well within the ${rulePct}% limit.`;
+    guidance = `Your best day represents ${bestDayPct.toFixed(1)}% of total profit - well within the ${rulePct}% limit.`;
   } else if (status === 'warning') {
-    guidance = `Your best day is ${bestDayPct.toFixed(1)}% of total profit — approaching the ${rulePct}% limit. Continue trading to dilute this ratio.`;
+    guidance = `Your best day is ${bestDayPct.toFixed(1)}% of total profit - approaching the ${rulePct}% limit. Continue trading to dilute this ratio.`;
   } else {
     const additionalProfitNeeded = bestDayProfit / (rulePct / 100) - totalProfit;
     guidance = `Your best day exceeds the ${rulePct}% limit (${bestDayPct.toFixed(1)}%). You need approximately $${fmt(additionalProfitNeeded)} more total profit to become compliant. Payouts are blocked until resolved.`;
@@ -188,7 +188,7 @@ export default function BestDayMonitor({ account, stats, closedTrades = [] }) {
               <span className="font-bold text-white/60">Example:</span> If your total profit is $8,000, the max you can make in one day is $4,000 (50%). If your best day was $5,000, you need total profit of at least $10,000 ($5,000 ÷ 50%) to become compliant.
             </p>
             <p className="text-white/40 mt-2">
-              <span className="font-bold text-white/60">Status:</span> This is a review-only rule — it does NOT auto-breach your account. It only affects payout eligibility.
+              <span className="font-bold text-white/60">Status:</span> This is a review-only rule - it does NOT auto-breach your account. It only affects payout eligibility.
             </p>
           </motion.div>
         )}

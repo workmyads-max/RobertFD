@@ -64,7 +64,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Direct session — no OTP step
+    // Direct session - no OTP step
     if (res.session?.access_token && res.session?.refresh_token) {
       console.log('Setting session...');
       const { error: sessionErr } = await supabase.auth.setSession({

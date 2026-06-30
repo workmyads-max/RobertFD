@@ -37,7 +37,7 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
   // KYC status via shared single-source-of-truth hook (object|null, never throws)
   const { isApproved: kycApproved } = useKycStatus(user?.email);
 
-  // Fetch closed trades for the selected account to compute trading days —
+  // Fetch closed trades for the selected account to compute trading days -
   // matches AccountTimeline/AccountOverview logic (Math.max(unique trade days, account.trading_days))
   const { closedTrades: selectedClosedTrades = [] } = useAccountTradeData(selectedAccount, { refetchIntervalMs: 15000 });
   const tradingDaysFromTrades = new Set(
@@ -134,7 +134,7 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
               <div className="w-full rounded-xl px-4 py-3 text-sm font-black text-emerald-400 cursor-not-allowed"
                 style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)' }}>
                 ${autoAmount.toFixed(2)}
-                <span className="text-xs font-normal text-muted-foreground ml-2">(fixed — {profitSplitPct}% of ${selectedProfit.toFixed(2)} profit)</span>
+                <span className="text-xs font-normal text-muted-foreground ml-2">(fixed - {profitSplitPct}% of ${selectedProfit.toFixed(2)} profit)</span>
               </div>
             </div>
 

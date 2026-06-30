@@ -161,7 +161,7 @@ function UserDetailModal({ user, onClose, qc }) {
             <div className="rounded-xl px-4 py-3 flex items-center gap-3"
               style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
               <Ban className="w-4 h-4 text-red-400" />
-              <span className="text-sm font-bold text-red-400">This account is BANNED — all features disabled</span>
+              <span className="text-sm font-bold text-red-400">This account is BANNED - all features disabled</span>
             </div>
           )}
 
@@ -246,8 +246,8 @@ function UserDetailModal({ user, onClose, qc }) {
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
                       {[
-                        { label: 'MT5 Login', value: acc.mt_login || '—' },
-                        { label: 'Server', value: acc.mt_server || acc.server || '—' },
+                        { label: 'MT5 Login', value: acc.mt_login || '-' },
+                        { label: 'Server', value: acc.mt_server || acc.server || '-' },
                         { label: 'Balance', value: `$${(acc.balance || 0).toLocaleString()}` },
                         { label: 'P&L', value: `${(acc.pnl || 0) >= 0 ? '+' : ''}$${(acc.pnl || 0).toLocaleString()}`, color: (acc.pnl || 0) >= 0 ? '#10b981' : '#ef4444' },
                         { label: 'Daily DD', value: `${acc.daily_drawdown_used || 0}%` },
@@ -265,7 +265,7 @@ function UserDetailModal({ user, onClose, qc }) {
                       <div className="mt-3 flex items-center gap-2 text-[11px] text-red-400 px-2 py-1.5 rounded-lg"
                         style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
                         <AlertTriangle className="w-3.5 h-3.5" />
-                        DD Breach: {acc.dd_breach_type?.toUpperCase()} — {new Date(acc.dd_breach_time || '').toLocaleString()}
+                        DD Breach: {acc.dd_breach_type?.toUpperCase()} - {new Date(acc.dd_breach_time || '').toLocaleString()}
                       </div>
                     )}
                   </div>
@@ -361,7 +361,7 @@ function UserDetailModal({ user, onClose, qc }) {
               </div>
               <div>
                 <div className="text-white/30 mb-1">Joined</div>
-                <div className="font-mono text-white/60">{user.created_date ? new Date(user.created_date).toLocaleDateString() : '—'}</div>
+                <div className="font-mono text-white/60">{user.created_date ? new Date(user.created_date).toLocaleDateString() : '-'}</div>
               </div>
             </div>
           </div>
@@ -443,7 +443,7 @@ export default function AdminUserManagement() {
                   {u.full_name?.charAt(0) || '?'}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-foreground truncate">{u.full_name || '—'}</div>
+                  <div className="text-xs font-semibold text-foreground truncate">{u.full_name || '-'}</div>
                   <div className="text-[11px] text-muted-foreground font-mono truncate">{u.email}</div>
                 </div>
               </div>
@@ -464,7 +464,7 @@ export default function AdminUserManagement() {
                     style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
                     <AlertTriangle className="w-3 h-3" /> {flagCount}
                   </span>
-                ) : <span className="text-white/20 text-xs">—</span>}
+                ) : <span className="text-white/20 text-xs">-</span>}
               </div>
 
               <button onClick={() => setSelected(u)}

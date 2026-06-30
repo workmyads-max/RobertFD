@@ -1,5 +1,5 @@
 /**
- * customAuth.js — Auth utility layer (Base44 only).
+ * customAuth.js - Auth utility layer (Base44 only).
  * Provides callAuth() for the ForgotPassword password reset flow.
  * Routes through supabaseAuthBridge which now uses Base44 Auth exclusively.
  */

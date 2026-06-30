@@ -7,7 +7,7 @@ import AddToCalendarButton from './AddToCalendarButton';
 import { isRestrictedEvent, isInRestrictedWindow } from '@/lib/newsTradingConfig';
 
 /**
- * EventRow — one economic event row in the FTMO-style table.
+ * EventRow - one economic event row in the FTMO-style table.
  *
  * Restricted (High-impact) events get:
  *   - Red left border
@@ -95,17 +95,17 @@ export default function EventRow({ event, now }) {
 
       {/* Actual */}
       <div className="w-16 flex-shrink-0 px-2 py-3 flex items-center justify-center">
-        <span className="text-xs font-mono text-white/40">—</span>
+        <span className="text-xs font-mono text-white/40">-</span>
       </div>
 
       {/* Forecast */}
       <div className="w-16 flex-shrink-0 px-2 py-3 flex items-center justify-center">
-        <span className="text-xs font-mono text-white/60">{event.forecast || '—'}</span>
+        <span className="text-xs font-mono text-white/60">{event.forecast || '-'}</span>
       </div>
 
       {/* Previous */}
       <div className="w-16 flex-shrink-0 px-2 py-3 flex items-center justify-center">
-        <span className="text-xs font-mono text-white/60">{event.previous || '—'}</span>
+        <span className="text-xs font-mono text-white/60">{event.previous || '-'}</span>
       </div>
 
       {/* Actions */}

@@ -41,7 +41,7 @@ export default function Footer() {
         <div className="text-[11px] font-semibold">
           <span style={{ color: '#606060' }}>2026 © </span>
           <span style={{ color: '#FF6600' }}>XFundedTrader.com</span>
-          <span style={{ color: '#606060' }}> — Institutional Prop Trading</span>
+          <span style={{ color: '#606060' }}> - Institutional Prop Trading</span>
         </div>
       </div>
     </footer>

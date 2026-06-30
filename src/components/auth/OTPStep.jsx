@@ -98,7 +98,7 @@ export default function OTPStep({ userId, onSuccess, onBack, purpose = 'login', 
         {devOtp && (
           <div className="mt-3 px-4 py-2 rounded-lg text-sm font-mono text-center"
             style={{ background: 'rgba(204,255,0,0.08)', border: '1px solid rgba(204,255,0,0.3)', color: '#ccff00' }}>
-            📧 Email delivery not configured yet — your code is: <strong style={{ letterSpacing: '4px' }}>{devOtp}</strong>
+            📧 Email delivery not configured yet - your code is: <strong style={{ letterSpacing: '4px' }}>{devOtp}</strong>
           </div>
         )}
       </div>

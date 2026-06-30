@@ -2,7 +2,7 @@ import React from 'react';
 import { CalendarPlus } from 'lucide-react';
 
 /**
- * AddToCalendarButton — generates a Google Calendar event link and opens it
+ * AddToCalendarButton - generates a Google Calendar event link and opens it
  * in a new tab. Simple, no .ics file generation needed.
  */
 export default function AddToCalendarButton({ event }) {
@@ -19,7 +19,7 @@ export default function AddToCalendarButton({ event }) {
       action: 'TEMPLATE',
       text: `${event.currency}: ${event.title}`,
       dates: `${fmt(start)}/${fmt(end)}`,
-      details: `Impact: ${event.impact}\nCurrency: ${event.currency}\nForecast: ${event.forecast || '—'}\nPrevious: ${event.previous || '—'}`,
+      details: `Impact: ${event.impact}\nCurrency: ${event.currency}\nForecast: ${event.forecast || '-'}\nPrevious: ${event.previous || '-'}`,
       location: 'Economic Calendar',
     });
 

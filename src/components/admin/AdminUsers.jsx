@@ -50,7 +50,7 @@ export default function AdminUsers() {
                 {u.full_name?.charAt(0) || '?'}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-foreground truncate">{u.full_name || '—'}</div>
+                <div className="text-xs font-semibold text-foreground truncate">{u.full_name || '-'}</div>
                 <div className="text-[11px] text-muted-foreground font-mono truncate">{u.email}</div>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function AdminUsers() {
               {u.role === 'admin' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />} {u.role}
             </span>
             <span className="text-xs text-muted-foreground font-mono">
-              {u.created_date ? new Date(u.created_date).toLocaleDateString() : '—'}
+              {u.created_date ? new Date(u.created_date).toLocaleDateString() : '-'}
             </span>
           </div>
         ))}

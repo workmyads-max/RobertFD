@@ -100,7 +100,7 @@ function generateInvoicePDF(order, user, account) {
 
   doc.setFillColor(255, 92, 0); doc.rect(0, 272, 210, 25, 'F');
   doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-  doc.text('XFUNDED — Institutional Proprietary Trading', 105, 280, { align: 'center' });
+  doc.text('XFUNDED - Institutional Proprietary Trading', 105, 280, { align: 'center' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
   doc.text(`Invoice # ${orderId}`, 105, 287, { align: 'center' });
   doc.text('www.xfundedtrader.com  |  support@xfundedtrader.com', 105, 293, { align: 'center' });
@@ -110,7 +110,7 @@ function generateInvoicePDF(order, user, account) {
 
 function InvoicePreviewModal({ order, user, account, onClose, onDownload }) {
   if (!order) return null;
-  const orderId = order.order_id || order.id || '—';
+  const orderId = order.order_id || order.id || '-';
   const invoiceDate = order.created_date
     ? new Date(order.created_date).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' })
     : new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -313,7 +313,7 @@ export default function Billing() {
             const isPending = !paid && (order.payment_status === 'pending' || order.payment_status === 'awaiting_confirmation');
             const isFailed = order.payment_status === 'failed' || order.payment_status === 'cancelled';
             const created = order.created_date ? new Date(order.created_date) : null;
-            const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+            const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
             const challengeLabel = order.challenge_type === 'two-step' ? '2-Step Challenge' : order.challenge_type === 'instant' ? 'Instant Funding' : 'Instant Light';
             const linkedAccount = getLinkedAccount(order);
 
@@ -335,7 +335,7 @@ export default function Billing() {
                 <div className="text-sm">
                   {order.discount_amount > 0
                     ? <span className="text-emerald-400 font-mono">-${order.discount_amount.toFixed(2)}</span>
-                    : <span className="text-white/20">—</span>}
+                    : <span className="text-white/20">-</span>}
                   {order.coupon_code && <div className="text-[10px] text-primary font-mono">{order.coupon_code}</div>}
                 </div>
                 <div className="text-xs text-white">

@@ -292,7 +292,7 @@ export default function Register() {
                 <div key={title} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-medium">{title}</span> — {desc}
+                    <span className="text-foreground font-medium">{title}</span> - {desc}
                   </div>
                 </div>
               ))}

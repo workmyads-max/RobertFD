@@ -1,5 +1,5 @@
 /**
- * useKycStatus — Shared KYC status hook.
+ * useKycStatus - Shared KYC status hook.
  *
  * Single source of truth for the current user's KYCVerification status.
  * Both the KYC page and the Withdrawals page use this so they never disagree.

@@ -295,7 +295,7 @@ export default function FundedTraderExperience() {
           </div>
         </motion.div>
 
-        {/* Right — per-slide mockup */}
+        {/* Right - per-slide mockup */}
         <motion.div
           key={`mockup-${slide}`}
           initial={{ opacity: 0, y: 16 }}

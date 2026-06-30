@@ -147,7 +147,7 @@ function CertListItem({ cert, index, onPreview }) {
       <div className="flex-1 min-w-0">
         <div className="text-sm font-bold text-white truncate">{cert.trader_name || 'Trader'}</div>
         <div className="text-[11px] text-white/30">
-          {cfg.label} • {cert.issue_date || '—'}
+          {cfg.label} • {cert.issue_date || '-'}
           {cert.withdrawal_amount ? ` • $${Number(cert.withdrawal_amount).toLocaleString()}` : ''}
           {cert.account_size && !cert.withdrawal_amount ? ` • $${Number(cert.account_size).toLocaleString()}` : ''}
         </div>
@@ -251,7 +251,7 @@ export default function Certificates({ user }) {
         />
         <PerfCard
           label="Latest Achievement"
-          value={certs.length > 0 ? (CERT_TYPES[certs[0]?.type]?.label || '—') : '—'}
+          value={certs.length > 0 ? (CERT_TYPES[certs[0]?.type]?.label || '-') : '-'}
           sub={certs.length > 0 ? (certs[0]?.issue_date || '') : 'No certificates yet'}
           icon={MoneyBagIcon}
         />

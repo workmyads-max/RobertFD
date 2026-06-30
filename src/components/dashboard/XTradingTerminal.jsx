@@ -70,7 +70,7 @@ function useLivePrices() {
     };
     connectWS();
 
-    // Polling fallback for FX/indices — use exchangerate-api or simulate realistic movement from seed
+    // Polling fallback for FX/indices - use exchangerate-api or simulate realistic movement from seed
     const FX_SEEDS = {
       'XAU/USD': { bid: 2338.15, spreadPips: 0.35 },
       'EUR/USD': { bid: 1.08215, spreadPips: 0.00012 },
@@ -154,7 +154,7 @@ function calcMargin(symbol, lots, leverage, currentBid) {
     // Crypto: 1 lot = 1 coin, margin = (lots × price) / leverage
     return (lots * price) / lev;
   } else if (inst.type === 'fx') {
-    // FX: margin = (lots × contractSize × price) / leverage — for USD quote pairs price ≈ 1
+    // FX: margin = (lots × contractSize × price) / leverage - for USD quote pairs price ≈ 1
     // For pairs like EUR/USD the base is EUR, so contract value in USD = lots × contractSize × price
     // For USD/JPY the base is USD, contract value = lots × contractSize × 1
     const isUsdBase = symbol.startsWith('USD/');
@@ -180,7 +180,7 @@ function PriceCell({ value, digits }) {
     }
     prev.current = value;
   }, [value]);
-  if (value === null) return <span className="text-muted-foreground/40 font-mono">—</span>;
+  if (value === null) return <span className="text-muted-foreground/40 font-mono">-</span>;
   return (
     <span className={`font-mono transition-colors duration-200 ${
       flash === 'up' ? 'text-emerald-300' : flash === 'down' ? 'text-red-300' : 'text-foreground'
@@ -393,7 +393,7 @@ export default function XTradingTerminal({ account }) {
     const maxLoss = ((accountSize - equity) / accountSize) * 100;
     if (dailyLoss >= rules.dailyDDLimit || maxLoss >= rules.maxDDLimit) {
       setAccountBlocked(true);
-      addLog(`⚠ DRAWDOWN LIMIT REACHED — Trading suspended`, false);
+      addLog(`⚠ DRAWDOWN LIMIT REACHED - Trading suspended`, false);
       // Mark account as failed in DB
       if (account?.id) {
         base44.entities.ChallengeAccount.update(account.id, {
@@ -429,7 +429,7 @@ export default function XTradingTerminal({ account }) {
         };
         setPositions(p => [...p, newPos]);
         setPendingOrders(po => po.filter(o => o.id !== order.id));
-        addLog(`${side} ${order.lots} ${order.symbol} @ ${order.price} — Pending Order Triggered`, true);
+        addLog(`${side} ${order.lots} ${order.symbol} @ ${order.price} - Pending Order Triggered`, true);
       }
     });
   }, [prices]);
@@ -498,7 +498,7 @@ export default function XTradingTerminal({ account }) {
         setTimeout(() => syncAccountToDB(newBalance, updated, prev.filter(p => p.id !== id), newBalance + floatPnl), 100);
         return updated;
       });
-      addLog(`${pos.type} ${pos.lots} ${pos.symbol} closed @ ${typeof closePrice === 'number' ? closePrice.toFixed(pos.digits || 2) : closePrice} — ${closePnl >= 0 ? '+' : ''}$${closePnl.toFixed(2)} [${reason}]`, closePnl >= 0);
+      addLog(`${pos.type} ${pos.lots} ${pos.symbol} closed @ ${typeof closePrice === 'number' ? closePrice.toFixed(pos.digits || 2) : closePrice} - ${closePnl >= 0 ? '+' : ''}$${closePnl.toFixed(2)} [${reason}]`, closePnl >= 0);
       return prev.filter(p => p.id !== id);
     });
   }, [addLog, sessionBalance, floatPnl, syncAccountToDB]);
@@ -518,7 +518,7 @@ export default function XTradingTerminal({ account }) {
     // Enforce leverage / margin check (MT5-style: price-based)
     const reqMargin = calcMargin(selectedSymbol, lotsNum, account?.leverage, p?.bid);
     if (reqMargin > freeMargin) {
-      addLog(`❌ Insufficient margin — required $${reqMargin.toFixed(0)}, available $${freeMargin.toFixed(0)} (Leverage: ${account?.leverage || '1:100'})`, false);
+      addLog(`❌ Insufficient margin - required $${reqMargin.toFixed(0)}, available $${freeMargin.toFixed(0)} (Leverage: ${account?.leverage || '1:100'})`, false);
       return;
     }
 
@@ -533,7 +533,7 @@ export default function XTradingTerminal({ account }) {
         time: new Date().toLocaleTimeString(),
       };
       setPositions(prev => [...prev, newPos]);
-      addLog(`${orderSide} ${lotsNum} ${selectedSymbol} @ ${entryPrice.toFixed(inst?.digits || 2)} — Market Executed`, true);
+      addLog(`${orderSide} ${lotsNum} ${selectedSymbol} @ ${entryPrice.toFixed(inst?.digits || 2)} - Market Executed`, true);
       setOrderFlash('ok');
       setTimeout(() => setOrderFlash(null), 1800);
       setSl(''); setTp('');
@@ -551,7 +551,7 @@ export default function XTradingTerminal({ account }) {
         time: new Date().toLocaleTimeString(),
       };
       setPendingOrders(prev => [...prev, newPending]);
-      addLog(`${pendType} ${lotsNum} ${selectedSymbol} @ ${price} — Pending Placed`, true);
+      addLog(`${pendType} ${lotsNum} ${selectedSymbol} @ ${price} - Pending Placed`, true);
       setOrderFlash('pending');
       setTimeout(() => setOrderFlash(null), 1800);
       setSl(''); setTp(''); setPendingPrice('');
@@ -625,7 +625,7 @@ export default function XTradingTerminal({ account }) {
             style={{ background: 'rgba(239,68,68,0.15)', borderBottom: '1px solid rgba(239,68,68,0.4)' }}>
             <div className="flex items-center gap-3 px-4 py-2">
               <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-              <span className="text-xs font-mono font-bold text-red-400">DRAWDOWN LIMIT REACHED — TRADING SUSPENDED. Account has been flagged for review.</span>
+              <span className="text-xs font-mono font-bold text-red-400">DRAWDOWN LIMIT REACHED - TRADING SUSPENDED. Account has been flagged for review.</span>
             </div>
           </motion.div>
         )}
@@ -728,7 +728,7 @@ export default function XTradingTerminal({ account }) {
         {/* RIGHT ORDER PANEL */}
         <div className="w-56 border-l border-white/5 flex flex-col flex-shrink-0 overflow-y-auto" style={{ background: 'rgba(5,5,7,0.98)' }}>
           <div className="p-3">
-            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">New Order — {selectedSymbol}</div>
+            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mb-2">New Order - {selectedSymbol}</div>
 
             {/* BUY/SELL toggle (only for market) */}
             {orderType === 'market' && (
@@ -753,14 +753,14 @@ export default function XTradingTerminal({ account }) {
                 <div className="text-[9px] font-mono text-emerald-400/70 mb-0.5">ASK</div>
                 {currentPrice?.ask !== null && currentPrice?.ask !== undefined
                   ? <div className="text-xs font-mono font-bold text-emerald-400">{currentPrice.ask.toFixed(selected.digits)}</div>
-                  : <div className="text-[10px] font-mono text-muted-foreground/30">—</div>
+                  : <div className="text-[10px] font-mono text-muted-foreground/30">-</div>
                 }
               </div>
               <div className="rounded-lg p-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 <div className="text-[9px] font-mono text-red-400/70 mb-0.5">BID</div>
                 {currentPrice?.bid !== null && currentPrice?.bid !== undefined
                   ? <div className="text-xs font-mono font-bold text-red-400">{currentPrice.bid.toFixed(selected.digits)}</div>
-                  : <div className="text-[10px] font-mono text-muted-foreground/30">—</div>
+                  : <div className="text-[10px] font-mono text-muted-foreground/30">-</div>
                 }
               </div>
             </div>
@@ -883,7 +883,7 @@ export default function XTradingTerminal({ account }) {
               </tr></thead>
               <tbody>
                 {positions.length === 0
-                  ? <tr><td colSpan={10} className="px-3 py-6 text-center text-muted-foreground/30">No open positions — terminal ready</td></tr>
+                  ? <tr><td colSpan={10} className="px-3 py-6 text-center text-muted-foreground/30">No open positions - terminal ready</td></tr>
                   : positions.map(pos => {
                     const p = prices[pos.symbol];
                     const livePrice = p ? (pos.type === 'BUY' ? p.bid : p.ask) : pos.entry;
@@ -896,8 +896,8 @@ export default function XTradingTerminal({ account }) {
                         <td className="px-3 py-1.5 text-muted-foreground">{pos.lots}</td>
                         <td className="px-3 py-1.5 text-muted-foreground">{pos.entry.toFixed(inst?.digits || 2)}</td>
                         <td className="px-3 py-1.5 text-foreground">{livePrice?.toFixed(inst?.digits || 2)}</td>
-                        <td className="px-3 py-1.5 text-red-400/60">{pos.sl || '—'}</td>
-                        <td className="px-3 py-1.5 text-emerald-400/60">{pos.tp || '—'}</td>
+                        <td className="px-3 py-1.5 text-red-400/60">{pos.sl || '-'}</td>
+                        <td className="px-3 py-1.5 text-emerald-400/60">{pos.tp || '-'}</td>
                         <td className={`px-3 py-1.5 font-bold ${livePnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{livePnl >= 0 ? '+' : ''}${livePnl.toFixed(2)}</td>
                         <td className="px-3 py-1.5 text-muted-foreground/40">{pos.time}</td>
                         <td className="px-3 py-1.5">
@@ -930,8 +930,8 @@ export default function XTradingTerminal({ account }) {
                       <td className="px-3 py-1.5 text-yellow-400 font-bold">{o.type.replace('_', ' ')}</td>
                       <td className="px-3 py-1.5 text-muted-foreground">{o.lots}</td>
                       <td className="px-3 py-1.5 text-foreground">{o.price}</td>
-                      <td className="px-3 py-1.5 text-red-400/60">{o.sl || '—'}</td>
-                      <td className="px-3 py-1.5 text-emerald-400/60">{o.tp || '—'}</td>
+                      <td className="px-3 py-1.5 text-red-400/60">{o.sl || '-'}</td>
+                      <td className="px-3 py-1.5 text-emerald-400/60">{o.tp || '-'}</td>
                       <td className="px-3 py-1.5 text-muted-foreground/40">{o.time}</td>
                       <td className="px-3 py-1.5">
                         <button onClick={() => { setPendingOrders(p => p.filter(x => x.id !== o.id)); addLog(`Pending order cancelled: ${o.type} ${o.symbol}`, true); }}

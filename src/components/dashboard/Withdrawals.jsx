@@ -22,7 +22,7 @@ const METHODS = [
   { id: 'bank_wire', label: 'Bank Wire', icon: '🏦' },
 ];
 
-// Fee is 5% of trader's 80% share — no affiliate deduction
+// Fee is 5% of trader's 80% share - no affiliate deduction
 const FEE_PCT = 0.05;
 
 function WithdrawalCard({ w, i }) {
@@ -112,7 +112,7 @@ export default function Withdrawals({ user, onNavigate }) {
   const qc = useQueryClient();
 
   const { data: accounts = [] } = useQuery({
-    // CRITICAL: Same queryFn as Dashboard — getUserAccounts service-role backend
+    // CRITICAL: Same queryFn as Dashboard - getUserAccounts service-role backend
     // (case-insensitive email match). Using a different queryFn with the same key
     // overwrites the shared cache with RLS-filtered data that can return empty.
     queryKey: ['challenge-accounts', user?.email],
@@ -128,7 +128,7 @@ export default function Withdrawals({ user, onNavigate }) {
   // Include funded accounts AND active instant_account accounts (payout eligible if instant_payout_eligible=true)
   const fundedAccounts = accounts.filter(a => a.status === 'funded' || (a.challenge_type === 'instant_account' && a.status === 'active'));
 
-  // Fetch closed trades for each funded account to compute trading days —
+  // Fetch closed trades for each funded account to compute trading days -
   // matches AccountTimeline logic (Math.max(unique trade days, account.trading_days))
   const { data: accountTradingDays = {} } = useQuery({
     queryKey: ['funded-trading-days', fundedAccounts.map(a => a.account_id)],
@@ -157,7 +157,7 @@ export default function Withdrawals({ user, onNavigate }) {
   // Same eligibility as AccountTimeline: funded + KYC approved + min 1 trading day
   const eligibleAccounts = fundedAccounts.filter(a => (accountTradingDays[a.account_id] || a.trading_days || 0) >= 1);
 
-  // Shared KYC status — single source of truth (same hook as the KYC page).
+  // Shared KYC status - single source of truth (same hook as the KYC page).
   // isLoading is true only on first load with no cached data, so we never show
   // a stale "pending" KYC card before the real status arrives.
   const { kyc, status: kycStatus, isApproved: kycApproved, isLoading: kycLoading } = useKycStatus(user?.email);
@@ -182,7 +182,7 @@ export default function Withdrawals({ user, onNavigate }) {
   const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2)); // 80% share is the withdrawal amount
   const fee5pct = parseFloat((autoAmount * FEE_PCT).toFixed(2));
   const youReceive = Math.max(0, autoAmount - fee5pct);
-  // Use the SAME data source as AccountOverview/AccountTimeline — useAccountTradeData
+  // Use the SAME data source as AccountOverview/AccountTimeline - useAccountTradeData
   // fetches via getAccountTradeRecords with keepPreviousData, so it's always populated.
   // The separate accountTradingDays query can be stale/not-yet-resolved when the modal
   // opens, causing a false (0/1) mismatch.
@@ -214,7 +214,7 @@ export default function Withdrawals({ user, onNavigate }) {
       if (!savedWalletAddress) throw new Error('Please save your payout wallet address in Settings → Payout Wallets first.');
       const res = await retryWithBackoff(() => base44.functions.invoke('requestTraderWithdrawal', {
         account_id: selectedAccount.account_id,
-        amount: selectedProfit, // Send gross profit — backend calculates split
+        amount: selectedProfit, // Send gross profit - backend calculates split
         method,
         wallet_address: savedWalletAddress,
       }));
@@ -238,7 +238,7 @@ export default function Withdrawals({ user, onNavigate }) {
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <DollarSign className="w-6 h-6 text-primary" /> Withdrawals
           </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Reward payouts — Simulation Funded accounts only</p>
+          <p className="text-sm text-muted-foreground font-mono mt-1">Reward payouts - Simulation Funded accounts only</p>
         </div>
         <button onClick={() => openForm('')}
           disabled={!kycApproved || eligibleAccounts.length === 0}
@@ -248,7 +248,7 @@ export default function Withdrawals({ user, onNavigate }) {
         </button>
       </div>
 
-      {/* KYC Gate — never render a stale "pending" state. Show a brief loading
+      {/* KYC Gate - never render a stale "pending" state. Show a brief loading
           indicator until the real status arrives, then the correct card. */}
       {kycLoading ? (
         <div className="flex justify-center mb-5">
@@ -289,7 +289,7 @@ export default function Withdrawals({ user, onNavigate }) {
         </div>
       )}
 
-      {/* Per-account funded breakdown — click to open withdrawal form */}
+      {/* Per-account funded breakdown - click to open withdrawal form */}
       {fundedAccounts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {fundedAccounts.map(acc => {
@@ -357,7 +357,7 @@ export default function Withdrawals({ user, onNavigate }) {
           <div className="text-base font-black text-foreground mb-1">80/20 Reward Split</div>
           <div className="text-sm text-muted-foreground">
             ${fundedAccounts.reduce((s, a) => s + (a.challenge_type === 'instant_account' ? Math.max(0, a.withdrawable_profit || 0) : Math.max(0, a.pnl || 0)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available reward.
-            You keep 80% — only a 5% processing fee is deducted from your share. No affiliate deductions.
+            You keep 80% - only a 5% processing fee is deducted from your share. No affiliate deductions.
           </div>
         </div>
         <DollarSign className="w-8 h-8 text-primary flex-shrink-0" />
@@ -416,13 +416,13 @@ export default function Withdrawals({ user, onNavigate }) {
                   </div>
                 )}
 
-                {/* Fixed amount — read only */}
+                {/* Fixed amount - read only */}
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Withdrawal Amount (Your {profitSplitPct}% Share)</label>
                   <div className="w-full rounded-xl px-4 py-3 text-sm font-black text-emerald-400 cursor-not-allowed"
                     style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)' }}>
                     ${autoAmount.toFixed(2)}
-                    <span className="text-xs font-normal text-muted-foreground ml-2">(fixed — 80% of ${selectedProfit.toFixed(2)} reward)</span>
+                    <span className="text-xs font-normal text-muted-foreground ml-2">(fixed - 80% of ${selectedProfit.toFixed(2)} reward)</span>
                   </div>
                 </div>
 
@@ -440,7 +440,7 @@ export default function Withdrawals({ user, onNavigate }) {
                   </div>
                 </div>
 
-                {/* Wallet address — from settings */}
+                {/* Wallet address - from settings */}
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Payout Wallet Address</label>
                   {savedWalletAddress ? (

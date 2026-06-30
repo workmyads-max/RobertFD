@@ -234,7 +234,7 @@ export default function DashboardSettings({ user }) {
 
     const passwordUpdateMutation = useMutation({
       mutationFn: async (newPassword) => {
-        // Base44 Auth — update current user's password
+        // Base44 Auth - update current user's password
         await base44.auth.updateMe({ password: newPassword });
       },
       onSuccess: () => {
@@ -466,7 +466,7 @@ export default function DashboardSettings({ user }) {
                       <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed" />
                       <InputField label="Phone" value={profile.phone || user?.phone || ''} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+1234567890" />
                       <InputField label="Username" value={profile.username || ''} onChange={e => setProfile(p => ({ ...p, username: e.target.value }))} placeholder="trader_john" />
-                      {/* Country — searchable dropdown */}
+                      {/* Country - searchable dropdown */}
                       <div>
                         <label className="text-sm font-bold text-white/45 mb-2.5 block uppercase tracking-wide">Country</label>
                         <div className="relative">
@@ -633,7 +633,7 @@ export default function DashboardSettings({ user }) {
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-white">Authenticator App (TOTP)</div>
-                          <div className="text-[11px] text-white/30 font-mono mt-0.5">{twoFAEnabled ? 'Active — Your account is protected' : 'Not enabled — Recommended for security'}</div>
+                          <div className="text-[11px] text-white/30 font-mono mt-0.5">{twoFAEnabled ? 'Active - Your account is protected' : 'Not enabled - Recommended for security'}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">

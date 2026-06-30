@@ -50,7 +50,7 @@ function TickerItem({ item }) {
   }, [item.price]);
 
   const isUp = (item.pct || 0) >= 0;
-  const priceStr = item.price?.toFixed(item.digits || 2) || '—';
+  const priceStr = item.price?.toFixed(item.digits || 2) || '-';
 
   return (
     <div className="flex items-center gap-2 px-4 flex-shrink-0 border-r border-white/[0.05]">

@@ -136,10 +136,10 @@ export default function AdminRiskCenter() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <KPICard label="Total Accounts" value={isLoading ? '—' : totalAccounts} icon={Users} color="#3b82f6" />
-        <KPICard label="High Risk" value={isLoading ? '—' : highRisk} sub={`${critical} critical`} icon={AlertTriangle} color="#ef4444" />
-        <KPICard label="Medium Risk" value={isLoading ? '—' : mediumRisk} icon={AlertTriangle} color="#f59e0b" />
-        <KPICard label="Low Risk" value={isLoading ? '—' : lowRisk} icon={Activity} color="#10b981" />
+        <KPICard label="Total Accounts" value={isLoading ? '-' : totalAccounts} icon={Users} color="#3b82f6" />
+        <KPICard label="High Risk" value={isLoading ? '-' : highRisk} sub={`${critical} critical`} icon={AlertTriangle} color="#ef4444" />
+        <KPICard label="Medium Risk" value={isLoading ? '-' : mediumRisk} icon={AlertTriangle} color="#f59e0b" />
+        <KPICard label="Low Risk" value={isLoading ? '-' : lowRisk} icon={Activity} color="#10b981" />
       </div>
 
       <div className="mb-6 rounded-xl px-4 py-3 text-xs text-white/50 flex items-center gap-2"
@@ -189,7 +189,7 @@ export default function AdminRiskCenter() {
           onView={setDetailAcc}
           onNote={openNote}
           onReviewed={(a) => reviewedMutation.mutate(a)}
-          emptyHint={activeTab === 'overview' ? 'No accounts' : 'No accounts flagged in this category — run Scan All to refresh'}
+          emptyHint={activeTab === 'overview' ? 'No accounts' : 'No accounts flagged in this category - run Scan All to refresh'}
         />
       )}
 
@@ -208,7 +208,7 @@ export default function AdminRiskCenter() {
               <div className="p-5 space-y-3 text-sm">
                 <DetailRow label="Trader Email" value={detailAcc.user_email} />
                 <DetailRow label="Account ID" value={detailAcc.account_id} />
-                <DetailRow label="MT5 Login" value={detailAcc.mt_login || '—'} />
+                <DetailRow label="MT5 Login" value={detailAcc.mt_login || '-'} />
                 <DetailRow label="Status" value={detailAcc.status} />
                 <DetailRow label="Challenge" value={`${detailAcc.challenge_type} · $${(detailAcc.account_size || 0).toLocaleString()}`} />
                 <DetailRow label="Risk Score" value={detailAcc.risk_score || 0} />
@@ -305,7 +305,7 @@ function AccountRiskTable({ accounts, loading, onView, onNote, onReviewed, empty
             <tr key={acc.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
               <td className="py-3 px-4">
                 <div className="text-sm font-bold text-white truncate max-w-[180px]">{acc.user_email}</div>
-                <div className="text-xs text-white/40 font-mono">{acc.account_id} · MT5 {acc.mt_login || '—'}</div>
+                <div className="text-xs text-white/40 font-mono">{acc.account_id} · MT5 {acc.mt_login || '-'}</div>
               </td>
               <td className="py-3 px-4">
                 <span className="text-lg font-black" style={{ color: getScoreColor(acc.risk_score) }}>{acc.risk_score || 0}</span>
@@ -351,7 +351,7 @@ function IpDeviceTab({ accounts, deviceLogs, onView, onNote, onReviewed }) {
     <div className="space-y-4">
       <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="px-5 py-3 border-b border-white/[0.06] text-xs font-mono text-white/40 uppercase">
-          Device Logs ({deviceLogs.length}) — VPN / proxy / datacenter / multi-device flags
+          Device Logs ({deviceLogs.length}) - VPN / proxy / datacenter / multi-device flags
         </div>
         {deviceLogs.length === 0 ? (
           <div className="py-10 text-center text-white/20 text-sm">No device logs recorded.</div>
@@ -359,7 +359,7 @@ function IpDeviceTab({ accounts, deviceLogs, onView, onNote, onReviewed }) {
           <div key={d.id} className="px-5 py-3 border-b border-white/[0.04] flex flex-wrap items-center gap-3 text-xs">
             <div className="flex-1 min-w-0">
               <div className="font-bold text-white truncate">{d.user_email}</div>
-              <div className="text-white/40 font-mono">IP {d.ip_address} · {d.browser || '—'} · {d.os || '—'}</div>
+              <div className="text-white/40 font-mono">IP {d.ip_address} · {d.browser || '-'} · {d.os || '-'}</div>
             </div>
             <div className="flex gap-1">
               {d.is_vpn && <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white" style={{ background: '#ef4444' }}>VPN</span>}
@@ -384,7 +384,7 @@ function KycReviewTab({ kycs, search }) {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
       <div className="px-5 py-3 border-b border-white/[0.06] text-xs font-mono text-white/40 uppercase">
-        KYC Submissions ({kycs.length}) — admin reviews manually
+        KYC Submissions ({kycs.length}) - admin reviews manually
       </div>
       {filtered.length === 0 ? (
         <div className="py-10 text-center text-white/20 text-sm">No KYC records.</div>
@@ -394,7 +394,7 @@ function KycReviewTab({ kycs, search }) {
           <div key={k.id} className="px-5 py-3.5 border-b border-white/[0.04] flex flex-wrap items-center gap-3 text-xs">
             <div className="flex-1 min-w-0">
               <div className="font-bold text-white truncate">{k.full_name || k.user_email}</div>
-              <div className="text-white/40 font-mono">{k.user_email} · {k.id_type || '—'} · {k.nationality || '—'}</div>
+              <div className="text-white/40 font-mono">{k.user_email} · {k.id_type || '-'} · {k.nationality || '-'}</div>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold capitalize" style={{ color: sc, background: `${sc}15`, border: `1px solid ${sc}30` }}>
               {k.status?.replace(/_/g, ' ')}
@@ -428,7 +428,7 @@ function DetailRow({ label, value }) {
   return (
     <div className="flex justify-between gap-3">
       <span className="text-white/40 text-xs font-mono uppercase">{label}</span>
-      <span className="text-white font-semibold text-right break-all">{value || '—'}</span>
+      <span className="text-white font-semibold text-right break-all">{value || '-'}</span>
     </div>
   );
 }

@@ -130,7 +130,7 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(6,7,14,0.7) 100%)' }} />
 
-        {/* Type + Phase — top left */}
+        {/* Type + Phase - top left */}
         <div className="absolute top-2.5 left-3 flex items-center gap-1.5">
           <span className="text-[9px] font-black tracking-widest px-1.5 py-0.5 rounded"
             style={{ background: 'rgba(255,92,0,0.18)', color: '#FF5C00', border: '1px solid rgba(255,92,0,0.25)' }}>
@@ -139,13 +139,13 @@ function AccountCard({ account, isSelected, onSelect, i, onNavigate }) {
           <span className="text-[9px] font-bold tracking-widest text-white/40">{phaseLabel}</span>
         </div>
 
-        {/* Status — top right */}
+        {/* Status - top right */}
         <div className="absolute top-2.5 right-3 flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusColor }} />
           <span className="text-[9px] font-semibold" style={{ color: statusColor }}>{statusLabel}</span>
         </div>
 
-        {/* Account ID — bottom left */}
+        {/* Account ID - bottom left */}
         <div className="absolute bottom-2 left-3 text-[9px] font-mono text-white/25 tracking-wider">
           #{(account.account_id || account.id?.slice(0, 8) || '').toUpperCase()}
         </div>

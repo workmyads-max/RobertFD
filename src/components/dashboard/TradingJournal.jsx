@@ -11,7 +11,7 @@ import JournalAnalytics from './JournalAnalytics';
 const TABS = ['Daily PnL', 'Closed trades', 'Charts', 'My Journal'];
 
 function fmt(n, d = 2) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   const abs = Math.abs(n);
   if (abs >= 1000) return `$${n >= 0 ? '' : '-'}${abs.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
   return `$${n >= 0 ? '' : '-'}${abs.toFixed(d)}`;
@@ -45,7 +45,7 @@ function DailyPnLTab({ trades }) {
     .reduce((s, [, v]) => s + v.pnl, 0);
   const tradingDays = Object.keys(dayMap).filter(k => k.startsWith(monthPrefix)).length;
 
-  // Calendar grid (Mon–Sun)
+  // Calendar grid (Mon-Sun)
   const firstDay = new Date(year, month, 1);
   // Offset: Mon=0 … Sun=6
   const startOffset = (firstDay.getDay() + 6) % 7;
@@ -172,14 +172,14 @@ function TradeRow({ trade, index }) {
   const durS = Math.floor((durationMs % 60000) / 1000);
   const duration = durationMs > 0
     ? `${String(durH).padStart(2,'0')}:${String(durM).padStart(2,'0')}:${String(durS).padStart(2,'0')}`
-    : '—';
+    : '-';
 
   // Pips estimate
   const pips = trade.entry && trade.close
     ? Math.abs(trade.close - trade.entry) * (trade.entry > 10 ? 10 : 1000)
     : 0;
 
-  const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+  const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
 
   return (
     <>
@@ -192,16 +192,16 @@ function TradeRow({ trade, index }) {
             style={{ color: isBuy ? '#4ade80' : '#f87171' }}>
             {isBuy ? '↗ Buy' : '↘ Sell'}
           </div>
-          <div className="text-[10px] text-muted-foreground">{openTime ? fmtDate(openTime) : '—'}</div>
+          <div className="text-[10px] text-muted-foreground">{openTime ? fmtDate(openTime) : '-'}</div>
         </td>
-        <td className="px-3 py-3 text-sm text-center text-foreground">{trade.lots || '—'}</td>
-        <td className="px-3 py-3 text-sm font-mono font-medium text-center text-foreground">{trade.symbol || '—'}</td>
+        <td className="px-3 py-3 text-sm text-center text-foreground">{trade.lots || '-'}</td>
+        <td className="px-3 py-3 text-sm font-mono font-medium text-center text-foreground">{trade.symbol || '-'}</td>
         <td className="px-3 py-3 text-center">
           <span className="text-sm font-bold font-mono" style={{ color: pnl >= 0 ? '#4ade80' : '#f87171' }}>
             {pnl >= 0 ? '+' : ''}{fmt(pnl)}
           </span>
         </td>
-        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground hidden sm:table-cell">{pips > 0 ? pips.toFixed(1) : '—'}</td>
+        <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground hidden sm:table-cell">{pips > 0 ? pips.toFixed(1) : '-'}</td>
         <td className="px-3 py-3 text-xs font-mono text-center text-muted-foreground hidden sm:table-cell">{duration}</td>
         <td className="px-3 py-3 text-center hidden sm:table-cell">
           <button className="p-1 rounded hover:bg-white/10">
@@ -224,8 +224,8 @@ function TradeRow({ trade, index }) {
                 <div className="space-y-1.5 text-xs">
                   {[
                     ['Type', trade.type, isBuy ? '#4ade80' : '#f87171'],
-                    ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—'],
-                    ['Close', trade.close > 0 ? trade.close.toFixed(5) : '—'],
+                    ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '-'],
+                    ['Close', trade.close > 0 ? trade.close.toFixed(5) : '-'],
                   ].map(([k, v, c]) => (
                     <div key={k} className="flex justify-between gap-3">
                       <span className="text-muted-foreground">{k}</span>
@@ -242,10 +242,10 @@ function TradeRow({ trade, index }) {
                 </div>
                 <div className="space-y-1.5 text-xs">
                   {[
-                    ['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'],
-                    ['SL Pips', '—'],
-                    ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—'],
-                    ['TP Pips', '—'],
+                    ['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '-'],
+                    ['SL Pips', '-'],
+                    ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '-'],
+                    ['TP Pips', '-'],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-3">
                       <span className="text-muted-foreground">{k}</span>
@@ -279,11 +279,11 @@ function TradeRow({ trade, index }) {
                 <div className="space-y-2 text-xs">
                   <div>
                     <div className="text-muted-foreground mb-0.5">Open</div>
-                    <div className="font-mono text-foreground">{openTime ? fmtDate(openTime) : '—'}</div>
+                    <div className="font-mono text-foreground">{openTime ? fmtDate(openTime) : '-'}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground mb-0.5">Closed</div>
-                    <div className="font-mono text-foreground">{closeTime ? fmtDate(closeTime) : '—'}</div>
+                    <div className="font-mono text-foreground">{closeTime ? fmtDate(closeTime) : '-'}</div>
                   </div>
                 </div>
               </div>
@@ -300,10 +300,10 @@ function TradeRow({ trade, index }) {
                     const mae = isBuy ? Math.min(0, close - entry) : Math.min(0, entry - close);
                     const mfe = isBuy ? Math.max(0, close - entry) : Math.max(0, entry - close);
                     return [
-                      ['MAE Pip', mae !== 0 ? (mae / pipSize).toFixed(1) : '—'],
-                      ['MAE', mae !== 0 ? (entry + mae).toFixed(5) : entry > 0 ? entry.toFixed(5) : '—'],
-                      ['MFE Pip', mfe !== 0 ? (mfe / pipSize).toFixed(1) : '—'],
-                      ['MFE', mfe !== 0 ? (entry + mfe).toFixed(5) : close > 0 ? close.toFixed(5) : '—'],
+                      ['MAE Pip', mae !== 0 ? (mae / pipSize).toFixed(1) : '-'],
+                      ['MAE', mae !== 0 ? (entry + mae).toFixed(5) : entry > 0 ? entry.toFixed(5) : '-'],
+                      ['MFE Pip', mfe !== 0 ? (mfe / pipSize).toFixed(1) : '-'],
+                      ['MFE', mfe !== 0 ? (entry + mfe).toFixed(5) : close > 0 ? close.toFixed(5) : '-'],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-3">
                         <span className="text-muted-foreground">{k}</span>
@@ -570,7 +570,7 @@ export default function TradingJournal({ user }) {
 
   const userEmail = user?.email || '';
 
-  // Use getUserAccounts backend function (case-insensitive email match) — same as Dashboard
+  // Use getUserAccounts backend function (case-insensitive email match) - same as Dashboard
   const { data: accounts = [], isLoading: accountsLoading } = useQuery({
     queryKey: ['challenge-accounts', userEmail],
     queryFn: async () => {
@@ -584,7 +584,7 @@ export default function TradingJournal({ user }) {
 
   const account = accounts.find(a => a.id === selectedAccountId) || accounts[0] || null;
 
-  // Use centralized trade data hook — same as AccountOverview (getAccountTradeRecords backend)
+  // Use centralized trade data hook - same as AccountOverview (getAccountTradeRecords backend)
   const { closedTrades: trades = [], isLoading } = useAccountTradeData(account, { refetchIntervalMs: 15000 });
 
   // ── Actual journal entries (TradingJournalEntry entity) ──────────────────
@@ -626,7 +626,7 @@ export default function TradingJournal({ user }) {
         </div>
       )}
 
-      {/* Empty state — no accounts */}
+      {/* Empty state - no accounts */}
       {accounts.length === 0 && (
         <div className="text-center py-20 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
           <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
@@ -635,7 +635,7 @@ export default function TradingJournal({ user }) {
         </div>
       )}
 
-      {/* Tabs — only show when accounts exist */}
+      {/* Tabs - only show when accounts exist */}
       {accounts.length > 0 && (
         <div className="flex border-b mb-6 overflow-x-auto scrollbar-hide" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           {TABS.map(t => (

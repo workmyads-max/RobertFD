@@ -31,7 +31,7 @@ function EmptyState({ onStartChallenge }) {
       </div>
       <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">No Active Accounts</h2>
       <p className="text-[13px] text-muted-foreground mb-10 max-w-sm leading-relaxed font-light">
-        Purchase a challenge to access the full funded trader platform — real-time analytics, live objectives, and institutional-grade tools.
+        Purchase a challenge to access the full funded trader platform - real-time analytics, live objectives, and institutional-grade tools.
       </p>
       <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onStartChallenge}
         className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white"
@@ -82,7 +82,7 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
   });
 
   // Accounts are passed from Dashboard (single source of truth, never unmounts)
-  // — eliminates empty-state flash when navigating between dashboard menus.
+  // - eliminates empty-state flash when navigating between dashboard menus.
   const accounts = propAccounts || [];
   const isLoading = propIsLoading || false;
   const refetch = onRefetchAccounts || (() => {});
@@ -90,7 +90,7 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
   // Use KYC from parent (Dashboard) to prevent duplicate queries and loading flash
   // kyc prop is loaded once in Dashboard with proper staleTime
 
-  // CRITICAL: Exclude is_trashed=true accounts — they belong ONLY in Trash.
+  // CRITICAL: Exclude is_trashed=true accounts - they belong ONLY in Trash.
   // Trashed accounts have status='passed' but are superseded; never show as live.
   const activeAccounts = accounts.filter(a => !a.is_trashed && ['active', 'funded', 'passed', 'pending'].includes(a.status));
 
@@ -110,9 +110,9 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
     }
   }, [derivedSelected?.id]);
 
-  // ── CENTRALIZED TRADE DATA — mt_login-scoped, single source of truth ──────
+  // ── CENTRALIZED TRADE DATA - mt_login-scoped, single source of truth ──────
   // Uses getAccountTradeRecords backend function (service role, mt_login filter)
-  // so each MT5 account shows ONLY its own trades — no cross-phase contamination.
+  // so each MT5 account shows ONLY its own trades - no cross-phase contamination.
   const { allTrades: trades = [], closedTrades: closedTradesList = [] } = useAccountTradeData(derivedSelected, { refetchIntervalMs: 5000 });
 
   const stats = useAccountStats(derivedSelected, trades);
@@ -147,7 +147,7 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
       {/* Particles */}
       <ParticleBackground />
 
-      {/* Floating Daily P&L — shown when open positions exist */}
+      {/* Floating Daily P&L - shown when open positions exist */}
       {derivedSelected && openTrades.length > 0 && (
         <div className="fixed z-50" style={{ pointerEvents: 'none' }}>
           <div style={{ pointerEvents: 'auto' }}>
@@ -170,7 +170,7 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
         {/* Unified Welcome Header + Status Bar */}
         <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
 
-        {/* Promotion Banner — below welcome header */}
+        {/* Promotion Banner - below welcome header */}
         {bannerNotification && (
           <div className="mt-4 rounded-xl overflow-hidden">
             <NotificationBanner notification={bannerNotification} />
@@ -179,10 +179,10 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
 
         {/* Main content area with proper spacing */}
         <div className="space-y-8 mt-8 min-h-[40vh]">
-          {/* First-Time Promo Banner — ALWAYS SHOWN */}
+          {/* First-Time Promo Banner - ALWAYS SHOWN */}
           <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
-          {/* Live News Alerts Bar — high-impact upcoming events ticker */}
+          {/* Live News Alerts Bar - high-impact upcoming events ticker */}
           <NewsAlertsBar onNavigate={onNavigate} />
 
           {activeAccounts.length === 0 ? (
@@ -226,18 +226,18 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
             </>
           )}
 
-          {/* Three Paths to Funded Trading — ALWAYS SHOWN */}
+          {/* Three Paths to Funded Trading - ALWAYS SHOWN */}
           <ThreePathsToFunded onNavigate={onNavigate} />
           
-          {/* Affiliate Section — ALWAYS SHOWN */}
+          {/* Affiliate Section - ALWAYS SHOWN */}
           <AffiliateSection onNavigate={onNavigate} />
           
-          {/* Footer — ALWAYS SHOWN */}
+          {/* Footer - ALWAYS SHOWN */}
           <Footer />
         </div>
       </div>
 
-      {/* Quick Withdraw Modal — includes funded accounts + instant accounts that are payout-eligible */}
+      {/* Quick Withdraw Modal - includes funded accounts + instant accounts that are payout-eligible */}
       {showWithdrawModal && (
         <QuickWithdrawModal
           accounts={activeAccounts.filter(a => a.status === 'funded' || (a.challenge_type === 'instant_account' && a.instant_payout_eligible))}

@@ -74,7 +74,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const [pendingOrder, setPendingOrder] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
 
-  // Only show platforms that are enabled — MT5-only mode: others are hidden completely
+  // Only show platforms that are enabled - MT5-only mode: others are hidden completely
   const PLATFORMS = [
     { id: 'mt5', label: 'MetaTrader 5', desc: 'Industry standard platform', available: true, icon: '📈' },
   ].filter(p => p.available);
@@ -139,7 +139,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const CHALLENGE_RULES = displayPlan ? [
     { icon: TrendingDown, color: '#ef4444', title: 'Daily Drawdown', body: `Max ${displayPlan.daily_dd}% loss per trading day. Resets at 3:00 AM GMT+4 daily. Evaluated on EQUITY (balance + floating P/L).` },
     { icon: AlertTriangle, color: '#f59e0b', title: 'Maximum Drawdown', body: displayPlan.type === 'one_step'
-      ? `${displayPlan.max_dd}% EOD TRAILING drawdown — the limit trails your equity high-water mark and locks at end of day. A touch is a PERMANENT breach.`
+      ? `${displayPlan.max_dd}% EOD TRAILING drawdown - the limit trails your equity high-water mark and locks at end of day. A touch is a PERMANENT breach.`
       : `Total equity must never fall more than ${displayPlan.max_dd}% below starting balance. This does NOT reset.` },
     { icon: Target, color: '#10b981', title: 'Reward Target', body: displayPlan.type === 'two-step'
       ? `Phase 1: ${displayPlan.phase1_target}% target. Phase 2: ${displayPlan.phase2_target}% target.`
@@ -147,8 +147,8 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         ? `Single-phase: reach ${displayPlan.phase1_target}% reward target to pass and receive a Simulation Funded Account.`
         : `Target: ${displayPlan.phase1_target}%. Maintain profitable operation.` },
     ...(displayPlan.type === 'one_step' ? [
-      { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'No minimum trading days required. Pass at your own pace — there is no time limit.' },
-      { icon: TrendingUp, color: '#3b82f6', title: 'Best Day Rule (50%)', body: `No single trading day's reward may exceed 50% of your total reward. This is a payout-eligibility condition reviewed at payout — NOT an auto-breach.` },
+      { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'No minimum trading days required. Pass at your own pace - there is no time limit.' },
+      { icon: TrendingUp, color: '#3b82f6', title: 'Best Day Rule (50%)', body: `No single trading day's reward may exceed 50% of your total reward. This is a payout-eligibility condition reviewed at payout - NOT an auto-breach.` },
     ] : [
       { icon: Calendar, color: '#6366f1', title: 'Min Trading Days', body: 'Trade on at least 4 different calendar days per phase to qualify.' },
     ]),
@@ -406,7 +406,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <div>
             <div className="text-base font-bold text-foreground">Challenge Rules</div>
-            <div className="text-xs text-muted-foreground mt-1">Read carefully — violations result in immediate termination</div>
+            <div className="text-xs text-muted-foreground mt-1">Read carefully - violations result in immediate termination</div>
           </div>
           <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
             style={{

@@ -39,13 +39,13 @@ async function fetchXAUUSDSignal(timeframe, livePrice) {
   const timestamp = now.toISOString();
 
   const tfDescriptions = {
-    M1:  '1-minute scalping chart — focus on micro price action, order flow, tick volume, tight S/R levels, and momentum bursts',
-    M5:  '5-minute intraday chart — focus on short-term trends, VWAP, EMA crossovers, and immediate support/resistance zones',
-    M15: '15-minute swing chart — focus on intraday structure, Fibonacci retracements, MACD divergences, and session-based levels',
+    M1:  '1-minute scalping chart - focus on micro price action, order flow, tick volume, tight S/R levels, and momentum bursts',
+    M5:  '5-minute intraday chart - focus on short-term trends, VWAP, EMA crossovers, and immediate support/resistance zones',
+    M15: '15-minute swing chart - focus on intraday structure, Fibonacci retracements, MACD divergences, and session-based levels',
   };
 
   const priceContext = livePrice 
-    ? `LIVE PRICE (verified): Bid $${livePrice.bid}, Ask $${livePrice.ask}, Spread ${livePrice.spread}. Use these exact numbers — do NOT search for a different price.`
+    ? `LIVE PRICE (verified): Bid $${livePrice.bid}, Ask $${livePrice.ask}, Spread ${livePrice.spread}. Use these exact numbers - do NOT search for a different price.`
     : 'Search for the current XAUUSD spot price.';
 
   const smcStrategy = `
@@ -162,11 +162,11 @@ function SignalCard({ signal, currentPrice }) {
     : null;
 
   const tp1Pips = signal.entry_price && signal.take_profit_1 
-    ? Math.abs(signal.take_profit_1 - signal.entry_price).toFixed(1) : '—';
+    ? Math.abs(signal.take_profit_1 - signal.entry_price).toFixed(1) : '-';
   const tp2Pips = signal.entry_price && signal.take_profit_2 
-    ? Math.abs(signal.take_profit_2 - signal.entry_price).toFixed(1) : '—';
+    ? Math.abs(signal.take_profit_2 - signal.entry_price).toFixed(1) : '-';
   const slPips = signal.entry_price && signal.stop_loss
-    ? Math.abs(signal.stop_loss - signal.entry_price).toFixed(1) : '—';
+    ? Math.abs(signal.stop_loss - signal.entry_price).toFixed(1) : '-';
 
   return (
     <div className="rounded-2xl overflow-hidden"
@@ -210,8 +210,8 @@ function SignalCard({ signal, currentPrice }) {
               </span>
             )}
           </div>
-          <div className="text-2xl font-black text-white">${currentPrice?.toFixed(2) || '—'}</div>
-          <div className="text-[10px] font-mono text-muted-foreground/60">Spread: {signal.spread || '—'}</div>
+          <div className="text-2xl font-black text-white">${currentPrice?.toFixed(2) || '-'}</div>
+          <div className="text-[10px] font-mono text-muted-foreground/60">Spread: {signal.spread || '-'}</div>
         </div>
       </div>
 
@@ -222,7 +222,7 @@ function SignalCard({ signal, currentPrice }) {
             <Target className="w-3 h-3 text-blue-400" />
             <span className="text-[10px] font-mono text-muted-foreground uppercase">Entry</span>
           </div>
-          <div className="text-lg font-black text-blue-400">${signal.entry_price?.toFixed(2) || '—'}</div>
+          <div className="text-lg font-black text-blue-400">${signal.entry_price?.toFixed(2) || '-'}</div>
           {priceDiff && (
             <div className={`text-[10px] font-mono mt-1 ${Number(priceDiff) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {Number(priceDiff) >= 0 ? '+' : ''}{priceDiff}%
@@ -234,7 +234,7 @@ function SignalCard({ signal, currentPrice }) {
             <Shield className="w-3 h-3 text-red-400" />
             <span className="text-[10px] font-mono text-muted-foreground uppercase">Stop Loss</span>
           </div>
-          <div className="text-lg font-black text-red-400">${signal.stop_loss?.toFixed(2) || '—'}</div>
+          <div className="text-lg font-black text-red-400">${signal.stop_loss?.toFixed(2) || '-'}</div>
           <div className="text-[10px] font-mono text-red-400/60 mt-1">-{slPips} pips</div>
         </div>
         <div className="px-4 py-4 text-center">
@@ -242,7 +242,7 @@ function SignalCard({ signal, currentPrice }) {
             <DollarSign className="w-3 h-3 text-emerald-400" />
             <span className="text-[10px] font-mono text-muted-foreground uppercase">TP 1</span>
           </div>
-          <div className="text-lg font-black text-emerald-400">${signal.take_profit_1?.toFixed(2) || '—'}</div>
+          <div className="text-lg font-black text-emerald-400">${signal.take_profit_1?.toFixed(2) || '-'}</div>
           <div className="text-[10px] font-mono text-emerald-400/60 mt-1">+{tp1Pips} pips</div>
         </div>
         <div className="px-4 py-4 text-center">
@@ -250,7 +250,7 @@ function SignalCard({ signal, currentPrice }) {
             <DollarSign className="w-3 h-3 text-emerald-300" />
             <span className="text-[10px] font-mono text-muted-foreground uppercase">TP 2</span>
           </div>
-          <div className="text-lg font-black text-emerald-300">${signal.take_profit_2?.toFixed(2) || '—'}</div>
+          <div className="text-lg font-black text-emerald-300">${signal.take_profit_2?.toFixed(2) || '-'}</div>
           <div className="text-[10px] font-mono text-emerald-300/60 mt-1">+{tp2Pips} pips</div>
         </div>
       </div>
@@ -261,7 +261,7 @@ function SignalCard({ signal, currentPrice }) {
         <div className="flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-white/40" />
           <span className="text-xs text-muted-foreground">R:R</span>
-          <span className="text-sm font-bold font-mono text-emerald-400">{signal.risk_reward_ratio || '—'}</span>
+          <span className="text-sm font-bold font-mono text-emerald-400">{signal.risk_reward_ratio || '-'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Activity className="w-3.5 h-3.5 text-white/40" />
@@ -290,12 +290,12 @@ function SignalCard({ signal, currentPrice }) {
 function SMCAnalysisPanel({ smc }) {
   if (!smc) return null;
   const rows = [
-    { label: 'HTF Trend', value: smc.higher_tf_trend || '—', 
+    { label: 'HTF Trend', value: smc.higher_tf_trend || '-', 
       color: smc.higher_tf_trend?.includes('BULLISH') ? '#10b981' : smc.higher_tf_trend?.includes('BEARISH') ? '#ef4444' : '#f59e0b' },
-    { label: 'Order Block', value: smc.order_block_zone || '—', color: '#60a5fa' },
-    { label: 'FVG Zone', value: smc.fvg_zone || '—', color: '#c084fc' },
-    { label: 'Liquidity Pools', value: smc.liquidity_pools || '—', color: '#f59e0b' },
-    { label: 'Session Bias', value: smc.session_bias || '—', color: '#FF5C00' },
+    { label: 'Order Block', value: smc.order_block_zone || '-', color: '#60a5fa' },
+    { label: 'FVG Zone', value: smc.fvg_zone || '-', color: '#c084fc' },
+    { label: 'Liquidity Pools', value: smc.liquidity_pools || '-', color: '#f59e0b' },
+    { label: 'Session Bias', value: smc.session_bias || '-', color: '#FF5C00' },
   ];
 
   return (
@@ -318,12 +318,12 @@ function SMCAnalysisPanel({ smc }) {
 function LevelsPanel({ levels }) {
   if (!levels) return null;
   const rows = [
-    { label: 'Pivot', value: levels.pivot_point ? `$${levels.pivot_point.toFixed(2)}` : '—', color: '#f1f5f9' },
-    { label: 'R1', value: levels.r1 ? `$${levels.r1.toFixed(2)}` : '—', color: '#f87171' },
-    { label: 'R2', value: levels.r2 ? `$${levels.r2.toFixed(2)}` : '—', color: '#ef4444' },
-    { label: 'S1', value: levels.s1 ? `$${levels.s1.toFixed(2)}` : '—', color: '#60a5fa' },
-    { label: 'S2', value: levels.s2 ? `$${levels.s2.toFixed(2)}` : '—', color: '#3b82f6' },
-    { label: 'Daily Open', value: levels.daily_open ? `$${levels.daily_open.toFixed(2)}` : '—', color: '#f1f5f9' },
+    { label: 'Pivot', value: levels.pivot_point ? `$${levels.pivot_point.toFixed(2)}` : '-', color: '#f1f5f9' },
+    { label: 'R1', value: levels.r1 ? `$${levels.r1.toFixed(2)}` : '-', color: '#f87171' },
+    { label: 'R2', value: levels.r2 ? `$${levels.r2.toFixed(2)}` : '-', color: '#ef4444' },
+    { label: 'S1', value: levels.s1 ? `$${levels.s1.toFixed(2)}` : '-', color: '#60a5fa' },
+    { label: 'S2', value: levels.s2 ? `$${levels.s2.toFixed(2)}` : '-', color: '#3b82f6' },
+    { label: 'Daily Open', value: levels.daily_open ? `$${levels.daily_open.toFixed(2)}` : '-', color: '#f1f5f9' },
   ];
 
   return (
@@ -402,7 +402,7 @@ export default function MarketSignals() {
             <Zap className="w-6 h-6 text-primary" /> XAUUSD Trade Signals
           </h1>
           <p className="text-sm text-muted-foreground font-mono mt-1">
-            SMC / ICT Scalping Strategy · {analysis?.generatedAt ? new Date(analysis.generatedAt).toLocaleString() : '—'}
+            SMC / ICT Scalping Strategy · {analysis?.generatedAt ? new Date(analysis.generatedAt).toLocaleString() : '-'}
             {analysis?.price_source && <span className="text-primary/70"> · Price: {analysis.price_source}</span>}
             {lastUpdated && <span className="text-muted-foreground/50"> · Updated {lastUpdated}</span>}
           </p>

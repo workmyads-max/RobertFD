@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 /**
- * useNow — returns the current timestamp (ms), updated on an interval.
+ * useNow - returns the current timestamp (ms), updated on an interval.
  * Pass intervalMs=1000 for a ticking countdown clock.
  * Uses a single timer regardless of how many components consume the value.
  */

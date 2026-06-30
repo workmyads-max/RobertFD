@@ -75,7 +75,7 @@ export default function MyAppeals({ user, accounts = [] }) {
             <CheckCircle className="w-5 h-5 text-emerald-400" />
             <div>
               <div className="text-sm font-bold text-emerald-400">Appeal Submitted Successfully</div>
-              <div className="text-xs text-muted-foreground">Our compliance team will review your case within 24–72 hours.</div>
+              <div className="text-xs text-muted-foreground">Our compliance team will review your case within 24-72 hours.</div>
             </div>
           </motion.div>
         )}
@@ -101,7 +101,7 @@ export default function MyAppeals({ user, accounts = [] }) {
                     <option value="" className="bg-[#0d0f16]">Select account...</option>
                     {accounts.map(a => (
                       <option key={a.id} value={a.account_id} className="bg-[#0d0f16]">
-                        {a.account_id} — ${(a.account_size || 0).toLocaleString()} ({a.status})
+                        {a.account_id} - ${(a.account_size || 0).toLocaleString()} ({a.status})
                       </option>
                     ))}
                   </select>
@@ -136,7 +136,7 @@ export default function MyAppeals({ user, accounts = [] }) {
               {/* Policy note */}
               <div className="rounded-xl p-3 text-xs text-muted-foreground"
                 style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
-                📋 <strong className="text-foreground">Note:</strong> Appeals are reviewed within 24–72 hours. Trading restrictions remain active during review. Providing detailed evidence increases approval chances.
+                📋 <strong className="text-foreground">Note:</strong> Appeals are reviewed within 24-72 hours. Trading restrictions remain active during review. Providing detailed evidence increases approval chances.
               </div>
 
               {/* Actions */}

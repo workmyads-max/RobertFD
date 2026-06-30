@@ -1,7 +1,7 @@
 /**
- * DDBreachModal — Full-screen unbreachable breach notification.
+ * DDBreachModal - Full-screen unbreachable breach notification.
  * Shown when LiveDDGuard detects a DD breach in the active session.
- * Cannot be dismissed — trader must acknowledge then navigate away.
+ * Cannot be dismissed - trader must acknowledge then navigate away.
  */
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -91,7 +91,7 @@ export default function DDBreachModal({ breach, onAcknowledge }) {
             boxShadow: '0 4px 20px rgba(220,38,38,0.3)',
           }}
         >
-          I Understand — View Dashboard
+          I Understand - View Dashboard
         </button>
       </motion.div>
     </motion.div>

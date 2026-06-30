@@ -5,7 +5,7 @@ import { getDailyResetCountdown } from '../terminal/terminalConfig';
 
 /**
  * Live countdown timer to the next Daily DD reset at 3:00 AM GMT+4 (23:00 UTC).
- * Drop this anywhere — Overview, Terminal account bar, Account Cards, Analytics.
+ * Drop this anywhere - Overview, Terminal account bar, Account Cards, Analytics.
  */
 export default function DailyResetTimer({ compact = false, dailyDDUsed = 0, dailyDDLimit = 5 }) {
   const [countdown, setCountdown] = useState(getDailyResetCountdown());

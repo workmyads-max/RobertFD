@@ -151,14 +151,14 @@ export default function WelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
         </div>
 
-        {/* Discord Community Banner — right side, lg+ only */}
+        {/* Discord Community Banner - right side, lg+ only */}
         <div className="hidden lg:flex flex-shrink-0 pl-7" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
         <DiscordCommunityBanner discordUrl={social.discord_enabled ? social.discord_url : null} />
         </div>
 
       </div>
 
-      {/* Discord Community Banner — mobile only (below header) */}
+      {/* Discord Community Banner - mobile only (below header) */}
       <div className="lg:hidden px-6 pb-5 sm:px-8">
         <DiscordCommunityBanner discordUrl={social.discord_enabled ? social.discord_url : null} />
       </div>

@@ -56,7 +56,7 @@ function AuthSettingsPanel() {
           <div>
             <div className="text-xs font-bold text-foreground">New Registrations</div>
             <div className="text-[10px] font-mono" style={{ color: registrationEnabled ? '#10b981' : '#666' }}>
-              {registrationEnabled ? 'Open — Anyone can register' : 'Closed — Registrations disabled'}
+              {registrationEnabled ? 'Open - Anyone can register' : 'Closed - Registrations disabled'}
             </div>
           </div>
         </div>

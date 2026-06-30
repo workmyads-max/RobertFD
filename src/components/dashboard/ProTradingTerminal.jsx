@@ -303,9 +303,9 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
     let breached = false, reason = '';
     if (dailyDD >= rules.dailyDDLimit) {
-      breached = true; reason = `DAILY DRAWDOWN LIMIT: ${dailyDD.toFixed(2)}% ≥ ${rules.dailyDDLimit}% — Trading Disabled`;
+      breached = true; reason = `DAILY DRAWDOWN LIMIT: ${dailyDD.toFixed(2)}% ≥ ${rules.dailyDDLimit}% - Trading Disabled`;
     } else if (maxDD >= rules.maxDDLimit) {
-      breached = true; reason = `MAX DRAWDOWN LIMIT: ${maxDD.toFixed(2)}% ≥ ${rules.maxDDLimit}% — Account Failed`;
+      breached = true; reason = `MAX DRAWDOWN LIMIT: ${maxDD.toFixed(2)}% ≥ ${rules.maxDDLimit}% - Account Failed`;
     } else if (marginLevel <= rules.stopOutLevel && positions.length > 0) {
       breached = true; reason = `STOP OUT: Margin level ${marginLevel.toFixed(1)}% ≤ ${rules.stopOutLevel}%`;
     }
@@ -530,7 +530,7 @@ export default function ProTradingTerminal({ account: initialAccount, allAccount
 
       {/* ═══ UNIFIED RESPONSIVE LAYOUT ═══════════════════════════════════════════════════════════ */}
       <div className="flex flex-col flex-1 overflow-hidden relative">
-        {/* Floating Daily P&L box — visible when positions are open */}
+        {/* Floating Daily P&L box - visible when positions are open */}
         <FloatingDailyPnL
           floatPnl={floatPnl}
           dailyClosedPnl={sessionBalance - (account?.balance || accountSize)}

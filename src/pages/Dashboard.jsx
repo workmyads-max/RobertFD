@@ -46,7 +46,7 @@ import AdminLiveChat from '../components/admin/AdminLiveChat';
 import AdminUserManagement from '../components/admin/AdminUserManagement';
 import PlatformVisibilityControl from '../components/admin/PlatformVisibilityControl';
 import PaymentApprovalNotification from '../components/dashboard/PaymentApprovalNotification';
-// DashboardPopupNotification intentionally removed — corner popups disabled globally
+// DashboardPopupNotification intentionally removed - corner popups disabled globally
 import KYC from '../components/dashboard/KYC';
 import MyPerformance from '../components/performance/MyPerformance';
 import AdminCoupons from '../components/admin/AdminCoupons';
@@ -151,7 +151,7 @@ export default function Dashboard() {
     queryKey: ['notifications', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      // Fetch ALL active notifications — Notification entity has no RLS, so we
+      // Fetch ALL active notifications - Notification entity has no RLS, so we
       // fetch all and filter case-insensitively on the client to avoid missing
       // user-specific notifications due to email casing/whitespace differences.
       const all = await base44.entities.Notification.filter({ is_active: true }, '-created_date', 100);
@@ -175,12 +175,12 @@ export default function Dashboard() {
       return res?.data?.accounts || [];
     },
     enabled: !!user?.email,
-    refetchInterval: 15000, // 15s — fast enough for overview real-time; single source of truth
+    refetchInterval: 15000, // 15s - fast enough for overview real-time; single source of truth
     staleTime: 10000,
     placeholderData: (prev) => prev ?? [], // Keep previous data while refetching - prevents flash of empty state
   });
 
-  // Load KYC status for welcome header and withdrawal eligibility — shared hook
+  // Load KYC status for welcome header and withdrawal eligibility - shared hook
   // (same source of truth as the KYC and Withdrawals pages).
   const { kyc } = useKycStatus(user?.email);
 
@@ -193,14 +193,14 @@ export default function Dashboard() {
   const hasFundedAccount = allAccounts.some(a => a.status === 'funded');
   const hasChallengeAccount = allAccounts.some(a => ['active', 'passed', 'pending'].includes(a.status));
   const notifications = rawNotifications.filter(n => {
-    // CRITICAL: Any notification addressed to a specific user is PRIVATE —
+    // CRITICAL: Any notification addressed to a specific user is PRIVATE -
     // only that exact user may ever see it, regardless of target.
     // Match case-insensitively and trimmed so casing/whitespace never hides it.
     if (n.user_email) {
       return (n.user_email || '').toLowerCase().trim() === normalizedUserEmail;
     }
     // From here on, only broadcast notifications (no user_email) remain.
-    // market_alert and system notifications MUST be user-scoped — never show as broadcast
+    // market_alert and system notifications MUST be user-scoped - never show as broadcast
     if (n.type === 'market_alert' || n.type === 'system') return false;
     if (n.target === 'all') return true;
     if (n.target === 'admin') return isAdmin;
@@ -339,12 +339,12 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
-      {/* Clean dark background — no animated overlays */}
+      {/* Clean dark background - no animated overlays */}
 
       {user && <UserWarningPanel userEmail={user.email} />}
       {user && <PaymentApprovalNotification user={user} />}
 
-      {/* Live DD Guard — runs every 15s when trader has dashboard open */}
+      {/* Live DD Guard - runs every 15s when trader has dashboard open */}
       {user && !isAdmin && <LiveDDGuard onBreach={handleDDBreach} />}
       <DDBreachModal breach={ddBreach} onAcknowledge={() => {
         // Save acknowledgement so modal doesn't re-appear for this breach
@@ -390,7 +390,7 @@ export default function Dashboard() {
                 </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
-            {/* Risk Disclaimer — collapsible, site-wide on all dashboard & admin pages */}
+            {/* Risk Disclaimer - collapsible, site-wide on all dashboard & admin pages */}
             {!isTerminal && <RiskDisclaimer variant="compact" />}
           </div>
         </main>

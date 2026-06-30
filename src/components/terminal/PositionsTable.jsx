@@ -134,7 +134,7 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
               {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select'}
             </button>
 
-            {/* Close Selected — only when something is selected */}
+            {/* Close Selected - only when something is selected */}
             {selectedIds.size > 0 && (
               <motion.button initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 onClick={closeSelected}
@@ -233,7 +233,7 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
               {positions.length === 0 ? (
                 <tr><td colSpan={13} className="px-4 py-10 text-center text-slate-600 text-[11px]">
                   <TrendingUp className="w-7 h-7 opacity-15 mx-auto mb-2" />
-                  No open positions — place a trade to get started
+                  No open positions - place a trade to get started
                 </td></tr>
               ) : positions.map(pos => {
                 const p   = prices[pos.symbol];
@@ -277,10 +277,10 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
                       </motion.span>
                     </td>
                     <td className={`${TD} text-slate-500`}>${pos.margin?.toFixed(0)}</td>
-                    <td className={`${TD}`} style={{ color: pos.sl ? '#f87171' : '#1e293b' }}>{pos.sl || '—'}</td>
-                    <td className={`${TD}`} style={{ color: pos.tp ? '#6ee7b7' : '#1e293b' }}>{pos.tp || '—'}</td>
+                    <td className={`${TD}`} style={{ color: pos.sl ? '#f87171' : '#1e293b' }}>{pos.sl || '-'}</td>
+                    <td className={`${TD}`} style={{ color: pos.tp ? '#6ee7b7' : '#1e293b' }}>{pos.tp || '-'}</td>
                     <td className={`${TD} text-slate-600`}>{pos.time}</td>
-                    {/* Partial close — always visible now */}
+                    {/* Partial close - always visible now */}
                     <td className={TD}>
                       <div className="flex items-center gap-1">
                         <input
@@ -376,12 +376,12 @@ export default function PositionsTable({ positions, pendingOrders, closedTrades,
                     <td className={`${TD} font-black text-white`}>{o.symbol}</td>
                     <td className={`${TD} text-slate-300`}>{o.lots}</td>
                     <td className={`${TD} font-bold text-yellow-300`}>{o.entry?.toFixed(inst?.digits)}</td>
-                    <td className={`${TD} text-slate-400`}>{cp?.toFixed(inst?.digits) || '—'}</td>
+                    <td className={`${TD} text-slate-400`}>{cp?.toFixed(inst?.digits) || '-'}</td>
                     <td className={`${TD}`} style={{ color: diff > 0 ? '#10b981' : '#ef4444' }}>
-                      {diff != null ? `${diff > 0 ? '+' : ''}${diff.toFixed(inst?.digits)}` : '—'}
+                      {diff != null ? `${diff > 0 ? '+' : ''}${diff.toFixed(inst?.digits)}` : '-'}
                     </td>
-                    <td className={`${TD} text-red-400/70`}>{o.sl || '—'}</td>
-                    <td className={`${TD} text-emerald-400/70`}>{o.tp || '—'}</td>
+                    <td className={`${TD} text-red-400/70`}>{o.sl || '-'}</td>
+                    <td className={`${TD} text-emerald-400/70`}>{o.tp || '-'}</td>
                     <td className={`${TD} text-slate-600`}>{o.time}</td>
                     <td className={TD}><button onClick={() => onCancelPending(o.id)}
                       className="w-6 h-6 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-all"

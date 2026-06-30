@@ -293,7 +293,7 @@ export default function AdminMatchTrader() {
                 </div>
                 <div>
                   <div className="text-[10px] font-mono text-white/40">Credentials</div>
-                  <div className="text-[10px] font-mono text-white/60 truncate">{a.mt_login || a.login_credentials?.split('|')[0]?.replace('Login:', '')?.trim() || '—'}</div>
+                  <div className="text-[10px] font-mono text-white/60 truncate">{a.mt_login || a.login_credentials?.split('|')[0]?.replace('Login:', '')?.trim() || '-'}</div>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full"

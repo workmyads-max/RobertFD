@@ -38,7 +38,7 @@ const FLOW_STEPS = [
 {
   step: '03', icon: Award, color: '#CCFF00',
   title: 'Trader Gets Funded',
-  desc: 'When your referral receives a reward payout — you earn a bonus too.',
+  desc: 'When your referral receives a reward payout - you earn a bonus too.',
   earn: 'Up to 25% Reward'
 },
 {
@@ -50,7 +50,7 @@ const FLOW_STEPS = [
 
 
 const TIERS = [
-{ traders: '0–9', rate: '7%', label: 'Starter', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
+{ traders: '0-9', rate: '7%', label: 'Starter', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
 { traders: '10+', rate: '11%', label: 'Silver IB', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
 { traders: '25+', rate: '17%', label: 'Gold IB', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)' },
 { traders: '50+', rate: '25%', label: 'Platinum IB', color: '#FF5C00', bg: 'rgba(255,92,0,0.08)' }];
@@ -267,7 +267,7 @@ export default function AffiliateSection() {
               <h3 className="text-3xl font-black text-foreground mb-4">Multi-Level <br />Commission Tree</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                 Build a deep network and earn from 3 levels of referrals.
-                Your Level 1 refers others — you earn from them too, automatically.
+                Your Level 1 refers others - you earn from them too, automatically.
               </p>
               <a href="/dashboard" className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-sm font-bold text-white transition-all group"
               style={{ background: 'linear-gradient(90deg,#FF5C00,#cc4900)', boxShadow: '0 4px 24px rgba(255,92,0,0.4)' }}>
@@ -286,7 +286,7 @@ export default function AffiliateSection() {
                   <div className="w-14 h-10 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0"
                 style={{ background: `${l.color}20`, color: l.color }}>{l.rate}</div>
                   <div>
-                    <div className="text-xs font-bold text-foreground">{l.lvl} — {l.label}</div>
+                    <div className="text-xs font-bold text-foreground">{l.lvl} - {l.label}</div>
                     <div className="text-[11px] text-muted-foreground font-mono">{l.example}</div>
                   </div>
                 </div>

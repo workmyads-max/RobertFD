@@ -138,15 +138,15 @@ export default function Analytics({ onStartChallenge }) {
   const worstTrade = closedTrades.length > 0 ? Math.min(...closedTrades.map(t => t.pnl || 0)) : 0;
   const symbolCount = {};
   tradeRecords.forEach(t => { symbolCount[t.symbol] = (symbolCount[t.symbol] || 0) + 1; });
-  const mostTraded = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+  const mostTraded = Object.entries(symbolCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 
   const totalPnl = account.pnl || 0;
-  // Always prefer synced account values from MT5 — TradeRecord data may be incomplete
+  // Always prefer synced account values from MT5 - TradeRecord data may be incomplete
   const winRate = account.win_rate || (closedTrades.length > 0 ? realWinRate : 0);
   const totalTrades = account.total_trades || closedTrades.length || 0;
   const dailyDD = account.daily_drawdown_used || 0;
   const maxDD = account.max_drawdown_used || 0;
-  // Read limits from rule_snapshot — never hardcoded
+  // Read limits from rule_snapshot - never hardcoded
   const snap = account.rule_snapshot || {};
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
   const maxDDLimit = snap.max_dd_limit ?? 10;
@@ -168,7 +168,7 @@ export default function Analytics({ onStartChallenge }) {
           <select value={selectedAccountId || activeAccounts[0].id} onChange={e => setSelectedAccountId(e.target.value)}
             className="px-3 py-2 rounded-lg text-sm text-foreground outline-none"
             style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            {activeAccounts.map(a => <option key={a.id} value={a.id} className="bg-card">{a.account_id} — ${(a.account_size || 0).toLocaleString()}</option>)}
+            {activeAccounts.map(a => <option key={a.id} value={a.id} className="bg-card">{a.account_id} - ${(a.account_size || 0).toLocaleString()}</option>)}
           </select>
         )}
       </div>
@@ -281,11 +281,11 @@ export default function Analytics({ onStartChallenge }) {
             <StatRow label="Open Positions" value={openTrades.length} valueColor="text-primary" />
             <StatRow label="Win Rate" value={`${winRate.toFixed(1)}%`} valueColor={winRate >= 50 ? 'text-emerald-400' : 'text-yellow-400'} />
             <StatRow label="Max Drawdown Used" value={`${maxDD.toFixed(2)}%`} valueColor={maxDD > (snap.max_dd_limit ?? 10) * 0.7 ? 'text-red-400' : 'text-foreground'} />
-            <StatRow label="Profit Factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '—'} valueColor={profitFactor >= 1.5 ? 'text-emerald-400' : undefined} />
-            <StatRow label="Average Win" value={avgWin > 0 ? `+$${avgWin.toFixed(2)}` : '—'} valueColor="text-emerald-400" />
-            <StatRow label="Average Loss" value={avgLoss > 0 ? `-$${avgLoss.toFixed(2)}` : '—'} valueColor="text-red-400" />
-            <StatRow label="Best Trade" value={bestTrade > 0 ? `+$${bestTrade.toFixed(2)}` : '—'} valueColor="text-emerald-400" />
-            <StatRow label="Worst Trade" value={worstTrade < 0 ? `-$${Math.abs(worstTrade).toFixed(2)}` : '—'} valueColor="text-red-400" />
+            <StatRow label="Profit Factor" value={profitFactor > 0 ? profitFactor.toFixed(2) : '-'} valueColor={profitFactor >= 1.5 ? 'text-emerald-400' : undefined} />
+            <StatRow label="Average Win" value={avgWin > 0 ? `+$${avgWin.toFixed(2)}` : '-'} valueColor="text-emerald-400" />
+            <StatRow label="Average Loss" value={avgLoss > 0 ? `-$${avgLoss.toFixed(2)}` : '-'} valueColor="text-red-400" />
+            <StatRow label="Best Trade" value={bestTrade > 0 ? `+$${bestTrade.toFixed(2)}` : '-'} valueColor="text-emerald-400" />
+            <StatRow label="Worst Trade" value={worstTrade < 0 ? `-$${Math.abs(worstTrade).toFixed(2)}` : '-'} valueColor="text-red-400" />
             <StatRow label="Most Traded" value={mostTraded} valueColor="text-primary" />
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function Analytics({ onStartChallenge }) {
             <StatRow label="Account Type" value={account.account_type || 'Standard'} />
             <StatRow label="Leverage" value={account.leverage || '1:100'} />
             <StatRow label="Phase" value={account.phase?.replace('phase', 'Phase ') || 'Phase 1'} />
-            <StatRow label="Last Synced" value={account.last_synced_at ? new Date(account.last_synced_at).toLocaleTimeString() : '—'} />
+            <StatRow label="Last Synced" value={account.last_synced_at ? new Date(account.last_synced_at).toLocaleTimeString() : '-'} />
           </div>
         </div>
       </div>
@@ -335,7 +335,7 @@ export default function Analytics({ onStartChallenge }) {
                   const isWin = pnl > 0;
                   return (
                     <tr key={t.id || i} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: 'hsl(var(--border))' }}>
-                      <td className="px-4 py-3 font-medium text-foreground font-mono">{t.symbol || '—'}</td>
+                      <td className="px-4 py-3 font-medium text-foreground font-mono">{t.symbol || '-'}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
                           {t.type === 'BUY' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
@@ -348,8 +348,8 @@ export default function Analytics({ onStartChallenge }) {
                       <td className={`px-4 py-3 font-bold font-mono ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
                         {isWin ? '+' : ''}${pnl.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{t.open_time ? new Date(t.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{t.close_time ? new Date(t.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.open_time ? new Date(t.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.close_time ? new Date(t.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     </tr>
                   );
                 })}

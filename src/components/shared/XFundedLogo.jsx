@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * XFundedLogo — SVG-only version for contexts that need a pure SVG (e.g. landing page hero).
+ * XFundedLogo - SVG-only version for contexts that need a pure SVG (e.g. landing page hero).
  * variant="full"  → icon + wordmark
  * variant="icon"  → icon mark only
  */

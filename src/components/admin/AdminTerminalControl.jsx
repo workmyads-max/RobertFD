@@ -310,7 +310,7 @@ export default function AdminTerminalControl() {
               <div className="rounded-2xl p-6 border" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2"><Monitor className="w-4 h-4 text-primary" /> TradingView Charts</h2>
                 <p className="text-xs text-muted-foreground/70 mb-5 font-mono">
-                  Charts use TradingView's free embedded widget — <strong className="text-foreground">no API key required</strong>. All symbols are pre-mapped automatically.
+                  Charts use TradingView's free embedded widget - <strong className="text-foreground">no API key required</strong>. All symbols are pre-mapped automatically.
                 </p>
                 <div className="p-4 rounded-xl" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
                   <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold mb-2"><CheckCircle2 className="w-4 h-4" /> TradingView is Active</div>

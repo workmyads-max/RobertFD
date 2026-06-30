@@ -94,7 +94,7 @@ export default function DDMonitor({ account, expanded = false }) {
       </div>
 
       <AnimatedBar value={dailyDDUsed} max={5} color="#f59e0b" label="Daily DD Used" sublabel="Resets at 3:00 AM GMT+4" warning />
-      <AnimatedBar value={maxDDUsed} max={10} color="#ef4444" label="Max DD Used" sublabel="Does not reset — permanent limit" warning />
+      <AnimatedBar value={maxDDUsed} max={10} color="#ef4444" label="Max DD Used" sublabel="Does not reset - permanent limit" warning />
       <AnimatedBar value={profitProgress} max={profitTarget} color="#10b981" label="Profit Target Progress" sublabel={`Target: ${profitTarget}%`} />
 
       <div className="grid grid-cols-2 gap-3 mb-4 mt-2">
@@ -115,7 +115,7 @@ export default function DDMonitor({ account, expanded = false }) {
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-3 text-xs"
           style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
           <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-          <span className="text-red-300">⚠ Approaching Daily DD Limit — Reduce position size</span>
+          <span className="text-red-300">⚠ Approaching Daily DD Limit - Reduce position size</span>
         </motion.div>
       )}
 

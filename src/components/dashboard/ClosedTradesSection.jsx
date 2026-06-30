@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, ChevronRight } from 'lucide-react';
 
 function formatDateTime(dt) {
-  if (!dt) return '—';
+  if (!dt) return '-';
   const d = new Date(dt);
   return d.toLocaleString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -49,14 +49,14 @@ function TradeDetailDrawer({ trade, onClose }) {
           {[
             ['Open Time', formatDateTime(trade.open_time)],
             ['Close Time', formatDateTime(trade.close_time)],
-            ['Open Price', trade.entry?.toFixed(5) || '—'],
-            ['Close Price', trade.close?.toFixed(5) || '—'],
+            ['Open Price', trade.entry?.toFixed(5) || '-'],
+            ['Close Price', trade.close?.toFixed(5) || '-'],
             ['Lots', (trade.lots || 0).toFixed(2)],
-            ['Pips', trade.pips?.toFixed(1) || '—'],
+            ['Pips', trade.pips?.toFixed(1) || '-'],
             ['Gross P&L', `$${(trade.profit || 0).toFixed(2)}`],
             ['Commission', `$${(trade.commission || 0).toFixed(2)}`],
             ['Swap', `$${(trade.swap || 0).toFixed(2)}`],
-            ['Trade ID', trade.trade_id || '—'],
+            ['Trade ID', trade.trade_id || '-'],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
               <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1">{label}</div>
@@ -78,7 +78,7 @@ function TradeDetailDrawer({ trade, onClose }) {
 const PAGE_SIZE = 12;
 
 // Receives pre-fetched trades from the centralized useAccountTradeData hook
-// in AccountOverview — the single source of truth for all trade data.
+// in AccountOverview - the single source of truth for all trade data.
 export default function ClosedTradesSection({ account, trades: propTrades, loading: propLoading }) {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [page, setPage] = useState(1);
@@ -167,11 +167,11 @@ export default function ClosedTradesSection({ account, trades: propTrades, loadi
                                 {new Date(trade.open_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                               </div>
                             </>
-                          ) : <span className="text-xs text-white/30">—</span>}
+                          ) : <span className="text-xs text-white/30">-</span>}
                         </div>
 
                         {/* Symbol */}
-                        <div className="text-sm font-black text-white">{trade.symbol || '—'}</div>
+                        <div className="text-sm font-black text-white">{trade.symbol || '-'}</div>
 
                         {/* PnL */}
                         <div className="text-right">

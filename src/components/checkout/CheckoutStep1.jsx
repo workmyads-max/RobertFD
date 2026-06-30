@@ -79,7 +79,7 @@ export default function CheckoutStep1({ order, updateOrder, onNext }) {
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
-      {/* LEFT — Form */}
+      {/* LEFT - Form */}
       <div className="lg:col-span-3 space-y-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -146,7 +146,7 @@ export default function CheckoutStep1({ order, updateOrder, onNext }) {
         </div>
       </div>
 
-      {/* RIGHT — Summary + CTA */}
+      {/* RIGHT - Summary + CTA */}
       <div className="lg:col-span-2">
         <div className="sticky top-6 space-y-4">
           {/* Order Summary Card */}

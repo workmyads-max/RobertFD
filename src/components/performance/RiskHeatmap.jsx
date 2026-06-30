@@ -55,7 +55,7 @@ export default function RiskHeatmap({ trades = [] }) {
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-2 mb-5">
           <Flame className="w-4 h-4 text-primary" />
-          <span className="text-sm font-black text-foreground">Performance Heatmap — Last 12 Weeks</span>
+          <span className="text-sm font-black text-foreground">Performance Heatmap - Last 12 Weeks</span>
         </div>
 
         {/* Day labels */}

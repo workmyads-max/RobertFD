@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
 /**
- * useRealtimeConnection — Institutional-grade realtime connection monitor
+ * useRealtimeConnection - Institutional-grade realtime connection monitor
  * Tracks WebSocket health, auto-reconnects, and exposes connection state to UI
  */
 export function useRealtimeConnection() {
@@ -27,7 +27,7 @@ export function useRealtimeConnection() {
   const checkConnection = useCallback(async () => {
     if (!isOnlineRef.current) return;
     try {
-      // Lightweight probe — just read 1 notification
+      // Lightweight probe - just read 1 notification
       await base44.entities.Notification.list('-created_date', 1);
       setStatus('connected');
       setLastConnectedAt(new Date());
@@ -63,7 +63,7 @@ export function useRealtimeConnection() {
 }
 
 /**
- * ConnectionStatusBadge — Drop-in UI indicator for dashboard
+ * ConnectionStatusBadge - Drop-in UI indicator for dashboard
  * Import and render in DashboardSidebar or DashboardHeader
  */
 export function ConnectionStatusBadge({ className = '' }) {

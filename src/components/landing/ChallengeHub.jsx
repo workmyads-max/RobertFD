@@ -51,7 +51,7 @@ const TYPES = [
   },
 ];
 
-// Fallback pricing if the live fetch is empty — [size, price, popular?]
+// Fallback pricing if the live fetch is empty - [size, price, popular?]
 const FALLBACK = {
   'two-step': [[5000, 49], [10000, 89], [25000, 235], [50000, 349], [100000, 517, true], [200000, 1089]],
   'one_step': [[5000, 59], [10000, 109], [25000, 279, true], [50000, 419], [100000, 619], [200000, 1299]],
@@ -74,7 +74,7 @@ function cellValue(row, size, showNumbers) {
         : `${p1}% / ${p2}%`,
     };
   }
-  return { text: '—' };
+  return { text: '-' };
 }
 
 export default function ChallengeHub() {
@@ -121,7 +121,7 @@ export default function ChallengeHub() {
             Choose Your Challenge
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-            Pick your funding path and capital — transparent objectives, no hidden rules.
+            Pick your funding path and capital - transparent objectives, no hidden rules.
           </p>
         </motion.div>
 

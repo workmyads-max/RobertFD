@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, X, GripHorizontal, AlertTriangle } from 'lucide-react';
 
 /**
- * Floating draggable Daily P&L box — shown when positions are open.
+ * Floating draggable Daily P&L box - shown when positions are open.
  * Mirrors the DailyPnlCard from FundedDashboard overview.
  */
 export default function FloatingDailyPnL({ floatPnl, dailyClosedPnl, accountSize, dailyDDLimit, dailyOpenBalance, equity, visible }) {

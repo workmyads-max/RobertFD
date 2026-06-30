@@ -11,21 +11,21 @@ const LEVEL_TIERS = [
 ];
 
 const PAYOUT_TIERS = [
-  { traders: '0–9', rate: '7%', color: '#6366f1' },
-  { traders: '10–24', rate: '11%', color: '#a78bfa' },
-  { traders: '25–49', rate: '17%', color: '#fbbf24' },
+  { traders: '0-9', rate: '7%', color: '#6366f1' },
+  { traders: '10-24', rate: '11%', color: '#a78bfa' },
+  { traders: '25-49', rate: '17%', color: '#fbbf24' },
   { traders: '50+', rate: '25%', color: '#FF5C00' },
 ];
 
 export default function ReferralLink({ profile }) {
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  // Official referral link — points to the register page with ?ref=CODE so the
+  // Official referral link - points to the register page with ?ref=CODE so the
   // visitor's referral is captured before authentication and attributed on signup.
   const refLink = profile?.referral_code
     ? `https://xfundedtrader.com/register?ref=${profile.referral_code}`
     : '';
-  const code = profile?.referral_code || '—';
+  const code = profile?.referral_code || '-';
 
   const copy = async (text, setter) => {
     await navigator.clipboard.writeText(text);

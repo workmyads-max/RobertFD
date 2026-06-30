@@ -85,32 +85,32 @@ export default function CredentialsModal({ account, onClose }) {
               <div className="px-6 py-4">
                 <CredentialRow
                   label="Platform"
-                  value={account.platform === 'mt5' ? 'MetaTrader 5' : account.platform || '—'}
+                  value={account.platform === 'mt5' ? 'MetaTrader 5' : account.platform || '-'}
                 />
                 <CredentialRow
                   label="Login ID"
-                  value={account.mt_login || '—'}
+                  value={account.mt_login || '-'}
                   copyable={!!account.mt_login}
                   onCopy={handleCopy}
                   copied={copied === 'Login ID'}
                 />
                 <CredentialRow
                   label="Password"
-                  value={account.mt_password || '—'}
+                  value={account.mt_password || '-'}
                   copyable={!!account.mt_password}
                   onCopy={handleCopy}
                   copied={copied === 'Password'}
                 />
                 <CredentialRow
                   label="Server"
-                  value={account.mt_server || '—'}
+                  value={account.mt_server || '-'}
                   copyable={!!account.mt_server}
                   onCopy={handleCopy}
                   copied={copied === 'Server'}
                 />
                 <CredentialRow
                   label="Account ID"
-                  value={account.account_id || '—'}
+                  value={account.account_id || '-'}
                   copyable={!!account.account_id}
                   onCopy={handleCopy}
                   copied={copied === 'Account ID'}
@@ -137,7 +137,7 @@ export default function CredentialsModal({ account, onClose }) {
                     account.status === 'active' ? 'Active' :
                     account.status === 'funded' ? 'Funded' :
                     account.status === 'passed' ? 'Passed' :
-                    account.status || '—'
+                    account.status || '-'
                   }
                 />
               </div>

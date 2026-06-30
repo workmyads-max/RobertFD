@@ -2,7 +2,7 @@ import React from 'react';
 import { getCurrencyFlag } from '@/lib/newsTradingConfig';
 
 /**
- * CurrencyFlag — shows the flag emoji + currency code for an event's instrument.
+ * CurrencyFlag - shows the flag emoji + currency code for an event's instrument.
  */
 export default function CurrencyFlag({ currency, size = 'sm' }) {
   const flag = getCurrencyFlag(currency);

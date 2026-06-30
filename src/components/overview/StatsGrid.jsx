@@ -43,7 +43,7 @@ export default function StatsGrid({ account, stats }) {
     { label: 'Server', value: account?.server || 'rf-live.com' },
     { label: 'Account ID', value: account?.account_id || account?.id?.slice(0, 8) || 'N/A', accent: '#FF5C00' },
     { label: 'Status', value: (account?.status || 'active').toUpperCase(), accent: account?.status === 'active' ? '#10b981' : '#f59e0b' },
-    { label: 'Login', value: account?.login_credentials || '—' },
+    { label: 'Login', value: account?.login_credentials || '-' },
   ];
 
   return (

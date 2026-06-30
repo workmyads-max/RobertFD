@@ -94,9 +94,9 @@ export default function Footer() {
         {/* Top grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
 
-          {/* Brand column — 2 cols wide */}
+          {/* Brand column - 2 cols wide */}
           <div className="sm:col-span-2 lg:col-span-2">
-            {/* Logo — large */}
+            {/* Logo - large */}
             <div className="mb-6">
               <XFLogo size="xl" animate />
             </div>
@@ -193,7 +193,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Risk Disclaimer — full text (centralized in RiskDisclaimer component) */}
+        {/* Risk Disclaimer - full text (centralized in RiskDisclaimer component) */}
         <RiskDisclaimer variant="full" />
       </div>
 
@@ -201,7 +201,7 @@ export default function Footer() {
       <div className="relative z-10 mt-10" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)' }}>
         <div className="max-w-[1400px] mx-auto px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground/70 text-center sm:text-left">
-            © {new Date().getFullYear()} XFundedTrader.com — Prove Your Edge. Get Funded.
+            © {new Date().getFullYear()} XFundedTrader.com - Prove Your Edge. Get Funded.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             {[

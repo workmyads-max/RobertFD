@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const HIGH_IMPACT_EVENTS = [
-  { name: 'Non-Farm Payrolls (NFP)', symbol: 'USD', impact: 'critical', description: 'US employment data — highest impact event', restricted: true },
+  { name: 'Non-Farm Payrolls (NFP)', symbol: 'USD', impact: 'critical', description: 'US employment data - highest impact event', restricted: true },
   { name: 'Federal Reserve Rate Decision (FOMC)', symbol: 'USD', impact: 'critical', description: 'Fed interest rate announcement and statement', restricted: true },
   { name: 'Consumer Price Index (CPI)', symbol: 'USD', impact: 'critical', description: 'US inflation data release', restricted: true },
   { name: 'ECB Interest Rate Decision', symbol: 'EUR', impact: 'high', description: 'European Central Bank policy announcement', restricted: true },
@@ -49,7 +49,7 @@ export default function NewsRiskFilter({ account }) {
           : <Ban className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />}
         <div>
           <div className={`text-sm font-bold mb-1 ${isSwing ? 'text-emerald-400' : 'text-red-400'}`}>
-            {isSwing ? 'Swing Account — News Trading Allowed' : 'Standard Account — News Restrictions Active'}
+            {isSwing ? 'Swing Account - News Trading Allowed' : 'Standard Account - News Restrictions Active'}
           </div>
           <div className="text-xs text-muted-foreground">
             {isSwing

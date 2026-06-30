@@ -222,7 +222,7 @@ export default function AdminMT5Configuration() {
         <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
           <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
           <p className="text-[11px] text-emerald-300/80">
-            Once these 3 secrets are set, <strong>everything works automatically</strong> — account provisioning, balance sync every 5 min, DD breach detection, phase progression, and funded account creation all use these credentials.
+            Once these 3 secrets are set, <strong>everything works automatically</strong> - account provisioning, balance sync every 5 min, DD breach detection, phase progression, and funded account creation all use these credentials.
           </p>
         </div>
       </div>

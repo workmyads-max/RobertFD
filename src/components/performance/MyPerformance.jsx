@@ -148,7 +148,7 @@ export default function MyPerformance({ user }) {
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
               {accounts.map(a => (
                 <option key={a.id} value={a.id} className="bg-[#0e0f16]">
-                  {a.account_id} — ${(a.account_size||0).toLocaleString()} ({a.status})
+                  {a.account_id} - ${(a.account_size||0).toLocaleString()} ({a.status})
                 </option>
               ))}
             </select>

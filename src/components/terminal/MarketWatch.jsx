@@ -23,7 +23,7 @@ function PriceFlash({ value, digits }) {
   }, [value]);
   return (
     <span className={`font-mono transition-colors duration-200 ${flash === 'up' ? 'text-emerald-300' : flash === 'down' ? 'text-red-300' : ''}`}>
-      {value != null ? value.toFixed(digits) : '—'}
+      {value != null ? value.toFixed(digits) : '-'}
     </span>
   );
 }
@@ -97,10 +97,10 @@ export default function MarketWatch({ prices, selectedSymbol, onSelect }) {
                   </div>
 
                   <div className="text-center text-[9px] text-red-400/80">
-                    {p?.bid != null ? <PriceFlash value={p.bid} digits={inst.digits} /> : <span className="text-slate-700">—</span>}
+                    {p?.bid != null ? <PriceFlash value={p.bid} digits={inst.digits} /> : <span className="text-slate-700">-</span>}
                   </div>
                   <div className="text-right text-[9px] text-emerald-400/80">
-                    {p?.ask != null ? <PriceFlash value={p.ask} digits={inst.digits} /> : <span className="text-slate-700">—</span>}
+                    {p?.ask != null ? <PriceFlash value={p.ask} digits={inst.digits} /> : <span className="text-slate-700">-</span>}
                   </div>
                 </div>
               );

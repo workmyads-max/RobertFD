@@ -57,7 +57,7 @@ export default function AdminNotifications() {
           <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
             <Shield className="w-6 h-6 text-primary" /> Manage Notifications
           </h1>
-          <p className="text-sm text-muted-foreground font-mono mt-1">Admin control panel — push announcements to all users</p>
+          <p className="text-sm text-muted-foreground font-mono mt-1">Admin control panel - push announcements to all users</p>
         </div>
         <button onClick={openNew}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"

@@ -143,7 +143,7 @@ export default function TermsModal({ open, onAccept, onClose }) {
                 }}
               >
                 <Shield className="w-4 h-4" />
-                I Accept — Proceed to Payment
+                I Accept - Proceed to Payment
               </motion.button>
             </div>
           </motion.div>

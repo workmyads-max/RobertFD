@@ -89,7 +89,7 @@ export default function ChallengeTrackerDrawer({ account, rules, balance, equity
         {/* Challenge title */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 whitespace-nowrap">{challengeLabel}</span>
-          <span className="text-[11px] font-black text-slate-200 whitespace-nowrap">{phase.replace('phase', 'Phase ')} — ${accountSize.toLocaleString()}</span>
+          <span className="text-[11px] font-black text-slate-200 whitespace-nowrap">{phase.replace('phase', 'Phase ')} - ${accountSize.toLocaleString()}</span>
           <span className="px-1.5 py-0.5 rounded text-[9px] font-black whitespace-nowrap"
             style={{ background: sm.bg, border: `1px solid ${sm.border}`, color: sm.color }}>
             {sm.label}
@@ -126,7 +126,7 @@ export default function ChallengeTrackerDrawer({ account, rules, balance, equity
         </motion.div>
       </button>
 
-      {/* ── Expanded detail panel — default open ────────────────────────────── */}
+      {/* ── Expanded detail panel - default open ────────────────────────────── */}
       {!collapsed && (
         <div className="px-4 pb-4 pt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 

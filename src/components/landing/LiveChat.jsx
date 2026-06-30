@@ -56,7 +56,7 @@ export default function LiveChat() {
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                   <span className="text-xs text-muted-foreground">
-                    {settings?.discord_enabled ? 'Online' : 'Offline'} — avg. 15min response
+                    {settings?.discord_enabled ? 'Online' : 'Offline'} - avg. 15min response
                   </span>
                 </div>
               </div>

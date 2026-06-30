@@ -26,7 +26,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
     staleTime: 10 * 1000,
   });
 
-  // Real-time subscription — only update records belonging to this user
+  // Real-time subscription - only update records belonging to this user
   useEffect(() => {
     if (!user?.email) return;
     const unsub = base44.entities.ChallengeAccount.subscribe((event) => {
@@ -92,7 +92,7 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
           style={{ background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.2)' }}>
           <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
           <span className="text-yellow-400 font-medium">{pendingActivation.length} order{pendingActivation.length > 1 ? 's' : ''} pending approval.</span>
-          <span className="text-muted-foreground">Account will activate within 1–24 hours.</span>
+          <span className="text-muted-foreground">Account will activate within 1-24 hours.</span>
         </div>
       )}
 

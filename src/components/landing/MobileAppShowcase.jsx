@@ -136,7 +136,7 @@ export default function MobileAppShowcase() {
 
             <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-lg">
               The XTrading Terminal mobile app brings institutional-grade trading to your fingertips.
-              Real-time charts, instant payouts, and full account management — anywhere, anytime.
+              Real-time charts, instant payouts, and full account management - anywhere, anytime.
             </p>
 
             <div className="space-y-4 mb-10">
@@ -179,11 +179,11 @@ export default function MobileAppShowcase() {
             </div>
           </motion.div>
 
-          {/* Right — phone mockups */}
+          {/* Right - phone mockups */}
           <div className="flex items-center justify-center gap-8 md:gap-12">
-            <PhoneMockup delay={0.2} tilt={-5} label="iOS App" sublabel="iPhone — Coming Q3 2026" isAndroid={false} />
+            <PhoneMockup delay={0.2} tilt={-5} label="iOS App" sublabel="iPhone - Coming Q3 2026" isAndroid={false} />
             <div className="mt-12">
-              <PhoneMockup delay={0.4} tilt={5} label="Android App" sublabel="Google Play — Coming Q3 2026" isAndroid={true} />
+              <PhoneMockup delay={0.4} tilt={5} label="Android App" sublabel="Google Play - Coming Q3 2026" isAndroid={true} />
             </div>
           </div>
         </div>

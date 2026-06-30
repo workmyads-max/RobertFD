@@ -16,17 +16,17 @@ export default function AccountStatusBanner({ account, rules }) {
     {
       label: 'News Trading',
       allowed: rules.newsTrading,
-      restrictedMsg: 'Standard — News restricted',
+      restrictedMsg: 'Standard - News restricted',
     },
     {
       label: 'Overnight Hold',
       allowed: rules.overnightHolding,
-      restrictedMsg: 'Standard — No overnight',
+      restrictedMsg: 'Standard - No overnight',
     },
     {
       label: 'Weekend Hold',
       allowed: rules.weekendHolding,
-      restrictedMsg: 'Standard — No weekend',
+      restrictedMsg: 'Standard - No weekend',
     },
     {
       label: `1:${rules.leverage} Leverage`,

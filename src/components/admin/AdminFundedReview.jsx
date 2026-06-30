@@ -57,9 +57,9 @@ function Phase1ReviewCard({ account, onApprove, onReject, loading }) {
         {/* Account details row */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           {[
-            { label: 'Account ID', value: account.account_id || '—' },
-            { label: 'MT5 Login', value: account.mt_login || '—' },
-            { label: 'Server', value: account.mt_server || account.server || '—' },
+            { label: 'Account ID', value: account.account_id || '-' },
+            { label: 'MT5 Login', value: account.mt_login || '-' },
+            { label: 'Server', value: account.mt_server || account.server || '-' },
           ].map(d => (
             <div key={d.label} className="rounded-lg px-3 py-2.5"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -119,7 +119,7 @@ function ReviewCard({ review, onAction }) {
       className="rounded-xl overflow-hidden"
       style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `3px solid ${cfg.color}` }}>
 
-      {/* Header row — always visible */}
+      {/* Header row - always visible */}
       <div className="flex items-center gap-4 p-5 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0"
           style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}25` }}>
@@ -263,7 +263,7 @@ export default function AdminFundedReview() {
   const { data: phase1Pending = [], refetch: refetchP1, isLoading: p1Loading } = useQuery({
     queryKey: ['phase1-pending-review'],
     queryFn: async () => {
-      // Use adminListAllAccounts (service role) to bypass RLS — otherwise the
+      // Use adminListAllAccounts (service role) to bypass RLS - otherwise the
       // admin can only see their own passed accounts, missing other users' Phase 1
       // passed accounts that need review.
       const res = await base44.functions.invoke('adminListAllAccounts', { limit: 500 });
@@ -285,7 +285,7 @@ export default function AdminFundedReview() {
   });
 
   const phase1RejectMutation = useMutation({
-    // Use phaseProgressionEngine (service role) — direct entity update is RLS-blocked
+    // Use phaseProgressionEngine (service role) - direct entity update is RLS-blocked
     // for accounts belonging to other users.
     mutationFn: (account_id) => base44.functions.invoke('phaseProgressionEngine', { action: 'reject_phase1', account_id }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['phase1-pending-review'] }); toast.success('Phase 1 rejected'); },
@@ -298,7 +298,7 @@ export default function AdminFundedReview() {
       const list = statusFilter === 'all'
         ? await base44.entities.FundedAccountReview.list('-created_date', 100)
         : await base44.entities.FundedAccountReview.filter({ status: statusFilter });
-      // FundedAccountReview doesn't store mt_login — fetch from ChallengeAccount
+      // FundedAccountReview doesn't store mt_login - fetch from ChallengeAccount
       if (!list.length) return list;
       const accountIds = [...new Set(list.map(r => r.account_id).filter(Boolean))];
       const accounts = await Promise.all(

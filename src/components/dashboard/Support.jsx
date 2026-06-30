@@ -21,7 +21,7 @@ const CATEGORIES = ['billing', 'technical', 'account', 'withdrawal', 'other'];
 const FAQS = [
   { q: 'How long does account delivery take?', a: 'Funded account credentials are delivered within 1-24 hours after payment confirmation.' },
   { q: 'What platforms does XFunded Trader support?', a: 'Currently XFunded Trader (our native platform). MT5 and TradeLocker are coming soon.' },
-  { q: 'What is the profit split?', a: 'XFunded Trader offers an 80/20 profit split — 80% goes to you.' },
+  { q: 'What is the profit split?', a: 'XFunded Trader offers an 80/20 profit split - 80% goes to you.' },
   { q: 'Can I trade news events?', a: 'Swing accounts allow news trading. Standard accounts restrict trading during major news events.' },
   { q: 'How do I request a payout?', a: 'Navigate to Withdrawals in your dashboard and click "Request Payout". Payouts are processed within 24 hours.' },
 ];
@@ -43,7 +43,7 @@ export default function Support() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
   const userEmail = me?.email;
 
-  // Scoped to current user via RLS — but we also pass user_email filter for safety
+  // Scoped to current user via RLS - but we also pass user_email filter for safety
   const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
     queryKey: ['support-tickets', userEmail],
     queryFn: async () => {
@@ -99,12 +99,12 @@ export default function Support() {
         </button>
       </div>
 
-      {/* Quick stats — computed from real data */}
+      {/* Quick stats - computed from real data */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Open Tickets', value: ticketsLoading ? '—' : openTickets, sub: 'Awaiting response', icon: Clock, color: '#f59e0b' },
-          { label: 'Resolved', value: ticketsLoading ? '—' : resolvedTickets, sub: 'Successfully closed', icon: CheckCircle, color: '#10b981' },
-          { label: 'Avg Response', value: avgResponse || '—', sub: 'Across your tickets', icon: Zap, color: ACCENT },
+          { label: 'Open Tickets', value: ticketsLoading ? '-' : openTickets, sub: 'Awaiting response', icon: Clock, color: '#f59e0b' },
+          { label: 'Resolved', value: ticketsLoading ? '-' : resolvedTickets, sub: 'Successfully closed', icon: CheckCircle, color: '#10b981' },
+          { label: 'Avg Response', value: avgResponse || '-', sub: 'Across your tickets', icon: Zap, color: ACCENT },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl p-5 flex flex-col justify-between"
             style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.06)', minHeight: '120px' }}>
@@ -256,7 +256,7 @@ function TicketList({ tickets, loading, onCreate }) {
               </div>
             )}
             <div className="text-[10px] text-white/20 mt-2 font-mono">
-              #{t.id?.slice(0, 8)} · {t.category} · {t.created_date ? new Date(t.created_date).toLocaleDateString() : '—'}
+              #{t.id?.slice(0, 8)} · {t.category} · {t.created_date ? new Date(t.created_date).toLocaleDateString() : '-'}
             </div>
           </div>
         );
@@ -320,7 +320,7 @@ function LiveChat({ userEmail, userName }) {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MessageCircle className="w-8 h-8 text-white/10 mb-3" />
-            <p className="text-sm text-white/30">Start the conversation — send a message below.</p>
+            <p className="text-sm text-white/30">Start the conversation - send a message below.</p>
           </div>
         ) : (
           messages.map(m => (

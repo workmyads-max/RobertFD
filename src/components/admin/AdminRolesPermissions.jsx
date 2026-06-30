@@ -170,7 +170,7 @@ export default function AdminRolesPermissions() {
             <Shield className="w-6 h-6 text-primary" />
             <span>Roles &amp; Permissions</span>
           </h1>
-          <p className="text-sm text-muted-foreground font-mono">Granular RBAC — {roles.length} roles configured</p>
+          <p className="text-sm text-muted-foreground font-mono">Granular RBAC - {roles.length} roles configured</p>
         </div>
         <button onClick={() => { setShowCreate(true); setEditingId(null); }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white"

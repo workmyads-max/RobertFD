@@ -32,7 +32,7 @@ export default function NotificationBanner({ notification: n }) {
             <div className="ticker-scroll flex gap-16">
               {[1, 2].map(k => (
                 <span key={k} className="text-sm text-foreground whitespace-nowrap font-medium">
-                  {n.title} — {n.message}
+                  {n.title} - {n.message}
                 </span>
               ))}
             </div>

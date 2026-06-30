@@ -125,7 +125,7 @@ export default function PromoPopup({ mascotImage }) {
                           Worldwide
                         </h2>
                         <p className="text-sm text-muted-foreground leading-relaxed">
-                          Get exclusive discounts, payout updates, and early access offers — directly to your inbox.
+                          Get exclusive discounts, payout updates, and early access offers - directly to your inbox.
                         </p>
                       </div>
 

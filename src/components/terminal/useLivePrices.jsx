@@ -131,7 +131,7 @@ export default function useLivePrices() {
   useEffect(() => {
     mounted.current = true;
 
-    // ── 1. Binance WebSocket — crypto real-time ───────────────────────────────
+    // ── 1. Binance WebSocket - crypto real-time ───────────────────────────────
     const streams = Object.values(BINANCE_MAP).map(s => `${s}@ticker`).join('/');
     const connectBinance = () => {
       try {

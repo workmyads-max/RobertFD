@@ -89,7 +89,7 @@ export default function Checkout() {
           window.location.href = '/login?redirect=/checkout?' + params.toString();
           return null;
         }
-        // Logged in — redirect to dashboard checkout
+        // Logged in - redirect to dashboard checkout
         window.location.href = '/dashboard?tab=checkout&' + params.toString();
         return user;
       } catch (e) {

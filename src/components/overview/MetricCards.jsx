@@ -268,7 +268,7 @@ export default function MetricCards({ account, rules, stats }) {
     {
       label: 'Max Drawdown',
       value: `${maxDDPct.toFixed(2)}%`,
-      sub: `Limit: ${maxDDLimit}% — ${maxDDLimit - maxDDPct > 0 ? (maxDDLimit - maxDDPct).toFixed(2) + '% left' : 'BREACHED'}`,
+      sub: `Limit: ${maxDDLimit}% - ${maxDDLimit - maxDDPct > 0 ? (maxDDLimit - maxDDPct).toFixed(2) + '% left' : 'BREACHED'}`,
       accent: maxDDWarn ? '#ef4444' : '#00F5A0',
       icon: Shield,
       pulse: maxDDWarn,

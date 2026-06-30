@@ -194,7 +194,7 @@ export default function HomeLeaderboard() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             className="text-xs font-mono text-white/30 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Zap className="w-3 h-3" /> Rankings #{top3.length + 1}–{sorted.length}
+                <Zap className="w-3 h-3" /> Rankings #{top3.length + 1}-{sorted.length}
               </motion.div>
               {rest.map((t, i) =>
           <RankRow key={t.id} trader={t} rank={i + top3.length + 1} />

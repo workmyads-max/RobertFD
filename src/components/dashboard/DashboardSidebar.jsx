@@ -207,7 +207,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
   return (
     <>
-      {/* Mobile toggle — z-[60] to always sit above banners/modals */}
+      {/* Mobile toggle - z-[60] to always sit above banners/modals */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-3 left-3 sm:top-4 sm:left-4 md:hidden w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"

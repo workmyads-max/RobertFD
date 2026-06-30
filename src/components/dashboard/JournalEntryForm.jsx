@@ -149,7 +149,7 @@ export default function JournalEntryForm({ entry, periodType, onClose, onSaved, 
                 <div key={key}>
                   <label className="text-[10px] font-mono text-muted-foreground mb-1 block">{label}</label>
                   <input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    placeholder="—"
+                    placeholder="-"
                     className="w-full rounded-xl px-3 py-2 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
                     style={{ background: 'linear-gradient(135deg, rgba(10,14,28,0.9), rgba(14,18,32,0.8))', border: '1px solid rgba(255,92,0,0.15)', backdropFilter: 'blur(32px)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} />
                 </div>

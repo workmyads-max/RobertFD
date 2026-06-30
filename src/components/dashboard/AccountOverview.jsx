@@ -74,7 +74,7 @@ function InfoTooltip({ children }) {
 }
 
 function fmtTime(t) {
-  if (!t) return '—';
+  if (!t) return '-';
   const ms = Date.now() - new Date(t).getTime();
   const s = Math.floor(ms / 1000);
   const m = Math.floor(s / 60);
@@ -138,8 +138,8 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
   const modelLabel = (account.account_type || 'standard').charAt(0).toUpperCase() + (account.account_type || 'standard').slice(1);
   const isUnderPhase1Review = account.status === 'passed' && account.phase === 'phase1' && account.phase_review_status === 'pending_review';
   const isUnderFundedReview = account.status === 'passed' && account.funded_review_status === 'pending_review';
-  const statusLabel = isUnderPhase1Review ? 'Phase 1 Passed — Under Review'
-    : isUnderFundedReview ? 'Phase 2 Passed — Funded Review'
+  const statusLabel = isUnderPhase1Review ? 'Phase 1 Passed - Under Review'
+    : isUnderFundedReview ? 'Phase 2 Passed - Funded Review'
     : account.status === 'active' ? 'Active' : account.status === 'passed' ? 'Passed'
     : account.status === 'funded' ? 'Simulation Funded' : account.status;
   const isActive = account.status === 'active';
@@ -175,7 +175,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       {/* Main body */}
       <div className="px-6 py-6">
         {/* Account ID */}
-        <div className="text-xs font-semibold text-white/40 mb-4 tracking-wide uppercase">{account.account_id || account.mt_login || '—'}</div>
+        <div className="text-xs font-semibold text-white/40 mb-4 tracking-wide uppercase">{account.account_id || account.mt_login || '-'}</div>
 
         {/* Size + P&L */}
         <div className="flex items-end justify-between mb-6">
@@ -191,7 +191,7 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
           </div>
         </div>
 
-        {/* Profit Target Progress — hidden for funded live accounts */}
+        {/* Profit Target Progress - hidden for funded live accounts */}
         {!isFundedLive && profitTargetPct && (
           <div className="mb-6">
             <div className="flex items-center justify-between text-[11px] mb-2">
@@ -355,14 +355,14 @@ function StatisticsPanel({ account, closedTrades = [] }) {
     { label: 'Equity', value: `$${fmt(equity)}`, color: equity >= accountSize ? '#10b981' : '#ef4444', bar: true, barPct: (equity / accountSize) * 50 },
     { label: 'Balance', value: `$${fmt(balance)}`, color: '#60a5fa' },
     { label: 'Win Rate', value: winRate > 0 ? `${winRate.toFixed(1)}%` : '0%', color: winRate >= 50 ? '#10b981' : '#f59e0b', bar: true, barPct: winRate },
-    { label: 'Avg. Reward', value: avgWin > 0 ? `+$${fmt(avgWin)}` : '—', color: '#10b981' },
-    { label: 'Avg. Loss', value: avgLoss > 0 ? `-$${fmt(avgLoss)}` : '—', color: '#ef4444' },
+    { label: 'Avg. Reward', value: avgWin > 0 ? `+$${fmt(avgWin)}` : '-', color: '#10b981' },
+    { label: 'Avg. Loss', value: avgLoss > 0 ? `-$${fmt(avgLoss)}` : '-', color: '#ef4444' },
     { label: 'Total Trades', value: totalTrades || '0', color: '#f1f5f9' },
     { label: 'Lots Traded', value: totalLots > 0 ? totalLots.toFixed(2) : '0', color: '#f1f5f9' },
     { label: 'Total P&L', value: totalPnl >= 0 ? `+$${fmt(totalPnl)}` : `-$${fmt(Math.abs(totalPnl))}`, color: totalPnl >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Avg. RRR', value: rrrAvg > 0 ? rrrAvg.toFixed(2) : '—', color: '#f1f5f9' },
-    { label: 'Expectancy', value: expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '—', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
-    { label: 'Reward Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '—', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
+    { label: 'Avg. RRR', value: rrrAvg > 0 ? rrrAvg.toFixed(2) : '-', color: '#f1f5f9' },
+    { label: 'Expectancy', value: expectancy !== 0 ? `${expectancy >= 0 ? '+' : ''}$${fmt(expectancy)}` : '-', color: expectancy >= 0 ? '#10b981' : '#ef4444' },
+    { label: 'Reward Factor', value: profitFactor > 0 ? profitFactor.toFixed(2) : '-', color: profitFactor >= 1.5 ? '#10b981' : profitFactor >= 1 ? '#f59e0b' : '#ef4444' },
   ];
 
   return (
@@ -510,7 +510,7 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const dailyDDLimit = snap.daily_dd_limit ?? 5;
   const maxDDLimit = snap.max_dd_limit ?? 10;
   const isFundedAccount = account?.status === 'funded';
-  // Funded live accounts have no profit target — only challenge accounts do
+  // Funded live accounts have no profit target - only challenge accounts do
   const profitTarget = isFundedAccount ? null
     : account?.phase === 'phase2' ? (snap.phase2_target ?? 5)
     : (snap.phase1_target ?? 10);
@@ -522,14 +522,14 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const tradingDaySet = new Set();
   closedTrades.filter(t => t.close_time).forEach(t => {
     const d = new Date(t.close_time);
-    // Use UTC date — avoids timezone shifts causing off-by-one day counting
+    // Use UTC date - avoids timezone shifts causing off-by-one day counting
     tradingDaySet.add(d.toISOString().split('T')[0]);
   });
   // CRITICAL: Only count days from actual closed trades.
-  // NEVER fall back to account.trading_days — scheduledMTSync can write a non-zero
+  // NEVER fall back to account.trading_days - scheduledMTSync can write a non-zero
   // value (e.g. 1) on first sync even before any real trades are closed, producing
   // phantom "Day 1 complete" status for brand-new accounts.
-  // If closedTrades haven't loaded yet (empty array), show 0 — don't use entity field.
+  // If closedTrades haven't loaded yet (empty array), show 0 - don't use entity field.
   const tradingDays = tradingDaySet.size;
 
   const nowBangkok = new Date(Date.now() + (7 * 60 + new Date().getTimezoneOffset()) * 60000);
@@ -568,11 +568,11 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     : tradingDays;
 
   const objectives = [
-    { label: `Min ${minDays} Trading Days`, result: isPassedOrUnderReview ? `✓ ${effectiveTradingDays} / ${minDays} — Met` : `${effectiveTradingDays} / ${minDays}`, pass: effectiveTradingDays >= minDays || isPassedOrUnderReview, pct: isPassedOrUnderReview ? 100 : Math.min((effectiveTradingDays / minDays) * 100, 100), icon: CalendarDays },
+    { label: `Min ${minDays} Trading Days`, result: isPassedOrUnderReview ? `✓ ${effectiveTradingDays} / ${minDays} - Met` : `${effectiveTradingDays} / ${minDays}`, pass: effectiveTradingDays >= minDays || isPassedOrUnderReview, pct: isPassedOrUnderReview ? 100 : Math.min((effectiveTradingDays / minDays) * 100, 100), icon: CalendarDays },
     { label: `Max Daily Loss`, result: `-$${fmt(Math.max(0, dailyStartBalance - equity))} (${dailyDDUsed.toFixed(1)}%)`, pass: false, danger: dailyDDUsed >= dailyDDLimit, forceRed: true, pct: Math.min((dailyDDUsed / dailyDDLimit) * 100, 100), icon: Shield },
     { label: `Max Overall Loss`, result: `-$${fmt(Math.max(0, accountSize - equity))} (${maxDDUsed.toFixed(1)}%)`, pass: false, danger: maxDDUsed >= maxDDLimit, forceRed: true, pct: Math.min((maxDDUsed / maxDDLimit) * 100, 100), icon: Shield },
     ...(!isFundedAccount ? [
-      { label: `Reward Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% — Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / (profitTarget || 1)) * 100, 100), icon: Target },
+      { label: `Reward Target`, result: isPassedOrUnderReview ? `✓ ${profitTargetPct.toFixed(1)}% - Target Met` : `$${fmt(Math.max(0, equity - accountSize))} (${profitTargetPct.toFixed(1)}%)`, pass: profitTargetPct >= profitTarget || isPassedOrUnderReview, pct: Math.min((profitTargetPct / (profitTarget || 1)) * 100, 100), icon: Target },
     ] : []),
   ];
 
@@ -582,7 +582,7 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
     // DD scores: only show 100% if account has actual trading activity
     !hasAnyTrades ? 0 : dailyDDUsed < dailyDDLimit * 0.5 ? 100 : dailyDDUsed < dailyDDLimit ? 60 : 0,
     !hasAnyTrades ? 0 : maxDDUsed < maxDDLimit * 0.5 ? 100 : maxDDUsed < maxDDLimit ? 60 : 0,
-    // Funded live accounts: no profit target — treat as 100 (they already passed)
+    // Funded live accounts: no profit target - treat as 100 (they already passed)
     isFundedAccount ? 100 : (profitTargetPct >= profitTarget || isPassedOrUnderReview) ? 100 : Math.round((profitTargetPct / (profitTarget || 1)) * 60),
   ];
   const disciplineScore = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
@@ -759,11 +759,11 @@ function OpenTradeRow({ trade, index }) {
           {isClosed ? (
             <span className="text-emerald-400/70">CLOSED</span>
           ) : (
-            trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
+            trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'
           )}
         </td>
         <td className="px-4 py-3.5 text-xs font-mono font-bold text-white/60">{trade.lots || 0}</td>
-        <td className="px-4 py-3.5 text-xs font-black text-white">{trade.symbol || '—'}</td>
+        <td className="px-4 py-3.5 text-xs font-black text-white">{trade.symbol || '-'}</td>
         <td className="px-4 py-3.5">
           <span className={`px-2.5 py-1.5 rounded-lg text-sm font-black font-mono ${pnl >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
             {pnl >= 0 ? '+' : ''}${fmt(pnl)}
@@ -789,7 +789,7 @@ function OpenTradeRow({ trade, index }) {
                 <div>
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Price</div>
                   <div className="space-y-1.5 text-xs">
-                    {[['Type', trade.type, trade.type === 'BUY' ? '#10b981' : '#ef4444'], ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '—', '#f1f5f9'], [isClosed ? 'Close' : 'Current', (isClosed ? trade.close : trade.current_price) > 0 ? (isClosed ? trade.close : trade.current_price).toFixed(5) : '—', '#f1f5f9']].map(([k, v, c]) => (
+                    {[['Type', trade.type, trade.type === 'BUY' ? '#10b981' : '#ef4444'], ['Open', trade.entry > 0 ? trade.entry.toFixed(5) : '-', '#f1f5f9'], [isClosed ? 'Close' : 'Current', (isClosed ? trade.close : trade.current_price) > 0 ? (isClosed ? trade.close : trade.current_price).toFixed(5) : '-', '#f1f5f9']].map(([k, v, c]) => (
                       <div key={k} className="flex justify-between gap-3">
                         <span className="text-white/30">{k}</span>
                         <span className="font-mono font-semibold" style={{ color: c }}>{v}</span>
@@ -805,7 +805,7 @@ function OpenTradeRow({ trade, index }) {
                         <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                       ))
                     ) : (
-                      [['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '—'], ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '—']].map(([k, v]) => (
+                      [['SL', trade.sl > 0 ? trade.sl.toFixed(5) : '-'], ['TP', trade.tp > 0 ? trade.tp.toFixed(5) : '-']].map(([k, v]) => (
                         <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                       ))
                     )}
@@ -826,11 +826,11 @@ function OpenTradeRow({ trade, index }) {
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-2.5">Time</div>
                   <div className="space-y-1.5 text-xs">
                     <div><span className="text-white/30 block">Opened</span>
-                      <span className="font-mono text-foreground text-[10px]">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span className="font-mono text-foreground text-[10px]">{trade.open_time ? new Date(trade.open_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                     </div>
                     {isClosed ? (
                       <div><span className="text-white/30 block">Closed</span>
-                        <span className="font-mono text-foreground text-[10px]">{trade.close_time ? new Date(trade.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                        <span className="font-mono text-foreground text-[10px]">{trade.close_time ? new Date(trade.close_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                       </div>
                     ) : (
                       <div><span className="text-white/30 block">Duration</span><span className="font-mono text-foreground">{elapsed}</span></div>
@@ -847,7 +847,7 @@ function OpenTradeRow({ trade, index }) {
                       const mae = ib ? Math.min(0, cur - entry) : Math.min(0, entry - cur);
                       const mfe = ib ? Math.max(0, cur - entry) : Math.max(0, entry - cur);
                       const pip = entry > 10 ? 0.0001 : 0.00001;
-                      return [['MAE', mae !== 0 ? `${(mae / pip).toFixed(1)} pips` : '—'], ['MFE', mfe !== 0 ? `${(mfe / pip).toFixed(1)} pips` : '—'], ['Lots', trade.lots || 0]].map(([k, v]) => (
+                      return [['MAE', mae !== 0 ? `${(mae / pip).toFixed(1)} pips` : '-'], ['MFE', mfe !== 0 ? `${(mfe / pip).toFixed(1)} pips` : '-'], ['Lots', trade.lots || 0]].map(([k, v]) => (
                         <div key={k} className="flex justify-between gap-3"><span className="text-white/30">{k}</span><span className="font-mono text-foreground">{v}</span></div>
                       ));
                     })()}
@@ -945,7 +945,7 @@ function OpenTradesPanel({ account, initialPositions = [], tradeRecords = [] }) 
         <div className="flex items-center justify-center py-10"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : allPositions.length === 0 ? (
         <div className="py-10 text-center text-sm text-white/30">
-          {showClosed ? 'No closed trades yet' : 'No open positions — auto-refreshes every 5s'}
+          {showClosed ? 'No closed trades yet' : 'No open positions - auto-refreshes every 5s'}
         </div>
       ) : (
         <>
@@ -1039,7 +1039,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
 
 
-  // CRITICAL: Exclude is_trashed=true accounts — they belong ONLY in Trash.
+  // CRITICAL: Exclude is_trashed=true accounts - they belong ONLY in Trash.
   const activeAccounts = accounts.filter(a => !a.is_trashed && ['active', 'funded', 'passed'].includes(a.status));
   const account = selectedAccount
     ? (accounts.find(a => a.id === selectedAccount.id && !a.is_trashed) || activeAccounts[0] || null)
@@ -1061,10 +1061,10 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
     staleTime: 30000,
   });
 
-  // ── CENTRALIZED TRADE DATA — single source of truth for ALL sections ────────
+  // ── CENTRALIZED TRADE DATA - single source of truth for ALL sections ────────
   // Uses getAccountTradeRecords backend function (service role, case-insensitive
   // ownership) to bypass RLS exact-match issues that were hiding the user's own
-  // trades. All sections below consume these derived arrays — no scattered
+  // trades. All sections below consume these derived arrays - no scattered
   // per-section query logic.
   const { allTrades, closedTrades, isLoading: tradesLoading } = useAccountTradeData(account, { refetchIntervalMs: 10000 });
 
@@ -1151,12 +1151,12 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
 
-      {/* Instant Account Widgets — only for instant_account type */}
+      {/* Instant Account Widgets - only for instant_account type */}
       {account?.challenge_type === 'instant_account' && (
         <InstantAccountWidgets account={account} closedTrades={closedTrades} />
       )}
 
-      {/* Best Day Rule Monitor — only for one_step type (shows during eval AND funded) */}
+      {/* Best Day Rule Monitor - only for one_step type (shows during eval AND funded) */}
       {account?.challenge_type === 'one_step' && (
         <BestDayMonitor account={account} stats={stats} closedTrades={closedTrades} />
       )}
@@ -1173,9 +1173,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
             </motion.div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#60a5fa' }}>⚡ Phase 1 Target Met — Under Review</div>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#60a5fa' }}>⚡ Phase 1 Target Met - Under Review</div>
             <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Congratulations! You have successfully met the Phase 1 reward target. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is currently reviewing your account. Once approved, your Phase 2 account credentials will be issued automatically. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>1–3 business days</span>.
+              Congratulations! You have successfully met the Phase 1 reward target. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is currently reviewing your account. Once approved, your Phase 2 account credentials will be issued automatically. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>1-3 business days</span>.
             </div>
           </div>
         </motion.div>
@@ -1192,9 +1192,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
             </motion.div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#FF5C00' }}>🏆 Phase 2 Complete — Simulation Funded Account Review</div>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: '#FF5C00' }}>🏆 Phase 2 Complete - Simulation Funded Account Review</div>
             <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Outstanding! You have passed Phase 2. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is conducting a risk review before issuing your live simulation funded account. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>3–5 business days</span>.
+              Outstanding! You have passed Phase 2. The <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>XFunded Trader Team</span> is conducting a risk review before issuing your live simulation funded account. Expected processing time: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>3-5 business days</span>.
             </div>
           </div>
         </motion.div>
@@ -1206,7 +1206,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Live Open Trades */}
       <OpenTradesPanel account={account} initialPositions={livePositions} tradeRecords={tradeRecords} />
 
-      {/* Closed Trades — from centralized TradeRecord source */}
+      {/* Closed Trades - from centralized TradeRecord source */}
       <ClosedTradesSection account={account} trades={closedTrades} loading={tradesLoading} />
 
       {/* Performance Metrics + Progress Timeline */}
@@ -1221,7 +1221,7 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Discipline + Objectives */}
       <DisciplinePanel account={account} closedTrades={closedTrades} livePlan={livePlan} />
 
-      {/* Account History — trashed accounts excluded (they appear in Trash page) */}
+      {/* Account History - trashed accounts excluded (they appear in Trash page) */}
       <AccountHistorySection accounts={accounts.filter(a => !a.is_trashed)} />
 
       {/* Footer */}

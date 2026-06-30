@@ -91,7 +91,7 @@ export default function AdminSupport() {
                 <div key={t.id} className="grid grid-cols-6 gap-2 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] items-center transition-colors">
                   <div className="col-span-2 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate">{t.subject}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{t.user_email || '—'}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">{t.user_email || '-'}</div>
                   </div>
                   <span className="text-xs text-muted-foreground capitalize">{t.category}</span>
                   <span className="text-[10px] font-mono capitalize" style={{ color: pc }}>{t.priority}</span>
@@ -249,7 +249,7 @@ function AdminLiveChat() {
                 )}
               </div>
               <div className="text-[10px] text-muted-foreground truncate mt-1">
-                {t.last?.message || '—'}
+                {t.last?.message || '-'}
               </div>
             </button>
           ))}

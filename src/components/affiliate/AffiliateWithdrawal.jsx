@@ -91,7 +91,7 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                 <div className="text-2xl font-black text-amber-400">${pendingTotal.toFixed(2)}</div>
               </div>
             </div>
-            <div className="text-[10px] text-white/20">Commissions awaiting admin approval — not yet withdrawable</div>
+            <div className="text-[10px] text-white/20">Commissions awaiting admin approval - not yet withdrawable</div>
           </div>
         </motion.div>
       </div>
@@ -107,7 +107,7 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
               </div>
             </div>
             <div className="p-5 space-y-5">
-              {/* Pending commissions info — most common reason withdrawals are blocked */}
+              {/* Pending commissions info - most common reason withdrawals are blocked */}
               {pendingTotal > 0 && available < MIN_WITHDRAWAL && (
                 <div className="flex items-start gap-3 p-4 rounded-xl"
                   style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
@@ -119,7 +119,7 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                       Once approved, they will appear as "Available" and you can withdraw them.
                     </div>
                     <div className="text-[10px] text-white/30 mt-1">
-                      💡 Commissions are typically reviewed within 1–3 business days after the referred trader's purchase is verified.
+                      💡 Commissions are typically reviewed within 1-3 business days after the referred trader's purchase is verified.
                     </div>
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                   <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-bold text-amber-400 mb-0.5">Minimum withdrawal not met</div>
-                    <div className="text-[11px] text-white/30">You have ${available.toFixed(2)} approved — need ${(MIN_WITHDRAWAL - available).toFixed(2)} more to reach the $${MIN_WITHDRAWAL} minimum.</div>
+                    <div className="text-[11px] text-white/30">You have ${available.toFixed(2)} approved - need ${(MIN_WITHDRAWAL - available).toFixed(2)} more to reach the $${MIN_WITHDRAWAL} minimum.</div>
                   </div>
                 </div>
               )}

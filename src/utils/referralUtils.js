@@ -1,5 +1,5 @@
 /**
- * referralUtils.js — Shared referral attribution helpers.
+ * referralUtils.js - Shared referral attribution helpers.
  *
  * Flow:
  *   1. Any page with ?ref=CODE → captureReferralCode() stores it in localStorage
@@ -54,7 +54,7 @@ export function getStoredReferralCode() {
     if (!code) return '';
     const ts = parseInt(localStorage.getItem(STORAGE_TS_KEY) || '0', 10);
     if (!ts || Date.now() - ts > THIRTY_DAYS_MS) {
-      // Expired — clean up
+      // Expired - clean up
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_TS_KEY);
       return '';
@@ -86,7 +86,7 @@ async function trackReferralClick(referralCode) {
 /**
  * Process affiliate attribution after successful registration + verification.
  * Creates the user's AffiliateProfile and increments the referrer's counters.
- * Non-blocking — failures are logged but don't break auth flow.
+ * Non-blocking - failures are logged but don't break auth flow.
  */
 export async function processAffiliateAttribution(userEmail, referralCode) {
   if (!userEmail) return { success: false, reason: 'no email' };

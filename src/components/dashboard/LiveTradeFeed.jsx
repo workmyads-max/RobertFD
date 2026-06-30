@@ -4,7 +4,7 @@ import { ArrowUpRight, ArrowDownRight, Activity, RefreshCw, Clock, TrendingUp, T
 import { base44 } from '@/api/base44Client';
 
 function formatDuration(openTime) {
-  if (!openTime) return '—';
+  if (!openTime) return '-';
   const ms = Date.now() - new Date(openTime).getTime();
   const s = Math.floor(ms / 1000);
   if (s < 60) return `${s}s`;
@@ -15,7 +15,7 @@ function formatDuration(openTime) {
 }
 
 function formatDateTime(dt) {
-  if (!dt) return '—';
+  if (!dt) return '-';
   const d = new Date(dt);
   return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
@@ -50,16 +50,16 @@ function OpenTradeRow({ trade }) {
         </div>
       </td>
       <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
-        {trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : '—'}
+        {trade.open_time ? new Date(trade.open_time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : '-'}
       </td>
       <td className="px-3 py-3 text-xs font-mono text-foreground">{(trade.lots || 0).toFixed(2)}</td>
-      <td className="px-3 py-3 text-xs font-bold text-foreground">{trade.symbol || '—'}</td>
+      <td className="px-3 py-3 text-xs font-bold text-foreground">{trade.symbol || '-'}</td>
       <td className="px-3 py-3">
         <span className={`text-sm font-bold font-mono ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
           {isProfit ? '+' : ''}${pnl.toFixed(2)}
         </span>
       </td>
-      <td className="px-3 py-3 text-xs font-mono text-muted-foreground">—</td>
+      <td className="px-3 py-3 text-xs font-mono text-muted-foreground">-</td>
       <td className="px-3 py-3">
         <span className="text-[10px] font-mono text-yellow-400 flex items-center gap-1">
           <Clock className="w-3 h-3" />{elapsed}
@@ -99,12 +99,12 @@ function ClosedTradeRow({ trade }) {
         <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground whitespace-nowrap">
           {trade.close_time
             ? new Date(trade.close_time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
-            : '—'}
+            : '-'}
         </td>
         {/* Lots */}
         <td className="px-4 py-3.5 text-xs font-bold font-mono text-foreground">{(trade.lots || 0).toFixed(2)}</td>
         {/* Symbol */}
-        <td className="px-4 py-3.5 text-xs font-bold text-foreground">{trade.symbol || '—'}</td>
+        <td className="px-4 py-3.5 text-xs font-bold text-foreground">{trade.symbol || '-'}</td>
         {/* PnL */}
         <td className="px-4 py-3.5">
           <span className={`text-sm font-black font-mono px-2 py-0.5 rounded ${isProfit ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
@@ -113,7 +113,7 @@ function ClosedTradeRow({ trade }) {
         </td>
         {/* Pips */}
         <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">
-          {trade.pips != null ? trade.pips.toFixed(1) : '—'}
+          {trade.pips != null ? trade.pips.toFixed(1) : '-'}
         </td>
         {/* Duration */}
         <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground whitespace-nowrap">
@@ -124,7 +124,7 @@ function ClosedTradeRow({ trade }) {
             const m = Math.floor((totalSec % 3600) / 60);
             const s = totalSec % 60;
             return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-          })() : '—'}
+          })() : '-'}
         </td>
         {/* Expand */}
         <td className="px-3 py-3.5 text-muted-foreground">

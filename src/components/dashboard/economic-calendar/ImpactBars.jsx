@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * ImpactBars — 3 small vertical bars indicating impact level.
+ * ImpactBars - 3 small vertical bars indicating impact level.
  *   1 filled = Low (grey)
  *   2 filled = Medium (amber)
  *   3 filled = High (red)

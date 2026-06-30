@@ -75,7 +75,7 @@ export function useAccountStats(account, trades = []) {
     const maxDDPct = maxDD > 0 ? maxDD : Math.abs((size - Math.min(equity, size)) / size) * 100;
     const profitTargetPct = profitProgress > 0 ? profitProgress : (pnl / size) * 100;
 
-    // ── BEST DAY RULE (one_step) — no single day's profit may exceed 50% of total ──
+    // ── BEST DAY RULE (one_step) - no single day's profit may exceed 50% of total ──
     // Computed for ALL account types; the UI decides whether to show it.
     // Only considers days with NET positive PnL (loss days don't count as "best day").
     let bestDayProfit = 0;

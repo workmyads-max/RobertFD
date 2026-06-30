@@ -17,7 +17,7 @@ const FLAG = (rawCode) => {
 const COUNTRY_LABEL = (rawCode) => {
   const code = resolveCountryCode(rawCode);
   if (code) return COUNTRY_NAMES[code] || code;
-  // It's a full name we don't have — return as-is
+  // It's a full name we don't have - return as-is
   return rawCode || 'Global';
 };
 
@@ -192,7 +192,7 @@ function PodiumCard({ trader, rank, onCelebrate }) {
           {plt.label}
         </div>
 
-        {/* Profit % — animated */}
+        {/* Profit % - animated */}
         <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2.5, repeat: Infinity }}
           className="text-2xl font-black" style={{ color: m.color, textShadow: `0 0 20px ${m.glow}` }}>
           +{profitRatio.toFixed(1)}%
@@ -281,7 +281,7 @@ function LeaderRow({ trader, rank }) {
       <div className="hidden lg:flex flex-col items-end flex-shrink-0">
         <span className="text-[10px] text-white/25 font-mono">Payout</span>
         <span className="text-sm font-bold" style={{ color: trader.totalPayout > 0 ? '#10b981' : 'rgba(255,255,255,0.2)' }}>
-          {trader.totalPayout > 0 ? `$${trader.totalPayout.toLocaleString()}` : '—'}
+          {trader.totalPayout > 0 ? `$${trader.totalPayout.toLocaleString()}` : '-'}
         </span>
       </div>
 
@@ -324,7 +324,7 @@ export default function Leaderboard() {
 
   // Fetch ALL accounts + payouts via service-role backend function.
   // ChallengeAccount and WithdrawalRequest both have RLS that restricts
-  // reads to the current user — direct entity queries can't see other
+  // reads to the current user - direct entity queries can't see other
   // traders' data, so the leaderboard would only ever show yourself.
   const { data, isLoading: loadingAccounts } = useQuery({
     queryKey: ['leaderboard-data'],
@@ -518,7 +518,7 @@ export default function Leaderboard() {
           {rest.length > 0 && (
             <div>
               <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-3 flex items-center gap-2">
-                <Medal className="w-3 h-3 text-primary" /> Rankings #4–{Math.min(rest.length + 3, 50)}
+                <Medal className="w-3 h-3 text-primary" /> Rankings #4-{Math.min(rest.length + 3, 50)}
               </div>
               <div className="space-y-1.5">
                 {rest.map((t, i) => <LeaderRow key={t.id} trader={t} rank={i + 4} />)}

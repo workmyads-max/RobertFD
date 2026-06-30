@@ -214,7 +214,7 @@ export default function AdminStaffManagement() {
           <h1 className="text-3xl font-black text-foreground flex items-center gap-3 mb-1">
             <Users className="w-6 h-6 text-primary" /> Staff Management
           </h1>
-          <p className="text-sm text-muted-foreground font-mono">RBAC — Institutional Access Control</p>
+          <p className="text-sm text-muted-foreground font-mono">RBAC - Institutional Access Control</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => refetch()} className="p-2 rounded-lg hover:bg-white/5 text-muted-foreground transition-colors">
@@ -267,7 +267,7 @@ export default function AdminStaffManagement() {
                   className="border-t transition-colors hover:bg-white/[0.02]"
                   style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-foreground">{member.full_name || '—'}</div>
+                    <div className="font-semibold text-foreground">{member.full_name || '-'}</div>
                     <div className="text-xs text-muted-foreground font-mono">{member.user_email}</div>
                   </td>
                   <td className="px-4 py-3"><RoleBadge role={member.role_name} /></td>
@@ -280,7 +280,7 @@ export default function AdminStaffManagement() {
                       <span className="text-xs text-muted-foreground">Inactive</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{member.invited_by || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{member.invited_by || '-'}</td>
                   <td className="px-4 py-3">
                     {member.last_login_at ? (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">

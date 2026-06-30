@@ -23,7 +23,7 @@ export default function AdminAccounts() {
   const [form, setForm] = useState(BLANK);
   const qc = useQueryClient();
 
-  // Admin-scoped fetch via service-role backend function — bypasses per-user RLS
+  // Admin-scoped fetch via service-role backend function - bypasses per-user RLS
   // so admins see ALL users' accounts. Normal-user isolation stays intact.
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['admin-accounts-all'],
@@ -129,7 +129,7 @@ export default function AdminAccounts() {
             <div key={a.id} className="grid grid-cols-7 gap-2 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] items-center transition-colors">
               <div className="col-span-2 min-w-0">
                 <div className="text-xs font-mono font-bold text-foreground">{a.account_id}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{a.user_email || '—'}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{a.user_email || '-'}</div>
               </div>
               <span className="text-xs text-muted-foreground capitalize">{a.challenge_type === 'two-step' ? '2-Step' : 'Instant'} / {a.account_type}</span>
               <span className="text-xs text-foreground">${(a.account_size||0).toLocaleString()}</span>

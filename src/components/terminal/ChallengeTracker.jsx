@@ -67,7 +67,7 @@ export default function ChallengeTracker({ account, rules, balance, equity, dail
             {account?.challenge_type === 'instant' ? 'Instant' : 'Two-Step'} Challenge
           </div>
           <div className="font-black text-foreground capitalize">
-            {phase.replace('phase', 'Phase ')} — ${accountSize.toLocaleString()}
+            {phase.replace('phase', 'Phase ')} - ${accountSize.toLocaleString()}
           </div>
         </div>
         <div className="px-2 py-1 rounded text-[9px] font-black" style={{ background: sm.bg, border: `1px solid ${sm.border}`, color: sm.color }}>

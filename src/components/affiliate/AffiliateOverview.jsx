@@ -57,7 +57,7 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
   return (
     <div className="space-y-8">
 
-      {/* Tier status — large institutional panel */}
+      {/* Tier status - large institutional panel */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>
         <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: 'hsl(var(--border))' }}>
 
@@ -101,7 +101,7 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
                     <div className="flex items-center gap-2">
                       <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-primary' : 'bg-white/10'}`} />
                       <span className={isActive ? 'font-semibold' : ''}>{t.label}</span>
-                      <span className="text-xs opacity-50">{t.min === 0 ? '0' : t.min}–{t.max === Infinity ? '∞' : t.max} traders</span>
+                      <span className="text-xs opacity-50">{t.min === 0 ? '0' : t.min}-{t.max === Infinity ? '∞' : t.max} traders</span>
                     </div>
                     <span className={`font-semibold ${isActive ? 'text-primary' : ''}`}>{t.rate}%</span>
                   </div>
@@ -155,7 +155,7 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
           </div>
           <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
             {[
-              { lvl: 1, label: 'Level 1 — Direct Referrals', rate: '8%' },
+              { lvl: 1, label: 'Level 1 - Direct Referrals', rate: '8%' },
               { lvl: 2, label: 'Level 2', rate: '2%' },
               { lvl: 3, label: 'Level 3', rate: '1%' },
             ].map(({ lvl, label, rate }) => {

@@ -34,7 +34,7 @@ const IMAGES = {
 };
 
 export default function Home() {
-  // ── Referral tracking — capture ?ref=CODE into localStorage (30-day expiry)
+  // ── Referral tracking - capture ?ref=CODE into localStorage (30-day expiry)
   // and fire a non-blocking click-tracking backend call. Also kept in a cookie
   // for backward compatibility with any legacy reads.
   useEffect(() => {

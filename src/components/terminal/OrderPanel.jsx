@@ -68,7 +68,7 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
   };
 
   const maxLots = (() => {
-    if (!freeMargin || !entryPrice) return '—';
+    if (!freeMargin || !entryPrice) return '-';
     const per1 = calcRequiredMargin(symbol, 1, lev, entryPrice);
     if (!per1) return '∞';
     return Math.min(freeMargin / per1, rules?.maxLotsPerTrade || 20).toFixed(2);
@@ -86,18 +86,18 @@ export default function OrderPanel({ symbol, prices, account, rules, equity, use
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
             <span className="text-[7px] text-red-500/70 uppercase tracking-widest font-bold">SELL (Bid)</span>
-            <span className="text-[13px] font-black text-red-400">{p?.bid?.toFixed(inst?.digits) || '—'}</span>
+            <span className="text-[13px] font-black text-red-400">{p?.bid?.toFixed(inst?.digits) || '-'}</span>
           </div>
           <div className="flex flex-col items-center">
             <span className="text-[7px] text-slate-600 uppercase tracking-widest">Spread</span>
             <span className="text-[11px] font-bold text-orange-400">
-              {p?.bid && p?.ask ? ((p.ask - p.bid) / (inst?.digits >= 4 ? 0.0001 : 0.01)).toFixed(1) : '—'}
+              {p?.bid && p?.ask ? ((p.ask - p.bid) / (inst?.digits >= 4 ? 0.0001 : 0.01)).toFixed(1) : '-'}
             </span>
             <span className="text-[6px] text-slate-700">pips</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[7px] text-emerald-500/70 uppercase tracking-widest font-bold">BUY (Ask)</span>
-            <span className="text-[13px] font-black text-emerald-400">{p?.ask?.toFixed(inst?.digits) || '—'}</span>
+            <span className="text-[13px] font-black text-emerald-400">{p?.ask?.toFixed(inst?.digits) || '-'}</span>
           </div>
         </div>
       </div>

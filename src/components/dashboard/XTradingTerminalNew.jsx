@@ -227,7 +227,7 @@ export default function XTradingTerminalNew({ account }) {
     
     if (isBreached && !accountBlocked) {
       setAccountBlocked(true);
-      addLog(`⚠ DRAWDOWN LIMIT REACHED — Trading suspended`, false);
+      addLog(`⚠ DRAWDOWN LIMIT REACHED - Trading suspended`, false);
       if (account?.id) {
         base44.entities.ChallengeAccount.update(account.id, {
           status: 'failed',
@@ -252,7 +252,7 @@ export default function XTradingTerminalNew({ account }) {
       const newBalance = parseFloat((sessionBalance + closePnl).toFixed(2));
       setSessionBalance(newBalance);
       setClosedTrades(ct => [{ ...pos, close: closePrice, pnl: closePnl, closeTime: new Date().toLocaleTimeString(), reason }, ...ct.slice(0, 99)]);
-      addLog(`${pos.type} ${pos.lots} ${pos.symbol} closed @ ${closePrice?.toFixed(2)} — ${closePnl >= 0 ? '+' : ''}$${closePnl.toFixed(2)}`, closePnl >= 0);
+      addLog(`${pos.type} ${pos.lots} ${pos.symbol} closed @ ${closePrice?.toFixed(2)} - ${closePnl >= 0 ? '+' : ''}$${closePnl.toFixed(2)}`, closePnl >= 0);
       return prev.filter(p => p.id !== id);
     });
   }, [addLog, sessionBalance]);
@@ -491,7 +491,7 @@ export default function XTradingTerminalNew({ account }) {
               border: '1px solid rgba(96,165,250,0.25)',
             }}>
               <div className="text-[9px] text-muted-foreground/60 font-mono uppercase mb-1">Price</div>
-              <div className="text-2xl font-black text-foreground">{currentPrice?.bid?.toFixed(selected.digits) || '—'}</div>
+              <div className="text-2xl font-black text-foreground">{currentPrice?.bid?.toFixed(selected.digits) || '-'}</div>
             </div>
 
             {/* Order Type */}

@@ -45,7 +45,7 @@ function BufferZoneCard({ account }) {
             </div>
             <div className="text-base font-black text-emerald-400 mb-1">Buffer Zone Activated</div>
             <div className="text-[11px] text-white/40 font-mono">
-              Activated at: {account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+              Activated at: {account?.buffer_zone_activated_at ? new Date(account.buffer_zone_activated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}
             </div>
           </div>
         ) : (
@@ -442,7 +442,7 @@ function PayoutEligibilityBanner({ account, closedTrades }) {
       </div>
       <div className="flex-1">
         <div className={`text-sm font-bold mb-1 ${allMet ? 'text-emerald-400' : 'text-white/50'}`}>
-          {allMet ? '✅ Payout Eligible — You can request a withdrawal' : 'Payout Eligibility'}
+          {allMet ? '✅ Payout Eligible - You can request a withdrawal' : 'Payout Eligibility'}
         </div>
         <div className="flex flex-wrap gap-2">
           {checks.map((c, i) => (

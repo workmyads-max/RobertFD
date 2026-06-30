@@ -1,5 +1,5 @@
 /**
- * retryWithBackoff — Retry a promise on HTTP 429 (rate limit) with
+ * retryWithBackoff - Retry a promise on HTTP 429 (rate limit) with
  * exponential backoff + jitter. Non-429 errors throw immediately.
  *
  * Usage:

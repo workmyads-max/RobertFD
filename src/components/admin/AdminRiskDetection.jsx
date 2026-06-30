@@ -149,7 +149,7 @@ export default function AdminRiskDetection() {
           }
         >
           {isEnabled ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-          {isEnabled ? 'ENABLED — Click to Disable' : 'DISABLED — Click to Enable'}
+          {isEnabled ? 'ENABLED - Click to Disable' : 'DISABLED - Click to Enable'}
         </button>
       </div>
 

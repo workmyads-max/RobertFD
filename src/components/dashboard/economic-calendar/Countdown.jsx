@@ -2,12 +2,12 @@ import React from 'react';
 import { formatCountdown } from '@/hooks/useNow';
 
 /**
- * Countdown — live ticking countdown to a target time.
+ * Countdown - live ticking countdown to a target time.
  * Shows "HH:MM:SS" format, or "Expired" in grey for past events.
  * Receives `now` from parent (single timer) for performance.
  */
 export default function Countdown({ targetTime, now }) {
-  if (!targetTime) return <span className="text-xs text-white/20">—</span>;
+  if (!targetTime) return <span className="text-xs text-white/20">-</span>;
 
   const diff = new Date(targetTime).getTime() - now;
   const text = formatCountdown(diff);

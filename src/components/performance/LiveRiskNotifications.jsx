@@ -10,11 +10,11 @@ export default function LiveRiskNotifications({ account, riskScore, violations }
     const dailyDD = account.daily_drawdown_used || 0;
     const maxDD = account.max_drawdown_used || 0;
 
-    if (dailyDD > 4) alerts.push({ id: 'daily-dd-critical', icon: TrendingDown, color: '#ef4444', title: 'Critical: Daily DD Limit Near', msg: `${dailyDD.toFixed(2)}% used of 5% limit — stop trading today` });
-    else if (dailyDD > 3) alerts.push({ id: 'daily-dd-warn', icon: TrendingDown, color: '#f59e0b', title: 'Approaching Daily DD Limit', msg: `${dailyDD.toFixed(2)}% used — consider reducing exposure` });
+    if (dailyDD > 4) alerts.push({ id: 'daily-dd-critical', icon: TrendingDown, color: '#ef4444', title: 'Critical: Daily DD Limit Near', msg: `${dailyDD.toFixed(2)}% used of 5% limit - stop trading today` });
+    else if (dailyDD > 3) alerts.push({ id: 'daily-dd-warn', icon: TrendingDown, color: '#f59e0b', title: 'Approaching Daily DD Limit', msg: `${dailyDD.toFixed(2)}% used - consider reducing exposure` });
 
-    if (maxDD > 8) alerts.push({ id: 'max-dd-critical', icon: AlertTriangle, color: '#ef4444', title: 'Max DD Critical Level', msg: `${maxDD.toFixed(2)}% of 10% used — account at risk` });
-    if (riskScore?.score >= 60) alerts.push({ id: 'high-risk', icon: Shield, color: '#ef4444', title: 'High Risk Score Detected', msg: `Risk score: ${riskScore.score}/100 — review trading behavior` });
+    if (maxDD > 8) alerts.push({ id: 'max-dd-critical', icon: AlertTriangle, color: '#ef4444', title: 'Max DD Critical Level', msg: `${maxDD.toFixed(2)}% of 10% used - account at risk` });
+    if (riskScore?.score >= 60) alerts.push({ id: 'high-risk', icon: Shield, color: '#ef4444', title: 'High Risk Score Detected', msg: `Risk score: ${riskScore.score}/100 - review trading behavior` });
     violations.forEach((v, i) => alerts.push({ id: `viol-${i}`, icon: Zap, color: '#ef4444', title: v.label, msg: v.desc }));
   }
 

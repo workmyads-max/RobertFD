@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, AlertTriangle, Clock, XCircle } from 'lucide-react';
 
 function ObjectiveRow({ label, current, target, limit, color, unit = '%', inverse = false, i, usdValue, limitUsd, minDays, tradingDays }) {
-  // Special case: Minimum Trading Days — show day-by-day dots
+  // Special case: Minimum Trading Days - show day-by-day dots
   if (unit === 'd') {
     const completed = Math.min(current, minDays);
     const passed = current >= minDays;
@@ -212,7 +212,7 @@ export default function TradingObjectives({ account, rules, stats }) {
           const reviewStatus = account?.phase_review_status;
           const fundedReviewStatus = account?.funded_review_status;
           const isUnderReview = (st === 'passed' && (reviewStatus === 'pending_review' || fundedReviewStatus === 'pending_review'));
-          const label = isUnderReview ? 'Passed — Under Review' : st;
+          const label = isUnderReview ? 'Passed - Under Review' : st;
           const bg = isUnderReview ? 'rgba(96,165,250,0.1)' : st === 'active' ? 'rgba(16,185,129,0.1)' : st === 'passed' ? 'rgba(96,165,250,0.1)' : 'rgba(255,92,0,0.1)';
           const color = isUnderReview ? '#60a5fa' : st === 'active' ? '#10b981' : st === 'passed' ? '#60a5fa' : '#FF5C00';
           return (

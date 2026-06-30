@@ -84,7 +84,7 @@ export default function Leaderboard() {
             <span className="gradient-text">Leaderboard</span>
           </h2>
           <p className="text-muted-foreground text-base max-w-md mx-auto">
-            The most profitable funded & instant traders — ranked live by profit percentage.
+            The most profitable funded & instant traders - ranked live by profit percentage.
           </p>
         </motion.div>
 
@@ -163,7 +163,7 @@ export default function Leaderboard() {
 
                 {/* Country */}
                 <div className="text-center text-xs font-mono text-muted-foreground">
-                  {COUNTRY_NAMES[t.country?.toUpperCase()] || t.country || '—'}
+                  {COUNTRY_NAMES[t.country?.toUpperCase()] || t.country || '-'}
                 </div>
 
                 {/* Account size */}

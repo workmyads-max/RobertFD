@@ -2,13 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 /**
- * MiniRocket — small decorative animated rocket SVG
+ * MiniRocket - small decorative animated rocket SVG
  * Props:
- *   size   — pixel size (default 48)
- *   style  — additional inline styles
- *   className — additional classes
- *   delay  — float animation delay in seconds
- *   rotate — rotation in degrees (default -30 = tilted up-right)
+ *   size   - pixel size (default 48)
+ *   style  - additional inline styles
+ *   className - additional classes
+ *   delay  - float animation delay in seconds
+ *   rotate - rotation in degrees (default -30 = tilted up-right)
  */
 export default function MiniRocket({ size = 48, style = {}, className = '', delay = 0, rotate = -30 }) {
   return (

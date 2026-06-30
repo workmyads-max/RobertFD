@@ -1,6 +1,6 @@
 import React from 'react';
 import XFLogo from '@/components/shared/XFLogo';
-// No icon imports needed — using inline SVGs for html2canvas compatibility
+// No icon imports needed - using inline SVGs for html2canvas compatibility
 
 const FIRM = {
   name: 'XFUNDED TRADER',
@@ -9,7 +9,7 @@ const FIRM = {
   ceo: 'Diego Reyes',
 };
 
-// ─── Theme — single premium dark theme matching homepage ──────────────────
+// ─── Theme - single premium dark theme matching homepage ──────────────────
 const T = {
   bg: '#05060a',
   text: '#f1f5f9',
@@ -115,13 +115,13 @@ function Watermark() {
         );
       })}
 
-      {/* Trend line — rising channel */}
+      {/* Trend line - rising channel */}
       <line x1={padding.left} y1={scale(118)} x2={chartW - padding.right} y2={scale(250)}
         stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
       <line x1={padding.left + 20} y1={scale(105)} x2={chartW - padding.right} y2={scale(238)}
         stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
 
-      {/* Pulsing breakout arrow — top right */}
+      {/* Pulsing breakout arrow - top right */}
       <line x1={400} y1={scale(230)} x2={430} y2={scale(210)} stroke="#C5A059" strokeWidth="1" opacity="0.6" />
       <polygon points="430,150 436,166 424,166" fill="#C5A059" opacity="0.6"
         transform={`translate(0, ${scale(210) - 158})`} />
@@ -235,7 +235,7 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         position: 'absolute', top: '120px', left: '56px', right: '56px', bottom: '100px',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* Crown icon — clean, no glow */}
+        {/* Crown icon - clean, no glow */}
         <div style={{
           width: '52px', height: '52px', borderRadius: '12px',
           background: 'rgba(255,255,255,0.04)',
@@ -310,22 +310,22 @@ export default function CertificateDocument({ cert, forCapture = false }) {
 
 
 
-        {/* Stats row — always 4 uniform boxes */}
+        {/* Stats row - always 4 uniform boxes */}
         <div style={{
           display: 'flex', gap: '14px', marginTop: '28px', width: '100%', maxWidth: '620px', justifyContent: 'center',
         }}>
           {(isWithdrawal
             ? [
-              { label: 'WITHDRAWAL AMOUNT', value: cert?.withdrawal_amount ? `$${Number(cert.withdrawal_amount).toLocaleString()}` : '—' },
-              { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '—' },
+              { label: 'WITHDRAWAL AMOUNT', value: cert?.withdrawal_amount ? `$${Number(cert.withdrawal_amount).toLocaleString()}` : '-' },
+              { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '-' },
               { label: 'DATE', value: cert?.issue_date || new Date().toLocaleDateString('en-GB') },
-              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '—' },
+              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '-' },
             ]
             : [
-              { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '—' },
+              { label: 'ACCOUNT SIZE', value: cert?.account_size ? `$${Number(cert.account_size).toLocaleString()}` : '-' },
               { label: 'CHALLENGE TYPE', value: (cert?.challenge_type || 'two-step').replace('-', ' ').toUpperCase() },
               { label: 'DATE', value: cert?.issue_date || new Date().toLocaleDateString('en-GB') },
-              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '—' },
+              { label: 'CERTIFICATE ID', value: cert?.certificate_id ? `#${cert.certificate_id.slice(0, 12)}` : '-' },
             ]
           ).map((s) => (
             <div key={s.label} style={{

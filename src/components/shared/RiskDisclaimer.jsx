@@ -8,7 +8,7 @@ import { ChevronDown, AlertTriangle, ShieldAlert } from 'lucide-react';
 export const RISK_DISCLAIMER_SECTIONS = [
   {
     label: 'Risk Disclaimer',
-    body: 'The challenge/evaluation accounts and related services offered by XFunded Trader are a DIGITAL PRODUCT. All accounts provided are DEMO accounts, and any account received after passing a challenge — or any direct funded account taken without an evaluation phase — is a SIMULATED (simulation-type) account. No real funds are involved at any stage. All trading occurs in a simulated/demo environment using virtual capital.',
+    body: 'The challenge/evaluation accounts and related services offered by XFunded Trader are a DIGITAL PRODUCT. All accounts provided are DEMO accounts, and any account received after passing a challenge - or any direct funded account taken without an evaluation phase - is a SIMULATED (simulation-type) account. No real funds are involved at any stage. All trading occurs in a simulated/demo environment using virtual capital.',
   },
   {
     label: 'Performance Reward',
@@ -69,7 +69,7 @@ function FullDisclaimer() {
   );
 }
 
-// ── COMPACT VARIANT (dashboard / admin pages — collapsible) ───────────────────
+// ── COMPACT VARIANT (dashboard / admin pages - collapsible) ───────────────────
 function CompactDisclaimer() {
   const [expanded, setExpanded] = useState(false);
   return (

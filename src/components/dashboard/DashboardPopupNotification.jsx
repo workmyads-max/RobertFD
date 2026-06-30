@@ -38,7 +38,7 @@ export default function DashboardPopupNotification({ notification, onClose }) {
     }
   }, [notification]);
 
-  // Never show system/breach notifications as a popup — those use DDBreachModal
+  // Never show system/breach notifications as a popup - those use DDBreachModal
   if (!shouldShow || !notification || notification.type === 'system') return null;
 
   const Icon = NOTIFICATION_ICONS[notification.type] || Bell;

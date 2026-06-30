@@ -6,7 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 const ACCOUNT = 100000;
 const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
 
-// Detailed 100K walkthrough for each type — order: One-Step, Two-Step, Instant Account
+// Detailed 100K walkthrough for each type - order: One-Step, Two-Step, Instant Account
 const EXAMPLES = [
   {
     id: 'one_step', name: 'One-Step', badge: 'Single Phase', accent: '#3b82f6', split: 90,
@@ -95,7 +95,7 @@ function ExampleCard({ ex, i }) {
         ))}
       </div>
 
-      {/* How it works — numbered steps */}
+      {/* How it works - numbered steps */}
       <div className="px-6 py-5 flex-1">
         <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-4">How it works</div>
         <div className="relative">

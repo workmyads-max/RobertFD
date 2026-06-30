@@ -80,7 +80,7 @@ export default function AdminAffiliate() {
   });
 
   // Affiliate payout requests are approved/rejected via the same backend function
-  // as trader payouts — it detects account_id='affiliate', pays 100% (no profit
+  // as trader payouts - it detects account_id='affiliate', pays 100% (no profit
   // split) minus the 5% fee, and settles the covered commissions as paid.
   const affiliateWithdrawalMutation = useMutation({
     mutationFn: async ({ id, action }) => {
@@ -185,7 +185,7 @@ export default function AdminAffiliate() {
                   <TrendingUp className="w-4 h-4 text-primary" /> Commission Rates
                 </div>
                 <div className="space-y-4">
-                  <RateInput label="Level 1 — Direct Sales" value={settings.l1_rate} onChange={v => setSettings(s => ({ ...s, l1_rate: v }))} color="#FF5C00" />
+                  <RateInput label="Level 1 - Direct Sales" value={settings.l1_rate} onChange={v => setSettings(s => ({ ...s, l1_rate: v }))} color="#FF5C00" />
                   <RateInput label="Level 2" value={settings.l2_rate} onChange={v => setSettings(s => ({ ...s, l2_rate: v }))} color="#60a5fa" />
                   <RateInput label="Level 3" value={settings.l3_rate} onChange={v => setSettings(s => ({ ...s, l3_rate: v }))} color="#a78bfa" />
                 </div>
@@ -196,7 +196,7 @@ export default function AdminAffiliate() {
                   <DollarSign className="w-4 h-4 text-primary" /> Payout Reward Scaling
                 </div>
                 <div className="space-y-4">
-                  <RateInput label="Tier 1 (0–9 live traders)" value={settings.payout_tier_0_rate} onChange={v => setSettings(s => ({ ...s, payout_tier_0_rate: v }))} color="#60a5fa" />
+                  <RateInput label="Tier 1 (0-9 live traders)" value={settings.payout_tier_0_rate} onChange={v => setSettings(s => ({ ...s, payout_tier_0_rate: v }))} color="#60a5fa" />
                   <RateInput label="Tier 2 (10+ live traders)" value={settings.payout_tier_10_rate} onChange={v => setSettings(s => ({ ...s, payout_tier_10_rate: v }))} color="#a78bfa" />
                   <RateInput label="Tier 3 (25+ live traders)" value={settings.payout_tier_25_rate} onChange={v => setSettings(s => ({ ...s, payout_tier_25_rate: v }))} color="#fbbf24" />
                   <RateInput label="Tier 4 (50+ live traders)" value={settings.payout_tier_50_rate} onChange={v => setSettings(s => ({ ...s, payout_tier_50_rate: v }))} color="#FF5C00" />
@@ -367,7 +367,7 @@ export default function AdminAffiliate() {
                           {w.method?.replace(/_/g, ' ').toUpperCase()} · {new Date(w.created_date).toLocaleDateString()}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-mono text-primary/80 truncate" title={w.wallet_address}>💳 {w.wallet_address || '—'}</span>
+                          <span className="text-[10px] font-mono text-primary/80 truncate" title={w.wallet_address}>💳 {w.wallet_address || '-'}</span>
                           {w.wallet_address && (
                             <button onClick={() => navigator.clipboard.writeText(w.wallet_address).catch(() => {})}
                               className="text-[9px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-muted-foreground transition-colors">Copy</button>

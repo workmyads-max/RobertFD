@@ -263,7 +263,7 @@ export default function AdminFirstTimeDiscount() {
                       </span>
                     </td>
                     <td className="px-6 py-3 text-white/40">
-                      {d.used_at ? new Date(d.used_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                      {d.used_at ? new Date(d.used_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                     </td>
                   </tr>
                 ))}

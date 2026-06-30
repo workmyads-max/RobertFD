@@ -151,7 +151,7 @@ export default function LiveStatusBar({ account }) {
                 >
                   <span className="text-white/50 italic">{quotes[quoteIndex].text}</span>
                   {quotes[quoteIndex].author && (
-                    <span className="text-white/30 ml-1">— {quotes[quoteIndex].author}</span>
+                    <span className="text-white/30 ml-1">- {quotes[quoteIndex].author}</span>
                   )}
                 </motion.div>
               </AnimatePresence>

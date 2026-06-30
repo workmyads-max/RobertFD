@@ -213,7 +213,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
             })}
           </div>
 
-          {/* Progress bar — hidden for funded live */}
+          {/* Progress bar - hidden for funded live */}
           {!isFundedLive && profitTarget && (
             <div className="mb-5">
               <div className="flex justify-between text-xs mb-2">
@@ -243,8 +243,8 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
               style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
               <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-xs font-medium text-blue-400 mb-0.5">Phase 1 passed — Under review</div>
-                <div className="text-[11px] text-muted-foreground">Phase 2 credentials will be issued after admin approval. Expected: 1–3 business days.</div>
+                <div className="text-xs font-medium text-blue-400 mb-0.5">Phase 1 passed - Under review</div>
+                <div className="text-[11px] text-muted-foreground">Phase 2 credentials will be issued after admin approval. Expected: 1-3 business days.</div>
               </div>
             </div>
           )}
@@ -254,7 +254,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
               style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
               <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-xs font-medium text-emerald-400 mb-0.5">Phase 1 passed — Under review</div>
+                <div className="text-xs font-medium text-emerald-400 mb-0.5">Phase 1 passed - Under review</div>
                 <div className="text-[11px] text-muted-foreground">Phase 2 credentials will be issued after admin approval.</div>
               </div>
             </div>
@@ -265,8 +265,8 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
               style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
               <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-xs font-medium text-blue-400 mb-0.5">Phase 2 passed — Funded review</div>
-                <div className="text-[11px] text-muted-foreground">Processing time: 3–5 business days.</div>
+                <div className="text-xs font-medium text-blue-400 mb-0.5">Phase 2 passed - Funded review</div>
+                <div className="text-[11px] text-muted-foreground">Processing time: 3-5 business days.</div>
               </div>
             </div>
           )}
@@ -324,17 +324,17 @@ export default function MyAccounts({ user, onStartChallenge, onNavigate }) {
     queryKey: ['challenge-accounts', user?.email],
     queryFn: async () => {
       // Use service-role backend function with case-insensitive email matching.
-      // FIX: Removed platform:'mt5' filter — that was hiding all accounts since
+      // FIX: Removed platform:'mt5' filter - that was hiding all accounts since
       // they have platform='xtrading' (the default), not 'mt5'.
       const res = await base44.functions.invoke('getUserAccounts', {});
       const all = res?.data?.accounts || [];
-      // Show all non-trashed accounts — trashed accounts belong in the Trash page.
+      // Show all non-trashed accounts - trashed accounts belong in the Trash page.
       // This ensures passed/active/funded/failed (non-trashed) are all visible and counted.
       return all.filter(a => !a.is_trashed).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user?.email,
     refetchInterval: 30000,
-    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching — prevents empty state flash
+    placeholderData: (prev) => prev ?? [], // Keep previous data while refetching - prevents empty state flash
     staleTime: 10000,
   });
 

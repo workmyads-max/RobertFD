@@ -1,5 +1,5 @@
 /**
- * LiveDDGuard — Realtime MT5 equity monitoring display layer.
+ * LiveDDGuard - Realtime MT5 equity monitoring display layer.
  *
  * ARCHITECTURE (server-side enforcement):
  *   - Polls mt5RealtimeSync every 1s for near-instant breach detection
@@ -7,7 +7,7 @@
  *       → Updates ChallengeAccount (status=failed, breach flags)
  *       → Creates RiskFlag + Notification
  *       → Disables MT5 account broker-side
- *   - Frontend NEVER makes the breach decision — only responds to server result
+ *   - Frontend NEVER makes the breach decision - only responds to server result
  *   - On breach response: invalidates cache + fires onBreach for modal display
  *   - On no-breach: updates local cache with live equity for dashboard display
  *
@@ -17,13 +17,13 @@
  *
  * NOTE: 1s polling with per-account in-flight guard ensures no overlapping calls.
  * The global checkingRef lock is intentionally removed so accounts are checked
- * independently — a slow response on one account does NOT delay others.
+ * independently - a slow response on one account does NOT delay others.
  */
 import React, { useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const POLL_INTERVAL_MS = 15000; // 15s — catches floating DD without overloading the API (was 1s)
+const POLL_INTERVAL_MS = 15000; // 15s - catches floating DD without overloading the API (was 1s)
 
 export default function LiveDDGuard({ onBreach }) {
   const queryClient = useQueryClient();
@@ -53,7 +53,7 @@ export default function LiveDDGuard({ onBreach }) {
   const normalizedEmail = (currentUser?.email || '').toLowerCase().trim();
 
   // Only monitor active, non-breached, MT5 accounts belonging to this user
-  // NOTE: platform field may be 'mt5', 'xtrading', or other legacy values — all use MT5
+  // NOTE: platform field may be 'mt5', 'xtrading', or other legacy values - all use MT5
   const monitorableAccounts = allAccounts.filter(a =>
     normalizedEmail &&
     (a.user_email || '').toLowerCase().trim() === normalizedEmail &&
@@ -67,7 +67,7 @@ export default function LiveDDGuard({ onBreach }) {
   const checkEquityNow = useCallback(() => {
     if (!currentUser?.email || monitorableAccounts.length === 0) return;
 
-    // Per-account independent checks — slow response on one never blocks others
+    // Per-account independent checks - slow response on one never blocks others
     monitorableAccounts.forEach(async (acc) => {
       if (inFlightRef.current.has(acc.account_id)) return; // skip if already in-flight
 

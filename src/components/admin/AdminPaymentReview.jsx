@@ -79,7 +79,7 @@ function ActionModal({ order, onClose, onSuccess }) {
             ['Amount', `$${order.price}`],
             ['Challenge', `${order.challenge_type} ${order.account_size}`],
             ['Method', order.payment_method],
-            ['TXID', order.transaction_id ? `${order.transaction_id.slice(0, 16)}...` : '—'],
+            ['TXID', order.transaction_id ? `${order.transaction_id.slice(0, 16)}...` : '-'],
             ['Network', order.proof_network || 'Unknown'],
           ].map(([k, v]) => (
             <div key={k} className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.04)' }}>
@@ -268,7 +268,7 @@ export default function AdminPaymentReview() {
                       <RiskIndicator order={order} />
                       <div className="flex items-center gap-1 text-xs text-muted-foreground/60">
                         <Clock className="w-3 h-3" />
-                        {order.created_date ? new Date(order.created_date).toLocaleDateString() : '—'}
+                        {order.created_date ? new Date(order.created_date).toLocaleDateString() : '-'}
                       </div>
                     </div>
                   </div>

@@ -81,14 +81,14 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
   const provisioned = account?.provisioned_at ? new Date(account.provisioned_at) : new Date();
   const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  // One-Step, Instant, and Instant Account have NO time limit — hide "End" date
+  // One-Step, Instant, and Instant Account have NO time limit - hide "End" date
   const isNoTimeLimit = account?.challenge_type === 'one_step'
     || account?.challenge_type === 'instant'
     || account?.challenge_type === 'instant_account'
     || account?.challenge_type === 'instant_light';
   const endDate = isNoTimeLimit ? null : new Date(provisioned.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  // Phase label — One-Step uses "Evaluation" not "Phase 1"
+  // Phase label - One-Step uses "Evaluation" not "Phase 1"
   const isOneStep = account?.challenge_type === 'one_step';
   const phaseLabel = account?.phase === 'funded' ? 'Funded'
     : account?.phase === 'phase2' ? 'Phase 2'
@@ -222,14 +222,14 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
             { label: 'Status', value: <span className="font-bold text-foreground">Active</span> },
             {
               label: challengeLabel + ':',
-              value: <span className="font-mono font-bold text-foreground">{account?.mt_login || '—'}</span>,
+              value: <span className="font-mono font-bold text-foreground">{account?.mt_login || '-'}</span>,
             },
             { label: 'Start:', value: <span className="font-semibold text-foreground">{fmtDate(provisioned)}</span> },
             ...(endDate ? [{
               label: 'End:',
               value: (
                 <span className="flex items-center gap-1 font-semibold text-foreground">
-                  {fmtDate(endDate)} <InfoTip text="Challenge end date — 30 days from account activation." />
+                  {fmtDate(endDate)} <InfoTip text="Challenge end date - 30 days from account activation." />
                 </span>
               ),
             }] : [{

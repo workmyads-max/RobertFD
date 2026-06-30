@@ -1,5 +1,5 @@
 /**
- * useStaffPermissions — RBAC permission hook
+ * useStaffPermissions - RBAC permission hook
  * Fetches current user's staff role & permissions from backend.
  * Classic admins (role=admin on UserAccount) get ALL permissions.
  */
@@ -35,7 +35,7 @@ export function useStaffPermissions() {
       return;
     }
 
-    // Classic admin shortcut — check role from user object
+    // Classic admin shortcut - check role from user object
     if (user.role === 'admin') {
       const result = { permissions: ALL_PERMISSIONS, staffRole: 'admin', isClassicAdmin: true };
       _cache = result;

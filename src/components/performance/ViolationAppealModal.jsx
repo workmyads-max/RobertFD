@@ -50,7 +50,7 @@ export default function ViolationAppealModal({ account, user, violationType, onC
           <div className="p-8 text-center">
             <div className="text-4xl mb-3">✅</div>
             <div className="text-base font-black text-emerald-400 mb-2">Appeal Submitted</div>
-            <div className="text-xs text-muted-foreground mb-5">Our compliance team will review your case within 24–72 hours.</div>
+            <div className="text-xs text-muted-foreground mb-5">Our compliance team will review your case within 24-72 hours.</div>
             <button onClick={onClose} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white"
               style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>Close</button>
           </div>
@@ -75,7 +75,7 @@ export default function ViolationAppealModal({ account, user, violationType, onC
 
             <div className="rounded-xl p-4 text-xs text-muted-foreground"
               style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.15)' }}>
-              📋 <strong className="text-foreground">Note:</strong> Appeals are reviewed by our compliance team within 24–72 hours. Providing detailed evidence increases approval chances. Trading restrictions remain active during review.
+              📋 <strong className="text-foreground">Note:</strong> Appeals are reviewed by our compliance team within 24-72 hours. Providing detailed evidence increases approval chances. Trading restrictions remain active during review.
             </div>
 
             <div className="flex gap-3">

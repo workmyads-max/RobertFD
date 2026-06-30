@@ -6,7 +6,7 @@ import { useNow, formatCountdown } from '@/hooks/useNow';
 import { isRestrictedEvent, isInRestrictedWindow } from '@/lib/newsTradingConfig';
 
 /**
- * NewsAlertsBar — horizontal ticker showing upcoming RESTRICTED (high-impact)
+ * NewsAlertsBar - horizontal ticker showing upcoming RESTRICTED (high-impact)
  * economic events with live countdowns. Positioned below the promo banner,
  * above the Active Accounts section. Clicking opens the Economic Calendar.
  */

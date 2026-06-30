@@ -8,7 +8,7 @@
  *   4. Currency flag emojis
  *
  * The Economic Calendar page, the News Alerts Bar, and any future news-window
- * enforcement logic all import from here — change a value once, it applies everywhere.
+ * enforcement logic all import from here - change a value once, it applies everywhere.
  */
 
 // ── What makes an event "restricted" ────────────────────────────────────────

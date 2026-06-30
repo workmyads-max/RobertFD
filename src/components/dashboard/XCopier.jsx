@@ -493,9 +493,9 @@ export default function XCopier() {
             <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-2">Summary</div>
               {[
-                { label: 'Master', value: master?.account_id || '—' },
-                { label: 'Slave', value: slave?.account_id || '—' },
-                { label: 'Mode', value: RISK_MODES.find(r => r.id === riskMode)?.label || '—' },
+                { label: 'Master', value: master?.account_id || '-' },
+                { label: 'Slave', value: slave?.account_id || '-' },
+                { label: 'Mode', value: RISK_MODES.find(r => r.id === riskMode)?.label || '-' },
                 { label: 'Example (0.1 lot)', value: `${exampleLot} lots` },
                 { label: 'Trades Copied', value: copyCount.toString() },
                 { label: 'Status', value: isRunning ? '● Live' : '○ Stopped' },

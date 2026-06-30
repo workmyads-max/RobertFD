@@ -13,7 +13,7 @@ export default function PaymentApprovalNotification({ user, onDismiss }) {
     if (!email) return;
     // Already ran (guards against strict mode double-invoke and re-renders)
     if (hasChecked.current) return;
-    // Already dismissed in a previous session — never make an API call
+    // Already dismissed in a previous session - never make an API call
     if (localStorage.getItem(`payment_approval_seen_${email}`)) return;
     // Rate limit guard - only check once per session
     if (rateLimitRef.current) return;

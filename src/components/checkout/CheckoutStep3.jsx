@@ -74,7 +74,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
         }
       }
 
-      // Create order directly in Base44 Order entity — no Supabase
+      // Create order directly in Base44 Order entity - no Supabase
       await base44.entities.Order.create({
         order_id: orderId,
         challenge_type: order.challenge_type,
@@ -398,7 +398,7 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
               { label: 'Challenge', value: order.challenge_type === 'two-step' ? 'Two-Step' : 'Instant Funding' },
               { label: 'Account Size', value: `$${order.account_size?.toLocaleString()}`, highlight: true },
               { label: 'Payment', value: order.payment_method === 'usdt_trc20' ? 'USDT TRC20' : 'Bitcoin' },
-              { label: 'Email', value: order.email || '—' },
+              { label: 'Email', value: order.email || '-' },
             ].map(({ label, value, highlight }) => (
               <div key={label} className="flex justify-between items-start">
                 <span className="text-xs text-muted-foreground">{label}</span>

@@ -122,7 +122,7 @@ export default function VerifyEmail() {
         await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
 
         // ── Affiliate attribution: create the new user's AffiliateProfile and
-        // increment the referrer's total_referrals. Non-blocking — failures are
+        // increment the referrer's total_referrals. Non-blocking - failures are
         // logged but never break the auth flow.
         if (referralCode) {
           processAffiliateAttribution(email, referralCode).then((res) => {
