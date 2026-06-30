@@ -155,11 +155,7 @@ function PodiumCard({ trader, rank, onCelebrate }) {
           {m.label}
         </div>
 
-        {/* Platform badge - corner */}
-        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[9px] font-semibold"
-          style={{ background: `${plt.color}14`, color: plt.color, border: `1px solid ${plt.color}25` }}>
-          {plt.label}
-        </div>
+
 
         {/* Avatar with flag badge */}
         <div className="mt-6 mb-3 flex justify-center relative">
