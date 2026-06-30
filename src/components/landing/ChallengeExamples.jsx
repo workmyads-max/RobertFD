@@ -11,11 +11,11 @@ const EXAMPLES = [
   {
     id: 'one_step', name: 'One-Step', badge: 'Single Phase', accent: '#3b82f6', split: 90,
     steps: [
-      { t: 'Buy & get your account', d: 'Purchase the $100,000 One-Step challenge and receive MetaTrader 5 credentials instantly — no waiting.' },
-      { t: 'Reach 8% profit target', d: 'Grow the balance to $108,000 ($8,000 profit). Trade as long as you need — no time limit, no minimum days.' },
-      { t: 'Stay inside the loss limits', d: 'Never lose more than $4,000 in a day (4%) or breach the $8,000 trailing max loss (8%).' },
-      { t: 'Pass the Best Day Rule', d: 'No single day may make up more than 50% of your total profit — proves consistent trading.' },
-      { t: 'Get funded & keep 90%', d: 'After a short review you receive a Simulation Funded Account and withdraw 90% of every reward.' },
+      { t: 'Buy & get your account', d: 'Pay the fee and get your MetaTrader 5 login straight away.' },
+      { t: 'Reach 8% profit target', d: 'Grow the balance to $108,000 ($8,000 profit). No time limit, no minimum days.' },
+      { t: 'Stay inside the loss limits', d: 'Do not lose more than $4,000 in a day (4%) or $8,000 overall (8% trailing).' },
+      { t: 'Pass the Best Day Rule', d: 'No single day can be more than 50% of your total profit.' },
+      { t: 'Get funded & keep 90%', d: 'After a quick review you get a Simulation Funded Account and keep 90% of every reward.' },
     ],
     limits: [
       { k: 'Profit Target', v: '$8,000', s: '8%' },
@@ -27,11 +27,11 @@ const EXAMPLES = [
   {
     id: 'two-step', name: 'Two-Step', badge: 'Standard Evaluation', accent: '#FF5C00', split: 80,
     steps: [
-      { t: 'Buy & get your account', d: 'Purchase the $100,000 Two-Step challenge and start Phase 1 on MetaTrader 5 right away.' },
-      { t: 'Phase 1 — reach 10%', d: 'Make $10,000 profit (balance $110,000) over at least 4 trading days to clear Phase 1.' },
-      { t: 'Phase 2 — reach 5%', d: 'On a fresh Phase 2 account, make $5,000 profit while keeping the same loss limits.' },
-      { t: 'Respect loss limits both phases', d: 'Max $5,000 daily loss (5%) and $10,000 overall loss (10%) apply throughout.' },
-      { t: 'Get funded & keep 80%', d: 'Pass both phases, receive a Simulation Funded Account, and withdraw 80% of every reward.' },
+      { t: 'Buy & get your account', d: 'Pay the fee and start Phase 1 on MetaTrader 5 straight away.' },
+      { t: 'Phase 1: reach 10%', d: 'Make $10,000 profit (balance $110,000) over at least 4 trading days.' },
+      { t: 'Phase 2: reach 5%', d: 'On a fresh Phase 2 account, make $5,000 profit with the same loss limits.' },
+      { t: 'Respect loss limits in both phases', d: 'Max $5,000 daily loss (5%) and $10,000 overall loss (10%) at all times.' },
+      { t: 'Get funded & keep 80%', d: 'Pass both phases, get a Simulation Funded Account, and keep 80% of every reward.' },
     ],
     limits: [
       { k: 'P1 / P2 Target', v: '$10K / $5K', s: '10% / 5%' },
@@ -43,11 +43,11 @@ const EXAMPLES = [
   {
     id: 'instant_account', name: 'Instant Account', badge: 'No Evaluation', accent: '#10b981', split: 80,
     steps: [
-      { t: 'Buy & trade instantly', d: 'Purchase the $100,000 Instant Account — funded immediately with no evaluation phase.' },
-      { t: 'Reach the buffer zone (5%)', d: 'Grow the balance to $105,000 to lock your drawdown reference and unlock payout tracking.' },
-      { t: 'Pass the consistency rule (35%)', d: 'Your best day cannot exceed 35% of total profit, so required profit scales with your biggest day.' },
-      { t: 'Log 7 profitable days', d: 'Record at least 7 days with positive closed profit after the buffer zone activates.' },
-      { t: 'Withdraw & get a new account', d: 'Keep 80% of your reward — after each payout a fresh account is issued automatically.' },
+      { t: 'Buy & trade instantly', d: 'Pay the fee and start trading at once. No evaluation phase.' },
+      { t: 'Reach the buffer zone (5%)', d: 'Grow the balance to $105,000 to lock your drawdown reference.' },
+      { t: 'Pass the consistency rule (35%)', d: 'Your best day can not be more than 35% of your total profit.' },
+      { t: 'Log 7 profitable days', d: 'Have at least 7 days with positive closed profit after the buffer zone.' },
+      { t: 'Withdraw & get a new account', d: 'Keep 80% of your reward. A fresh account is issued after each payout.' },
     ],
     limits: [
       { k: 'Buffer Zone', v: '$5,000', s: '5%' },
@@ -156,7 +156,7 @@ export default function ChallengeExamples() {
             How a $100K account works
           </h2>
           <p className="text-muted-foreground text-base">
-            Follow the exact path from purchase to payout for each challenge type — with real dollar figures at every step.
+            The path from purchase to payout for each challenge type, with real dollar figures at every step.
           </p>
         </motion.div>
 
