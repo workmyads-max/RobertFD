@@ -6,6 +6,7 @@ import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
 import FundedShowcaseDemo from '../components/landing/FundedShowcaseDemo';
 import ChallengeHub from '../components/landing/ChallengeHub';
+import ChallengeExamples from '../components/landing/ChallengeExamples';
 import RulesSection from '../components/landing/RulesSection';
 import PlatformsSection from '../components/landing/PlatformsSection';
 import MobileAppShowcase from '../components/landing/MobileAppShowcase';
@@ -65,6 +66,7 @@ export default function Home() {
         <FundedShowcaseDemo />
       </section>
       <ChallengeHub />
+      <ChallengeExamples />
       <RulesSection />
       <PlatformsSection mobileImage={IMAGES.mobile} />
       <MobileAppShowcase />
