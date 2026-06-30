@@ -121,16 +121,17 @@ function RankBadge({ rank }) {
   );
 }
 
-// ── Podium card (clean, flat fintech style) ───────────────────────────────────
+// ── Podium card (modern profile-card style) ──────────────────────────────────
 function PodiumCard({ trader, rank, onCelebrate }) {
   const m = MEDALS[rank];
   const profitRatio = ((trader.pnl || 0) / (trader.account_size || 1)) * 100;
   const consistency = calcConsistency(trader);
   const plt = PLATFORM_COLORS[trader.platform] || PLATFORM_COLORS.xtrading;
-  const podiumH = { 1: 'min-h-[300px]', 2: 'min-h-[275px]', 3: 'min-h-[260px]' };
   const podiumOrder = { 1: 'order-2', 2: 'order-1', 3: 'order-3' };
   const consistencyColor = consistency >= 70 ? '#10b981' : consistency >= 40 ? '#f59e0b' : '#ef4444';
   const footerLabel = rank === 1 ? 'CHAMPION' : rank === 2 ? 'RUNNER-UP' : 'THIRD PLACE';
+  const initials = (trader.username || 'T').replace(/[*]/g, '').slice(0, 2).toUpperCase() || 'TR';
+  const isChamp = rank === 1;
 
   return (
     <motion.div
@@ -138,76 +139,88 @@ function PodiumCard({ trader, rank, onCelebrate }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.08, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => onCelebrate(rank)}
-      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[230px]`}
+      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[240px]`}
     >
-      {/* Rank pill - floats above card */}
-      <div className="mb-3 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-bold tracking-wider z-10"
-        style={{ background: m.color, color: '#0a0a0a' }}>
-        {rank === 1 && <Crown className="w-3 h-3" strokeWidth={2.5} />}
-        {m.label}
-      </div>
-
-      <motion.div whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
-        className={`relative w-full rounded-2xl flex flex-col items-center ${podiumH[rank]}`}
+      <motion.div whileHover={{ y: -6 }} whileTap={{ scale: 0.98 }}
+        className="relative w-full rounded-2xl overflow-hidden flex flex-col"
         style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
 
-        {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl" style={{ background: m.color }} />
+        {/* Top accent bar */}
+        <div className="h-1 w-full" style={{ background: m.color }} />
 
-        {/* Avatar */}
-        <div className="mt-6 w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3 flex-shrink-0"
-          style={{ background: `${m.color}12`, border: `1px solid ${m.color}33` }}>
-          {FLAG(trader.country)}
+        {/* Rank pill - corner */}
+        <div className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider"
+          style={{ background: m.color, color: '#0a0a0a' }}>
+          {isChamp && <Crown className="w-2.5 h-2.5" strokeWidth={2.5} />}
+          {m.label}
         </div>
 
-        {/* Username */}
-        <div className="text-sm font-bold text-white font-mono truncate max-w-full px-3">{trader.username}</div>
-
-        {/* Region */}
-        <div className="text-[10px] font-mono mt-0.5 mb-2.5" style={{ color: m.color }}>
-          {COUNTRY_LABEL(trader.country)}
-        </div>
-
-        {/* Platform badge */}
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold mb-5"
+        {/* Platform badge - corner */}
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[9px] font-semibold"
           style={{ background: `${plt.color}14`, color: plt.color, border: `1px solid ${plt.color}25` }}>
           {plt.label}
         </div>
 
-        {/* Hero metric - gain % */}
-        <div className="text-2xl font-bold tabular" style={{ color: m.color }}>
-          +{profitRatio.toFixed(1)}%
-        </div>
-        <div className="text-[10px] font-mono text-white/40 mt-1">
-          ${(trader.pnl || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} profit
+        {/* Avatar with flag badge */}
+        <div className="mt-6 mb-3 flex justify-center relative">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-lg font-bold text-white"
+            style={{ background: `${m.color}1a`, border: `2px solid ${m.color}` }}>
+            {initials}
+          </div>
+          <div className="absolute bottom-0 left-1/2 translate-x-3 w-6 h-6 rounded-full flex items-center justify-center text-sm"
+            style={{ background: 'hsl(var(--card))', border: '2px solid hsl(var(--border))' }}>
+            {FLAG(trader.country)}
+          </div>
         </div>
 
-        {/* Payout */}
-        {trader.totalPayout > 0 && (
-          <div className="text-[10px] font-mono mt-1.5" style={{ color: '#10b981' }}>
-            ${trader.totalPayout.toLocaleString()} paid out
+        {/* Username + region */}
+        <div className="text-center px-4">
+          <div className="text-sm font-bold text-white font-mono">{trader.username}</div>
+          <div className="text-[10px] font-mono text-white/40 mt-0.5">{COUNTRY_LABEL(trader.country)}</div>
+        </div>
+
+        {/* Hero metric */}
+        <div className="text-center mt-4 px-4">
+          <div className="text-3xl font-bold tabular" style={{ color: m.color }}>
+            +{profitRatio.toFixed(1)}%
           </div>
-        )}
+          <div className="text-[10px] font-mono text-white/40 mt-1">
+            ${(trader.pnl || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} profit
+          </div>
+          {trader.totalPayout > 0 && (
+            <div className="text-[10px] font-mono mt-1" style={{ color: '#10b981' }}>
+              ${trader.totalPayout.toLocaleString()} paid out
+            </div>
+          )}
+        </div>
 
         {/* Divider */}
-        <div className="w-3/4 my-3.5 h-px" style={{ background: 'hsl(var(--border))' }} />
+        <div className="mx-4 my-3 h-px" style={{ background: 'hsl(var(--border))' }} />
 
-        {/* Consistency */}
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: consistencyColor }} />
-          <span className="text-[10px] font-mono text-white/50">Consistency: {consistency}%</span>
+        {/* Metric strip */}
+        <div className="grid grid-cols-2 px-4 gap-2">
+          <div>
+            <div className="text-[9px] font-mono uppercase text-white/30 tracking-wider">Consistency</div>
+            <div className="text-sm font-bold mt-0.5" style={{ color: consistencyColor }}>{consistency}%</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[9px] font-mono uppercase text-white/30 tracking-wider">Account</div>
+            <div className="text-sm font-bold text-white mt-0.5">${(trader.account_size / 1000).toFixed(0)}K</div>
+          </div>
         </div>
 
-        {/* Account details */}
-        <div className="text-[10px] font-mono text-white/35 mt-1.5">
-          ${(trader.account_size || 0).toLocaleString()} · {trader.challengeLabel}
+        {/* Challenge type */}
+        <div className="text-center text-[10px] font-mono text-white/35 mt-2 px-4">
+          {trader.challengeLabel}
         </div>
 
         {/* Footer badge */}
-        <div className="mt-auto pt-4 w-full px-4 pb-4">
-          <div className="w-full py-2 rounded-lg flex items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider"
-            style={{ background: `${m.color}15`, color: m.color, border: `1px solid ${m.color}30` }}>
-            {rank === 1 && <Trophy className="w-3 h-3" />}
+        <div className="mt-4 px-4 pb-4 w-full">
+          <div className="w-full py-2.5 rounded-lg flex items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider"
+            style={isChamp
+              ? { background: m.color, color: '#0a0a0a' }
+              : { background: `${m.color}15`, color: m.color, border: `1px solid ${m.color}30` }}>
+            {isChamp && <Trophy className="w-3.5 h-3.5" />}
             {footerLabel}
           </div>
         </div>
