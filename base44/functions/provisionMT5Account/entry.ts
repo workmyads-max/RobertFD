@@ -230,6 +230,7 @@ Deno.serve(async (req) => {
         daily_start_balance: account_size,
         country: country || undefined,
         rule_snapshot: rule_snapshot || null,
+        risk_monitoring_enabled: true,
       });
       console.log(`[provisionMT5Account] ✅ ChallengeAccount saved: id=${newAccount?.id}, user_email=${user_email}`);
     } catch (dbErr) {

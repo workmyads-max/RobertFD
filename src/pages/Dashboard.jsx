@@ -32,7 +32,7 @@ import AdminRiskManagement from '../components/admin/AdminRiskManagement';
 import AdminMatchTrader from '../components/admin/AdminMatchTrader';
 import AdminMT5Configuration from '../components/admin/AdminMT5Configuration';
 import AdminRiskDetection from '../components/admin/AdminRiskDetection';
-import AdminRiskCenter from '../components/admin/AdminRiskCenter';
+import RiskManagementCenter from '../components/admin/riskcenter/RiskManagementCenter';
 import AdminStaffManagement from '../components/admin/AdminStaffManagement';
 import AdminRolesPermissions from '../components/admin/AdminRolesPermissions';
 import AdminFundedReview from '../components/admin/AdminFundedReview';
@@ -314,7 +314,7 @@ export default function Dashboard() {
       case 'admin-challenges': return isAdmin ? <AdminChallenges /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-terminal': return isAdmin ? <AdminTerminalControl /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk-detection': return isAdmin ? <AdminRiskDetection /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-risk-center': return isAdmin ? <AdminRiskCenter /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
+      case 'admin-risk-center': return isAdmin ? <RiskManagementCenter /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-funded-review': return isAdmin ? <AdminFundedReview /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-risk': return isAdmin ? <AdminRiskManagement /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-match-trader': return isAdmin ? <AdminMatchTrader /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
@@ -337,6 +337,7 @@ export default function Dashboard() {
   };
 
   const isTerminal  = activePage === 'terminal' || activePage === 'mt5-terminal';
+  const isFullHeight = activePage === 'admin-risk-center';
   const isOverview  = activePage === 'overview';
 
   return (
@@ -375,9 +376,9 @@ export default function Dashboard() {
           setCollapsed={setSidebarCollapsed}
         />
 
-        <main className={`flex-1 overflow-y-auto ${isTerminal ? 'overflow-hidden' : ''}`}
-          style={!isTerminal ? { background: 'transparent' } : {}}>
-          <div className={isTerminal ? 'h-full' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+        <main className={`flex-1 overflow-y-auto ${isTerminal || isFullHeight ? 'overflow-hidden' : ''}`}
+          style={!isTerminal && !isFullHeight ? { background: 'transparent' } : {}}>
+          <div className={isTerminal || isFullHeight ? 'h-full' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}
@@ -385,7 +386,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: isTerminal ? 0 : -16 }}
                 transition={{ duration: 0.3 }}
-                className={isTerminal ? 'h-full' : ''}
+                className={isTerminal || isFullHeight ? 'h-full' : ''}
               >
                 <ErrorBoundary resetKey={activePage}>
                   {renderPage()}
@@ -393,7 +394,7 @@ export default function Dashboard() {
               </motion.div>
             </AnimatePresence>
             {/* Risk Disclaimer - collapsible, site-wide on all dashboard & admin pages */}
-            {!isTerminal && <RiskDisclaimer variant="compact" />}
+            {!isTerminal && !isFullHeight && <RiskDisclaimer variant="compact" />}
           </div>
         </main>
       </div>

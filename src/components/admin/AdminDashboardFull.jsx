@@ -32,7 +32,7 @@ const ADMIN_SECTIONS = [
   {
     category: 'Risk & Compliance',
     items: [
-      { id: 'admin-risk-center', label: 'Risk System', icon: AlertTriangle, color: '#ef4444' },
+      { id: 'admin-risk-center', label: 'Risk Management Center', icon: Shield, color: '#ef4444' },
       { id: 'admin-risk-detection', label: 'Risk Detection', icon: Shield, color: '#dc2626' },
       { id: 'admin-funded-review', label: 'Funded Review', icon: ShieldCheck, color: '#7f1d1d' },
       { id: 'admin-appeals', label: 'Violation Appeals', icon: Shield, color: '#991b1b' },
