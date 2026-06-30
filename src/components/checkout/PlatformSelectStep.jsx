@@ -16,10 +16,10 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
       {/* Right: Order Summary */}
       <div className="lg:col-span-2">
         <div className="sticky top-6 space-y-4">
-          <div className="rounded-xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="px-5 py-3.5 border-b border-white/5">
-              <span className="text-[10px] font-semibold text-white/25 uppercase tracking-wider">Order Summary</span>
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+            <div className="px-5 py-3.5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Order Summary</span>
             </div>
             <div className="p-5 space-y-3">
               {[
@@ -30,13 +30,13 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
                 { label: 'Platform', value: 'MetaTrader 5', highlight: true },
               ].map(({ label, value, highlight }) => (
                 <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-white/30">{label}</span>
-                  <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-white/70'}`}>{value}</span>
+                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <span className={`text-xs font-semibold ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</span>
                 </div>
               ))}
-              <div className="border-t border-white/6 pt-3 mt-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-white">Total</span>
+              <div className="border-t pt-3 mt-1" style={{ borderColor: 'hsl(var(--border))' }}>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm font-semibold text-foreground">Total</span>
                   <span className="text-2xl font-bold text-primary">${order.price}</span>
                 </div>
               </div>
@@ -45,8 +45,8 @@ export default function PlatformSelectStep({ order, updateOrder, onNext }) {
 
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
-            style={{ background: '#FF5C00', color: 'white' }}
+            className="w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: 'hsl(var(--primary))', color: 'white' }}
           >
             Continue <ArrowRight className="w-4 h-4" />
           </button>
