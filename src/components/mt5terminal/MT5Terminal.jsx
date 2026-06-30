@@ -55,7 +55,8 @@ export default function MT5Terminal() {
         setConnectError(res?.data?.error || 'Connection failed');
       }
     } catch (e) {
-      setConnectError(e.message || 'Connection failed');
+      const msg = e?.response?.data?.error || e?.data?.error || e.message || 'Connection failed';
+      setConnectError(msg);
     }
     setConnecting(false);
   }, []);
@@ -125,7 +126,8 @@ export default function MT5Terminal() {
         setTradeMsg({ type: 'error', text: res?.data?.error || 'Trade failed' });
       }
     } catch (e) {
-      setTradeMsg({ type: 'error', text: e.message });
+      const msg = e?.response?.data?.error || e?.data?.error || e.message || 'Trade failed';
+      setTradeMsg({ type: 'error', text: msg });
     }
     setTradeLoading(false);
     setTimeout(() => setTradeMsg(null), 5000);
