@@ -241,9 +241,10 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <img
-                    src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=200&q=80&fit=crop"
+                    src="https://upload.wikimedia.org/wikipedia/commons/f/fa/MetaTrader_5_Clear_240px.png"
                     alt="MetaTrader 5"
                     className="w-10 h-10 object-contain"
+                    onError={(e) => { e.target.src = 'https://commons.wikimedia.org/wiki/Special:FilePath/MetaTrader_5_Clear_240px.png'; }}
                   />
                 </div>
                 <div className="text-left min-w-0 flex-1">
