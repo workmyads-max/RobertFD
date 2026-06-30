@@ -83,7 +83,7 @@
     },
     "funded_account_id": {
       "type": "string",
-      "description": "Separate bookkeeping ID assigned at funded approval \u2014 does NOT replace account_id"
+      "description": "Separate bookkeeping ID assigned at funded approval - does NOT replace account_id"
     },
     "balance": {
       "type": "number",
@@ -103,18 +103,15 @@
     },
     "daily_drawdown_used": {
       "type": "number",
-      "default": 0,
-      "description": "Permanent peak daily DD as % of account_size \u2014 Math.max with stored, never decreases within a trading day. Resets to 0 at daily reset."
+      "default": 0
     },
     "daily_low_equity": {
       "type": "number",
-      "default": 0,
-      "description": "Lowest equity reached during the current trading day. Resets at daily reset. Used for permanent daily DD breach detection \u2014 if this ever touches the daily limit, the breach is permanent and never reversed."
+      "default": 0
     },
     "max_drawdown_used": {
       "type": "number",
-      "default": 0,
-      "description": "Permanent peak overall/max DD as % \u2014 Math.max with stored, NEVER decreases (not even on daily reset)."
+      "default": 0
     },
     "daily_start_balance": {
       "type": "number",
@@ -175,8 +172,7 @@
     },
     "dd_breach_detected": {
       "type": "boolean",
-      "default": false,
-      "description": "PERMANENT \u2014 once true, can NEVER be reset to false by any sync. The breach is final."
+      "default": false
     },
     "dd_breach_type": {
       "type": "string",
@@ -194,47 +190,38 @@
     },
     "buffer_zone_activated": {
       "type": "boolean",
-      "default": false,
-      "description": "instant_account only \u2014 TRUE once equity reaches the buffer zone target (e.g. $105K on 100K). Permanently locked once activated."
+      "default": false
     },
     "buffer_zone_activated_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "Timestamp when buffer zone was activated (instant_account only)"
+      "format": "date-time"
     },
     "buffer_zone_lock_balance": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 the locked balance at buffer zone activation (e.g. 105000). DD reference after activation."
+      "default": 0
     },
     "balance_at_activation": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 the actual balance at the moment buffer zone was activated. Used to compute spillover and withdrawable profit."
+      "default": 0
     },
     "activation_trade_id": {
-      "type": "string",
-      "description": "instant_account only \u2014 trade_id of the trade that activated the buffer zone. Excluded from all post-activation calculations."
+      "type": "string"
     },
     "dd_reference_balance": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 the balance used as DD reference. Equals account_size before buffer zone, equals buffer_zone_lock_balance after activation."
+      "default": 0
     },
     "best_day_profit": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 highest single-day net closed PnL from POST-activation trades only. Updates dynamically from MT5 trade history."
+      "default": 0
     },
     "required_total_profit": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 best_day_profit / (consistency_rule_pct/100). Dynamic \u2014 recalculated whenever best_day_profit changes."
+      "default": 0
     },
     "consistency_passed": {
       "type": "boolean",
-      "default": false,
-      "description": "instant_account only \u2014 TRUE when withdrawable_profit >= required_total_profit"
+      "default": false
     },
     "profitable_days_list": {
       "type": "array",
@@ -249,39 +236,31 @@
           }
         }
       },
-      "default": [],
-      "description": "instant_account only \u2014 array of {date, profit} for each POST-activation day where net daily closed PnL > 0"
+      "default": []
     },
     "profitable_days_count": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 count of profitable post-activation days (length of profitable_days_list)"
+      "default": 0
     },
     "withdrawable_profit": {
       "type": "number",
-      "default": 0,
-      "description": "instant_account only \u2014 max(0, current_balance - buffer_lock - remaining_spillover). The only profit eligible for withdrawal. Spillover = balance_at_activation - buffer_lock, consumed by post-activation losses."
+      "default": 0
     },
     "instant_payout_eligible": {
       "type": "boolean",
-      "default": false,
-      "description": "instant_account only \u2014 TRUE when ALL conditions met: buffer_zone_activated + consistency_passed + profitable_days_count >= min_profitable_days + no DD breach + status active"
+      "default": false
     },
     "previous_account_id": {
-      "type": "string",
-      "description": "instant_account only \u2014 ID of the previous account this one replaced (set on renewal after payout)"
+      "type": "string"
     },
     "new_account_id": {
-      "type": "string",
-      "description": "instant_account only \u2014 ID of the new account provisioned after payout approval"
+      "type": "string"
     },
     "country": {
-      "type": "string",
-      "description": "Two-letter country code from the purchase order (e.g. US, GB, AE)"
+      "type": "string"
     },
     "rule_snapshot": {
       "type": "object",
-      "description": "Immutable copy of ChallengePlan rules at time of purchase.",
       "properties": {
         "daily_dd_limit": {
           "type": "number"
@@ -338,8 +317,7 @@
     },
     "risk_score": {
       "type": "number",
-      "default": 0,
-      "description": "Risk score 0-100 calculated by risk engine"
+      "default": 0
     },
     "risk_level": {
       "type": "string",
@@ -349,21 +327,23 @@
         "high",
         "critical"
       ],
-      "default": "low",
-      "description": "Risk level based on score"
+      "default": "low"
     },
     "risk_flags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "default": [],
-      "description": "Array of active risk flag types"
+      "default": []
     },
     "last_risk_scan": {
       "type": "string",
-      "format": "date-time",
-      "description": "Timestamp of last risk score calculation"
+      "format": "date-time"
+    },
+    "risk_monitoring_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "True for accounts created after the Risk Management Center went live. Only these accounts are scanned/listed in the Risk Center."
     },
     "hft_detected": {
       "type": "boolean",
@@ -382,16 +362,14 @@
       "default": 0
     },
     "ea_bot_evidence": {
-      "type": "object",
-      "description": "JSON evidence of bot detection"
+      "type": "object"
     },
     "account_passing_suspected": {
       "type": "boolean",
       "default": false
     },
     "behavioral_fingerprint": {
-      "type": "object",
-      "description": "Behavioral analytics data"
+      "type": "object"
     },
     "consistency_score": {
       "type": "number",
@@ -399,18 +377,15 @@
     },
     "can_trade": {
       "type": "boolean",
-      "default": true,
-      "description": "Whether account is allowed to trade (false if risk suspended)"
+      "default": true
     },
     "is_trashed": {
       "type": "boolean",
-      "default": false,
-      "description": "True when the account is in Trash (terminal/superseded) and its trade history is frozen as a read-only snapshot. MT5 sync skips trashed accounts."
+      "default": false
     },
     "trashed_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "Timestamp the account entered Trash. Trade history snapshot is available for 14 days from this date, then auto-deleted."
+      "format": "date-time"
     },
     "trash_reason": {
       "type": "string",
@@ -419,13 +394,11 @@
         "rejected",
         "superseded",
         "manual"
-      ],
-      "description": "Why the account was moved to Trash"
+      ]
     },
     "history_expired": {
       "type": "boolean",
-      "default": false,
-      "description": "True after the daily cleanup job deleted the frozen TradeRecords (older than 14 days). The account summary remains, but trades are gone."
+      "default": false
     }
   },
   "required": [
@@ -435,10 +408,10 @@
   "rls": {
     "create": null,
     "read": {
-      "user_email": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
     },
     "update": {
-      "user_email": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
     },
     "delete": null
   }
