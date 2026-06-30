@@ -104,127 +104,114 @@ function calcConsistency(account) {
   return Math.max(0, score);
 }
 
-// ── Animated rank badge ───────────────────────────────────────────────────────
+// ── Rank badge (clean, flat) ──────────────────────────────────────────────────
 function RankBadge({ rank }) {
   const m = MEDALS[rank];
   if (!m) return (
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
-      style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+      style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
       #{rank}
     </div>
   );
   return (
-    <motion.div
-      animate={rank === 1 ? { boxShadow: [`0 0 12px ${m.glow}`, `0 0 28px ${m.glow}`, `0 0 12px ${m.glow}`] } : {}}
-      transition={{ duration: 2, repeat: Infinity }}
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0 relative"
-      style={{ background: m.bg, border: `1px solid ${m.border}`, boxShadow: `0 0 12px ${m.glow}` }}>
-      {m.emoji}
-      {rank === 1 && (
-        <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }} transition={{ duration: 1.8, repeat: Infinity }}
-          className="absolute inset-0 rounded-xl" style={{ border: `1px solid ${m.color}`, opacity: 0.4 }} />
-      )}
-    </motion.div>
+    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+      style={{ background: m.color, color: '#0a0a0a' }}>
+      {rank}
+    </div>
   );
 }
 
-// ── Podium card ───────────────────────────────────────────────────────────────
+// ── Podium card (clean, flat fintech style) ───────────────────────────────────
 function PodiumCard({ trader, rank, onCelebrate }) {
   const m = MEDALS[rank];
   const profitRatio = ((trader.pnl || 0) / (trader.account_size || 1)) * 100;
   const consistency = calcConsistency(trader);
   const plt = PLATFORM_COLORS[trader.platform] || PLATFORM_COLORS.xtrading;
-  const podiumH = { 1: 'min-h-[280px]', 2: 'min-h-[240px]', 3: 'min-h-[220px]' };
+  const podiumH = { 1: 'min-h-[300px]', 2: 'min-h-[275px]', 3: 'min-h-[260px]' };
   const podiumOrder = { 1: 'order-2', 2: 'order-1', 3: 'order-3' };
+  const consistencyColor = consistency >= 70 ? '#10b981' : consistency >= 40 ? '#f59e0b' : '#ef4444';
+  const footerLabel = rank === 1 ? 'CHAMPION' : rank === 2 ? 'RUNNER-UP' : 'THIRD PLACE';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: rank * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay: rank * 0.08, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => onCelebrate(rank)}
-      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[220px]`}
+      className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[230px]`}
     >
-      {/* Crown above card */}
-      <motion.div
-        animate={{ y: [-3, 3, -3], rotate: rank === 1 ? [-6, 6, -6] : [0, 0, 0] }}
-        transition={{ duration: rank === 1 ? 2.5 : 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="text-2xl mb-1"
-      >
-        {m.crown}
-      </motion.div>
+      {/* Rank pill - floats above card */}
+      <div className="mb-3 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-bold tracking-wider z-10"
+        style={{ background: m.color, color: '#0a0a0a' }}>
+        {rank === 1 && <Crown className="w-3 h-3" strokeWidth={2.5} />}
+        {m.label}
+      </div>
 
-      <motion.div whileHover={{ scale: 1.04, y: -5 }} whileTap={{ scale: 0.97 }}
-        className={`relative w-full rounded-2xl p-5 flex flex-col items-center ${podiumH[rank]}`}
-        style={{
-          background: `linear-gradient(160deg, ${m.bg}, rgba(6,9,20,0.98))`,
-          border: `1px solid ${m.border}`,
-          boxShadow: `0 0 60px ${m.glow}, 0 0 20px ${m.glow}, inset 0 0 30px ${m.bg}`,
-        }}>
+      <motion.div whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
+        className={`relative w-full rounded-2xl flex flex-col items-center ${podiumH[rank]}`}
+        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
 
-        {/* Top shimmer */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
-          style={{ background: `linear-gradient(90deg, transparent, ${m.color}, ${m.color}80, transparent)` }} />
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl" style={{ background: m.color }} />
 
-        {/* Rank label */}
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full text-[9px] font-black tracking-wider"
-          style={{ background: m.color, color: '#000', boxShadow: `0 4px 16px ${m.glow}` }}>{m.label}</div>
-
-        {/* Animated glow pulse for #1 */}
-        {rank === 1 && (
-          <motion.div animate={{ opacity: [0.15, 0.35, 0.15] }} transition={{ duration: 2, repeat: Infinity }}
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: `radial-gradient(ellipse at 50% 30%, ${m.color}20, transparent 70%)` }} />
-        )}
-
-        {/* Flag avatar */}
-        <div className="mt-4 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-2 relative flex-shrink-0"
-          style={{ background: `${m.color}18`, border: `2px solid ${m.color}55`, boxShadow: `0 0 28px ${m.glow}` }}>
+        {/* Avatar */}
+        <div className="mt-6 w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3 flex-shrink-0"
+          style={{ background: `${m.color}12`, border: `1px solid ${m.color}33` }}>
           {FLAG(trader.country)}
         </div>
 
-        <div className="text-sm font-black text-white truncate max-w-full px-1">{trader.username}</div>
-        <div className="text-[10px] font-mono mb-1" style={{ color: m.color }}>
+        {/* Username */}
+        <div className="text-sm font-bold text-white font-mono truncate max-w-full px-3">{trader.username}</div>
+
+        {/* Region */}
+        <div className="text-[10px] font-mono mt-0.5 mb-2.5" style={{ color: m.color }}>
           {COUNTRY_LABEL(trader.country)}
         </div>
-        <div className="text-[9px] px-2 py-0.5 rounded-full mb-3"
-          style={{ background: `${plt.color}18`, color: plt.color, border: `1px solid ${plt.color}30` }}>
+
+        {/* Platform badge */}
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold mb-5"
+          style={{ background: `${plt.color}14`, color: plt.color, border: `1px solid ${plt.color}25` }}>
           {plt.label}
         </div>
 
-        {/* Profit % - animated */}
-        <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2.5, repeat: Infinity }}
-          className="text-2xl font-black" style={{ color: m.color, textShadow: `0 0 20px ${m.glow}` }}>
+        {/* Hero metric - gain % */}
+        <div className="text-2xl font-bold tabular" style={{ color: m.color }}>
           +{profitRatio.toFixed(1)}%
-        </motion.div>
-        <div className="text-[10px] font-mono text-white/35 mb-1">
+        </div>
+        <div className="text-[10px] font-mono text-white/40 mt-1">
           ${(trader.pnl || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} profit
         </div>
 
-        {/* Payout amount */}
+        {/* Payout */}
         {trader.totalPayout > 0 && (
-          <div className="text-[10px] font-mono" style={{ color: '#10b981' }}>
-            💸 ${trader.totalPayout.toLocaleString()} paid out
+          <div className="text-[10px] font-mono mt-1.5" style={{ color: '#10b981' }}>
+            ${trader.totalPayout.toLocaleString()} paid out
           </div>
         )}
 
-        {/* Consistency badge */}
-        <div className="flex items-center gap-1 mt-1">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: consistency >= 70 ? '#10b981' : consistency >= 40 ? '#f59e0b' : '#ef4444' }} />
-          <span className="text-[9px] font-mono text-white/30">Consistency: {consistency}%</span>
+        {/* Divider */}
+        <div className="w-3/4 my-3.5 h-px" style={{ background: 'hsl(var(--border))' }} />
+
+        {/* Consistency */}
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: consistencyColor }} />
+          <span className="text-[10px] font-mono text-white/50">Consistency: {consistency}%</span>
         </div>
 
-        {/* Footer */}
-        <div className="mt-auto pt-2 border-t w-full text-center" style={{ borderColor: `${m.color}20` }}>
-          <span className="text-[10px] font-mono text-white/30">${(trader.account_size || 0).toLocaleString()} · {trader.challengeLabel}</span>
+        {/* Account details */}
+        <div className="text-[10px] font-mono text-white/35 mt-1.5">
+          ${(trader.account_size || 0).toLocaleString()} · {trader.challengeLabel}
+        </div>
+
+        {/* Footer badge */}
+        <div className="mt-auto pt-4 w-full px-4 pb-4">
+          <div className="w-full py-2 rounded-lg flex items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider"
+            style={{ background: `${m.color}15`, color: m.color, border: `1px solid ${m.color}30` }}>
+            {rank === 1 && <Trophy className="w-3 h-3" />}
+            {footerLabel}
+          </div>
         </div>
       </motion.div>
-
-      {/* Podium base */}
-      <div className="w-full mt-1 rounded-b-lg flex items-center justify-center py-1.5"
-        style={{ background: `${m.color}15`, border: `1px solid ${m.color}20`, borderTop: 'none' }}>
-        <span className="text-[9px] font-mono" style={{ color: m.color }}>{m.title}</span>
-      </div>
     </motion.div>
   );
 }
