@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Plus, TrendingUp, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, Copy, X, Loader2, Shield, ArrowRight } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, BarChart3, DollarSign, Eye, CheckCircle, Clock, XCircle, Copy, X, Loader2, Shield, ArrowRight, Award, Target } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import QuickWithdrawModal from '../overview/QuickWithdrawModal';
@@ -85,11 +85,60 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
   // Dynamic "Under Review" label: only when genuinely awaiting admin review
   const isUnderReview = account.status === 'passed' &&
     (account.phase_review_status === 'pending_review' || account.funded_review_status === 'pending_review');
-  const statusLabel = isUnderReview ? 'Passed — Under Review' : statusCfg.label;
+  const statusLabel = isUnderReview ? 'Under Review' : statusCfg.label;
   const isPnlPos = (account.pnl || 0) >= 0;
   const snap = account.rule_snapshot || {};
   const isFundedLive = account.status === 'funded';
   const profitTarget = isFundedLive ? null : account.phase === 'phase2' ? (snap.phase2_target ?? 5) : (snap.phase1_target ?? 10);
+  const typeLabel = account.challenge_type === 'two-step' ? 'Two-Step'
+    : account.challenge_type === 'one_step' ? 'One-Step'
+    : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant';
+
+  // Header copy per status
+  const header = isFundedLive ? {
+    label: 'FUNDED TRADER STATUS',
+    title: "Congratulations, you're funded",
+    subtitle: 'Trade with real capital and withdraw your profits daily',
+    badge: 'ACCOUNT ACTIVE',
+    badgeColor: '#10b981',
+  } : account.status === 'active' ? {
+    label: `${typeLabel.toUpperCase()} · ${account.phase?.replace('phase', 'PHASE ') || 'PHASE 1'}`,
+    title: 'Challenge in progress',
+    subtitle: 'Hit your reward target to unlock a funded account',
+    badge: 'ACTIVE',
+    badgeColor: '#10b981',
+  } : isUnderReview ? {
+    label: 'PHASE PASSED',
+    title: 'Phase complete',
+    subtitle: 'Your account is under admin review',
+    badge: 'UNDER REVIEW',
+    badgeColor: '#60a5fa',
+  } : account.status === 'failed' ? {
+    label: 'STATUS',
+    title: 'Challenge failed',
+    subtitle: 'This account did not meet the requirements',
+    badge: 'FAILED',
+    badgeColor: '#ef4444',
+  } : {
+    label: (account.status || 'PENDING').toUpperCase(),
+    title: account.account_id,
+    subtitle: 'Account overview',
+    badge: (account.status || 'pending').toUpperCase(),
+    badgeColor: statusCfg.color,
+  };
+
+  // Metrics grid (4 cards)
+  const metrics = isFundedLive ? [
+    { label: 'FUNDED CAPITAL', value: `$${(account.account_size || 0).toLocaleString()}`, sub: 'Trading capital', icon: DollarSign, color: '#ffffff' },
+    { label: 'CURRENT BALANCE', value: `$${(account.balance || 0).toLocaleString()}`, sub: 'Live balance', icon: TrendingUp, color: '#10b981' },
+    { label: 'YOUR EARNINGS', value: `${isPnlPos ? '+' : ''}$${(account.pnl || 0).toLocaleString()}`, sub: `${snap.profit_split ?? 80}% profit split`, icon: Award, color: '#10b981' },
+    { label: 'NEXT WITHDRAWAL', value: 'Available', sub: 'Ready to claim', icon: Target, color: '#ffffff' },
+  ] : [
+    { label: 'BALANCE', value: `$${(account.balance || account.account_size || 0).toLocaleString()}`, sub: 'Live balance', icon: Wallet, color: '#ffffff' },
+    { label: 'P&L', value: `${isPnlPos ? '+' : ''}$${(account.pnl || 0).toLocaleString()}`, sub: 'Net profit', icon: TrendingUp, color: isPnlPos ? '#10b981' : '#ef4444' },
+    { label: 'WIN RATE', value: `${account.win_rate || 0}%`, sub: `${account.total_trades || 0} trades`, icon: BarChart3, color: '#ffffff' },
+    { label: 'DAILY DD', value: `${account.daily_drawdown_used || 0}%`, sub: `Limit ${snap.daily_dd_limit ?? 5}%`, icon: Shield, color: '#ffffff' },
+  ];
 
   return (
     <>
@@ -97,69 +146,71 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         className="rounded-xl overflow-hidden"
-        style={{
-          background: '#16181d',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderTop: `2px solid ${statusCfg.color}`,
-        }}
+        style={{ background: '#16181d', border: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <div className="p-5">
+        <div className="p-6">
           {/* Header */}
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-base font-semibold text-foreground font-mono">{account.account_id}</span>
-                <span className="px-2.5 py-1 rounded-md text-xs font-medium"
-                  style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.color}25` }}>
-                  {statusLabel}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="capitalize">{account.status === 'funded' ? 'Simulation Funded' : account.challenge_type === 'two-step' ? 'Two-step' : account.challenge_type === 'one_step' ? 'One-Step' : account.challenge_type === 'instant_light' ? 'Instant Light' : 'Instant'}</span>
-                <span>•</span>
-                <span className="capitalize">{account.account_type}</span>
-                <span>•</span>
-                <span>{account.leverage}</span>
-                {!isFundedLive && (<>
-                  <span>•</span>
-                  <span className="capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
-                </>)}
-              </div>
-              {account.rule_snapshot && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)', color: '#FF5C00' }}>
-                    Daily DD: {account.rule_snapshot.daily_dd_limit}%
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)', color: '#FF5C00' }}>
-                    Max DD: {account.rule_snapshot.max_dd_limit}%
-                  </span>
-                  {!isFundedLive && (
-                    <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
-                      Target: {account.phase === 'phase2' ? account.rule_snapshot.phase2_target : account.rule_snapshot.phase1_target}%
-                    </span>
-                  )}
-                </div>
-              )}
+          <div className="flex items-start justify-between mb-6 gap-4">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#FF5C00' }}>{header.label}</span>
+              <h3 className="text-xl font-bold text-foreground mt-2 truncate">{header.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{header.subtitle}</p>
             </div>
-            <div className="text-right">
-              <div className="text-xl font-semibold text-foreground">${(account.balance || account.account_size)?.toLocaleString()}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Balance</div>
+            <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+              <span className="w-2 h-2 rounded-full" style={{ background: header.badgeColor }} />
+              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: header.badgeColor }}>{header.badge}</span>
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Account meta line */}
+          <div className="flex flex-wrap items-center gap-2 mb-5 text-xs text-muted-foreground">
+            <span className="font-mono text-foreground">{account.account_id}</span>
+            <span>•</span>
+            <span>{typeLabel}</span>
+            <span>•</span>
+            <span className="capitalize">{account.account_type}</span>
+            <span>•</span>
+            <span>{account.leverage}</span>
+            {!isFundedLive && (
+              <>
+                <span>•</span>
+                <span className="capitalize">{account.phase?.replace('phase', 'Phase ')}</span>
+              </>
+            )}
+          </div>
+
+          {/* Rule chips */}
+          {account.rule_snapshot && (
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)', color: '#FF5C00' }}>
+                Daily DD: {account.rule_snapshot.daily_dd_limit}%
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(255,92,0,0.08)', border: '1px solid rgba(255,92,0,0.15)', color: '#FF5C00' }}>
+                Max DD: {account.rule_snapshot.max_dd_limit}%
+              </span>
+              {!isFundedLive && (
+                <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
+                  Target: {account.phase === 'phase2' ? account.rule_snapshot.phase2_target : account.rule_snapshot.phase1_target}%
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Metrics grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-            {[
-              { label: 'P&L', value: `${isPnlPos ? '+' : ''}$${(account.pnl || 0).toLocaleString()}`, color: isPnlPos ? 'text-emerald-400' : 'text-red-400' },
-              { label: 'Win rate', value: `${account.win_rate || 0}%` },
-              { label: 'Daily DD', value: `${account.daily_drawdown_used || 0}%` },
-              { label: 'Trades', value: account.total_trades || 0 },
-            ].map((s) => (
-              <div key={s.label} className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="text-[10px] text-muted-foreground mb-1">{s.label}</div>
-                <div className={`text-sm font-semibold ${s.color || 'text-foreground'}`}>{s.value}</div>
-              </div>
-            ))}
+            {metrics.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-lg font-bold tabular" style={{ color: s.color }}>{s.value}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{s.sub}</div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Progress bar — hidden for funded live */}
@@ -239,7 +290,7 @@ function AccountCard({ account, onNavigate, onWithdraw }) {
                 <DollarSign className="w-3.5 h-3.5" /> Withdraw
               </button>
             )}
-            
+
             {showWithdrawModal && (
               <QuickWithdrawModal
                 account={account}
