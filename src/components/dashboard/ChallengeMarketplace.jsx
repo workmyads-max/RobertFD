@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
-import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2 } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2, Layers, Gauge } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
 import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
@@ -189,9 +189,9 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
         <div className="inline-flex rounded-xl p-1"
           style={{ background: '#1A1D23', border: '1px solid rgba(255,255,255,0.06)' }}>
           {[
-            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Zap },
+            { id: 'two-step', label: 'Two-Step', desc: '2 phases', icon: Layers },
             { id: 'one_step', label: 'One-Step', desc: '1 phase · 90%', icon: Target },
-            { id: 'instant_account', label: 'Inst. Account', desc: 'Buffer Zone', icon: Target },
+            { id: 'instant_account', label: 'Inst. Account', desc: 'Buffer Zone', icon: Gauge },
           ].map((t, idx) => {
             const isSelected = challengeType === t.id;
             const Icon = t.icon;
