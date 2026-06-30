@@ -61,6 +61,7 @@ import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
 import RiskDisclaimer from '@/components/shared/RiskDisclaimer';
 import MT5Terminal from '../components/mt5terminal/MT5Terminal';
+import UnifiedWelcomeHeader from '../components/overview/UnifiedWelcomeHeader';
 
 import AccountOverview from '../components/dashboard/AccountOverview';
 import EconomicCalendar from '../components/dashboard/EconomicCalendar';
@@ -339,6 +340,8 @@ export default function Dashboard() {
   const isTerminal  = activePage === 'terminal' || activePage === 'mt5-terminal';
   const isFullHeight = activePage === 'admin-risk-center';
   const isOverview  = activePage === 'overview';
+  // Welcome header appears on all user-facing dashboard pages (not admin/terminal/full-height)
+  const showWelcomeHeader = !isTerminal && !isFullHeight && !activePage.startsWith('admin-');
 
   return (
     <div className="h-screen bg-background text-foreground font-inter flex flex-col relative overflow-hidden">
@@ -379,6 +382,11 @@ export default function Dashboard() {
         <main className={`flex-1 overflow-y-auto ${isTerminal || isFullHeight ? 'overflow-hidden' : ''}`}
           style={!isTerminal && !isFullHeight ? { background: 'transparent' } : {}}>
           <div className={isTerminal || isFullHeight ? 'h-full' : 'p-3 pt-14 sm:pt-4 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen'}>
+            {showWelcomeHeader && user && (
+              <div className="mb-4 sm:mb-6">
+                <UnifiedWelcomeHeader user={user} kyc={kyc} onStartChallenge={goToChallenge} />
+              </div>
+            )}
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage}

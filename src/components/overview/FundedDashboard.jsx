@@ -15,7 +15,6 @@ import Footer from '../dashboard/Footer';
 
 import ParticleBackground   from './ParticleBackground.jsx';
 import AccountSwitcher      from './AccountSwitcher.jsx';
-import UnifiedWelcomeHeader from './UnifiedWelcomeHeader.jsx';
 import FloatingDailyPnL     from '../terminal/FloatingDailyPnL.jsx';
 import AccountTimeline      from './AccountTimeline.jsx';
 import NotificationBanner   from '../dashboard/NotificationBanner.jsx';
@@ -167,10 +166,7 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
       {/* Content */}
       <div className="relative z-10 px-4 sm:px-6 md:px-8 lg:px-12 pb-8 sm:pb-10 max-w-[1920px] mx-auto w-full mt-14 sm:mt-6 min-h-[60vh]">
 
-        {/* Unified Welcome Header + Status Bar */}
-        <UnifiedWelcomeHeader user={currentUser} kyc={kyc} onStartChallenge={onStartChallenge} />
-
-        {/* Promotion Banner - below welcome header */}
+        {/* Promotion Banner - below welcome header (header now rendered globally in Dashboard) */}
         {bannerNotification && (
           <div className="mt-4 rounded-xl overflow-hidden">
             <NotificationBanner notification={bannerNotification} />
