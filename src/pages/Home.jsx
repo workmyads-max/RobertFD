@@ -5,8 +5,7 @@ import TrustBar from '../components/landing/TrustBar';
 import SliderSection from '../components/landing/SliderSection';
 import DashboardPreview from '../components/landing/DashboardPreview';
 import FundedShowcaseDemo from '../components/landing/FundedShowcaseDemo';
-import ChallengeTypes from '../components/landing/ChallengeTypes';
-import PricingSection from '../components/landing/PricingSection';
+import ChallengeHub from '../components/landing/ChallengeHub';
 import RulesSection from '../components/landing/RulesSection';
 import PlatformsSection from '../components/landing/PlatformsSection';
 import MobileAppShowcase from '../components/landing/MobileAppShowcase';
@@ -65,8 +64,7 @@ export default function Home() {
         </div>
         <FundedShowcaseDemo />
       </section>
-      <ChallengeTypes />
-      <PricingSection />
+      <ChallengeHub />
       <RulesSection />
       <PlatformsSection mobileImage={IMAGES.mobile} />
       <MobileAppShowcase />
