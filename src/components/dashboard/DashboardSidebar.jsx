@@ -22,7 +22,6 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
     { id: 'account-overview', label: 'Account Overview', icon: BarChart2 },
     { id: 'economic-calendar', label: 'Economic Calendar', icon: CalendarClock },
     { id: 'markets', label: 'Markets', icon: Globe },
-    { id: 'mt5-terminal', label: 'MetaTrader 5', icon: LineChart, highlight: true },
     { id: 'journal', label: 'Journal', icon: BookOpen },
     { id: 'marketplace', label: 'Buy Challenge', icon: ShoppingBag, highlight: true, prominent: true, bigBtn: true, limeGreen: true },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
