@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Award, TrendingUp, TrendingDown, ShieldAlert, CheckCircle2,
-  AlertTriangle, XCircle, Info, ArrowUpRight, Activity, Layers,
+  Award, TrendingDown, ShieldAlert, Info, ArrowUpRight, Activity, Layers,
 } from 'lucide-react';
 
 function fmt(n, d = 2) {
@@ -11,6 +10,20 @@ function fmt(n, d = 2) {
 function fmtDate(dateStr) {
   if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * StatusDot — modern-classic status indicator.
+ * A solid filled dot + uppercase label. No translucent fill, no glow border.
+ * Editorial / terminal aesthetic, not the glassy "AI" pill look.
+ */
+function StatusDot({ color, label, dotSize = 6, textSize = 'text-[10px]' }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="rounded-full flex-shrink-0" style={{ width: dotSize, height: dotSize, background: color }} />
+      <span className={`${textSize} font-semibold uppercase tracking-[0.12em]`} style={{ color }}>{label}</span>
+    </span>
+  );
 }
 
 /**
@@ -38,15 +51,15 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
   const bestDayDate = stats.bestDayDate || null;
   const maxAllowedDaily = totalProfit > 0 ? totalProfit * (rulePct / 100) : 0;
 
-  let bdStatus, bdColor, bdIcon, bdText;
+  let bdStatus, bdColor, bdText;
   if (totalProfit <= 0) {
-    bdStatus = 'idle'; bdColor = '#64748b'; bdIcon = Info; bdText = 'No profit yet';
+    bdStatus = 'idle'; bdColor = '#64748b'; bdText = 'No profit yet';
   } else if (bestDayPct <= rulePct * 0.8) {
-    bdStatus = 'compliant'; bdColor = '#10b981'; bdIcon = CheckCircle2; bdText = 'Compliant';
+    bdStatus = 'compliant'; bdColor = '#10b981'; bdText = 'Compliant';
   } else if (bestDayPct <= rulePct) {
-    bdStatus = 'warning'; bdColor = '#f59e0b'; bdIcon = AlertTriangle; bdText = 'Near limit';
+    bdStatus = 'warning'; bdColor = '#f59e0b'; bdText = 'Near limit';
   } else {
-    bdStatus = 'exceeded'; bdColor = '#ef4444'; bdIcon = XCircle; bdText = 'Exceeded';
+    bdStatus = 'exceeded'; bdColor = '#ef4444'; bdText = 'Exceeded';
   }
   const bdBarPct = totalProfit > 0 ? Math.min((bestDayPct / rulePct) * 100, 100) : 0;
 
@@ -71,15 +84,15 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
   const liveTrailingDD = peak > 0 ? Math.max(0, ((peak - equity) / peak) * 100) : 0;
   const remainingDollars = Math.max(0, equity - floor);
 
-  let tddStatus, tddColor, tddIcon, tddText;
+  let tddStatus, tddColor, tddText;
   if (account.status === 'failed' || trailingDDUsed >= maxDDLimit) {
-    tddStatus = 'breached'; tddColor = '#ef4444'; tddIcon = ShieldAlert; tddText = 'Breached';
+    tddStatus = 'breached'; tddColor = '#ef4444'; tddText = 'Breached';
   } else if (liveTrailingDD >= maxDDLimit * 0.8) {
-    tddStatus = 'critical'; tddColor = '#ef4444'; tddIcon = AlertTriangle; tddText = 'Critical';
+    tddStatus = 'critical'; tddColor = '#ef4444'; tddText = 'Critical';
   } else if (liveTrailingDD >= maxDDLimit * 0.5) {
-    tddStatus = 'warning'; tddColor = '#f59e0b'; tddIcon = AlertTriangle; tddText = 'Warning';
+    tddStatus = 'warning'; tddColor = '#f59e0b'; tddText = 'Warning';
   } else {
-    tddStatus = 'safe'; tddColor = '#10b981'; tddIcon = CheckCircle2; tddText = 'Safe';
+    tddStatus = 'safe'; tddColor = '#10b981'; tddText = 'Safe';
   }
   const tddBarPct = Math.min((liveTrailingDD / maxDDLimit) * 100, 100);
 
@@ -95,15 +108,13 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
   }
 
   // ── OVERALL VERDICT ─────────────────────────────────────────────────────────
-  let verdictColor, verdictText, verdictIcon;
+  let verdictColor, verdictText;
   if (tddStatus === 'breached' || bdStatus === 'exceeded') {
-    verdictColor = '#ef4444'; verdictText = 'Payout blocked'; verdictIcon = XCircle;
-  } else if (tddStatus === 'critical' || bdStatus === 'warning') {
-    verdictColor = '#f59e0b'; verdictText = 'At risk'; verdictIcon = AlertTriangle;
-  } else if (tddStatus === 'warning') {
-    verdictColor = '#f59e0b'; verdictText = 'At risk'; verdictIcon = AlertTriangle;
+    verdictColor = '#ef4444'; verdictText = 'Payout blocked';
+  } else if (tddStatus === 'critical' || tddStatus === 'warning' || bdStatus === 'warning') {
+    verdictColor = '#f59e0b'; verdictText = 'At risk';
   } else {
-    verdictColor = '#10b981'; verdictText = 'Trade ready'; verdictIcon = CheckCircle2;
+    verdictColor = '#10b981'; verdictText = 'Trade ready';
   }
 
   // Threshold tick position on best-day meter
@@ -127,11 +138,7 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-          style={{ background: `${verdictColor}12`, border: `1px solid ${verdictColor}30` }}>
-          {React.createElement(verdictIcon, { className: 'w-3.5 h-3.5', style: { color: verdictColor } })}
-          <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: verdictColor }}>{verdictText}</span>
-        </div>
+        <StatusDot color={verdictColor} label={verdictText} dotSize={7} textSize="text-[11px]" />
       </div>
 
       {/* Accent line */}
@@ -149,11 +156,7 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
               </span>
               <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#9aa0a6' }}>Best Day Rule</span>
             </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{ background: `${bdColor}10`, border: `1px solid ${bdColor}25` }}>
-              {React.createElement(bdIcon, { className: 'w-2.5 h-2.5', style: { color: bdColor } })}
-              <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: bdColor }}>{bdText}</span>
-            </div>
+            <StatusDot color={bdColor} label={bdText} dotSize={6} textSize="text-[10px]" />
           </div>
 
           {/* meter */}
@@ -205,11 +208,7 @@ export default function OneStepRiskPanel({ account, stats, closedTrades = [], li
               </span>
               <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#9aa0a6' }}>Trailing Max Drawdown</span>
             </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{ background: `${tddColor}10`, border: `1px solid ${tddColor}25` }}>
-              {React.createElement(tddIcon, { className: 'w-2.5 h-2.5', style: { color: tddColor } })}
-              <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: tddColor }}>{tddText}</span>
-            </div>
+            <StatusDot color={tddColor} label={tddText} dotSize={6} textSize="text-[10px]" />
           </div>
 
           {/* meter */}
