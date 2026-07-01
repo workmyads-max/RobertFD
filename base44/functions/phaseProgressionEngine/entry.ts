@@ -875,7 +875,15 @@ Deno.serve(async (req) => {
       }
       const lev = parseInt((account.rule_snapshot?.leverage || account.leverage || '1:100').split(':')[1]) || 100;
       const sizeLabel = account.account_size >= 1000000 ? `${account.account_size / 1000000}M` : `${account.account_size / 1000}K`;
-      const result = await provisionMT5Account(creds, account.user_email, groupName, lev, account.account_size, `${sizeLabel} Instant XFunded Trader`);
+      // ── ROLLOVER: fresh account starts at the LOCKED buffer balance ──────────
+      // The trader already earned the buffer milestone (e.g. $26,250 on a $25K
+      // account). Carry it into the new cycle so they never re-hit the buffer
+      // target. The displayed account_size (label) stays 25K; only the real
+      // deposited balance + drawdown reference move up to the locked amount.
+      const lockBal = account.buffer_zone_activated
+        ? (account.buffer_zone_lock_balance || account.account_size)
+        : account.account_size;
+      const result = await provisionMT5Account(creds, account.user_email, groupName, lev, lockBal, `${sizeLabel} Instant XFunded Trader`);
       if (!result.success) {
         console.error('[renew_instant_account] provisioning failed:', result.error);
         return Response.json({ success: false, error: `Renewal provisioning failed: ${result.error}. No changes applied — please retry.` }, { status: 500 });
@@ -914,10 +922,11 @@ Deno.serve(async (req) => {
         login_credentials: `Login: ${result.mt_login} | Password: ${result.mt_password} | Server: ${result.mt_server}`,
         server: result.mt_server,
         provisioned_at: nowIso,
-        balance: account.account_size,
-        equity: account.account_size,
-        high_water_mark: account.account_size,
-        daily_start_balance: account.account_size,
+        // Real balance starts at the locked amount (label account_size stays the same).
+        balance: lockBal,
+        equity: lockBal,
+        high_water_mark: lockBal,
+        daily_start_balance: lockBal,
         pnl: 0, daily_pnl: 0,
         daily_drawdown_used: 0, max_drawdown_used: 0,
         profit_target_progress: 0,
@@ -926,15 +935,21 @@ Deno.serve(async (req) => {
         rule_snapshot: account.rule_snapshot || {},
         country: account.country || '',
         is_trashed: false,
-        buffer_zone_activated: false,
-        buffer_zone_lock_balance: 0,
-        dd_reference_balance: 0,
+        // ── Buffer stays LOCKED into the new cycle — trader keeps the milestone ──
+        buffer_zone_activated: account.buffer_zone_activated || false,
+        buffer_zone_activated_at: account.buffer_zone_activated_at || undefined,
+        buffer_zone_lock_balance: account.buffer_zone_activated ? lockBal : 0,
+        balance_at_activation: account.balance_at_activation || 0,
+        // Daily + overall drawdown now measured from the locked balance.
+        dd_reference_balance: account.buffer_zone_activated ? lockBal : 0,
+        // ── Consistency + 7 profitable days RESET each payout cycle ──
         best_day_profit: 0,
         required_total_profit: 0,
         consistency_passed: false,
         profitable_days_list: [],
         profitable_days_count: 0,
         instant_payout_eligible: false,
+        withdrawable_profit: 0,
         previous_account_id: account.account_id,
       });
 
@@ -945,7 +960,7 @@ Deno.serve(async (req) => {
       await sr.entities.Notification.create({
         user_email: account.user_email,
         title: '🎉 New Instant Account Issued',
-        message: `Your payout has been approved! A fresh instant account (${newAccountId}) of $${account.account_size.toLocaleString()} is now active. Your previous account has been retired. Your new credentials are available in your dashboard.`,
+        message: `Your payout has been approved! A fresh instant account (${newAccountId}) is now active with your locked balance of $${lockBal.toLocaleString()} — your buffer zone stays activated, so you do not need to hit the target again. Your previous account has been retired and new credentials are available in your dashboard.`,
         type: 'payout', priority: 'high', display_mode: 'popup', is_active: true, target: 'funded',
       });
 
