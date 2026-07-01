@@ -127,12 +127,14 @@ Deno.serve(async (req) => {
     const sizeK = account_size >= 1000000 ? `${account_size / 1000000}M` : `${account_size / 1000}K`;
     const brandName = 'XFunded Trader';
     const accountName = challenge_type === 'instant'
-      ? `${sizeK} Instant ${brandName}`
+      ? `${sizeK} ${brandName} Instant`
       : challenge_type === 'instant_account'
-        ? `${sizeK} Instant Account ${brandName}`
+        ? `${sizeK} ${brandName} Instant Account`
         : challenge_type === 'instant_light'
-          ? `${sizeK} Instant Light ${brandName}`
-          : `${sizeK} Phase 1 ${brandName} 2-Step`; // two-step default
+          ? `${sizeK} ${brandName} Instant Light`
+          : challenge_type === 'one_step'
+            ? `${sizeK} ${brandName} One-Step`
+            : `${sizeK} Phase 1 ${brandName} 2-Step`; // two-step default
 
     console.log(`[provisionMT5Account] Creating account: name="${accountName}", email=${user_email}, group=${groupName}, leverage=${leverageInt}`);
 
