@@ -53,7 +53,7 @@ export default function Home() {
       <Navbar />
       <HeroSection heroImage={IMAGES.hero} />
       <TrustBar />
-      <SliderSection images={[IMAGES.trading, IMAGES.dashboard, IMAGES.infrastructure]} />
+      <FundedTraderExperience />
       <section className="py-20 max-w-[1200px] mx-auto px-6">
         <div className="mb-12 text-center">
           <span className="text-xs font-mono text-primary uppercase tracking-widest">Funded Account Features</span>
@@ -66,7 +66,6 @@ export default function Home() {
         </div>
         <FundedShowcaseDemo />
       </section>
-      <FundedTraderExperience />
       <ChallengeHub />
       <ChallengeExamples />
       <RulesSection />
