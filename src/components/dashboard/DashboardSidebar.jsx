@@ -79,7 +79,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
               onClick={() => handleNav(item.id)}
               title={collapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-xl transition-all duration-150 group relative font-medium ${
-                collapsed ? 'justify-center px-2 py-2.5' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-2.5 px-3 py-2.5 text-sm'
+                collapsed ? 'justify-center px-2 py-3' : item.bigBtn ? 'gap-3 px-5 py-4 text-base font-bold' : 'gap-3 px-3.5 py-3 text-[15px]'
               } ${
                 isActive
                   ? (item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-white')
@@ -104,7 +104,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
               } : {}}
             >
-              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-6 h-6' : item.prominent ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
+              <Icon className={`flex-shrink-0 transition-colors relative z-10 ${collapsed ? 'w-5 h-5' : item.bigBtn ? 'w-6 h-6' : item.prominent ? 'w-5 h-5' : 'w-[18px] h-[18px]'} ${isActive ? 'text-primary' : item.id === 'trash' ? 'text-red-400/60 group-hover:text-red-400' : item.limeGreen ? 'text-[#CCFF00]' : item.highlight ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
               {!collapsed && <span className="flex-1 text-left relative z-10">{item.label}</span>}
               {!collapsed && item.id === 'trash' && trashCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/80 text-white relative z-10">{trashCount}</span>
@@ -121,8 +121,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
         <button
           onClick={() => handleNav('notifications')}
           title={collapsed ? 'Notifications' : undefined}
-          className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-150 group relative ${
-          collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
+          className={`w-full flex items-center rounded-xl text-[15px] font-medium transition-all duration-150 group relative ${
+          collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3.5 py-3'
           } ${
           activePage === 'notifications'
           ? 'text-white'
@@ -133,7 +133,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
           } : {}}
         >
-          <Bell className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${activePage === 'notifications' ? 'text-primary' : 'text-white/25 group-hover:text-primary/70'}`} />
+          <Bell className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'} ${activePage === 'notifications' ? 'text-primary' : 'text-white/25 group-hover:text-primary/70'}`} />
           {!collapsed && <span className="flex-1 text-left">Notifications</span>}
           {!collapsed && unreadCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#FF5C00' }}>{unreadCount}</span>
@@ -217,7 +217,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
       </button>
 
       {/* Desktop sidebar */}
-      <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[70px]' : 'w-64'}`}
+      <div className={`hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 ${collapsed ? 'w-[74px]' : 'w-72'}`}
         style={{ background: 'var(--sidebar-bg, rgba(7,8,14,0.99))', backdropFilter: 'blur(60px)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
         <SidebarContent />
       </div>
