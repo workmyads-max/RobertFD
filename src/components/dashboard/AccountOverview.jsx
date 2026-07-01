@@ -557,9 +557,21 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
   const dailyAllowance = dailyStartBalance * (dailyDDLimit / 100);
   const dailyLossUsedAmt = Math.max(0, dailyStartBalance - equity);
   const todayPermittedLossRemaining = Math.max(0, dailyAllowance - dailyLossUsedAmt);
-  const maxDDAllowance = accountSize * (maxDDLimit / 100);
-  const maxLossUsedAmt = Math.max(0, accountSize - equity);
-  const maxPermittedLossRemaining = Math.max(0, maxDDAllowance - maxLossUsedAmt);
+
+  // Max DD reference floor — must match the backend's calcOverallDD per challenge type:
+  //  two-step / instant:          static floor from accountSize
+  //  one_step:                    trailing floor from high water mark (HWM x (1 - maxDD%))
+  //  instant_account:             static from accountSize until buffer-zone activation,
+  //                               then from dd_reference_balance (locked balance)
+  const isTrailingDD = account?.challenge_type === 'one_step';
+  const bufferActive = account?.challenge_type === 'instant_account' && account?.buffer_zone_activated && (account?.dd_reference_balance || 0) > 0;
+  const ddRefBalance = bufferActive ? account.dd_reference_balance : accountSize;
+  const trailingHWM = account?.high_water_mark || accountSize;
+  const maxDDRefBalance = isTrailingDD ? trailingHWM : ddRefBalance;
+  const maxDDAllowance = maxDDRefBalance * (maxDDLimit / 100);
+  const maxDDFloor = maxDDRefBalance - maxDDAllowance;            // minimum allowed equity
+  const maxLossUsedAmt = Math.max(0, maxDDRefBalance - equity);   // loss relative to real floor
+  const maxPermittedLossRemaining = Math.max(0, equity - maxDDFloor); // remaining buffer to the real floor
 
   // For passed/funded accounts that have already met the requirement,
   // trust account.trading_days as ground truth (the account already passed review).
