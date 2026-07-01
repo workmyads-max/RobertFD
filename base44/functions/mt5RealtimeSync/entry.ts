@@ -379,6 +379,20 @@ Deno.serve(async (req) => {
         target:       'challenge',
       }).catch(() => {});
 
+      // ── FORCE-CLOSE all open positions BEFORE disabling the login ────────────
+      // Positions must close while the login is still active; move-disabled may
+      // strand open positions in a disabled group that rejects close calls.
+      let forceCloseResult = null;
+      if (acc.mt_login) {
+        try {
+          const fc = await sr.functions.invoke('forceCloseMT5Positions', { mt_login: acc.mt_login });
+          forceCloseResult = fc?.data || null;
+          console.log(`[FORCE-CLOSE] ${acc.mt_login}: closed=${fc?.data?.closed ?? 0} failed=${fc?.data?.failed ?? 0}`);
+        } catch (e) {
+          console.error(`[FORCE-CLOSE] ${acc.mt_login} failed (non-blocking):`, e.message);
+        }
+      }
+
       // MT5 broker-side disable (non-blocking)
       if (acc.mt_login) {
         (async () => {

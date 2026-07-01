@@ -121,6 +121,16 @@ Deno.serve(async (req) => {
         if (breachReason) {
           const breachNow = new Date().toISOString();
 
+          // ── FORCE-CLOSE all open positions BEFORE disabling the login ──────────
+          if (account.platform === 'mt5' && account.mt_login) {
+            try {
+              const fc = await sr.functions.invoke('forceCloseMT5Positions', { mt_login: account.mt_login });
+              console.log(`[FORCE-CLOSE] ${account.mt_login}: closed=${fc?.data?.closed ?? 0} failed=${fc?.data?.failed ?? 0}`);
+            } catch (e) {
+              console.error(`[FORCE-CLOSE] ${account.mt_login} failed (non-blocking):`, e.message);
+            }
+          }
+
           // ── BROKER-SIDE DISABLE — non-blocking ──────────────────────────────
           if (account.platform === 'mt5' && account.mt_login) {
             (async () => {
