@@ -17,8 +17,7 @@ import CredentialsModal from './CredentialsModal';
 import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
 import InstantAccountWidgets from './InstantAccountWidgets';
-import BestDayMonitor from './BestDayMonitor';
-import TrailingDDMonitor from './TrailingDDMonitor';
+import OneStepRiskPanel from './OneStepRiskPanel';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -1169,14 +1168,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
         <InstantAccountWidgets account={account} closedTrades={closedTrades} />
       )}
 
-      {/* Best Day Rule Monitor - only for one_step type (shows during eval AND funded) */}
+      {/* Unified One-Step Risk Panel — Best Day Rule + Trailing Max Drawdown */}
       {account?.challenge_type === 'one_step' && (
-        <BestDayMonitor account={account} stats={stats} closedTrades={closedTrades} />
-      )}
-
-      {/* Trailing Max Drawdown Monitor - only for one_step type (FTMO-style trailing) */}
-      {account?.challenge_type === 'one_step' && (
-        <TrailingDDMonitor account={account} liveEquity={liveEquity} />
+        <OneStepRiskPanel account={account} stats={stats} closedTrades={closedTrades} liveEquity={liveEquity} />
       )}
 
       {/* Phase passed / under review banners */}
