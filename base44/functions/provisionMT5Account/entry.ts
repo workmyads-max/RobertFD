@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
           rule_snapshot = {
             daily_dd_limit:    plan.daily_dd ?? 5,
             max_dd_limit:      plan.max_dd ?? 10,
-            trailing_dd:       challenge_type === 'instant_light',
+            trailing_dd:       challenge_type === 'instant_light' || challenge_type === 'one_step',
             phase1_target:     plan.phase1_target ?? 10,
             phase2_target:     plan.phase2_target ?? 5,
             min_trading_days:  plan.min_trading_days ?? 1,

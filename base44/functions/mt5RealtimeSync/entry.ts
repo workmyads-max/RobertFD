@@ -46,7 +46,8 @@ function getDDLimits(acc) {
   const snap = acc.rule_snapshot || {};
   const dailyLimit   = snap.daily_dd_limit ?? (acc.challenge_type === 'instant_account' ? 4 : 5);
   const overallLimit = snap.max_dd_limit ?? (acc.challenge_type === 'instant_light' ? 6 : acc.challenge_type === 'instant_account' ? 8 : 10);
-  const isTrailing   = snap.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  // One-Step is ALWAYS trailing (FTMO-style) — ignore any stale false snapshot.
+  const isTrailing   = acc.challenge_type === 'one_step' || (snap.trailing_dd ?? (acc.challenge_type === 'instant_light'));
   return { dailyLimit, overallLimit, isTrailing };
 }
 
@@ -61,7 +62,7 @@ function getDDLimits(acc) {
  */
 function calcOverallDD(acc, equity, hwm) {
   const accountSize = acc.account_size || 100000;
-  const isTrailing  = acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light');
+  const isTrailing  = acc.challenge_type === 'one_step' || (acc.rule_snapshot?.trailing_dd ?? (acc.challenge_type === 'instant_light'));
   if (isTrailing) {
     return hwm > 0 ? Math.max(0, ((hwm - equity) / hwm) * 100) : 0;
   }
