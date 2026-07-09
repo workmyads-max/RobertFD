@@ -7,17 +7,17 @@ import { RefreshCw } from 'lucide-react';
  */
 export default function FeeRefundNote({ className = '' }) {
   return (
-    <div className={`rounded-2xl px-5 py-4 flex items-start gap-4 ${className}`}
-      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(16,185,129,0.22)' }}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-        <RefreshCw className="w-5 h-5 text-emerald-400" />
+    <div className={`rounded-lg px-5 py-4 flex items-start gap-4 ${className}`}
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <RefreshCw className="w-4 h-4 text-white/50" />
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-semibold text-emerald-400">Fee Refund</span>
+          <span className="text-sm font-semibold text-white/80">Fee Refund</span>
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded uppercase tracking-wider"
-            style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}>
             Two-Step
           </span>
         </div>

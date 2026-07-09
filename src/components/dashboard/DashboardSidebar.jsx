@@ -92,13 +92,11 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                     : 'text-white/35 hover:text-primary/80 hover:bg-primary/[0.07]'
               }`}
               style={item.limeGreen ? {
-                background: 'rgba(204,255,0,0.12)',
-                border: '1.5px solid rgba(204,255,0,0.4)',
-                boxShadow: '0 0 14px rgba(204,255,0,0.2)',
+                background: 'rgba(204,255,0,0.1)',
+                border: '1px solid rgba(204,255,0,0.25)',
               } : item.highlight && !isActive ? {
-                background: 'rgba(255,92,0,0.15)',
-                border: '1.5px solid rgba(255,92,0,0.5)',
-                boxShadow: '0 0 12px rgba(255,92,0,0.15)',
+                background: 'rgba(255,92,0,0.12)',
+                border: '1px solid rgba(255,92,0,0.3)',
               } : isActive ? {
                 background: collapsed ? 'rgba(255,92,0,0.15)' : 'rgba(255,92,0,0.1)',
                 borderLeft: collapsed ? 'none' : '2px solid #FF5C00',
@@ -152,9 +150,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
                 onClick={() => handleNav('admin-dashboard')}
                 className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-bold mb-2 transition-all hover:scale-[1.02]"
                 style={{ 
-                  background: 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,92,0,0.1))',
-                  border: '1.5px solid rgba(255,92,0,0.4)',
-                  boxShadow: '0 0 12px rgba(255,92,0,0.15)',
+                  background: 'rgba(255,92,0,0.1)',
+                  border: '1px solid rgba(255,92,0,0.25)',
                 }}
               >
                 <div className="flex items-center gap-2">

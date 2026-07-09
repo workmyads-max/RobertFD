@@ -48,8 +48,8 @@ function WithdrawalCard({ w, i }) {
               {METHODS.find(m => m.id === w.method)?.label || w.method} • Account: {w.account_id} • {new Date(w.created_date).toLocaleDateString()}
             </div>
           </div>
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-            style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}30` }}>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold"
+            style={{ background: `${cfg.color}0d`, color: cfg.color, border: `1px solid ${cfg.color}22` }}>
             <Icon className="w-3 h-3" /> {cfg.label}
           </span>
         </div>

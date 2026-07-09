@@ -152,7 +152,7 @@ function CertListItem({ cert, index, onPreview }) {
           {cert.account_size && !cert.withdrawal_amount ? ` • $${Number(cert.account_size).toLocaleString()}` : ''}
         </div>
       </div>
-      <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold" style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}30` }}>
+      <span className="px-2.5 py-1 rounded text-[10px] font-semibold" style={{ background: `${cfg.color}10`, color: cfg.color, border: `1px solid ${cfg.color}22` }}>
         {cfg.label}
       </span>
       <Eye className="w-4 h-4 text-white/15 group-hover:text-white/40 transition-colors" />

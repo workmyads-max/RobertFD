@@ -303,8 +303,8 @@ function AccountHistorySection({ accounts }) {
                   <div className="text-[10px] text-white/35">${(acc.account_size || 0).toLocaleString()} · {(acc.phase || 'phase1').replace('phase', 'Phase ')}</div>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold"
-                style={{ background: `${sc.color}15`, color: sc.color, border: `1px solid ${sc.color}30` }}>
+              <span className="px-2.5 py-1 rounded text-[10px] font-semibold"
+                style={{ background: `${sc.color}10`, color: sc.color, border: `1px solid ${sc.color}22` }}>
                 {sc.label}
               </span>
             </div>
@@ -1146,11 +1146,11 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
           {activeAccounts.map(a => (
             <button key={a.id} onClick={() => setSelectedAccount(a)}
-              className="flex-shrink-0 px-4 py-3 rounded-xl text-xs font-mono transition-all"
+              className="flex-shrink-0 px-4 py-3 rounded-lg text-xs font-mono transition-all"
               style={{
-                background: account?.id === a.id ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${account?.id === a.id ? 'rgba(255,92,0,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                color: account?.id === a.id ? '#FF5C00' : '#94a3b8',
+                background: account?.id === a.id ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${account?.id === a.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)'}`,
+                color: account?.id === a.id ? '#fff' : '#6b7280',
                 minWidth: '140px',
               }}>
               <div className="font-black">{a.account_id || a.id?.slice(0, 8)}</div>

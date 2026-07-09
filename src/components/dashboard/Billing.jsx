@@ -343,11 +343,11 @@ export default function Billing() {
                   <div className="text-white/30 text-[10px]">{linkedAccount?.mt_login && <span className="text-primary">#{linkedAccount.mt_login}</span>}</div>
                 </div>
                 <div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit"
+                  <span className="px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 w-fit"
                     style={{
-                      background: paid ? 'rgba(20,184,166,0.2)' : isPending ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
-                      color: paid ? '#2dd4bf' : isPending ? '#fbbf24' : '#f87171',
-                      border: `1px solid ${paid ? 'rgba(45,212,191,0.3)' : isPending ? 'rgba(251,191,36,0.3)' : 'rgba(248,113,113,0.3)'}`,
+                      background: paid ? 'rgba(16,185,129,0.1)' : isPending ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: paid ? '#6ee7b7' : isPending ? '#fbbf24' : '#f87171',
+                      border: `1px solid ${paid ? 'rgba(16,185,129,0.2)' : isPending ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'}`,
                     }}>
                     {paid ? <CheckCircle2 className="w-3 h-3" /> : isPending ? <Clock className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                     {paid ? 'Paid' : isPending ? 'Pending' : isFailed ? 'Failed' : order.payment_status}

@@ -158,11 +158,10 @@ export default function AffiliateWithdrawal({ profile, commissions = [], withdra
                 <label className="text-[10px] font-mono text-white/25 uppercase tracking-widest block mb-2">Payment Method</label>
                 <div className="grid grid-cols-3 gap-2">
                   {METHODS.map(m => (
-                    <button key={m.id} onClick={() => setMethod(m.id)} className="rounded-xl p-3 text-center transition-all"
-                      style={{ background: method === m.id ? `${ACCENT}10` : 'rgba(255,255,255,0.03)', border: `1px solid ${method === m.id ? `${ACCENT}35` : 'rgba(255,255,255,0.07)'}` }}>
-                      <div className="text-lg mb-1">{m.icon}</div>
-                      <div className="text-xs font-bold" style={{ color: method === m.id ? ACCENT : '#999' }}>{m.label}</div>
-                      <div className="text-[9px] font-mono text-white/20">{m.fee ? `$${m.fee} fee` : 'No fee'}</div>
+                    <button key={m.id} onClick={() => setMethod(m.id)} className="rounded-lg p-3 text-center transition-all"
+                      style={{ background: method === m.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${method === m.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
+                      <div className="text-xs font-semibold mb-0.5" style={{ color: method === m.id ? '#fff' : 'rgba(255,255,255,0.5)' }}>{m.label}</div>
+                      <div className="text-[9px] font-mono text-white/30">{m.fee ? `$${m.fee} fee` : 'No fee'}</div>
                     </button>
                   ))}
                 </div>

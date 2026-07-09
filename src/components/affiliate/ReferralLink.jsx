@@ -99,12 +99,12 @@ export default function ReferralLink({ profile }) {
         <div className="p-5">
           <div className="grid grid-cols-3 gap-3 mb-6">
             {LEVEL_TIERS.map(t => (
-              <div key={t.lvl} className="rounded-xl p-4 text-center transition-all hover:scale-[1.02]"
-                style={{ background: `${t.color}08`, border: `1px solid ${t.color}20` }}>
-                <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black mb-2"
-                  style={{ background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}25` }}>{t.lvl}</div>
-                <div className="text-3xl font-black mb-1" style={{ color: t.color }}>{t.pct}</div>
-                <div className="text-xs font-bold text-white mb-0.5">{t.label}</div>
+              <div key={t.lvl} className="rounded-lg p-4 text-center"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold mb-2"
+                  style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)' }}>{t.lvl}</div>
+                <div className="text-3xl font-bold mb-1 text-white">{t.pct}</div>
+                <div className="text-xs font-semibold text-white/60 mb-0.5">{t.label}</div>
                 <div className="text-[10px] text-white/30">{t.desc}</div>
               </div>
             ))}
@@ -112,10 +112,10 @@ export default function ReferralLink({ profile }) {
           <div className="text-xs font-bold text-white mb-4 uppercase tracking-wider">Payout Reward Scaling</div>
           <div className="grid grid-cols-4 gap-2">
             {PAYOUT_TIERS.map(t => (
-              <div key={t.traders} className="rounded-xl p-3 text-center transition-all hover:scale-[1.02]"
-                style={{ background: `${t.color}08`, border: `1px solid ${t.color}20` }}>
+              <div key={t.traders} className="rounded-lg p-3 text-center"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="text-[10px] font-mono text-white/30 mb-1.5">{t.traders} traders</div>
-                <div className="text-xl font-black" style={{ color: t.color }}>{t.rate}</div>
+                <div className="text-xl font-bold text-white">{t.rate}</div>
               </div>
             ))}
           </div>

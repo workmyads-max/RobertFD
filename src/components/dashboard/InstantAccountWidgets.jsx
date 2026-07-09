@@ -31,9 +31,9 @@ function BufferZoneCard({ account }) {
           </div>
           <span className="text-sm font-bold text-foreground">Buffer Zone Status</span>
         </div>
-        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
-          style={{ background: isActivated ? 'rgba(16,185,129,0.12)' : 'rgba(255,92,0,0.1)', color: isActivated ? '#10b981' : '#FF5C00', border: `1px solid ${isActivated ? 'rgba(16,185,129,0.25)' : 'rgba(255,92,0,0.2)'}` }}>
-          {isActivated ? '🔒 Locked' : 'In Progress'}
+        <span className="text-[10px] px-2.5 py-1 rounded font-semibold tracking-wide"
+          style={{ background: isActivated ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', color: isActivated ? '#6ee7b7' : 'rgba(255,255,255,0.4)', border: `1px solid ${isActivated ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)'}` }}>
+          {isActivated ? 'LOCKED' : 'IN PROGRESS'}
         </span>
       </div>
 
@@ -151,7 +151,7 @@ function ConsistencyCard({ account, closedTrades }) {
             </div>
             <span className="text-sm font-bold text-foreground">Consistency Tracker</span>
           </div>
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white/40" style={{ background: 'rgba(255,255,255,0.05)' }}>Dormant</span>
+          <span className="text-[10px] px-2.5 py-1 rounded font-semibold text-white/30 tracking-wide" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>DORMANT</span>
         </div>
         <div className="p-8 text-center">
           <Lock className="w-8 h-8 text-white/15 mx-auto mb-3" />
@@ -171,9 +171,9 @@ function ConsistencyCard({ account, closedTrades }) {
           </div>
           <span className="text-sm font-bold text-foreground">Consistency Tracker</span>
         </div>
-        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
-          style={{ background: isPassed ? 'rgba(16,185,129,0.12)' : 'rgba(255,92,0,0.1)', color: isPassed ? '#10b981' : '#FF5C00', border: `1px solid ${isPassed ? 'rgba(16,185,129,0.25)' : 'rgba(255,92,0,0.2)'}` }}>
-          {isPassed ? '✅ Passed' : 'Not Eligible Yet'}
+        <span className="text-[10px] px-2.5 py-1 rounded font-semibold tracking-wide"
+          style={{ background: isPassed ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.04)', color: isPassed ? '#6ee7b7' : 'rgba(255,255,255,0.35)', border: `1px solid ${isPassed ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
+          {isPassed ? 'PASSED' : 'PENDING'}
         </span>
       </div>
 
@@ -265,7 +265,7 @@ function ProfitableDaysCard({ account, closedTrades }) {
             </div>
             <span className="text-sm font-bold text-foreground">Profitable Days</span>
           </div>
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white/40" style={{ background: 'rgba(255,255,255,0.05)' }}>Dormant</span>
+          <span className="text-[10px] px-2.5 py-1 rounded font-semibold text-white/30 tracking-wide" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>DORMANT</span>
         </div>
         <div className="p-8 text-center">
           <Lock className="w-8 h-8 text-white/15 mx-auto mb-3" />
@@ -285,9 +285,9 @@ function ProfitableDaysCard({ account, closedTrades }) {
           </div>
           <span className="text-sm font-bold text-foreground">Profitable Days Tracker</span>
         </div>
-        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
-          style={{ background: isComplete ? 'rgba(16,185,129,0.12)' : 'rgba(255,92,0,0.1)', color: isComplete ? '#10b981' : '#FF5C00', border: `1px solid ${isComplete ? 'rgba(16,185,129,0.25)' : 'rgba(255,92,0,0.2)'}` }}>
-          {isComplete ? '✅ Completed' : `${minDays - count} More Required`}
+        <span className="text-[10px] px-2.5 py-1 rounded font-semibold tracking-wide"
+          style={{ background: isComplete ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.04)', color: isComplete ? '#6ee7b7' : 'rgba(255,255,255,0.35)', border: `1px solid ${isComplete ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
+          {isComplete ? 'COMPLETED' : `${minDays - count} MORE NEEDED`}
         </span>
       </div>
 
@@ -355,13 +355,13 @@ function WithdrawableProfitCard({ account }) {
           </div>
           <span className="text-sm font-bold text-foreground">Withdrawable Reward</span>
         </div>
-        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
+        <span className="text-[10px] px-2.5 py-1 rounded font-semibold tracking-wide"
           style={{
-            background: isEligible ? 'rgba(16,185,129,0.12)' : isBufferActivated ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.05)',
-            color: isEligible ? '#10b981' : isBufferActivated ? '#FF5C00' : 'rgba(255,255,255,0.3)',
-            border: `1px solid ${isEligible ? 'rgba(16,185,129,0.25)' : isBufferActivated ? 'rgba(255,92,0,0.2)' : 'rgba(255,255,255,0.08)'}`,
+            background: isEligible ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.04)',
+            color: isEligible ? '#6ee7b7' : 'rgba(255,255,255,0.35)',
+            border: `1px solid ${isEligible ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}`,
           }}>
-          {isEligible ? '✅ Eligible' : isBufferActivated ? 'Pending Rules' : 'Locked'}
+          {isEligible ? 'ELIGIBLE' : isBufferActivated ? 'PENDING RULES' : 'LOCKED'}
         </span>
       </div>
 

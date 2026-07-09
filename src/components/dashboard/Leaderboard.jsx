@@ -371,10 +371,9 @@ export default function Leaderboard() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-2"
-            style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
-            <Radio className="w-3 h-3 text-yellow-400 animate-pulse" />
-            <span className="text-[10px] font-mono text-yellow-400 uppercase tracking-widest">Live Rankings</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded mb-2"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest">Live Rankings</span>
           </div>
           <h1 className="text-3xl font-black text-white flex items-center gap-3">
             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 3, repeat: Infinity }}>
@@ -384,9 +383,9 @@ export default function Leaderboard() {
           </h1>
           <p className="text-xs font-mono text-white/30 mt-1">Institutional performance rankings · Real backend data · No fake traders</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono"
-          style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }}>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded text-[10px] font-mono"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           LIVE · 30s refresh
         </div>
       </div>
@@ -420,18 +419,18 @@ export default function Leaderboard() {
           <Filter className="w-3 h-3" /> Sort by:
         </div>
         <button onClick={() => setSortBy('profit')}
-          className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+          className="px-3 py-1.5 rounded text-[11px] font-semibold transition-all"
           style={{
-            background: sortBy === 'profit' ? 'rgba(255,92,0,0.18)' : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${sortBy === 'profit' ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
-            color: sortBy === 'profit' ? '#FF5C00' : 'rgba(255,255,255,0.4)',
+            background: sortBy === 'profit' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${sortBy === 'profit' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
+            color: sortBy === 'profit' ? '#fff' : 'rgba(255,255,255,0.4)',
           }}>Top Profit %</button>
         <button onClick={() => setSortBy('payout')}
-          className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+          className="px-3 py-1.5 rounded text-[11px] font-semibold transition-all"
           style={{
-            background: sortBy === 'payout' ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${sortBy === 'payout' ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)'}`,
-            color: sortBy === 'payout' ? '#10b981' : 'rgba(255,255,255,0.4)',
+            background: sortBy === 'payout' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${sortBy === 'payout' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
+            color: sortBy === 'payout' ? '#fff' : 'rgba(255,255,255,0.4)',
           }}>Top Payouts</button>
         <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/30 mr-1">
@@ -439,11 +438,11 @@ export default function Leaderboard() {
         </div>
         {ACCOUNT_SIZE_FILTERS.map(f => (
           <button key={f.value} onClick={() => setSizeFilter(f.value)}
-            className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+            className="px-3 py-1.5 rounded text-[11px] font-semibold transition-all"
             style={{
-              background: sizeFilter === f.value ? 'rgba(255,92,0,0.18)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${sizeFilter === f.value ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`,
-              color: sizeFilter === f.value ? '#FF5C00' : 'rgba(255,255,255,0.4)',
+              background: sizeFilter === f.value ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${sizeFilter === f.value ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
+              color: sizeFilter === f.value ? '#fff' : 'rgba(255,255,255,0.4)',
             }}>{f.label}</button>
         ))}
       </div>

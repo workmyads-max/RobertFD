@@ -100,9 +100,8 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
               {/* KYC badge */}
               <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center"
                 style={{
-                  background: isVerified ? '#059669' : '#d97706',
+                  background: isVerified ? '#059669' : '#92400e',
                   border: '2px solid rgba(14,18,28,1)',
-                  boxShadow: isVerified ? '0 0 8px rgba(5,150,105,0.5)' : '0 0 8px rgba(217,119,6,0.5)',
                 }}>
                 {isVerified
                   ? <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
@@ -130,14 +129,14 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
               {/* Badges */}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {isVerified ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-medium"
-                    style={{ background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.2)', color: '#34d399' }}>
-                    <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">KYC Verified</span><span className="xs:hidden">Verified</span>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold"
+                    style={{ background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.25)', color: '#6ee7b7' }}>
+                    <ShieldCheck className="w-3 h-3" /> Verified
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-medium"
-                    style={{ background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', color: '#fbbf24' }}>
-                    <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">Verify Identity</span><span className="xs:hidden">Verify</span>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold"
+                    style={{ background: 'rgba(146,64,14,0.15)', border: '1px solid rgba(146,64,14,0.3)', color: '#fbbf24' }}>
+                    <AlertCircle className="w-3 h-3" /> Verify KYC
                   </div>
                 )}
 
@@ -238,11 +237,8 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
 
           {/* Platform Status */}
           <div className="flex items-center gap-1.5">
-            <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2">
-              <div className="absolute inset-0 rounded-full" style={{ background: '#10b981', opacity: 0.3 }} />
-              <motion.div className="absolute inset-0 rounded-full" style={{ background: '#10b981' }} animate={{ scale: [1, 1.4, 1], opacity: [1, 0.8, 1] }} transition={{ duration: 2, repeat: Infinity }} />
-            </div>
-            <span className="text-[9px] sm:text-[10px] text-emerald-400 font-bold">Platform Online</span>
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#10b981' }} />
+            <span className="text-[10px] text-white/50 font-medium">Platform Online</span>
           </div>
 
           {/* Divider */}
@@ -303,9 +299,9 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
           </div>
 
           {/* MT5 Badge - Right aligned */}
-          <div className="ml-auto flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-white/40" />
-            <span className="text-[9px] sm:text-[10px] font-bold text-white/60">MT5 Live</span>
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-[10px] font-medium text-white/50">MT5 Live</span>
           </div>
         </div>
       </div>

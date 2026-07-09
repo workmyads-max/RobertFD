@@ -24,27 +24,27 @@ export default function CommissionHistory({ commissions = [] }) {
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-4">
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex gap-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {['all', 'pending', 'approved', 'paid', 'rejected'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all"
+              className="px-3 py-2 text-[11px] font-semibold capitalize transition-all relative"
               style={{
-                background: filter === s ? 'rgba(255,92,0,0.15)' : 'transparent',
-                color: filter === s ? '#FF5C00' : 'hsl(var(--muted-foreground))',
-                border: filter === s ? '1px solid rgba(255,92,0,0.3)' : '1px solid transparent',
+                color: filter === s ? '#fff' : 'rgba(255,255,255,0.35)',
+                borderBottom: filter === s ? '2px solid #FF5C00' : '2px solid transparent',
               }}>{s}</button>
           ))}
         </div>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex gap-1">
           {['all', 'challenge_purchase', 'payout_reward'].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
-              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              className="px-3 py-2 text-[11px] font-semibold transition-all"
               style={{
-                background: typeFilter === t ? 'rgba(255,92,0,0.15)' : 'transparent',
-                color: typeFilter === t ? '#FF5C00' : 'hsl(var(--muted-foreground))',
-                border: typeFilter === t ? '1px solid rgba(255,92,0,0.3)' : '1px solid transparent',
+                color: typeFilter === t ? '#fff' : 'rgba(255,255,255,0.35)',
+                background: typeFilter === t ? 'rgba(255,255,255,0.07)' : 'transparent',
+                border: typeFilter === t ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '6px',
               }}>
-              {t === 'all' ? 'All Types' : t === 'challenge_purchase' ? '💼 Purchases' : '🏆 Payouts'}
+              {t === 'all' ? 'All Types' : t === 'challenge_purchase' ? 'Purchases' : 'Payouts'}
             </button>
           ))}
         </div>
