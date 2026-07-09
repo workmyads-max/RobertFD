@@ -142,7 +142,7 @@ function PodiumCard({ trader, rank, onCelebrate }) {
       className={`${podiumOrder[rank]} cursor-pointer flex flex-col items-center w-full max-w-[240px]`}
     >
       <motion.div whileHover={{ y: -6 }} whileTap={{ scale: 0.98 }}
-        className="relative w-full rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-full rounded-lg overflow-hidden flex flex-col"
         style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
 
         {/* Top accent bar */}
@@ -236,7 +236,7 @@ function LeaderRow({ trader, rank }) {
   return (
     <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(rank * 0.025, 0.5) }}
       whileHover={{ x: 4 }}
-      className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all cursor-default"
+      className="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all cursor-default"
       style={{ background: m.bg, border: `1px solid ${m.border}` }}>
 
       {/* Animated rank badge */}
@@ -253,16 +253,16 @@ function LeaderRow({ trader, rank }) {
 
       {/* Platform */}
       <div className="hidden md:block flex-shrink-0">
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
-          style={{ background: `${plt.color}15`, color: plt.color, border: `1px solid ${plt.color}25` }}>
+        <span className="px-2 py-0.5 rounded text-[9px] font-bold"
+          style={{ background: `${plt.color}0d`, color: plt.color, border: `1px solid ${plt.color}22` }}>
           {plt.label}
         </span>
       </div>
 
       {/* Challenge type */}
       <div className="hidden sm:block flex-shrink-0">
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-black"
-          style={{ background: trader.status === 'funded' ? 'rgba(204,255,0,0.1)' : 'rgba(255,92,0,0.1)', border: `1px solid ${trader.status === 'funded' ? 'rgba(204,255,0,0.3)' : 'rgba(255,92,0,0.3)'}`, color: trader.status === 'funded' ? '#CCFF00' : '#FF5C00' }}>
+        <span className="px-2 py-0.5 rounded text-[9px] font-bold"
+          style={{ background: trader.status === 'funded' ? 'rgba(204,255,0,0.08)' : 'rgba(255,92,0,0.08)', border: `1px solid ${trader.status === 'funded' ? 'rgba(204,255,0,0.22)' : 'rgba(255,92,0,0.22)'}`, color: trader.status === 'funded' ? '#CCFF00' : '#FF5C00' }}>
           {trader.challengeLabel}
         </span>
       </div>
@@ -384,7 +384,7 @@ export default function Leaderboard() {
           <p className="text-xs font-mono text-white/30 mt-1">Institutional performance rankings · Real backend data · No fake traders</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 rounded text-[10px] font-mono"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           LIVE · 30s refresh
         </div>
@@ -402,7 +402,7 @@ export default function Leaderboard() {
           return (
             <motion.div key={s.label}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-              className="rounded-2xl p-4" style={{ background: `${s.color}08`, border: `1px solid ${s.color}22` }}>
+              className="rounded-lg p-4" style={{ background: `${s.color}08`, border: `1px solid ${s.color}22` }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[9px] font-mono uppercase text-white/30">{s.label}</span>
                 <Icon className="w-4 h-4" style={{ color: s.color }} />
@@ -451,14 +451,14 @@ export default function Leaderboard() {
       {countries.length > 0 && (
         <div className="flex gap-1.5 flex-wrap">
           <button onClick={() => setCountry('all')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-mono transition-all"
-            style={{ background: country === 'all' ? 'rgba(255,92,0,0.18)' : 'rgba(255,255,255,0.04)', border: `1px solid ${country === 'all' ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`, color: country === 'all' ? '#FF5C00' : 'rgba(255,255,255,0.4)' }}>
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-mono transition-all"
+            style={{ background: country === 'all' ? 'rgba(255,92,0,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${country === 'all' ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.07)'}`, color: country === 'all' ? '#FF5C00' : 'rgba(255,255,255,0.4)' }}>
             <Globe className="w-3 h-3" /> All Countries
           </button>
           {countries.map(c => (
             <button key={c} onClick={() => setCountry(c)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-mono transition-all"
-              style={{ background: country === c ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${country === c ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.07)'}`, color: country === c ? '#FF5C00' : 'rgba(255,255,255,0.35)' }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-mono transition-all"
+              style={{ background: country === c ? 'rgba(255,92,0,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${country === c ? 'rgba(255,92,0,0.3)' : 'rgba(255,255,255,0.07)'}`, color: country === c ? '#FF5C00' : 'rgba(255,255,255,0.35)' }}>
               <span>{FLAG(c)}</span><span>{COUNTRY_LABEL(c)}</span>
             </button>
           ))}
@@ -488,7 +488,7 @@ export default function Leaderboard() {
         </div>
       ) : filtered.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="py-20 text-center rounded-2xl border border-dashed border-white/10">
+          className="py-20 text-center rounded-lg border border-dashed border-white/10">
           <Trophy className="w-12 h-12 text-white/10 mx-auto mb-3" />
           <div className="text-base font-bold text-white/40">No traders ranked yet</div>
           <div className="text-xs font-mono text-white/20 mt-1">

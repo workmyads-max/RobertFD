@@ -37,9 +37,9 @@ function WithdrawalCard({ w, i }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-      className="rounded-2xl overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${cfg.color}25` }}>
-      <div className="h-0.5" style={{ background: cfg.color, opacity: 0.6 }} />
+      className="rounded-lg overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${cfg.color}22` }}>
+      <div className="h-0.5" style={{ background: cfg.color, opacity: 0.4 }} />
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -56,15 +56,15 @@ function WithdrawalCard({ w, i }) {
 
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="text-xs font-bold text-emerald-400">${traderShare.toFixed(2)}</div>
             <div className="text-[9px] font-mono text-muted-foreground">Your {w.profit_split_pct || 80}%</div>
           </div>
-          <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="text-xs font-bold text-yellow-400">-${fee.toFixed(2)}</div>
             <div className="text-[9px] font-mono text-muted-foreground">Fee (5%)</div>
           </div>
-          <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="text-xs font-bold text-primary">${final.toFixed(2)}</div>
             <div className="text-[9px] font-mono text-muted-foreground">Final Payout</div>
           </div>
@@ -77,7 +77,7 @@ function WithdrawalCard({ w, i }) {
         </button>
 
         {expanded && (
-          <div className="mt-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="mt-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
             {[
               { label: 'Gross Reward', val: `$${(w.amount||0).toLocaleString()}`, color: 'text-foreground' },
               { label: `Company Share (${100 - (w.profit_split_pct||80)}%)`, val: `-$${companyShare.toFixed(2)}`, color: 'text-red-400' },
@@ -94,7 +94,7 @@ function WithdrawalCard({ w, i }) {
         )}
 
         {w.admin_notes && (
-          <div className="mt-3 p-3 rounded-xl text-xs text-muted-foreground" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="mt-3 p-3 rounded-lg text-xs text-muted-foreground" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <span className="text-foreground font-semibold">Note: </span>{w.admin_notes}
           </div>
         )}
@@ -259,8 +259,8 @@ export default function Withdrawals({ user, onNavigate }) {
         </div>
         <button onClick={() => openForm('')}
           disabled={!kycApproved || eligibleAccounts.length === 0}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)', boxShadow: '0 4px 20px rgba(255,92,0,0.3)' }}>
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-100"
+          style={{ background: '#FF5C00' }}>
           <Plus className="w-4 h-4" /> Request Payout
         </button>
       </div>
@@ -269,7 +269,7 @@ export default function Withdrawals({ user, onNavigate }) {
           indicator until the real status arrives, then the correct card. */}
       {kycLoading ? (
         <div className="flex justify-center mb-5">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-3 px-5 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-xs font-mono text-muted-foreground">Loading KYC status…</span>
           </div>
@@ -368,22 +368,22 @@ export default function Withdrawals({ user, onNavigate }) {
       )}
 
       {/* Profit split info banner */}
-      <div className="rounded-2xl p-5 mb-6 flex items-center justify-between gap-4"
-        style={{ background: 'linear-gradient(135deg,rgba(255,92,0,0.12),rgba(255,92,0,0.05))', border: '1px solid rgba(255,92,0,0.25)' }}>
+      <div className="rounded-lg p-5 mb-6 flex items-center justify-between gap-4"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div>
-          <div className="text-base font-black text-foreground mb-1">80/20 Reward Split</div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-base font-bold text-white/90 mb-1">80/20 Reward Split</div>
+          <div className="text-sm text-white/40">
             ${fundedAccounts.reduce((s, a) => s + (a.challenge_type === 'instant_account' ? Math.max(0, a.withdrawable_profit || 0) : Math.max(0, a.pnl || 0)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} available reward.
             You keep 80% - only a 5% processing fee is deducted from your share. No affiliate deductions.
           </div>
         </div>
-        <DollarSign className="w-8 h-8 text-primary flex-shrink-0" />
+        <DollarSign className="w-8 h-8 text-white/20 flex-shrink-0" />
       </div>
 
       {/* Withdrawal list */}
       <div className="space-y-4">
         {withdrawals.length === 0 && (
-          <div className="text-center py-12 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <div className="text-center py-12 rounded-lg" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
             <DollarSign className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No withdrawal requests yet.</p>
           </div>
@@ -398,7 +398,7 @@ export default function Withdrawals({ user, onNavigate }) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="w-full max-w-md rounded-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-md rounded-lg max-h-[90vh] overflow-y-auto"
               style={{ background: '#0c0c0f', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center justify-between p-5 border-b border-white/5">
                 <h2 className="text-lg font-black">Request Payout</h2>
@@ -419,10 +419,10 @@ export default function Withdrawals({ user, onNavigate }) {
                         const share = (profit * (split / 100)).toFixed(2);
                         return (
                           <button key={acc.account_id} onClick={() => setSelectedAccountId(acc.account_id)}
-                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all"
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all"
                             style={{
-                              background: selectedAccountId === acc.account_id ? 'rgba(255,92,0,0.12)' : 'rgba(255,255,255,0.04)',
-                              border: `1px solid ${selectedAccountId === acc.account_id ? 'rgba(255,92,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                              background: selectedAccountId === acc.account_id ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${selectedAccountId === acc.account_id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}`,
                             }}>
                             <span className="font-mono font-bold text-foreground">{acc.account_id}</span>
                             <span className="text-emerald-400 font-bold">${share} (your {split}%)</span>
@@ -436,8 +436,8 @@ export default function Withdrawals({ user, onNavigate }) {
                 {/* Fixed amount - read only */}
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Withdrawal Amount (Your {profitSplitPct}% Share)</label>
-                  <div className="w-full rounded-xl px-4 py-3 text-sm font-black text-emerald-400 cursor-not-allowed"
-                    style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                  <div className="w-full rounded-lg px-4 py-3 text-sm font-bold text-emerald-400 cursor-not-allowed"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     ${autoAmount.toFixed(2)}
                     <span className="text-xs font-normal text-muted-foreground ml-2">(fixed - 80% of ${selectedProfit.toFixed(2)} reward)</span>
                   </div>
@@ -449,8 +449,8 @@ export default function Withdrawals({ user, onNavigate }) {
                   <div className="grid grid-cols-3 gap-2">
                     {METHODS.map(m => (
                       <button key={m.id} onClick={() => setMethod(m.id)}
-                        className="py-2.5 rounded-xl text-xs font-semibold transition-all"
-                        style={{ background: method === m.id ? 'rgba(255,92,0,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${method === m.id ? 'rgba(255,92,0,0.5)' : 'rgba(255,255,255,0.08)'}`, color: method === m.id ? '#FF5C00' : '#666' }}>
+                        className="py-2.5 rounded-lg text-xs font-semibold transition-all"
+                        style={{ background: method === m.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${method === m.id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}`, color: method === m.id ? '#fff' : 'rgba(255,255,255,0.35)' }}>
                         {m.icon} {m.label}
                       </button>
                     ))}
@@ -461,15 +461,15 @@ export default function Withdrawals({ user, onNavigate }) {
                 <div>
                   <label className="text-xs font-mono text-muted-foreground mb-1.5 block uppercase">Payout Wallet Address</label>
                   {savedWalletAddress ? (
-                    <div className="w-full rounded-xl px-4 py-3 text-sm font-mono text-foreground cursor-not-allowed break-all"
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.25)', color: '#94a3b8' }}>
+                    <div className="w-full rounded-lg px-4 py-3 text-sm font-mono text-foreground cursor-not-allowed break-all"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
                       {savedWalletAddress}
-                      <div className="text-[10px] text-emerald-400 mt-1">✓ From your saved payout wallet settings</div>
+                      <div className="text-[10px] text-white/40 mt-1">From your saved payout wallet settings</div>
                     </div>
                   ) : (
-                    <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}>
-                      <Wallet className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
-                      <p className="text-xs text-yellow-400 font-semibold mb-1">No wallet address saved</p>
+                    <div className="rounded-lg p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <Wallet className="w-5 h-5 text-white/30 mx-auto mb-2" />
+                      <p className="text-xs text-white/50 font-semibold mb-1">No wallet address saved</p>
                       <p className="text-[11px] text-muted-foreground mb-3">Go to Settings → Payout Wallets to save your primary wallet address.</p>
                       <button onClick={() => { setShowForm(false); onNavigate?.('settings'); }}
                         className="flex items-center gap-1.5 mx-auto text-xs font-bold text-primary hover:underline">
@@ -481,7 +481,7 @@ export default function Withdrawals({ user, onNavigate }) {
 
                 {/* Payout breakdown */}
                 {autoAmount > 0 && (
-                  <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="px-4 py-2 text-[10px] font-mono text-muted-foreground uppercase bg-white/[0.02]">Payout Breakdown</div>
                     {[
                       { label: 'Gross Reward', val: `$${selectedProfit.toFixed(2)}`, color: 'text-foreground' },
@@ -495,16 +495,16 @@ export default function Withdrawals({ user, onNavigate }) {
                       </div>
                     ))}
                     <div className="flex justify-between px-4 py-2.5 border-t border-white/10"
-                      style={{ background: 'rgba(255,92,0,0.06)' }}>
+                      style={{ background: 'rgba(255,255,255,0.04)' }}>
                       <span className="text-xs font-bold text-foreground">You Receive</span>
-                      <span className="text-sm font-black text-primary">${youReceive.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-primary">${youReceive.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Withdrawal requirements not met warning */}
                 {selectedAccount && !isSelectedEligible && (
-                  <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                  <div className="rounded-lg px-4 py-3" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
                     <div className="flex items-center gap-2 mb-1">
                       <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
                       <span className="text-xs font-bold text-red-400">Withdrawal Requirements Not Met</span>
@@ -521,18 +521,18 @@ export default function Withdrawals({ user, onNavigate }) {
 
                 {/* Error message */}
                 {submitError && (
-                  <div className="rounded-xl px-4 py-3 text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                  <div className="rounded-lg px-4 py-3 text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
                     {submitError}
                   </div>
                 )}
 
                 <div className="flex gap-3 pt-2">
-                  <button onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  <button onClick={() => setShowForm(false)} className="flex-1 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
                     style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
                   <button onClick={() => createMutation.mutate()}
                     disabled={!savedWalletAddress || createMutation.isPending || autoAmount <= 0 || !isSelectedEligible}
-                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40"
-                    style={{ background: 'linear-gradient(90deg,#FF5C00,#FF7A2F)' }}>
+                    className="flex-1 py-3 rounded-lg text-sm font-bold text-white disabled:opacity-40"
+                    style={{ background: '#FF5C00' }}>
                     {createMutation.isPending ? 'Submitting...' : 'Submit Request'}
                   </button>
                 </div>
