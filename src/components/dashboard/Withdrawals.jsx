@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, Plus, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Bell, Wallet, ExternalLink } from 'lucide-react';
 import { AlertCard } from '@/components/ui/alert-card';
@@ -105,7 +105,10 @@ function WithdrawalCard({ w, i }) {
 
 export default function Withdrawals({ user, onNavigate }) {
   const [showForm, setShowForm] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState(() => {
+    // Pre-select account from sessionStorage (set by "Request Withdrawal" buttons)
+    return sessionStorage.getItem('selectedAccountId') || '';
+  });
   const [showKycAlert, setShowKycAlert] = useState(true);
   const [method, setMethod] = useState('usdt_trc20');
   const [submitError, setSubmitError] = useState('');
@@ -124,6 +127,20 @@ export default function Withdrawals({ user, onNavigate }) {
     enabled: !!user?.email,
     placeholderData: (prev) => prev ?? [],
   });
+
+  // Open the withdrawal form automatically when navigated from "Request Withdrawal"
+  // buttons (sets selectedAccountId in sessionStorage + tab=withdrawals in URL)
+  useEffect(() => {
+    const savedId = sessionStorage.getItem('selectedAccountId');
+    if (savedId && accounts.length > 0 && !showForm) {
+      const exists = accounts.find(a => a.account_id === savedId);
+      if (exists) {
+        setSelectedAccountId(savedId);
+        setShowForm(true);
+      }
+      sessionStorage.removeItem('selectedAccountId');
+    }
+  }, [accounts, showForm]);
 
   // Include funded accounts AND active instant_account accounts (payout eligible if instant_payout_eligible=true)
   const fundedAccounts = accounts.filter(a => a.status === 'funded' || (a.challenge_type === 'instant_account' && a.status === 'active'));

@@ -26,7 +26,10 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
   const [submitError, setSubmitError] = useState('');
 
   const selectedAccount = fundedAccounts.find(a => a.account_id === selectedAccountId) || fundedAccounts[0];
-  const selectedProfit = Math.max(0, selectedAccount?.pnl || 0);
+  // Instant accounts: use withdrawable_profit (spillover-capped); others use raw pnl
+  const selectedProfit = selectedAccount?.challenge_type === 'instant_account'
+    ? Math.max(0, selectedAccount?.withdrawable_profit || 0)
+    : Math.max(0, selectedAccount?.pnl || 0);
   const profitSplitPct = selectedAccount?.rule_snapshot?.profit_split ?? 80;
   const autoAmount = parseFloat((selectedProfit * (profitSplitPct / 100)).toFixed(2));
   const fee = parseFloat((autoAmount * FEE_PCT).toFixed(2));
@@ -45,16 +48,18 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
   ).size;
   const tradingDays = Math.max(tradingDaysFromTrades, selectedAccount?.trading_days || 0);
 
-  // Eligibility checks
+  // Eligibility checks - instant accounts use instant_payout_eligible instead of funded status
+  const isInstantAccount = selectedAccount?.challenge_type === 'instant_account';
   const isFunded = selectedAccount?.status === 'funded';
+  const isPayoutEligible = isInstantAccount ? (selectedAccount?.instant_payout_eligible === true) : isFunded;
   const hasProfit = selectedProfit > 0;
-  const hasMinTradingDays = tradingDays >= 1;
-  const isEligible = isFunded && hasProfit && hasMinTradingDays && kycApproved && savedWalletAddress;
+  const hasMinTradingDays = isInstantAccount ? true : (tradingDays >= 1);
+  const isEligible = isPayoutEligible && hasProfit && hasMinTradingDays && kycApproved && savedWalletAddress;
   
   const requirements = [];
-  if (!isFunded) requirements.push('Account must be in funded status');
+  if (!isPayoutEligible) requirements.push(isInstantAccount ? 'Instant account payout requirements not met (Buffer Zone, Consistency, Profitable Days)' : 'Account must be in funded status');
   if (!hasProfit) requirements.push('No withdrawable profit available');
-  if (!hasMinTradingDays) requirements.push(`Minimum 1 trading day required (${tradingDays}/1)`);
+  if (!isInstantAccount && !hasMinTradingDays) requirements.push(`Minimum 1 trading day required (${tradingDays}/1)`);
   if (!kycApproved) requirements.push('KYC verification must be approved');
   if (!savedWalletAddress) requirements.push('Payout wallet address required');
 
@@ -109,7 +114,9 @@ export default function QuickWithdrawModal({ accounts = [], account, user, onClo
                 <label className="text-xs font-mono text-muted-foreground mb-2 block uppercase">Select Account</label>
                 <div className="space-y-2">
                   {fundedAccounts.map(acc => {
-                    const profit = Math.max(0, acc.pnl || 0);
+                    const profit = acc.challenge_type === 'instant_account'
+                      ? Math.max(0, acc.withdrawable_profit || 0)
+                      : Math.max(0, acc.pnl || 0);
                     const split = acc.rule_snapshot?.profit_split ?? 80;
                     const share = (profit * (split / 100)).toFixed(2);
                     return (

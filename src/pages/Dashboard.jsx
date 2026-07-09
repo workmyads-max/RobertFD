@@ -94,6 +94,14 @@ export default function Dashboard() {
       }
       // Clean up URL after navigation
       window.history.replaceState({}, '', window.location.pathname);
+    } else if (tab === 'withdrawals') {
+      setActivePage('withdrawals');
+      // Store account ID for Withdrawals form to pre-select
+      if (accountId) {
+        sessionStorage.setItem('selectedAccountId', accountId);
+      }
+      // Clean up URL after navigation
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
 
