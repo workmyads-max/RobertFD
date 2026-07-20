@@ -93,7 +93,7 @@ export default function ComingSoon({ now, launchMs }) {
             initial={{ scale: 0.94, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transform: 'scale(1.3)' }}
+            style={{ transform: 'scale(5)' }}
           >
             <XFLogo size="xl" animate />
           </motion.div>
