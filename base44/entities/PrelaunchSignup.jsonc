@@ -1,0 +1,40 @@
+{
+  "name": "PrelaunchSignup",
+  "type": "object",
+  "permissions": {
+    "read": "admin",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Subscriber email (stored lowercased for dedupe)"
+    },
+    "confirmation_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the 'you're on the list' confirmation email was sent"
+    },
+    "live_notified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the 'we are live' email was sent after launch"
+    },
+    "notified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "default": "coming_soon_page"
+    }
+  },
+  "required": [
+    "email"
+  ]
+}
