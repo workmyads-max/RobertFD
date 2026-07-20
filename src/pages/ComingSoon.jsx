@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// Coming Soon — pre-launch gate (v2)
 import { motion } from 'framer-motion';
 import { Mail, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import XFLogo from '@/components/shared/XFLogo';
