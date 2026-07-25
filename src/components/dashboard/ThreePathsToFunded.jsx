@@ -59,11 +59,12 @@ function buildSpecs(pathId, plan) {
     // Fallback so the card never renders empty if a plan is missing
     if (pathId === 'two-step') {
       return [
-        { label: 'PHASE 1 TARGET', value: '—' },
-        { label: 'PHASE 2 TARGET', value: '—' },
-        { label: 'DAILY DD', value: '—' },
-        { label: 'MAX DD', value: '—' },
-        { label: 'LEVERAGE', value: '—' },
+        { label: 'PROFIT TARGET', value: '—' },
+        { label: 'MAX DAILY LOSS', value: '—' },
+        { label: 'MAX LOSS', value: '—' },
+        { label: 'MIN TRADING DAYS', value: '—' },
+        { label: 'TRADING PERIOD', value: 'Unlimited' },
+        { label: 'REFUND', value: 'Yes - 100%' },
         { label: 'REWARD SPLIT', value: '—', highlight: true },
       ];
     }
@@ -88,16 +89,15 @@ function buildSpecs(pathId, plan) {
     ];
   }
 
-  const leverage = `${plan.leverage_standard || '1:100'} / ${plan.leverage_swing || '1:30'}`;
-
   if (pathId === 'two-step') {
     return [
-      { label: 'PHASE 1 TARGET', value: pct(plan.phase1_target) },
-      { label: 'PHASE 2 TARGET', value: pct(plan.phase2_target) },
-      { label: 'DAILY DD', value: pct(plan.daily_dd) },
-      { label: 'MAX DD', value: pct(plan.max_dd) },
-      { label: 'LEVERAGE', value: leverage },
-      { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
+      { label: 'PROFIT TARGET', value: `${pct(plan.phase1_target)} / ${pct(plan.phase2_target)}` },
+      { label: 'MAX DAILY LOSS', value: pct(plan.daily_dd) },
+      { label: 'MAX LOSS', value: pct(plan.max_dd) },
+      { label: 'MIN TRADING DAYS', value: '4 days' },
+      { label: 'TRADING PERIOD', value: 'Unlimited' },
+      { label: 'REFUND', value: 'Yes - 100%' },
+      { label: 'REWARD SPLIT', value: `Up to ${pct(plan.profit_split)}`, highlight: true },
     ];
   }
   if (pathId === 'instant') {
