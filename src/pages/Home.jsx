@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import TrustBar from '../components/landing/TrustBar';
@@ -8,6 +9,7 @@ import FundedShowcaseDemo from '../components/landing/FundedShowcaseDemo';
 import FundedTraderExperience from '../components/landing/FundedTraderExperience';
 import ChallengeHub from '../components/landing/ChallengeHub';
 import ChallengeExamples from '../components/landing/ChallengeExamples';
+import PayoutCalculator from '../components/landing/PayoutCalculator';
 import RulesSection from '../components/landing/RulesSection';
 import PlatformsSection from '../components/landing/PlatformsSection';
 import MobileAppShowcase from '../components/landing/MobileAppShowcase';
@@ -34,6 +36,7 @@ const IMAGES = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
   // ── Referral tracking - capture ?ref=CODE into localStorage (30-day expiry)
   // and fire a non-blocking click-tracking backend call. Also kept in a cookie
   // for backward compatibility with any legacy reads.
@@ -68,6 +71,7 @@ export default function Home() {
       </section>
       <ChallengeHub />
       <ChallengeExamples />
+      <PayoutCalculator onNavigate={(path) => navigate(`/${path}`)} />
       <RulesSection />
       <PlatformsSection mobileImage={IMAGES.mobile} />
       <MobileAppShowcase />
