@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 
 const tabs = [
   { id: 'profile',  label: 'Profile',        icon: User },
@@ -199,8 +200,9 @@ const WALLET_TYPES = [
 ];
 
 export default function DashboardSettings({ user }) {
+  const { checkAuth } = useCustomAuth();
   const [activeTab, setActiveTab] = useState('profile');
-  const [profile, setProfile] = useState({ full_name: user?.full_name || '', email: user?.email || '' });
+  const [profile, setProfile] = useState({ display_name: user?.display_name || user?.full_name || '', email: user?.email || '' });
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [wallets, setWallets] = useState({ usdt_trc20: user?.usdt_trc20 || '', bitcoin: user?.bitcoin || '', usdt_bep20: user?.usdt_bep20 || '', ethereum: user?.ethereum || '' });
   const [notifs, setNotifs] = useState({ email: true, payouts: true, news: false, marketing: false });
@@ -230,6 +232,7 @@ export default function DashboardSettings({ user }) {
 
   const saveMutation = useMutation({
        mutationFn: (data) => base44.auth.updateMe(data),
+       onSuccess: () => checkAuth(),
      });
 
     const passwordUpdateMutation = useMutation({
@@ -462,7 +465,7 @@ export default function DashboardSettings({ user }) {
 
                   <Card title="Personal Information" subtitle="Update your profile and contact details">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <InputField label="Full Name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} placeholder="John Doe" />
+                      <InputField label="Full Name" value={profile.display_name} onChange={e => setProfile(p => ({ ...p, display_name: e.target.value }))} placeholder="John Doe" />
                       <InputField label="Email Address" value={profile.email} placeholder="your@email.com" disabled hint="Email cannot be changed" />
                       <InputField label="Phone" value={profile.phone || user?.phone || ''} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+1234567890" />
                       <InputField label="Username" value={profile.username || ''} onChange={e => setProfile(p => ({ ...p, username: e.target.value }))} placeholder="trader_john" />

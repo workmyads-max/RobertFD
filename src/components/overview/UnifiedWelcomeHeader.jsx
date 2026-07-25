@@ -11,7 +11,7 @@ export default function UnifiedWelcomeHeader({ user, kyc, onStartChallenge }) {
   // Use KYC status from prop (loaded in parent), fallback to safe default during loading
   const kycStatus = kyc?.status || 'not_submitted';
   const isVerified = kycStatus === 'approved';
-  const displayName = user?.full_name || 'Trader';
+  const displayName = user?.display_name || user?.full_name || 'Trader';
   const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   const { data: socialSettings = [] } = useQuery({

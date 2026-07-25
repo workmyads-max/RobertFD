@@ -10,6 +10,10 @@
         "user"
       ]
     },
+    "display_name": {
+      "type": "string",
+      "description": "User-editable display name shown in the welcome header (built-in full_name cannot be updated via updateMe)"
+    },
     "avatar_url": {
       "type": "string",
       "description": "Profile picture URL"
