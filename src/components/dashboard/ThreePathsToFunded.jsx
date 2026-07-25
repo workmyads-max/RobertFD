@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Layers, Zap, Lightbulb, ChevronDown, ArrowRight } from 'lucide-react';
+import { Layers, Zap, Target, ChevronDown, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -21,32 +21,32 @@ const PATH_TEMPLATE = [
     buttonColor: '#F56C2C',
   },
   {
-    id: 'instant',
+    id: 'instant_account',
     icon: Zap,
     iconColor: '#F56C2C',
     badge: 'MOST POPULAR',
     badgeColor: '#F56C2C',
     label: 'NO EVALUATION',
     labelColor: '#F56C2C',
-    title: 'Instant Funding',
-    description: 'Skip evaluation entirely. Get funded capital the same day and request payouts daily from day one.',
+    title: 'Instant Account',
+    description: 'Skip evaluation and get funded instantly. Buffer zone protection locks in profits, with daily payouts and trailing drawdown safety.',
     buttonStyle: 'solid',
-    buttonText: 'Get Instant Funding →',
+    buttonText: 'Get Instant Account →',
     buttonColor: '#F56C2C',
     buttonTextColor: '#FFFFFF',
   },
   {
-    id: 'instant_light',
-    icon: Lightbulb,
+    id: 'one_step',
+    icon: Target,
     iconColor: '#CCFF00',
-    badge: 'BEST VALUE',
+    badge: '90% REWARD SPLIT',
     badgeColor: '#CCFF00',
-    label: '50% CHEAPER - TRAILING DD',
+    label: 'SINGLE PHASE',
     labelColor: '#CCFF00',
-    title: 'Instant Light',
-    description: 'Most affordable path to funding. Trailing drawdown protection moves your safety floor up as your balance grows.',
+    title: 'One Step',
+    description: 'One phase to funded. Reach the 8% target with no time limit and no minimum trading days. Highest reward split we offer.',
     buttonStyle: 'solid',
-    buttonText: 'Get Instant Light →',
+    buttonText: 'Get One Step →',
     buttonColor: '#CCFF00',
     buttonTextColor: '#000000',
   },
@@ -68,23 +68,23 @@ function buildSpecs(pathId, plan) {
         { label: 'REWARD SPLIT', value: '—', highlight: true },
       ];
     }
-    if (pathId === 'instant') {
+    if (pathId === 'instant_account') {
       return [
-        { label: 'EVALUATION', value: 'None' },
-        { label: 'DAILY DD', value: '—' },
-        { label: 'MAX DD', value: '—' },
+        { label: 'BUFFER ZONE', value: '—' },
+        { label: 'MAX DAILY LOSS', value: '—' },
+        { label: 'TRAILING MAX LOSS', value: '—' },
         { label: 'LEVERAGE', value: '—' },
         { label: 'PAYOUTS', value: 'Daily' },
         { label: 'REWARD SPLIT', value: '—', highlight: true },
       ];
     }
-    // instant_light
+    // one_step
     return [
-      { label: 'EVALUATION', value: 'None' },
-      { label: 'TRAILING DD', value: '—' },
-      { label: 'DAILY DD', value: '—' },
-      { label: 'LEVERAGE', value: '—' },
-      { label: 'PRICE', value: '50% Off', highlight: true },
+      { label: 'REWARD TARGET', value: '—' },
+      { label: 'MAX DAILY LOSS', value: '—' },
+      { label: 'TRAILING MAX LOSS', value: '—' },
+      { label: 'MIN TRADING DAYS', value: 'No minimum' },
+      { label: 'BEST DAY RULE', value: '—' },
       { label: 'REWARD SPLIT', value: '—', highlight: true },
     ];
   }
@@ -100,23 +100,23 @@ function buildSpecs(pathId, plan) {
       { label: 'REWARD SPLIT', value: `Up to ${pct(plan.profit_split)}`, highlight: true },
     ];
   }
-  if (pathId === 'instant') {
+  if (pathId === 'instant_account') {
     return [
-      { label: 'EVALUATION', value: 'None' },
-      { label: 'DAILY DD', value: pct(plan.daily_dd) },
-      { label: 'MAX DD', value: pct(plan.max_dd) },
-      { label: 'LEVERAGE', value: plan.leverage_swing || '1:30' },
+      { label: 'BUFFER ZONE', value: pct(plan.phase1_target) },
+      { label: 'MAX DAILY LOSS', value: pct(plan.daily_dd) },
+      { label: 'TRAILING MAX LOSS', value: pct(plan.max_dd) },
+      { label: 'LEVERAGE', value: `${plan.leverage_standard || '1:100'} / ${plan.leverage_swing || '1:30'}` },
       { label: 'PAYOUTS', value: 'Daily' },
       { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
     ];
   }
-  // instant_light — trailing drawdown uses max_dd
+  // one_step — single phase, trailing max drawdown, best-day rule
   return [
-    { label: 'EVALUATION', value: 'None' },
-    { label: 'TRAILING DD', value: pct(plan.max_dd) },
-    { label: 'DAILY DD', value: pct(plan.daily_dd) },
-    { label: 'LEVERAGE', value: plan.leverage_swing || '1:30' },
-    { label: 'PRICE', value: '50% Off', highlight: true },
+    { label: 'REWARD TARGET', value: pct(plan.phase1_target) },
+    { label: 'MAX DAILY LOSS', value: pct(plan.daily_dd) },
+    { label: 'TRAILING MAX LOSS', value: pct(plan.max_dd) },
+    { label: 'MIN TRADING DAYS', value: 'No minimum' },
+    { label: 'BEST DAY RULE', value: pct(plan.best_day_rule_pct) },
     { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
   ];
 }
@@ -150,8 +150,8 @@ export default function ThreePathsToFunded({ onNavigate }) {
     };
     return {
       'two-step': pick('two-step'),
-      'instant': pick('instant'),
-      'instant_light': pick('instant_light'),
+      'instant_account': pick('instant_account'),
+      'one_step': pick('one_step'),
     };
   }, [allPlans]);
 
@@ -181,7 +181,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
         {paths.map((path) => {
           const Icon = path.icon;
           const isExpanded = expandedCard === path.id;
-          const isInstantLight = path.id === 'instant_light';
+          const isAccent = path.id === 'one_step';
 
           return (
             <motion.div
@@ -192,7 +192,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
               className="relative rounded-2xl overflow-hidden flex flex-col p-6"
               style={{
                 background: '#141416',
-                border: `1px solid ${isInstantLight ? '#CCFF00' : '#F56C2C'}`,
+                border: `1px solid ${isAccent ? '#CCFF00' : '#F56C2C'}`,
               }}
             >
               {/* Badge */}
@@ -202,7 +202,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
                     className="px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider"
                     style={{
                       background: path.badgeColor,
-                      color: isInstantLight ? '#000000' : '#FFFFFF',
+                      color: isAccent ? '#000000' : '#FFFFFF',
                     }}
                   >
                     {path.badge}
@@ -237,7 +237,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
                       <span className="text-[9px] font-medium text-[#808080] uppercase tracking-wide">{spec.label}</span>
                       <span
                         className="text-xs font-bold"
-                        style={{ color: spec.highlight ? (isInstantLight ? '#CCFF00' : '#F56C2C') : '#FFFFFF' }}
+                        style={{ color: spec.highlight ? (isAccent ? '#CCFF00' : '#F56C2C') : '#FFFFFF' }}
                       >
                         {spec.value}
                       </span>
