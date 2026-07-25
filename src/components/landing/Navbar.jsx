@@ -67,7 +67,7 @@ export default function Navbar() {
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Link>
                 <Link to="/dashboard" className="flex items-center gap-1.5 px-4 py-2 text-sm text-foreground border border-border rounded-full hover:border-primary/50 transition-all">
-                  <User className="w-4 h-4" /> {user.username || user.full_name}
+                  <User className="w-4 h-4" /> {user.display_name || user.full_name || user.username}
                 </Link>
                 <button onClick={() => logout()}
                   className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground hover:text-red-400 transition-colors">
