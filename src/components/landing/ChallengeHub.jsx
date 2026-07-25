@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 import {
   Layers, Rocket, Zap, Target, TrendingDown, Gauge, Clock,
   CalendarClock, RefreshCw, Award, ArrowRight, Star, DollarSign,
@@ -79,6 +80,7 @@ function cellValue(row, size, showNumbers) {
 
 export default function ChallengeHub() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useCustomAuth();
   const [activeType, setActiveType] = useState('two-step');
   const [showNumbers, setShowNumbers] = useState(false);
 
@@ -102,7 +104,16 @@ export default function ChallengeHub() {
     return source.sort((a, b) => a.size - b.size);
   }, [plans, activeType]);
 
-  const goCheckout = (size) => navigate(`/challenges?type=${activeType}&size=${size}`);
+  // Auth-aware: not logged in → login (return to this challenge after login);
+  // logged in → buy-challenge checkout flow.
+  const goCheckout = (size) => {
+    const dest = `/challenges?type=${activeType}&size=${size}`;
+    if (isAuthenticated) {
+      navigate(dest);
+    } else {
+      navigate(`/login?from_url=${encodeURIComponent(dest)}`);
+    }
+  };
 
   return (
     <section id="challenge" className="relative py-20 md:py-28 overflow-hidden">
