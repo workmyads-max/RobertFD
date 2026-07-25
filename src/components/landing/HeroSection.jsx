@@ -4,10 +4,10 @@ import LivePriceTicker from './LivePriceTicker';
 import DashboardPreview from './DashboardPreview';
 
 const stats = [
-{ label: 'Traders worldwide', value: '14,200+', icon: Users },
-{ label: 'Total payouts', value: '$742M+', icon: DollarSign },
-{ label: 'Simulation funded accounts', value: '8,450+', icon: TrendingUp },
-{ label: 'Daily volume', value: '$2.4B+', icon: BarChart3 }];
+{ label: 'Traders worldwide', value: '9,500+', icon: Users },
+{ label: 'Total payouts', value: '$450K+', icon: DollarSign },
+{ label: 'Simulation funded accounts', value: '4,368+', icon: TrendingUp },
+{ label: 'Daily volume', value: '$12.8M+', icon: BarChart3 }];
 
 
 export default function HeroSection({ heroImage }) {
