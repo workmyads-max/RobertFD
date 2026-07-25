@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Layers, Zap, Lightbulb, ChevronDown, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
-const CHALLENGE_PATHS = [
+// Static visual template per path type — design stays identical, only specs
+// values are populated from live ChallengePlan records.
+const PATH_TEMPLATE = [
   {
     id: 'two-step',
     icon: Layers,
@@ -12,14 +16,6 @@ const CHALLENGE_PATHS = [
     labelColor: '#808080',
     title: 'Two-Step',
     description: 'Prove your skills through a structured 2-phase evaluation. Built for disciplined traders who want the highest trust and capital allocation.',
-    specs: [
-      { label: 'PHASE 1 TARGET', value: '10%' },
-      { label: 'PHASE 2 TARGET', value: '5%' },
-      { label: 'DAILY DD', value: '5%' },
-      { label: 'MAX DD', value: '10%' },
-      { label: 'LEVERAGE', value: '1:100 / 1:30' },
-      { label: 'REWARD SPLIT', value: '80%', highlight: true },
-    ],
     buttonStyle: 'outline',
     buttonText: 'Start Challenge →',
     buttonColor: '#F56C2C',
@@ -34,14 +30,6 @@ const CHALLENGE_PATHS = [
     labelColor: '#F56C2C',
     title: 'Instant Funding',
     description: 'Skip evaluation entirely. Get funded capital the same day and request payouts daily from day one.',
-    specs: [
-      { label: 'EVALUATION', value: 'None' },
-      { label: 'DAILY DD', value: '5%' },
-      { label: 'MAX DD', value: '10%' },
-      { label: 'LEVERAGE', value: '1:30' },
-      { label: 'PAYOUTS', value: 'Daily' },
-      { label: 'REWARD SPLIT', value: '80%', highlight: true },
-    ],
     buttonStyle: 'solid',
     buttonText: 'Get Instant Funding →',
     buttonColor: '#F56C2C',
@@ -57,14 +45,6 @@ const CHALLENGE_PATHS = [
     labelColor: '#CCFF00',
     title: 'Instant Light',
     description: 'Most affordable path to funding. Trailing drawdown protection moves your safety floor up as your balance grows.',
-    specs: [
-      { label: 'EVALUATION', value: 'None' },
-      { label: 'TRAILING DD', value: '10%' },
-      { label: 'DAILY DD', value: '5%' },
-      { label: 'LEVERAGE', value: '1:30' },
-      { label: 'PRICE', value: '50% Off', highlight: true },
-      { label: 'REWARD SPLIT', value: '80%', highlight: true },
-    ],
     buttonStyle: 'solid',
     buttonText: 'Get Instant Light →',
     buttonColor: '#CCFF00',
@@ -72,8 +52,118 @@ const CHALLENGE_PATHS = [
   },
 ];
 
+// Build the specs list for a path from a live ChallengePlan record.
+function buildSpecs(pathId, plan) {
+  const pct = (n) => (n == null ? '—' : `${n}%`);
+  if (!plan) {
+    // Fallback so the card never renders empty if a plan is missing
+    if (pathId === 'two-step') {
+      return [
+        { label: 'PHASE 1 TARGET', value: '—' },
+        { label: 'PHASE 2 TARGET', value: '—' },
+        { label: 'DAILY DD', value: '—' },
+        { label: 'MAX DD', value: '—' },
+        { label: 'LEVERAGE', value: '—' },
+        { label: 'REWARD SPLIT', value: '—', highlight: true },
+      ];
+    }
+    if (pathId === 'instant') {
+      return [
+        { label: 'EVALUATION', value: 'None' },
+        { label: 'DAILY DD', value: '—' },
+        { label: 'MAX DD', value: '—' },
+        { label: 'LEVERAGE', value: '—' },
+        { label: 'PAYOUTS', value: 'Daily' },
+        { label: 'REWARD SPLIT', value: '—', highlight: true },
+      ];
+    }
+    // instant_light
+    return [
+      { label: 'EVALUATION', value: 'None' },
+      { label: 'TRAILING DD', value: '—' },
+      { label: 'DAILY DD', value: '—' },
+      { label: 'LEVERAGE', value: '—' },
+      { label: 'PRICE', value: '50% Off', highlight: true },
+      { label: 'REWARD SPLIT', value: '—', highlight: true },
+    ];
+  }
+
+  const leverage = `${plan.leverage_standard || '1:100'} / ${plan.leverage_swing || '1:30'}`;
+
+  if (pathId === 'two-step') {
+    return [
+      { label: 'PHASE 1 TARGET', value: pct(plan.phase1_target) },
+      { label: 'PHASE 2 TARGET', value: pct(plan.phase2_target) },
+      { label: 'DAILY DD', value: pct(plan.daily_dd) },
+      { label: 'MAX DD', value: pct(plan.max_dd) },
+      { label: 'LEVERAGE', value: leverage },
+      { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
+    ];
+  }
+  if (pathId === 'instant') {
+    return [
+      { label: 'EVALUATION', value: 'None' },
+      { label: 'DAILY DD', value: pct(plan.daily_dd) },
+      { label: 'MAX DD', value: pct(plan.max_dd) },
+      { label: 'LEVERAGE', value: plan.leverage_swing || '1:30' },
+      { label: 'PAYOUTS', value: 'Daily' },
+      { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
+    ];
+  }
+  // instant_light — trailing drawdown uses max_dd
+  return [
+    { label: 'EVALUATION', value: 'None' },
+    { label: 'TRAILING DD', value: pct(plan.max_dd) },
+    { label: 'DAILY DD', value: pct(plan.daily_dd) },
+    { label: 'LEVERAGE', value: plan.leverage_swing || '1:30' },
+    { label: 'PRICE', value: '50% Off', highlight: true },
+    { label: 'REWARD SPLIT', value: pct(plan.profit_split), highlight: true },
+  ];
+}
+
 export default function ThreePathsToFunded({ onNavigate }) {
   const [expandedCard, setExpandedCard] = useState(null);
+
+  // Fetch live challenge plans — same source as the marketplace so the
+  // cards always reflect the latest admin-configured values.
+  const { data: allPlans = [] } = useQuery({
+    queryKey: ['challenge-plans-paths'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getChallengePlans', {});
+      const data = res?.data?.plans || res?.plans || [];
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 60000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  });
+
+  // Pick the most representative active+visible plan for each of the 3 types.
+  // Prefer a 100K size when available, else the smallest active size.
+  const planByType = useMemo(() => {
+    const active = allPlans.filter(p => p.is_active && p.is_visible !== false);
+    const pick = (type) => {
+      const oftype = active.filter(p => p.type === type);
+      if (!oftype.length) return null;
+      const bySize = [...oftype].sort((a, b) => (a.size || 0) - (b.size || 0));
+      return bySize.find(p => p.size === 100000) || bySize[0];
+    };
+    return {
+      'two-step': pick('two-step'),
+      'instant': pick('instant'),
+      'instant_light': pick('instant_light'),
+    };
+  }, [allPlans]);
+
+  const maxRewardSplit = useMemo(() => {
+    const vals = Object.values(planByType).map(p => p?.profit_split || 0).filter(Boolean);
+    return vals.length ? Math.max(...vals) : 80;
+  }, [planByType]);
+
+  const paths = PATH_TEMPLATE.map(t => ({
+    ...t,
+    specs: buildSpecs(t.id, planByType[t.id]),
+  }));
 
   return (
     <div className="rounded-3xl overflow-hidden mt-8" style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -83,12 +173,12 @@ export default function ThreePathsToFunded({ onNavigate }) {
           Three Paths to <span style={{ color: '#F56C2C' }}>Funded</span> <span style={{ color: '#CCFF00' }}>Trading</span>
         </h2>
         <p className="text-sm text-[#808080] max-w-md mx-auto leading-relaxed">
-          Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to 80% reward split.
+          Select the model that matches your strategy. Every plan includes institutional rules, real capital, and up to {maxRewardSplit}% reward split.
         </p>
       </div>
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 px-4 sm:px-8 py-8 sm:py-10">
-        {CHALLENGE_PATHS.map((path) => {
+        {paths.map((path) => {
           const Icon = path.icon;
           const isExpanded = expandedCard === path.id;
           const isInstantLight = path.id === 'instant_light';
@@ -102,7 +192,7 @@ export default function ThreePathsToFunded({ onNavigate }) {
               className="relative rounded-2xl overflow-hidden flex flex-col p-6"
               style={{
                 background: '#141416',
-                border: `1px solid ${path.id === 'instant_light' ? '#CCFF00' : '#F56C2C'}`,
+                border: `1px solid ${isInstantLight ? '#CCFF00' : '#F56C2C'}`,
               }}
             >
               {/* Badge */}
@@ -187,8 +277,8 @@ export default function ThreePathsToFunded({ onNavigate }) {
                   onClick={() => onNavigate?.('marketplace')}
                   className="w-full py-3.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] text-center"
                   style={{
-                    background: path.buttonStyle === 'solid' 
-                      ? path.buttonColor 
+                    background: path.buttonStyle === 'solid'
+                      ? path.buttonColor
                       : 'transparent',
                     border: `1.5px solid ${path.buttonColor}`,
                     color: path.buttonTextColor || path.buttonColor,
