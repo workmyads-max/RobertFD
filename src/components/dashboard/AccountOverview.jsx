@@ -18,6 +18,7 @@ import Footer from './Footer';
 import ClosedTradesSection from './ClosedTradesSection';
 import InstantAccountWidgets from './InstantAccountWidgets';
 import OneStepRiskPanel from './OneStepRiskPanel';
+import RiskAdherenceMonitor from './RiskAdherenceMonitor';
 
 function fmt(n, d = 2) { return (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 
@@ -161,10 +162,6 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
       <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wide" style={{ color: '#FF5C00' }}>{challengeTypeLabel}</span>
-          {!isFundedLive && isTwoStep && phaseLabel && <>
-            <span className="text-white/20 text-xs">·</span>
-            <span className="text-xs font-semibold tracking-wide text-white/50">{phaseLabel}</span>
-          </>}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusColor }} />
@@ -229,21 +226,26 @@ function ActiveAccountCard({ account, onNavigate, liveEquity, liveUnrealizedPnl,
         </button>
       </div>
 
-      {/* Bottom info strip */}
-      <div className="grid grid-cols-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
-        {[
+      {/* Bottom info strip — PHASE column only appears once the account is funded live */}
+      {(() => {
+        const items = [
           { label: 'SIZE', value: `$${(accountSize/1000).toFixed(0)}K` },
           { label: 'TYPE', value: isFundedLive ? 'Sim Funded' : account.challenge_type === 'two-step' ? 'Two-Step' : account.challenge_type === 'one_step' ? 'One-Step' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : 'Inst. Light' },
           { label: 'MODEL', value: modelLabel, highlight: true },
-          { label: 'PHASE', value: isFundedLive ? 'Sim Funded' : isTwoStep ? phaseLabel.replace('PH ', 'Phase ') : isOneStep ? (account.phase === 'phase1' ? 'Evaluation' : 'Funded') : 'N/A' },
+          ...(isFundedLive ? [{ label: 'PHASE', value: 'Sim Funded' }] : []),
           { label: 'LEVERAGE', value: account.leverage || '1:100' },
-        ].map((item, i) => (
-          <div key={item.label} className="px-3 py-3" style={{ borderRight: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-            <div className="text-[9px] font-semibold tracking-wide text-white/25 mb-1">{item.label}</div>
-            <div className={`text-[11px] font-semibold ${item.highlight ? 'text-primary' : 'text-white/70'}`}>{item.value}</div>
+        ];
+        return (
+          <div className="grid border-t" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`, borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}>
+            {items.map((item, i) => (
+              <div key={item.label} className="px-3 py-3" style={{ borderRight: i < items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                <div className="text-[9px] font-semibold tracking-wide text-white/25 mb-1">{item.label}</div>
+                <div className={`text-[11px] font-semibold ${item.highlight ? 'text-primary' : 'text-white/70'}`}>{item.value}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
     </div>
   );
 }
@@ -1161,6 +1163,9 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
+
+      {/* 1% Risk-Per-Trade Monitor — only shown on Account Overview page */}
+      <RiskAdherenceMonitor account={account} />
 
       {/* Instant Account Widgets - only for instant_account type */}
       {account?.challenge_type === 'instant_account' && (

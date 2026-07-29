@@ -8,7 +8,6 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
-import RiskAdherenceMonitor from '../dashboard/RiskAdherenceMonitor';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import NewsAlertsBar from '../dashboard/NewsAlertsBar';
 import AffiliateSection from '../dashboard/AffiliateSection';
@@ -49,7 +48,8 @@ function AccountInfoStrip({ account }) {
     { label: 'Size',     value: `$${(account.account_size || 0).toLocaleString()}` },
     { label: 'Type',     value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'instant' ? 'Instant' : account.challenge_type === 'instant_account' ? 'Instant Acct' : account.challenge_type === 'instant_light' ? 'Inst.Light' : account.challenge_type === 'one_step' ? 'One-Step' : 'Two-Step' },
     { label: 'Model',    value: account.account_type === 'swing' ? 'Swing' : 'Standard' },
-    { label: 'Phase',    value: account.status === 'funded' ? 'Sim Funded' : account.challenge_type === 'two-step' ? (account.phase || 'phase1').replace('phase', 'Phase ') : account.challenge_type === 'one_step' ? (account.phase === 'phase1' ? 'Evaluation' : 'Funded') : 'N/A' },
+    // Phase column only appears once the account is funded live — hidden during challenge phases
+    ...(account.status === 'funded' ? [{ label: 'Phase', value: 'Sim Funded' }] : []),
     { label: 'Leverage', value: account.leverage || '1:100' },
     { label: 'Platform', value: account.platform || 'MT5' },
   ];
@@ -210,8 +210,6 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
                   className="space-y-4">
                   {/* Info strip */}
                   <AccountInfoStrip account={derivedSelected} />
-                  {/* 1% Risk-Per-Trade Monitor (warning system, not auto-breach) */}
-                  <RiskAdherenceMonitor account={derivedSelected} />
                   {/* Progress Timeline */}
                   <AccountTimeline
                     account={derivedSelected}
