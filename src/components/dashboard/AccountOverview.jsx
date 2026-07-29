@@ -716,18 +716,17 @@ function DisciplinePanel({ account, closedTrades = [], livePlan = null }) {
       </div>
 
       {/* Bottom stat cards */}
-      <div className="grid grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
         {bottomCards.map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="px-4 py-5 text-center relative transition-colors hover:bg-white/[0.02]"
-              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+            <div key={s.label} className="px-4 py-5 text-center relative transition-colors hover:bg-white/[0.02]">
               <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-white/35 mb-2">
                 <Icon className="w-3 h-3" />
                 {s.label}
                 <InfoTooltip>{s.tooltip}</InfoTooltip>
               </div>
-              <div className="text-2xl font-black tracking-tight" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-xl sm:text-2xl font-black tracking-tight" style={{ color: s.color }}>{s.value}</div>
               <div className="text-[10px] text-white/25 mt-1 font-mono">{s.sub}</div>
             </div>
           );

@@ -114,8 +114,8 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
         </div>
 
         {/* Metric row */}
-        <div className="grid grid-cols-3 divide-x border-b"
-          style={{ divideColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 border-b divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           {[
             {
               label: 'Balance',
@@ -136,25 +136,24 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
               color: unrealizedPnl > 0 ? '#10b981' : unrealizedPnl < 0 ? '#ef4444' : '#94a3b8',
             },
           ].map((m, i) => (
-            <div key={m.label} className="px-5 py-4"
-              style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-              <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+            <div key={m.label} className="px-4 sm:px-5 py-3.5 flex items-center justify-between sm:block">
+              <div className="text-xs text-muted-foreground flex items-center gap-1.5 sm:mb-2">
                 {m.label} <InfoTip text={m.tip} />
               </div>
-              <div className="text-xl font-black font-mono" style={{ color: m.color }}>{m.value}</div>
+              <div className="text-base sm:text-xl font-black font-mono" style={{ color: m.color }}>{m.value}</div>
             </div>
           ))}
         </div>
 
         {/* Chart controls */}
-        <div className="flex items-center gap-4 px-5 py-3 border-b text-xs"
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-5 py-3 border-b text-xs"
           style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <span className="text-muted-foreground">Trading Objective Lines</span>
           <div className="flex rounded-lg overflow-hidden border border-white/10 text-xs">
             <span className="px-3 py-1 text-muted-foreground hover:bg-white/5 cursor-pointer">On</span>
             <span className="px-3 py-1 text-white font-semibold" style={{ background: '#3b82f6' }}>Off</span>
           </div>
-          <span className="text-muted-foreground ml-4">PnL Values</span>
+          <span className="text-muted-foreground sm:ml-4">PnL Values</span>
           <select className="px-2 py-1 rounded text-xs text-foreground outline-none ml-1"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <option>Absolute</option>
@@ -163,8 +162,8 @@ export default function AccountCurrentResults({ account, liveEquity, liveUnreali
         </div>
 
         {/* Equity Chart */}
-        <div className="px-5 pt-4 pb-3">
-          <div className="flex items-center gap-3 mb-3 text-xs">
+        <div className="px-4 sm:px-5 pt-4 pb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold"
               style={{ background: '#3b82f6', color: 'white' }}>
               ${fmt(balance)} Balance
