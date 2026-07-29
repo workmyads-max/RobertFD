@@ -1164,8 +1164,8 @@ export default function AccountOverview({ user, onStartChallenge, onNavigate }) 
       {/* Active account card */}
       <ActiveAccountCard account={account} onNavigate={onNavigate} liveEquity={liveEquity} liveUnrealizedPnl={liveUnrealizedPnl} setShowCredentials={setShowCredentials} />
 
-      {/* 1% Risk-Per-Trade Monitor — only shown on Account Overview page */}
-      <RiskAdherenceMonitor account={account} />
+      {/* 1% Risk-Per-Trade Monitor — only for funded live accounts */}
+      {account?.status === 'funded' && <RiskAdherenceMonitor account={account} />}
 
       {/* Instant Account Widgets - only for instant_account type */}
       {account?.challenge_type === 'instant_account' && (
