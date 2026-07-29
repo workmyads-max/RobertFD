@@ -11,6 +11,9 @@
     "code": {
       "type": "string"
     },
+    "name": {
+      "type": "string"
+    },
     "discount_type": {
       "type": "string",
       "enum": [
@@ -29,6 +32,10 @@
       "type": "number",
       "default": 0
     },
+    "per_user_limit": {
+      "type": "number",
+      "default": 1
+    },
     "min_order_amount": {
       "type": "number"
     },
@@ -38,9 +45,32 @@
         "type": "string"
       }
     },
+    "applicable_challenge_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "applicable_account_sizes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "applicable_platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "is_active": {
       "type": "boolean",
       "default": true
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "When false, coupon is manually distributed (not shown in user-facing displays)"
     },
     "expires_at": {
       "type": "string",

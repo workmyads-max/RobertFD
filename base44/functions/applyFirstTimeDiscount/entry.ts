@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       ip_address: clientIP,
       device_fingerprint: deviceFingerprint,
       discount_code: settings.first_time_discount_code || 'NEW25',
-      discount_percent: settings.first_time_discount_percent || 25,
+      discount_percent: settings.first_time_discount_percent || 10,
       is_used: false,
       created_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),

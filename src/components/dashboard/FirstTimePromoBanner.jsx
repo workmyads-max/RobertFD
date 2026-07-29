@@ -67,7 +67,7 @@ export default function FirstTimePromoBanner({ onStartChallenge }) {
 
   if (!shouldShow) return null;
 
-  const discountPercent = settings?.first_time_discount_percent || 25;
+  const discountPercent = settings?.first_time_discount_percent || 10;
   const maxAccountSize = settings?.max_account_size_for_discount || 200000;
 
   return (

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Copy, CheckCircle } from 'lucide-react';
+import { Tag, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Copy, CheckCircle, EyeOff } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import CouponAnalytics from './CouponAnalytics';
 
-const EMPTY_FORM = { code: '', name: '', discount_type: 'percentage', discount_value: 10, is_active: true, max_uses: 0, per_user_limit: 1, expires_at: '', notes: '', applicable_challenge_types: [], applicable_account_sizes: [], applicable_platforms: [] };
+const EMPTY_FORM = { code: '', name: '', discount_type: 'percentage', discount_value: 10, is_active: true, is_public: true, max_uses: 0, per_user_limit: 1, expires_at: '', notes: '', applicable_challenge_types: [], applicable_account_sizes: [], applicable_platforms: [] };
 
 const CHALLENGE_TYPE_OPTIONS = [
   { id: 'two-step', label: 'Two-Step Challenge' },
@@ -119,6 +120,9 @@ export default function AdminCoupons() {
         ))}
       </div>
 
+      {/* Performance Analytics */}
+      <CouponAnalytics />
+
       {/* Create/Edit Form */}
       <AnimatePresence>
         {showForm && (
@@ -175,6 +179,20 @@ export default function AdminCoupons() {
                 <input type="datetime-local" value={form.expires_at || ''} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
                   className="w-full rounded-xl px-3 py-2.5 text-sm text-foreground outline-none"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', colorScheme: 'dark' }} />
+              </div>
+              {/* Visibility (public vs private/manual) */}
+              <div className="md:col-span-1">
+                <label className="text-[10px] font-mono text-muted-foreground uppercase mb-1 block">Visibility</label>
+                <button type="button" onClick={() => setForm(p => ({ ...p, is_public: !p.is_public }))}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all"
+                  style={{ background: form.is_public ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)', border: `1px solid ${form.is_public ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}` }}>
+                  <span className="flex items-center gap-1.5" style={{ color: form.is_public ? '#10b981' : '#f59e0b' }}>
+                    {!form.is_public && <EyeOff className="w-3.5 h-3.5" />}
+                    {form.is_public ? 'Public' : 'Private'}
+                  </span>
+                  {form.is_public ? <ToggleRight className="w-5 h-5 text-emerald-400" /> : <ToggleLeft className="w-5 h-5 text-yellow-400" />}
+                </button>
+                <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">{form.is_public ? 'Visible in user-facing displays' : 'Manual distribution only — never shown to users'}</p>
               </div>
             </div>
             {/* Applicable filters */}
@@ -234,7 +252,14 @@ export default function AdminCoupons() {
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-foreground">{c.name || c.code}</div>
+                  <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                    {c.name || c.code}
+                    {c.is_public === false && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>
+                        <EyeOff className="w-2.5 h-2.5 mr-0.5" />Private
+                      </span>
+                    )}
+                  </div>
                   <div className="text-[11px] text-muted-foreground font-mono">
                     {c.discount_type === 'percentage' ? `${c.discount_value}% OFF` : `$${c.discount_value} OFF`}
                     {c.expires_at && ` · Expires ${new Date(c.expires_at).toLocaleDateString()}`}

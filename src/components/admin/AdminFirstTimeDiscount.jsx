@@ -69,7 +69,7 @@ export default function AdminFirstTimeDiscount() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">First-Time Discount Settings</h2>
-          <p className="text-sm text-white/40 mt-1">Manage the 25% off promotion for new users</p>
+          <p className="text-sm text-white/40 mt-1">Manage the 10% off promotion for new users</p>
         </div>
         {!isEditing ? (
           <button
@@ -78,7 +78,7 @@ export default function AdminFirstTimeDiscount() {
                 setting_key: 'first_time_discount',
                 is_first_time_discount_active: true,
                 first_time_discount_code: 'NEW25',
-                first_time_discount_percent: 25,
+                first_time_discount_percent: 10,
                 max_account_size_for_discount: 50000,
                 one_per_ip_mac: true,
                 discount_end_date: null,
