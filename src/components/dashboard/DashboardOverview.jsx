@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useSyncOnLogin } from '@/hooks/useSyncOnLogin';
 import ThreePathsToFunded from './ThreePathsToFunded';
+import RiskAdherenceMonitor from './RiskAdherenceMonitor';
 
 
 
@@ -122,6 +123,11 @@ export default function DashboardOverview({ user, onStartChallenge, onNavigate }
           <div className="rounded-xl border py-12 text-center" style={{ borderColor: 'hsl(var(--border))' }}>
             <div className="text-sm text-muted-foreground">Active Account Overview</div>
           </div>
+
+          {/* 1% Risk-Per-Trade Monitor (warning system) */}
+          <RiskAdherenceMonitor
+            account={accounts.find(a => a.status === 'funded') || activeAccounts[0]}
+          />
 
           {/* Three Paths to Funded Trading */}
           <ThreePathsToFunded onNavigate={onNavigate} />

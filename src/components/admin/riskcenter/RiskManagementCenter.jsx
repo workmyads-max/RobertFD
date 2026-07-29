@@ -18,6 +18,7 @@ import RCSwapNoSwap from './RCSwapNoSwap';
 import RCClosedTrades from './RCClosedTrades';
 import RCDataCenter from './RCDataCenter';
 import RCActivityLogs from './RCActivityLogs';
+import RCRiskLimit from './RCRiskLimit';
 import RCEvidencePanel from './RCEvidencePanel';
 
 const TABS = [
@@ -34,6 +35,7 @@ const TABS = [
   { id: 'closed', label: 'Closed Trades', icon: Layers },
   { id: 'datacenter', label: 'Data Center', icon: Server },
   { id: 'logs', label: 'Activity Logs', icon: FileText },
+  { id: 'risklimit', label: '1% Risk Limit', icon: Shield },
 ];
 
 export default function RiskManagementCenter() {
@@ -64,6 +66,7 @@ export default function RiskManagementCenter() {
       case 'closed': return <RCClosedTrades {...common} />;
       case 'datacenter': return <RCDataCenter {...common} />;
       case 'logs': return <RCActivityLogs />;
+      case 'risklimit': return <RCRiskLimit {...common} />;
       default: return <RCOverview {...common} />;
     }
   };

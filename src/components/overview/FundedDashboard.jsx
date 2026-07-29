@@ -8,6 +8,7 @@ import { getAccountRules } from '../terminal/terminalConfig';
 import { useAccountStats } from './useAccountStats';
 import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
+import RiskAdherenceMonitor from '../dashboard/RiskAdherenceMonitor';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
 import NewsAlertsBar from '../dashboard/NewsAlertsBar';
 import AffiliateSection from '../dashboard/AffiliateSection';
@@ -209,6 +210,8 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
                   className="space-y-4">
                   {/* Info strip */}
                   <AccountInfoStrip account={derivedSelected} />
+                  {/* 1% Risk-Per-Trade Monitor (warning system, not auto-breach) */}
+                  <RiskAdherenceMonitor account={derivedSelected} />
                   {/* Progress Timeline */}
                   <AccountTimeline
                     account={derivedSelected}

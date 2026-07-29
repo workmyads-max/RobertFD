@@ -340,6 +340,61 @@
       "type": "string",
       "format": "date-time"
     },
+    "risk_violations_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Count of closed trades that exceeded the 1% max risk-per-trade limit (warning system, not auto-breach)"
+    },
+    "risk_warning_level": {
+      "type": "string",
+      "enum": [
+        "none",
+        "warning",
+        "critical"
+      ],
+      "default": "none"
+    },
+    "last_risk_violation_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trade_id": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "lots": {
+            "type": "number"
+          },
+          "entry": {
+            "type": "number"
+          },
+          "close": {
+            "type": "number"
+          },
+          "pnl": {
+            "type": "number"
+          },
+          "loss_pct": {
+            "type": "number"
+          },
+          "close_time": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Capped list (last 20) of 1% risk-per-trade violations for display"
+    },
     "risk_monitoring_enabled": {
       "type": "boolean",
       "default": false,

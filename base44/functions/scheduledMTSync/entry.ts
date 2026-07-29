@@ -824,6 +824,92 @@ Deno.serve(async (req) => {
             console.log(`[TRADERECORD] ${acc.account_id}: wrote ${newDeals.length} new trades`);
           }
 
+          // ── 1% RISK-PER-TRADE MONITOR (warning system — NOT an auto-breach) ──
+          // Flags any newly-closed trade whose realized loss exceeds 1% of account_size.
+          // Increments risk_violations_count, logs a RiskFlag (audit), and notifies the
+          // trader + admins with full trade + MT5 details. At 7 violations the account is
+          // red-flagged (risk_warning_level='critical'); only an admin may then terminate
+          // the funded contract manually. This block never sets status='failed'.
+          if (newDeals.length > 0 && !breachDetected) {
+            const riskLimit$ = accountSize * 0.01;
+            const parseRiskTime = (t) => {
+              if (!t) return null;
+              if (typeof t === 'string' && t.includes('T')) return t;
+              try { return new Date(parseInt(t) * (String(t).length <= 10 ? 1000 : 1)).toISOString(); } catch { return null; }
+            };
+            const violatingDeals = newDeals.filter(d => {
+              const p = parseFloat(d.profit ?? d.Profit ?? 0);
+              return p < 0 && Math.abs(p) > riskLimit$;
+            });
+            if (violatingDeals.length > 0) {
+              const existingViolations = Array.isArray(acc.risk_violations) ? acc.risk_violations : [];
+              const newViolations = violatingDeals.map(d => {
+                const p = parseFloat(d.profit ?? d.Profit ?? 0);
+                const action = d.action ?? d.Action ?? 0;
+                return {
+                  trade_id: String(d.deal_id ?? d.Ticket ?? d.PositionID ?? d.id ?? ''),
+                  symbol: d.symbol ?? d.Symbol ?? '',
+                  type: action === 1 ? 'SELL' : 'BUY',
+                  lots: parseFloat(d.volume ?? d.Volume ?? 0) / 10000,
+                  entry: parseFloat(d.openPrice ?? d.Price ?? 0),
+                  close: parseFloat(d.closePrice ?? d.PriceClose ?? 0),
+                  pnl: p,
+                  loss_pct: parseFloat((Math.abs(p) / accountSize * 100).toFixed(2)),
+                  close_time: parseRiskTime(d.closeTime ?? d.TimeMsc ?? d.Time),
+                };
+              });
+              const updatedCount = (acc.risk_violations_count || 0) + newViolations.length;
+              const cappedViolations = [...existingViolations, ...newViolations].slice(-20);
+              const warningLevel = updatedCount >= 7 ? 'critical' : 'warning';
+              await base44.asServiceRole.entities.ChallengeAccount.update(acc.id, {
+                risk_violations_count: updatedCount,
+                risk_warning_level: warningLevel,
+                last_risk_violation_at: new Date().toISOString(),
+                risk_violations: cappedViolations,
+              });
+
+              for (const v of newViolations) {
+                const detail = `1% Risk Violation — ${v.symbol} ${v.type} ${v.lots.toFixed(2)} lots | Loss $${Math.abs(v.pnl).toFixed(2)} (${v.loss_pct}% of $${accountSize.toLocaleString()}) | Trade ${v.trade_id} | User ${acc.user_email} | MT5 ${acc.mt_login}@${acc.mt_server || 'n/a'} | Account ${acc.account_id} (${acc.challenge_type})`;
+                base44.asServiceRole.entities.RiskFlag.create({
+                  user_email: acc.user_email,
+                  account_id: acc.account_id,
+                  flag_type: 'risk_limit_violation',
+                  severity: warningLevel === 'critical' ? 'critical' : 'high',
+                  description: detail,
+                  status: 'active',
+                  triggered_at: new Date().toISOString(),
+                }).catch(() => {});
+
+                base44.asServiceRole.entities.Notification.create({
+                  title: warningLevel === 'critical' ? '🚩 Risk Red Flag — 7 Violations' : '⚠️ 1% Risk Limit Warning',
+                  message: `${detail} | Violations: ${updatedCount}/7${warningLevel === 'critical' ? ' | RED FLAG: manual contract review required.' : ''}`,
+                  type: 'system',
+                  priority: warningLevel === 'critical' ? 'critical' : 'high',
+                  display_mode: 'sidebar',
+                  is_active: true,
+                  target: 'admin',
+                }).catch(() => {});
+              }
+
+              // User notification (summary) — non-blocking
+              const firstLossPct = newViolations[0]?.loss_pct ?? 0;
+              base44.asServiceRole.entities.Notification.create({
+                user_email: acc.user_email,
+                title: warningLevel === 'critical' ? '🚩 Risk Limit Red Flag' : '⚠️ Risk Limit Warning',
+                message: warningLevel === 'critical'
+                  ? `Your account ${acc.account_id} has reached 7 risk-limit violations. Per our risk-management policy, continued breaches will lead to termination of your funded account contract. Please reduce your per-trade risk immediately.`
+                  : `A closed trade on ${acc.account_id} exceeded the 1% maximum risk-per-trade limit (loss ${firstLossPct}% of account size). Running violations: ${updatedCount}/7. Risk management is essential — please reduce your per-trade risk.`,
+                type: 'system',
+                priority: warningLevel === 'critical' ? 'critical' : 'high',
+                display_mode: 'popup',
+                is_active: true,
+                target: 'challenge',
+              }).catch(() => {});
+
+              console.log(`[RISK-1PCT] ${acc.account_id}: +${newViolations.length} violation(s), total ${updatedCount}/7, level=${warningLevel}`);
+            }
+          }
+
           // ── INSTANT ACCOUNT: CONSISTENCY, PROFITABLE DAYS, PAYOUT ELIGIBILITY ──
           // SPILLOVER MODEL:
           //   - The activation trade's entire profit is ignored (including spillover above buffer lock).
