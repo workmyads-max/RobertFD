@@ -46,6 +46,8 @@ export default function AdminOrders() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      qc.invalidateQueries({ queryKey: ['payment-reviews'] });
+      qc.invalidateQueries({ queryKey: ['payment-review-history'] });
       qc.invalidateQueries({ queryKey: ['admin-accounts'] });
       qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
       if (vars.data?.payment_status === 'confirmed') {
@@ -62,6 +64,8 @@ export default function AdminOrders() {
     mutationFn: (order) => confirmAndProvisionAccount(order),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] });
+      qc.invalidateQueries({ queryKey: ['payment-reviews'] });
+      qc.invalidateQueries({ queryKey: ['payment-review-history'] });
       qc.invalidateQueries({ queryKey: ['admin-accounts'] });
       qc.invalidateQueries({ queryKey: ['challenge-accounts'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });

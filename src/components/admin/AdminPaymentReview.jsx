@@ -145,6 +145,15 @@ export default function AdminPaymentReview() {
     refetchInterval: 30000,
   });
 
+  const { data: history = [], refetch: refetchHistory } = useQuery({
+    queryKey: ['payment-review-history'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('manualCryptoReview', { action: 'get_review_history', limit: 50 });
+      return res.data?.history || [];
+    },
+    refetchInterval: 30000,
+  });
+
   const filtered = reviews.filter(r => filterStatus === 'all' || r.payment_status === filterStatus);
   const pendingCount = reviews.filter(r => r.payment_status === 'awaiting_confirmation').length;
 
@@ -294,6 +303,54 @@ export default function AdminPaymentReview() {
         </div>
       )}
 
+      {/* Decision History */}
+      {history.length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Decision History</h2>
+            <span className="text-xs text-muted-foreground font-mono">({history.length})</span>
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-[9px] font-mono text-muted-foreground uppercase border-b border-white/5"
+              style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <span className="col-span-2">Action</span>
+              <span className="col-span-3">Trader</span>
+              <span className="col-span-3">Reviewed By</span>
+              <span className="col-span-2">Order</span>
+              <span className="col-span-2">Timestamp</span>
+            </div>
+            {history.map((h, i) => {
+              const isApprove = h.event_type === 'admin_approved';
+              const isReject = h.event_type === 'admin_rejected' || h.event_type === 'fraud_flagged';
+              const color = isApprove ? '#10b981' : isReject ? '#ef4444' : '#818cf8';
+              const label = h.event_type === 'admin_approved' ? 'Approved' : h.event_type === 'admin_rejected' ? 'Rejected' : h.event_type === 'fraud_flagged' ? 'Fraud' : 'Info Req';
+              return (
+                <div key={h.id || i} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] items-center text-xs">
+                  <span className="col-span-2">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>{label}</span>
+                  </span>
+                  <div className="col-span-3 min-w-0">
+                    <div className="text-foreground font-medium truncate">{h.trader_name || '-'}</div>
+                    <div className="text-muted-foreground text-[10px] font-mono truncate">{h.trader_email}</div>
+                  </div>
+                  <div className="col-span-3 min-w-0">
+                    <div className="text-foreground font-mono text-[11px] truncate">{h.admin_email}</div>
+                  </div>
+                  <div className="col-span-2 min-w-0">
+                    <div className="text-foreground font-mono text-[10px] truncate">{h.order_id}</div>
+                    {h.account_size > 0 && <div className="text-muted-foreground text-[10px]">${h.account_size.toLocaleString()}</div>}
+                  </div>
+                  <div className="col-span-2 text-muted-foreground text-[10px] font-mono">
+                    {h.timestamp ? new Date(h.timestamp).toLocaleString() : '-'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
         {selectedOrder && (
           <ActionModal
@@ -302,7 +359,11 @@ export default function AdminPaymentReview() {
             onSuccess={(type) => {
               setSelectedOrder(null);
               qc.invalidateQueries({ queryKey: ['payment-reviews'] });
+              qc.invalidateQueries({ queryKey: ['payment-review-history'] });
+              qc.invalidateQueries({ queryKey: ['admin-orders'] });
+              qc.invalidateQueries({ queryKey: ['admin-accounts'] });
               refetch();
+              refetchHistory();
             }}
           />
         )}

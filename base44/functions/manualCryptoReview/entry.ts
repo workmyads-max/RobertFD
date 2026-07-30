@@ -57,6 +57,49 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, reviews: enriched });
     }
 
+    // ── GET REVIEW HISTORY ─────────────────────────────────────────────────────
+    if (action === 'get_review_history') {
+      const { limit = 50 } = body;
+      const logs = await sr.entities.PaymentLog.list('-created_date', Math.min(limit, 200));
+      const relevant = logs.filter(l =>
+        ['admin_approved', 'admin_rejected', 'fraud_flagged', 'admin_requested_info'].includes(l.event_type)
+      );
+
+      // Enrich with order details
+      const orderIds = [...new Set(relevant.map(l => l.order_id).filter(Boolean))];
+      const ordersMap = {};
+      await Promise.all(orderIds.map(async (oid) => {
+        const found = await sr.entities.Order.filter({ order_id: oid });
+        if (found[0]) ordersMap[oid] = found[0];
+      }));
+
+      const history = relevant.map(l => {
+        const o = ordersMap[l.order_id] || {};
+        let adminEmail = user.email;
+        try {
+          const ed = typeof l.event_data === 'string' ? JSON.parse(l.event_data) : (l.event_data || {});
+          adminEmail = ed.approved_by || ed.rejected_by || ed.flagged_by || ed.requested_by || adminEmail;
+        } catch {}
+        return {
+          id: l.id,
+          event_type: l.event_type,
+          order_id: l.order_id,
+          transaction_id: l.transaction_id,
+          trader_name: o.full_name || '',
+          trader_email: l.customer_email || o.email || '',
+          admin_email: adminEmail,
+          challenge_type: o.challenge_type || '',
+          account_size: o.account_size || 0,
+          price: o.price || 0,
+          notes: l.notes || '',
+          status: l.status,
+          timestamp: l.created_date,
+        };
+      });
+
+      return Response.json({ success: true, history });
+    }
+
     // ── SUBMIT MANUAL CRYPTO PROOF (user-facing, also admin-callable) ──────────
     if (action === 'submit_proof') {
       const { txid, screenshot_url, amount, network } = body;
