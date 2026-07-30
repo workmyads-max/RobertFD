@@ -21,9 +21,9 @@ async function confirmAndProvisionAccount(order) {
   return res.data;
 }
 
-const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirmed', 'failed'];
-const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#a78bfa', confirmed: '#10b981', failed: '#ef4444' };
-const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting Confirmation', confirmed: 'Confirmed', failed: 'Failed' };
+const STATUS_OPTS = ['pending', 'awaiting_confirmation', 'confirming', 'confirmed', 'failed'];
+const STATUS_COLOR = { pending: '#f59e0b', awaiting_confirmation: '#a78bfa', confirming: '#3b82f6', confirmed: '#10b981', failed: '#ef4444' };
+const STATUS_LABEL = { pending: 'Pending', awaiting_confirmation: 'Awaiting Confirmation', confirming: 'Payment Detected', confirmed: 'Confirmed', failed: 'Failed' };
 
 export default function AdminOrders() {
   const [search, setSearch] = useState('');
@@ -185,6 +185,7 @@ export default function AdminOrders() {
                   { l: 'Price', v: `$${selected.price}` },
                   { l: 'Payment Method', v: selected.payment_method },
                   { l: 'Wallet / Address', v: selected.payment_address },
+                  { l: 'Transaction ID (TXID)', v: selected.transaction_id },
                 ].map(({ l, v }) => (
                   <div key={l}>
                     <div className="text-[10px] font-mono text-muted-foreground mb-0.5 uppercase">{l}</div>
