@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Copy, CheckCircle, Clock, ArrowLeft, AlertTriangle, Link2, Loader2, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useMutation } from '@tanstack/react-query';
-import CouponInput from './CouponInput';
 
 const WALLET_ADDRESS = 'TCeumh27PZs7ALggMPA8oToNu6zeuEqHuu';
 const QR_IMAGE_URL = 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/bc3d039fe_image.png';
@@ -277,23 +276,23 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
           </p>
         </div>
 
-        {/* Back button */}
+        {/* Back + Send Payment buttons */}
         <div className="flex gap-3">
           <button onClick={onBack} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
             style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
+          <motion.button
+            onClick={onNext}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all"
+            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 24px rgba(255,92,0,0.35)' }}
+          >
+            <CheckCircle className="w-4 h-4" />
+            I've Sent Payment — Continue
+          </motion.button>
         </div>
-
-        {/* Coupon Code Section - Only for logged-in users */}
-        {isLoggedIn && (
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <CouponInput
-              order={order}
-              updateOrder={updateOrder}
-            />
-          </div>
-        )}
       </div>
 
       {/* Order Summary */}
