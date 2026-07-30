@@ -316,9 +316,10 @@ export default function AdminPaymentReview() {
               style={{ background: 'rgba(255,255,255,0.02)' }}>
               <span className="col-span-2">Action</span>
               <span className="col-span-3">Trader</span>
-              <span className="col-span-3">Reviewed By</span>
+              <span className="col-span-2">Reviewed By</span>
               <span className="col-span-2">Order</span>
-              <span className="col-span-2">Timestamp</span>
+              <span className="col-span-2">MT5 ID</span>
+              <span className="col-span-1">Time</span>
             </div>
             {history.map((h, i) => {
               const isApprove = h.event_type === 'admin_approved';
@@ -334,15 +335,25 @@ export default function AdminPaymentReview() {
                     <div className="text-foreground font-medium truncate">{h.trader_name || '-'}</div>
                     <div className="text-muted-foreground text-[10px] font-mono truncate">{h.trader_email}</div>
                   </div>
-                  <div className="col-span-3 min-w-0">
+                  <div className="col-span-2 min-w-0">
                     <div className="text-foreground font-mono text-[11px] truncate">{h.admin_email}</div>
                   </div>
                   <div className="col-span-2 min-w-0">
                     <div className="text-foreground font-mono text-[10px] truncate">{h.order_id}</div>
                     {h.account_size > 0 && <div className="text-muted-foreground text-[10px]">${h.account_size.toLocaleString()}</div>}
                   </div>
-                  <div className="col-span-2 text-muted-foreground text-[10px] font-mono">
-                    {h.timestamp ? new Date(h.timestamp).toLocaleString() : '-'}
+                  <div className="col-span-2 min-w-0">
+                    {h.mt5_login ? (
+                      <>
+                        <div className="text-foreground font-mono text-[11px] font-bold truncate">{h.mt5_login}</div>
+                        <div className="text-muted-foreground text-[9px] capitalize">{h.mt5_status}</div>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground/50 text-[10px] font-mono">—</span>
+                    )}
+                  </div>
+                  <div className="col-span-1 text-muted-foreground text-[10px] font-mono">
+                    {h.timestamp ? new Date(h.timestamp).toLocaleDateString() : '-'}
                   </div>
                 </div>
               );

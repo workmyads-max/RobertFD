@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
         ['admin_approved', 'admin_rejected', 'fraud_flagged', 'admin_requested_info'].includes(l.event_type)
       );
 
-      // Enrich with order details
+      // Enrich with order details + MT5 account delivered
       const orderIds = [...new Set(relevant.map(l => l.order_id).filter(Boolean))];
       const ordersMap = {};
       await Promise.all(orderIds.map(async (oid) => {
@@ -73,8 +73,20 @@ Deno.serve(async (req) => {
         if (found[0]) ordersMap[oid] = found[0];
       }));
 
+      // Fetch provisioned ChallengeAccount (mt_login) for each order's account_id
+      const accountIds = [...new Set(Object.values(ordersMap).map((o: any) => o.account_id || o.order_id).filter(Boolean))];
+      const accountsMap = {};
+      await Promise.all(accountIds.map(async (aid) => {
+        try {
+          const accs = await sr.entities.ChallengeAccount.filter({ account_id: aid });
+          if (accs[0]) accountsMap[aid] = accs[0];
+        } catch {}
+      }));
+
       const history = relevant.map(l => {
         const o = ordersMap[l.order_id] || {};
+        const aid = o.account_id || o.order_id;
+        const acc = accountsMap[aid] || {};
         let adminEmail = user.email;
         try {
           const ed = typeof l.event_data === 'string' ? JSON.parse(l.event_data) : (l.event_data || {});
@@ -91,6 +103,9 @@ Deno.serve(async (req) => {
           challenge_type: o.challenge_type || '',
           account_size: o.account_size || 0,
           price: o.price || 0,
+          mt5_login: acc.mt_login || '',
+          mt5_account_id: acc.account_id || '',
+          mt5_status: acc.status || '',
           notes: l.notes || '',
           status: l.status,
           timestamp: l.created_date,
