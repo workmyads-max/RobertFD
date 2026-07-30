@@ -49,7 +49,7 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
         <div className="text-[11px] font-mono text-emerald-400 uppercase tracking-widest mb-3">Payment Received</div>
         <h1 className="text-3xl md:text-4xl font-black text-foreground mb-3 tracking-tight">
-          Order Confirmed! 🎉
+          Order Confirmed
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto leading-relaxed mb-8">
           Your <strong className="text-foreground">${order.account_size?.toLocaleString()} {order.challenge_type === 'two-step' ? 'Two-Step Challenge' : 'Instant Funding'}</strong> account is being prepared by the XFunded team.
@@ -75,40 +75,23 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
         </div>
       </motion.div>
 
-      {/* Notices */}
+      {/* Notices — flat, minimal */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-        className="space-y-3 mb-8"
+        className="mb-8 text-left"
       >
-        {[
-          {
-            icon: Mail,
-            color: 'text-primary',
-            bg: 'rgba(255,92,0,0.07)',
-            border: 'rgba(255,92,0,0.18)',
-            text: `Funded account credentials will be sent to ${order.email || 'your email address'}.`,
-          },
-          {
-            icon: Clock,
-            color: 'text-muted-foreground',
-            bg: 'rgba(255,255,255,0.04)',
-            border: 'rgba(255,255,255,0.08)',
-            text: 'Delivery is typically completed within 1-24 hours after blockchain confirmation.',
-          },
-          {
-            icon: Shield,
-            color: 'text-emerald-400',
-            bg: 'rgba(16,185,129,0.06)',
-            border: 'rgba(16,185,129,0.18)',
-            text: 'Your account is protected under XFunded Trader\'s Trader Agreement. Keep your credentials private.',
-          },
-        ].map(({ icon: Icon, color, bg, border, text }) => (
-          <div key={text} className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-left"
-            style={{ background: bg, border: `1px solid ${border}` }}>
-            <Icon className={`w-4 h-4 flex-shrink-0 ${color}`} />
-            <span className="text-sm text-muted-foreground">{text}</span>
-          </div>
-        ))}
+        <div className="rounded-xl divide-y" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {[
+            { icon: Mail, text: `Funded account credentials will be sent to ${order.email || 'your email address'}.` },
+            { icon: Clock, text: 'Delivery is typically completed within 1-24 hours after blockchain confirmation.' },
+            { icon: Shield, text: 'Your account is protected under XFunded Trader\'s Trader Agreement. Keep your credentials private.' },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-3 px-5 py-4">
+              <Icon className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground leading-relaxed">{text}</span>
+            </div>
+          ))}
+        </div>
       </motion.div>
 
       {/* CTAs */}
