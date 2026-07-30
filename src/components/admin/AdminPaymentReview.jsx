@@ -145,13 +145,12 @@ export default function AdminPaymentReview() {
     refetchInterval: 30000,
   });
 
-  const { data: history = [], refetch: refetchHistory } = useQuery({
+  const { data: history = [], isLoading: historyLoading, refetch: refetchHistory } = useQuery({
     queryKey: ['payment-review-history'],
     queryFn: async () => {
       const res = await base44.functions.invoke('manualCryptoReview', { action: 'get_review_history', limit: 50 });
       return res.data?.history || [];
     },
-    refetchInterval: 30000,
   });
 
   const filtered = reviews.filter(r => filterStatus === 'all' || r.payment_status === filterStatus);
@@ -304,13 +303,21 @@ export default function AdminPaymentReview() {
       )}
 
       {/* Decision History */}
-      {history.length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Decision History</h2>
-            <span className="text-xs text-muted-foreground font-mono">({history.length})</span>
+      <div className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Decision History</h2>
+          <span className="text-xs text-muted-foreground font-mono">({history.length})</span>
+        </div>
+        {historyLoading ? (
+          <div className="rounded-xl py-10 text-center" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
           </div>
+        ) : history.length === 0 ? (
+          <div className="rounded-xl py-10 text-center" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-sm text-muted-foreground">No decisions recorded yet.</p>
+          </div>
+        ) : (
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-[9px] font-mono text-muted-foreground uppercase border-b border-white/5"
               style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -359,8 +366,8 @@ export default function AdminPaymentReview() {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <AnimatePresence>
         {selectedOrder && (
