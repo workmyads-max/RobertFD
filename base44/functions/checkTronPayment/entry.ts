@@ -7,7 +7,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-const WALLET_ADDRESS = 'TCeumh27PZs7ALggMPA8oToNu6zeuEqHuu';
+const WALLET_ADDRESS = 'TNmcxBokqW3ddNZDPSz6ij2spX92RmDxT5';
 const USDT_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
 const USDT_DECIMALS = 6;
 const SCAN_WINDOW_HOURS = 2;
