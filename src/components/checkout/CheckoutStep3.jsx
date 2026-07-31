@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useMutation } from '@tanstack/react-query';
 
 const WALLET_ADDRESS = 'TNmcxBokqW3ddNZDPSz6ij2spX92RmDxT5';
-const QR_IMAGE_URL = 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/fb6b624d2_image.png';
+const QR_IMAGE_URL = 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/76ccfcda2_image.png';
 
 export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLoggedIn }) {
   const [copied, setCopied] = useState(false);
