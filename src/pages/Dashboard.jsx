@@ -56,7 +56,6 @@ import AdminSocialMedia from '../components/admin/AdminSocialMedia';
 import EmailLogsDashboard from '../components/admin/EmailLogsDashboard';
 import AdminPromotions from '../components/admin/AdminPromotions';
 import AdminFirstTimeDiscount from '../components/admin/AdminFirstTimeDiscount';
-import AdminB2G1Promo from '../components/admin/AdminB2G1Promo';
 import MarketsHub from '../components/dashboard/MarketsHub';
 import LiveDDGuard from '../components/dashboard/LiveDDGuard';
 import DDBreachModal from '../components/dashboard/DDBreachModal';
@@ -366,7 +365,6 @@ export default function Dashboard() {
       case 'admin-roles': return isAdmin ? <AdminRolesPermissions /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-promotions': return isAdmin ? <AdminPromotions /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       case 'admin-first-time-discount': return isAdmin ? <AdminFirstTimeDiscount /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
-      case 'admin-b2g1-promo': return isAdmin ? <AdminB2G1Promo /> : <DashboardOverview user={user} onStartChallenge={goToChallenge} />;
       default: return <DashboardOverviewAdvanced user={user} onStartChallenge={goToChallenge} onNavigate={setActivePage} />;
     }
   };

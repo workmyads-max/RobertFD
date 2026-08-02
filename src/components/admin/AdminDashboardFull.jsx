@@ -63,7 +63,6 @@ const ADMIN_SECTIONS = [
       { id: 'admin-coupons', label: 'Coupon Codes', icon: Tag, color: '#f59e0b' },
       { id: 'admin-promotions', label: 'Promotions', icon: Gift, color: '#ec4899' },
       { id: 'admin-first-time-discount', label: 'First-Time Discount', icon: Gift, color: '#d946ef' },
-      { id: 'admin-b2g1-promo', label: 'Buy 2 Get 1 Free', icon: Gift, color: '#f97316' },
       { id: 'admin-social', label: 'Social Media', icon: Share2, color: '#8b5cf6' },
     ]
   },

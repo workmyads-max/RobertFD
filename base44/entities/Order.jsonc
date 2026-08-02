@@ -119,31 +119,6 @@
     },
     "affiliate_code": {
       "type": "string"
-    },
-    "promo_applied": {
-      "type": "boolean",
-      "default": false,
-      "description": "True when Buy 2 Get 1 Free promo is active on this order"
-    },
-    "promo_type": {
-      "type": "string",
-      "default": "",
-      "description": "Promo identifier, e.g. buy2get1"
-    },
-    "promo_quantity": {
-      "type": "number",
-      "default": 1,
-      "description": "Number of paid accounts in the bundle (2 for B2G1)"
-    },
-    "promo_free_account_size": {
-      "type": "number",
-      "default": 0,
-      "description": "Size of the free promotional account (0 if no promo)"
-    },
-    "promo_free_account_provisioned": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether the free promo account has been provisioned"
     }
   },
   "required": [
