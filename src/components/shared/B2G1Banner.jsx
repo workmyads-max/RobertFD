@@ -1,31 +1,30 @@
 import React from 'react';
-import { Gift } from 'lucide-react';
 
 /**
  * Static promotional banner — Buy 2 Challenges, Get 1 Free.
- * No backend logic, no admin toggle. Edit text here directly.
+ * Flat, institutional. No gradients, no icons, no glows.
  */
 export default function B2G1Banner({ className = '' }) {
   return (
     <div
-      className={`rounded-2xl p-5 flex items-center gap-4 flex-wrap ${className}`}
+      className={`px-5 py-4 ${className}`}
       style={{
-        background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(255,92,0,0.03))',
-        border: '1.5px solid rgba(255,92,0,0.25)',
+        background: '#0d0d0e',
+        border: '1px solid #1f1f22',
+        borderLeft: '2px solid #FF5C00',
       }}
     >
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
-        <Gift className="w-5 h-5 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-black text-primary uppercase tracking-wide">
+      <div className="flex items-baseline gap-3 flex-wrap">
+        <span className="text-[10px] font-mono text-[#52525b] uppercase tracking-[0.2em]">
+          Promo
+        </span>
+        <span className="text-sm font-bold text-[#FF5C00] uppercase tracking-wide">
           Buy 2 Challenges, Get 1 Free
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">
-          Buy two challenges of the same size and receive a third account on us — added to your order at no cost.
-        </div>
+        </span>
       </div>
+      <p className="text-[12px] text-[#71717a] mt-1.5 leading-relaxed">
+        Buy two challenges of the same size and receive a third account on us — added to your order at no cost.
+      </p>
     </div>
   );
 }

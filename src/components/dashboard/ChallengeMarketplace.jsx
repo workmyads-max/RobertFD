@@ -354,15 +354,32 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       {/* Buy 2 Get 1 Free — static banner */}
       <B2G1Banner className="mb-6" />
 
-      {/* B2G1 tier pills (shown when promo is enabled) */}
+      {/* B2G1 tier table — flat rows, not pills */}
       {b2g1Enabled && b2g1Tiers.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-6">
-          {b2g1Tiers.map((t, i) => (
-            <span key={i} className="px-2.5 py-1 rounded-lg text-[10px] font-mono"
-              style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF7A2F' }}>
-              2×{formatB2G1Size(t.buy_size)} → {formatB2G1Size(t.free_size)} FREE
-            </span>
-          ))}
+        <div className="mb-6" style={{ borderTop: '1px solid #1a1a1d', borderBottom: '1px solid #1a1a1d' }}>
+          <div className="grid" style={{ gridTemplateColumns: `repeat(${b2g1Tiers.length}, 1fr)` }}>
+            {b2g1Tiers.map((t, i) => (
+              <div
+                key={i}
+                className="py-3 px-3 text-center"
+                style={{ borderRight: i < b2g1Tiers.length - 1 ? '1px solid #141416' : 'none' }}
+              >
+                <div className="text-[10px] font-mono text-[#52525b] uppercase tracking-[0.15em] mb-1">
+                  Buy 2×
+                </div>
+                <div className="text-[13px] font-bold text-white">
+                  {formatB2G1Size(t.buy_size)}
+                </div>
+                <div className="text-[10px] text-[#52525b] my-1">↓</div>
+                <div className="text-[10px] font-mono text-[#52525b] uppercase tracking-[0.15em] mb-1">
+                  Get Free
+                </div>
+                <div className="text-[13px] font-bold text-[#FF5C00]">
+                  {formatB2G1Size(t.free_size)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

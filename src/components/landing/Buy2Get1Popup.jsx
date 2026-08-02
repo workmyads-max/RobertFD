@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, ArrowRight, Sparkles } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { DEFAULT_B2G1_TIERS, formatSize } from '@/lib/b2g1Promo';
@@ -53,114 +53,77 @@ export default function Buy2Get1Popup() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/85"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.88, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ duration: !settings ? 0.4 : 0.5, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[101] flex items-center justify-center px-4 pointer-events-none"
           >
             <div
-              className="pointer-events-auto relative w-full max-w-lg rounded-3xl overflow-hidden"
+              className="pointer-events-auto relative w-full max-w-md"
               style={{
-                background: 'linear-gradient(145deg, #0e0e10 0%, #151518 100%)',
-                border: '1px solid rgba(255, 92, 0, 0.3)',
-                boxShadow: '0 0 80px rgba(255,92,0,0.2), 0 30px 80px rgba(0,0,0,0.9)',
+                background: '#0a0a0b',
+                border: '1px solid #1f1f22',
               }}
             >
-              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-36 rounded-full blur-3xl pointer-events-none"
-                style={{ background: 'rgba(255,92,0,0.15)' }} />
-
-              <button onClick={handleClose}
-                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-
-              <div className="absolute top-5 left-5 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="text-[10px] font-mono text-primary uppercase tracking-widest">
+              {/* Top bar — flat label, no pill */}
+              <div className="flex items-center justify-between px-5 h-11 border-b" style={{ borderColor: '#1a1a1d' }}>
+                <span className="text-[10px] font-mono text-[#FF5C00] uppercase tracking-[0.2em]">
                   {settings?.b2g1_badge_text || 'LIMITED OFFER'}
                 </span>
+                <button onClick={handleClose}
+                  className="w-7 h-7 flex items-center justify-center text-[#52525b] hover:text-white transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="px-6 sm:px-10 pt-16 pb-8 text-center">
-                <motion.div
-                  initial={{ scale: 0, rotate: -15 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', damping: 12, stiffness: 180, delay: 0.15 }}
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255,92,0,0.2), rgba(255,122,47,0.1))',
-                    border: '1px solid rgba(255,92,0,0.3)',
-                  }}
-                >
-                  <Gift className="w-8 h-8 text-primary" />
-                </motion.div>
-
-                <motion.h2
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                  className="text-2xl sm:text-4xl font-black tracking-tight mb-3 leading-[1.1]"
-                >
-                  <span style={{ color: '#FF5C00' }}>
-                    {settings?.b2g1_headline || 'BUY 2 CHALLENGES, GET 1 FREE'}
-                  </span>
-                </motion.h2>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35 }}
-                  className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-md mx-auto"
-                >
+              {/* Body */}
+              <div className="px-5 py-7">
+                {/* Headline — no icon, just type */}
+                <div className="mb-1 text-[10px] font-mono text-[#52525b] uppercase tracking-[0.25em]">
+                  Promotion
+                </div>
+                <h2 className="text-2xl font-bold text-white tracking-tight leading-[1.15] mb-3">
+                  {settings?.b2g1_headline || 'BUY 2 CHALLENGES, GET 1 FREE'}
+                </h2>
+                <p className="text-[13px] text-[#71717a] leading-relaxed mb-6">
                   {settings?.b2g1_subline || 'Buy two challenges of the same size and automatically receive a third, smaller account on us — added to your order at no cost.'}
-                </motion.p>
+                </p>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.45 }}
-                  className="grid grid-cols-2 gap-2 mb-7"
-                >
+                {/* Tier table — flat rows, not pills */}
+                <div className="border-t border-b mb-7" style={{ borderColor: '#1a1a1d' }}>
                   {tiers.map((t, i) => (
-                    <div key={i}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono text-muted-foreground">2×</span>
-                        <span className="text-sm font-bold text-white">{formatSize(t.buy_size)}</span>
-                      </div>
-                      <ArrowRight className="w-3 h-3 text-primary" />
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-mono text-primary font-bold">FREE</span>
-                        <span className="text-sm font-bold text-primary">{formatSize(t.free_size)}</span>
-                      </div>
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-2.5 text-[13px]"
+                      style={{ borderBottom: i < tiers.length - 1 ? '1px solid #141416' : 'none' }}
+                    >
+                      <span className="font-mono text-[#a1a1aa]">
+                        2× {formatSize(t.buy_size)}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-[#3f3f46]" />
+                      <span className="font-bold text-[#FF5C00]">
+                        {formatSize(t.free_size)} FREE
+                      </span>
                     </div>
                   ))}
-                </motion.div>
+                </div>
 
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55 }}
+                {/* CTA — solid, flat */}
+                <button
                   onClick={handleCTA}
-                  className="w-full py-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-                  style={{
-                    background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)',
-                    boxShadow: '0 4px 24px rgba(255,92,0,0.35)',
-                  }}
+                  className="w-full h-11 text-[13px] font-bold text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                  style={{ background: '#FF5C00' }}
                 >
-                  <Sparkles className="w-4 h-4" />
                   {settings?.b2g1_cta_label || 'Shop Challenges'}
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
 
                 <button onClick={handleClose}
-                  className="w-full text-center text-xs text-muted-foreground mt-3 hover:text-foreground transition-colors py-2">
+                  className="w-full text-center text-[11px] text-[#52525b] hover:text-[#a1a1aa] transition-colors mt-3">
                   No thanks, maybe later
                 </button>
               </div>
