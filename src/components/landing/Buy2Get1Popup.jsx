@@ -28,7 +28,19 @@ export default function Buy2Get1Popup() {
     if (!settings?.b2g1_enabled) return;
     const dismissed = sessionStorage.getItem('b2g1_promo_dismissed');
     if (dismissed) return;
-    const timer = setTimeout(() => setOpen(true), 3000);
+
+    // Wait until the email-capture PromoPopup has been dismissed so the two
+    // modals never overlap. Poll every 500ms, then show once cleared.
+    let timer;
+    const check = () => {
+      const emailPopupActive = !sessionStorage.getItem('promo_dismissed');
+      if (emailPopupActive) {
+        timer = setTimeout(check, 500);
+        return;
+      }
+      timer = setTimeout(() => setOpen(true), 800);
+    };
+    timer = setTimeout(check, 3000);
     return () => clearTimeout(timer);
   }, [settings?.b2g1_enabled]);
 
