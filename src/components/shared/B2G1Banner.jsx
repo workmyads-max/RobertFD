@@ -23,7 +23,7 @@ export default function B2G1Banner({ className = '' }) {
         </span>
       </div>
       <p className="text-[12px] text-[#71717a] mt-1.5 leading-relaxed">
-        Buy two challenges of the same size and receive a third account on us — added to your order at no cost.
+        Buy two challenges of the same size and receive a third account on us. Added to your order at no cost.
       </p>
     </div>
   );

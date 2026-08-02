@@ -108,7 +108,7 @@ export default function AffiliateRanks({ user, onSupport }) {
               </>
             ) : (
               <>
-                <div className="text-2xl font-black text-white/50">Unranked</div>
+                <div className="text-2xl font-black text-white/50">Current Rank: Zero</div>
                 <div className="text-[11px] text-white/40">Generate L1 sales to reach Bronze</div>
               </>
             )}
@@ -139,7 +139,7 @@ export default function AffiliateRanks({ user, onSupport }) {
                   <div className="text-[12px] text-white/55">
                     {claimable ? (
                       <span className="text-emerald-400 font-semibold">
-                        Target reached — claim your {money(nextRank.bonus)} bonus
+                        Target reached. Claim your {money(nextRank.bonus)} bonus
                       </span>
                     ) : (
                       <>
@@ -176,7 +176,7 @@ export default function AffiliateRanks({ user, onSupport }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-bold text-white">
-                    You've reached {nextRank.name} — {money(nextRank.bonus)} bonus available
+                    You've reached {nextRank.name}. {money(nextRank.bonus)} bonus available
                   </div>
                   <div className="text-[11px] text-white/45 mt-0.5">
                     Claim to receive the bonus (sales counter resets for the next rank). Continue to forfeit this bonus but carry your sales toward the next rank's threshold.

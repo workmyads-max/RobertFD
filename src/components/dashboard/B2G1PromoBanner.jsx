@@ -54,7 +54,7 @@ export default function B2G1PromoBanner({ onStartChallenge }) {
           </h2>
 
           <p className="text-sm text-[#B0B0B0] mb-8 leading-relaxed">
-            {settings?.b2g1_subline || 'Buy two challenges of the same size and automatically receive a third, smaller account on us — added to your order at no cost.'}
+            {settings?.b2g1_subline || 'Buy two challenges of the same size and automatically receive a third, smaller account on us. Added to your order at no cost.'}
           </p>
 
           {/* Tier mapping */}
