@@ -45,6 +45,52 @@ export default async function(req: Request): Promise<Response> {
         return Response.json({ error: 'This TXID has already been submitted for another order' }, { status: 409 });
       }
 
+      // ── VERIFY TRANSACTION ON TRONGRID ────────────────────────────────────
+      // Fetch transaction events (TRC20 transfer logs)
+      const txEventsUrl = `https://api.trongrid.io/v1/transactions/${txid}/events`;
+      const txEventsRes = await fetch(txEventsUrl);
+      if (!txEventsRes.ok) {
+        return Response.json({
+          error: 'Unable to verify transaction on TronGrid. Please double-check your TXID and try again.'
+        }, { status: 400 });
+      }
+      const txEventsData = await txEventsRes.json();
+      const events = txEventsData?.data || [];
+
+      // Find a USDT TRC20 transfer to our wallet address
+      const usdtTransfer = events.find(ev =>
+        ev.contract_address === USDT_CONTRACT &&
+        (ev.to || '').toLowerCase() === WALLET_ADDRESS.toLowerCase()
+      );
+
+      if (!usdtTransfer) {
+        return Response.json({
+          error: 'No USDT TRC20 transfer to our wallet found in this transaction. Please verify you sent USDT (TRC20) to the correct wallet address.'
+        }, { status: 400 });
+      }
+
+      // Verify the amount matches the order price
+      const expectedValue = Math.round(order.price * Math.pow(10, USDT_DECIMALS));
+      const actualValue = parseInt(usdtTransfer.value);
+      if (actualValue !== expectedValue) {
+        const actualAmount = actualValue / Math.pow(10, USDT_DECIMALS);
+        return Response.json({
+          error: `Amount mismatch. Expected $${order.price} USDT but this transaction sent $${actualAmount} USDT.`
+        }, { status: 400 });
+      }
+
+      // Check transaction confirmation status (informational)
+      let confirmed = false;
+      try {
+        const txInfoRes = await fetch(`https://api.trongrid.io/v1/transactions/${txid}`);
+        if (txInfoRes.ok) {
+          const txInfoData = await txInfoRes.json();
+          const txInfo = txInfoData?.data?.[0];
+          confirmed = txInfo?.ret?.[0]?.contractRet === 'SUCCESS';
+        }
+      } catch {}
+
+      // ── VERIFIED — update order ──
       await sr.entities.Order.update(order.id, {
         transaction_id: txid,
         payment_status: 'confirming',
@@ -52,12 +98,21 @@ export default async function(req: Request): Promise<Response> {
 
       // Notify admin
       await sr.entities.Notification.create({
-        title: 'USDT Payment TXID Submitted',
-        message: `Order ${order_id}: ${order.email} submitted TXID ${txid} for $${order.price}. Awaiting admin verification.`,
+        title: 'USDT Payment Verified on TRC20',
+        message: `Order ${order_id}: ${order.email} submitted TXID ${txid}. Payment verified on TronGrid: $${order.price} USDT TRC20 received. Awaiting admin approval.`,
         type: 'system', priority: 'high', display_mode: 'sidebar', is_active: true, target: 'admin',
       });
 
-      return Response.json({ success: true, status: 'confirming', message: 'TXID submitted. Awaiting admin verification.' });
+      return Response.json({
+        success: true,
+        status: 'verified',
+        verified: true,
+        message: 'Payment verified on TRC20 network',
+        txid,
+        amount: order.price,
+        from: usdtTransfer.from,
+        confirmed,
+      });
     }
 
     // ── SCAN PENDING ORDERS (scheduled automation or single order) ───────────

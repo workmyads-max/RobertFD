@@ -13,6 +13,8 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
   const [txidInput, setTxidInput] = useState('');
   const [txidSubmitting, setTxidSubmitting] = useState(false);
   const [txidError, setTxidError] = useState('');
+  const [txidVerified, setTxidVerified] = useState(false);
+  const [verificationDetails, setVerificationDetails] = useState(null);
   const [paymentDetected, setPaymentDetected] = useState(false);
   const [paymentDetectedTxid, setPaymentDetectedTxid] = useState('');
 
@@ -130,12 +132,11 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
         txid: txidInput.trim(),
       });
 
-      if (res.data?.success) {
-        setPaymentDetected(true);
-        setPaymentDetectedTxid(txidInput.trim());
-        setTimeout(() => onNext(), 3000);
+      if (res.data?.success && res.data?.verified) {
+        setTxidVerified(true);
+        setVerificationDetails(res.data);
       } else {
-        setTxidError(res.data?.error || 'Failed to submit TXID');
+        setTxidError(res.data?.error || 'Payment verification failed. Please check your TXID and try again.');
       }
     } catch (e) {
       setTxidError(e.response?.data?.error || e.message || 'Failed to submit TXID');
@@ -239,14 +240,18 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
           </div>
         </div>
 
-        {/* TXID Paste Field (Optional) */}
-        <div className="rounded-2xl p-5" style={{ background: 'rgba(255,92,0,0.04)', border: '1px solid rgba(255,92,0,0.15)' }}>
+        {/* TXID Verification (Required) */}
+        <div className="rounded-2xl p-5" style={{ background: 'rgba(255,92,0,0.04)', border: `1px solid ${txidVerified ? 'rgba(16,185,129,0.3)' : 'rgba(255,92,0,0.15)'}` }}>
           <div className="flex items-center gap-2 mb-3">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold text-foreground">Speed Up Verification (Optional)</span>
+            {txidVerified ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Zap className="w-4 h-4 text-primary" />}
+            <span className="text-sm font-bold text-foreground">
+              {txidVerified ? 'Payment Verified on TRC20' : 'Payment Verification (Required)'}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Paste your transaction hash (TXID) after sending payment to speed up the verification process. This helps us match your payment instantly.
+            {txidVerified
+              ? 'Your USDT TRC20 payment has been confirmed on the Tron blockchain. You can now continue.'
+              : 'After sending payment, paste your transaction hash (TXID) below. Our system verifies it against the Tron blockchain to confirm the USDT TRC20 transfer is real before you continue.'}
           </p>
           <div className="flex gap-2">
             <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -256,28 +261,54 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
                 value={txidInput}
                 onChange={(e) => { setTxidInput(e.target.value); setTxidError(''); }}
                 placeholder="Paste your transaction hash (TXID)..."
-                className="flex-1 bg-transparent text-xs font-mono text-foreground outline-none placeholder:text-muted-foreground/50"
+                disabled={txidVerified}
+                className="flex-1 bg-transparent text-xs font-mono text-foreground outline-none placeholder:text-muted-foreground/50 disabled:opacity-60"
               />
             </div>
-            <button
-              onClick={handleSubmitTxid}
-              disabled={!txidInput.trim() || txidSubmitting}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 transition-all whitespace-nowrap"
-              style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)' }}
-            >
-              {txidSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit TXID'}
-            </button>
+            {txidVerified ? (
+              <button
+                onClick={() => { setTxidVerified(false); setVerificationDetails(null); setTxidInput(''); }}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground transition-all whitespace-nowrap"
+                style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                Change TXID
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmitTxid}
+                disabled={!txidInput.trim() || txidSubmitting}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50 transition-all whitespace-nowrap"
+                style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)' }}
+              >
+                {txidSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify TXID'}
+              </button>
+            )}
           </div>
           {txidError && (
             <p className="text-xs text-red-400 font-mono mt-2">{txidError}</p>
+          )}
+          {txidVerified && verificationDetails && (
+            <div className="mt-3 rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-xs font-bold text-emerald-400">Payment Verified on TRC20 Network</span>
+              </div>
+              <div className="text-[11px] font-mono text-muted-foreground space-y-1 pl-5">
+                <div>Amount: <span className="text-emerald-400">${verificationDetails.amount} USDT</span></div>
+                <div>From: <span className="text-foreground">{verificationDetails.from}</span></div>
+                <div>Status: <span className={verificationDetails.confirmed ? 'text-emerald-400' : 'text-amber-400'}>{verificationDetails.confirmed ? 'Confirmed' : 'Processing'}</span></div>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Auto-detection notice */}
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.12)' }}>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className={`w-2 h-2 rounded-full ${txidVerified ? 'bg-emerald-400' : 'bg-emerald-400 animate-pulse'}`} />
           <p className="text-xs text-muted-foreground">
-            <strong className="text-emerald-400">Auto-detection active.</strong> Your payment will be detected automatically within a few minutes. No need to close this page.
+            {txidVerified
+              ? <><strong className="text-emerald-400">Verification complete.</strong> Your payment has been confirmed on the Tron blockchain.</>
+              : <><strong className="text-emerald-400">Auto-detection active.</strong> Your payment will be detected automatically within a few minutes. No need to close this page.</>}
           </p>
         </div>
 
@@ -289,10 +320,11 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
           </button>
           <motion.button
             onClick={onNext}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all"
-            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: '0 4px 24px rgba(255,92,0,0.35)' }}
+            whileHover={txidVerified ? { scale: 1.02 } : {}}
+            whileTap={txidVerified ? { scale: 0.98 } : {}}
+            disabled={!txidVerified}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: 'linear-gradient(90deg, #FF5C00, #FF7A2F)', boxShadow: txidVerified ? '0 4px 24px rgba(255,92,0,0.35)' : 'none' }}
           >
             <CheckCircle className="w-4 h-4" />
             I've Sent Payment — Continue
