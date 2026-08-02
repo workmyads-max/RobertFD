@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import FeeRefundNote from '@/components/shared/FeeRefundNote';
-import PromoCarousel from '@/components/shared/PromoCarousel';
+import B2G1Banner from '@/components/shared/B2G1Banner';
 import { getFreeSize, isEligibleSize, formatSize as formatB2G1Size } from '@/lib/b2g1Promo';
 
 const ACCOUNT_TYPES = {
@@ -351,11 +351,8 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {challengeType === 'two-step' && <FeeRefundNote className="mb-6" />}
 
-      {/* Combined promo carousel — auto-sliding hero */}
-      <PromoCarousel className="mb-6" onShopChallenges={() => {
-        const cardsEl = document.querySelector('[data-plans-grid]');
-        if (cardsEl) cardsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }} />
+      {/* Buy 2 Get 1 Free — static banner */}
+      <B2G1Banner className="mb-6" />
 
       {/* Plans grid */}
       {plansLoading ? (
