@@ -119,6 +119,21 @@ export default function Dashboard() {
 
   const { user, isAdmin: isUserAdmin } = useCustomAuth();
 
+  // ── Admin auto-landing: xfundedtrader@gmail.com goes straight to admin dashboard ──
+  const [initialRedirectDone, setInitialRedirectDone] = useState(false);
+  useEffect(() => {
+    if (initialRedirectDone || !user?.email) return;
+    setInitialRedirectDone(true);
+
+    // Skip if URL has an explicit tab param (user navigated with a specific destination)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab')) return;
+
+    if (user.email.toLowerCase() === 'xfundedtrader@gmail.com') {
+      setActivePage('admin-dashboard');
+    }
+  }, [user?.email, initialRedirectDone]);
+
   // ── Google signup referral attribution ──────────────────────────────────
   useEffect(() => {
     if (!user?.email) return;
