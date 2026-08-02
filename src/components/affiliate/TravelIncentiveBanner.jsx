@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plane, Globe, Shield, TrendingUp, Gift, Mail, ArrowRight, ChevronRight } from 'lucide-react';
+import { Plane, Mail, ArrowRight } from 'lucide-react';
 
 /**
  * TravelIncentiveBanner — Modern luxury CSS recreation.
@@ -26,19 +26,15 @@ export default function TravelIncentiveBanner({ onSupport }) {
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,92,0,0.5), transparent)' }} />
 
       {/* ── Header ── */}
-      <div className="relative flex items-center gap-3 px-6 py-3.5 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="w-8 h-8 flex items-center justify-center" style={{ border: '1px solid ' + ORANGE_DIM, borderRadius: '2px' }}>
-          <Plane className="w-3.5 h-3.5" style={{ color: ORANGE }} />
-        </div>
-        <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.25em]" style={{ color: ORANGE, border: '1px solid ' + ORANGE_DIM, borderRadius: '1px', background: 'rgba(255,92,0,0.05)' }}>
+      <div className="relative flex items-center px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="w-[3px] h-4 mr-3" style={{ background: ORANGE }} />
+        <span className="text-[8px] font-bold uppercase tracking-[0.3em]" style={{ color: ORANGE }}>
           Limited-Time Offer
         </span>
-        <div className="flex items-center gap-1.5 ml-auto">
-          <Globe className="w-3.5 h-3.5" style={{ color: '#707070' }} />
-          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#707070]">
-            International Travel Incentive
-          </span>
-        </div>
+        <span className="mx-3 text-[#3a3a3a]">/</span>
+        <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-[#707070]">
+          International Travel Incentive
+        </span>
       </div>
 
       {/* ── Main body ── */}
@@ -78,48 +74,43 @@ export default function TravelIncentiveBanner({ onSupport }) {
           <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-[#808080] mt-1">Nights</div>
           <div className="text-[8px] font-semibold uppercase tracking-[0.2em] text-[#505050] mt-0.5">International Tour</div>
 
-          {/* Boarding pass card */}
-          <div className="mt-4 px-4 py-2 flex items-center gap-2" style={{ background: 'rgba(255,92,0,0.04)', border: '1px solid ' + ORANGE_DIM, borderRadius: '2px' }}>
-            <Plane className="w-3.5 h-3.5" style={{ color: ORANGE }} />
-            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#a0a0a0]">
+          {/* Boarding pass — solid pill, ticket notch */}
+          <div className="mt-4 relative flex items-center gap-2 px-4 py-2" style={{ background: ORANGE, borderRadius: '999px' }}>
+            <Plane className="w-3 h-3" style={{ color: '#0a0a0a' }} />
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#0a0a0a]">
               All Expenses On Us
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── Three-step process bar ── */}
-      <div className="relative px-6 pb-5">
-        <div className="flex items-stretch gap-3 p-3.5" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '2px' }}>
+      {/* ── Three-step process — timeline ── */}
+      <div className="relative px-6 pb-6">
+        <div className="flex items-start gap-0">
           {[
-            { n: '01', icon: Shield, title: 'Forfeit Bronze', sub: 'bonus & continue' },
-            { n: '02', icon: TrendingUp, title: 'Generate $12,500', sub: 'in L1 direct sales' },
-            { n: '03', icon: Gift, title: 'Claim $1,350 + email', sub: 'us for your tour' },
-          ].map((step, i, arr) => {
-            const Icon = step.icon;
-            return (
-              <React.Fragment key={i}>
-                <div className="flex-1 flex items-center gap-3 min-w-0">
-                  <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                    <span className="text-[9px] font-bold tracking-widest" style={{ color: ORANGE }}>{step.n}</span>
-                    <div className="w-8 h-8 flex items-center justify-center" style={{ border: '1px solid ' + ORANGE_DIM, borderRadius: '2px' }}>
-                      <Icon className="w-4 h-4" style={{ color: ORANGE }} />
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-semibold text-white truncate">{step.title}</div>
-                    <div className="text-[9px] text-[#606060] truncate">{step.sub}</div>
-                  </div>
+            { n: '01', title: 'Forfeit Bronze', sub: 'Skip the $450 bonus and keep accumulating sales' },
+            { n: '02', title: 'Generate $12,500', sub: 'In cumulative Level-1 direct sales' },
+            { n: '03', title: 'Claim $1,350 + Tour', sub: 'Email us to arrange your 7-night trip' },
+          ].map((step, i, arr) => (
+            <React.Fragment key={i}>
+              <div className="flex-1 min-w-0 relative">
+                {/* Dot */}
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: i === 0 ? ORANGE : 'rgba(255,92,0,0.3)' }} />
+                  <span className="text-[10px] font-mono font-semibold" style={{ color: ORANGE }}>{step.n}</span>
                 </div>
-                {i < arr.length - 1 && (
-                  <div className="flex items-center self-center flex-shrink-0">
-                    <div className="w-6 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />
-                    <ChevronRight className="w-3.5 h-3.5" style={{ color: 'rgba(255,92,0,0.35)' }} />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
+                <div className="pl-5">
+                  <div className="text-[11px] font-semibold text-white leading-tight">{step.title}</div>
+                  <div className="text-[9px] text-[#606060] mt-0.5 leading-snug">{step.sub}</div>
+                </div>
+              </div>
+              {i < arr.length - 1 && (
+                <div className="flex-shrink-0 self-start pt-[5px] mx-1">
+                  <div className="w-10 h-px" style={{ background: 'rgba(255,92,0,0.2)' }} />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
