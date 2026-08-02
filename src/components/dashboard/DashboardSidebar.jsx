@@ -7,7 +7,7 @@ import XFLogo from '../shared/XFLogo';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 
-export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isOpen, setIsOpen, unreadCount, trashCount, collapsed, setCollapsed }) {
+export default function DashboardSidebar({ activePage, setActivePage, user, isAdmin, isAdminOnly, isOpen, setIsOpen, unreadCount, trashCount, collapsed, setCollapsed }) {
   const { isEnabled } = useFeatureVisibility();
   const { hasPermission, isAdminLevel } = useStaffPermissions(user);
 
@@ -70,7 +70,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
 
       {/* Nav */}
       <nav className={`flex-1 py-4 space-y-0.5 overflow-y-auto overscroll-contain ${collapsed ? 'px-1.5' : 'px-2.5'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {filterNavItems().map((item) => {
+        {!isAdminOnly && filterNavItems().map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
           return (
@@ -115,7 +115,8 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
           );
         })}
 
-        {/* Notifications */}
+        {/* Notifications - hidden for admin-only accounts */}
+        {!isAdminOnly && (
         <button
           onClick={() => handleNav('notifications')}
           title={collapsed ? 'Notifications' : undefined}
@@ -140,6 +141,7 @@ export default function DashboardSidebar({ activePage, setActivePage, user, isAd
             <span className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ background: '#FF5C00' }} />
           )}
         </button>
+        )}
 
         {/* Admin only - Dashboard button only */}
         {isAdmin && (

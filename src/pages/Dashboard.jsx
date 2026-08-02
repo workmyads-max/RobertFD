@@ -188,6 +188,15 @@ export default function Dashboard() {
   });
 
   const isAdmin = isUserAdmin || user?.role === 'admin';
+  // xfundedtrader@gmail.com is an admin-only account — never sees user dashboard pages
+  const isAdminOnly = user?.email?.toLowerCase() === 'xfundedtrader@gmail.com';
+
+  // Guard: if admin-only account somehow lands on a user page, bounce back to admin dashboard
+  useEffect(() => {
+    if (isAdminOnly && activePage && !activePage.startsWith('admin-')) {
+      setActivePage('admin-dashboard');
+    }
+  }, [activePage, isAdminOnly]);
 
   const { data: allAccounts = [], isLoading: isLoadingAccounts, refetch: refetchAccounts } = useQuery({
     // CRITICAL: Always scope the cache key by user email to prevent cross-user cache leakage
@@ -394,6 +403,7 @@ export default function Dashboard() {
           setActivePage={setActivePage}
           user={user}
           isAdmin={isAdmin}
+          isAdminOnly={isAdminOnly}
           isOpen={sidebarOpen}
           setIsOpen={setSidebarOpen}
           unreadCount={notifications.filter(n => n.display_mode !== 'banner').length}
