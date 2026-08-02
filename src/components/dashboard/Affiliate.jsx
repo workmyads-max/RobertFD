@@ -148,8 +148,8 @@ export default function Affiliate({ user }) {
           transition={{ duration: 0.2 }}>
           {activeTab === 'overview' && (
             <>
-              <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />
               <AffiliateRanks user={user} onSupport={() => setActiveTab('withdraw')} />
+              <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />
             </>
           )}
           {activeTab === 'link' && <ReferralLink profile={profile} />}
