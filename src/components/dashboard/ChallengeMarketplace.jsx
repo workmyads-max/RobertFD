@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
-import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2, Layers, Gauge } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, Clock, BarChart2, AlertTriangle, Target, Calendar, Ban, Moon, TrendingDown, Users, Wallet, Loader2, Layers, Gauge, Gift } from 'lucide-react';
 import TermsModal from '../checkout/TermsModal';
 import ChallengeCard from './ChallengeCard';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import FeeRefundNote from '@/components/shared/FeeRefundNote';
+import { getFreeSize, isEligibleSize } from '@/lib/b2g1Promo';
 
 const ACCOUNT_TYPES = {
   standard: {
@@ -67,6 +68,18 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
     queryKey: ['platform-settings-trading'],
     queryFn: () => base44.entities.PlatformSettings.filter({ category: 'trading' }),
   });
+
+  // Fetch B2G1 promo settings (public backend function)
+  const { data: b2g1Settings } = useQuery({
+    queryKey: ['b2g1-promo-settings-public'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getB2G1PromoSettings', {});
+      return res?.settings || res?.data?.settings || null;
+    },
+    staleTime: 60000,
+  });
+  const b2g1Enabled = b2g1Settings?.b2g1_enabled === true;
+  const b2g1Tiers = b2g1Settings?.b2g1_tier_mapping || [];
   const enabledPlatforms = Object.fromEntries(
     platformSettings.map(s => [s.setting_key, s.is_enabled !== false])
   );
@@ -116,6 +129,19 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       platform,
       rule_snapshot: ruleSnapshot,
     };
+
+    // Attach B2G1 promo info if this size is eligible and promo is active
+    if (b2g1Enabled && isEligibleSize(plan.size, b2g1Tiers)) {
+      const freeSize = getFreeSize(plan.size, b2g1Tiers);
+      if (freeSize) {
+        order.promo_applied = true;
+        order.promo_type = 'buy2get1';
+        order.promo_quantity = 2;
+        order.promo_free_account_size = freeSize;
+        order.price = plan.price * 2;
+        order.final_price = plan.price * 2;
+      }
+    }
     setPendingOrder(order);
     setShowTerms(true);
   };
@@ -326,6 +352,38 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       </div>
 
       {challengeType === 'two-step' && <FeeRefundNote className="mb-6" />}
+
+      {/* Buy 2 Get 1 Free promo banner */}
+      {b2g1Enabled && b2g1Tiers.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-2xl p-5 flex items-center gap-4 flex-wrap"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,92,0,0.08), rgba(255,92,0,0.03))',
+            border: '1.5px solid rgba(255,92,0,0.25)',
+          }}
+        >
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,92,0,0.15)', border: '1px solid rgba(255,92,0,0.3)' }}>
+            <Gift className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-primary uppercase tracking-wide">Buy 2 Challenges, Get 1 Free</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Buy 2 accounts of the same eligible size and a smaller account is added to your order automatically — at no cost.
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {b2g1Tiers.map((t, i) => (
+              <span key={i} className="px-2 py-1 rounded-lg text-[10px] font-mono"
+                style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF7A2F' }}>
+                2×{formatSize(t.buy_size)} → {formatSize(t.free_size)} FREE
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Plans grid */}
       {plansLoading ? (

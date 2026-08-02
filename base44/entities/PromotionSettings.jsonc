@@ -30,6 +30,60 @@
     "discount_end_date": {
       "type": "string",
       "format": "date-time"
+    },
+    "b2g1_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Master toggle for Buy 2 Get 1 Free promo popup and checkout logic"
+    },
+    "b2g1_headline": {
+      "type": "string",
+      "default": "BUY 2 CHALLENGES, GET 1 FREE"
+    },
+    "b2g1_subline": {
+      "type": "string",
+      "default": "Buy two challenges of the same size and automatically receive a third, smaller account on us \u2014 added to your order at no cost."
+    },
+    "b2g1_cta_label": {
+      "type": "string",
+      "default": "Shop Challenges"
+    },
+    "b2g1_badge_text": {
+      "type": "string",
+      "default": "LIMITED OFFER"
+    },
+    "b2g1_tier_mapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "buy_size": {
+            "type": "number"
+          },
+          "free_size": {
+            "type": "number"
+          }
+        }
+      },
+      "default": [
+        {
+          "buy_size": 25000,
+          "free_size": 10000
+        },
+        {
+          "buy_size": 50000,
+          "free_size": 25000
+        },
+        {
+          "buy_size": 100000,
+          "free_size": 50000
+        },
+        {
+          "buy_size": 200000,
+          "free_size": 100000
+        }
+      ],
+      "description": "Mapping of eligible buy sizes to their free account size"
     }
   },
   "required": [
