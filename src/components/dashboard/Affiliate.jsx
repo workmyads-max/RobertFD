@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, Activity, DollarSign, GitBranch, Wallet, Radio, TrendingUp, Award
+  Users, Activity, DollarSign, GitBranch, Wallet, Radio, TrendingUp
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -16,12 +16,11 @@ const ORANGE = '#FF5C00';
 const CARD = '#15171e';
 
 const TABS = [
-{ id: 'overview', label: 'Overview', icon: Activity },
-{ id: 'ranks', label: 'Ranks & Bonuses', icon: Award },
-{ id: 'link', label: 'Referral Link', icon: GitBranch },
-{ id: 'history', label: 'Commissions', icon: DollarSign },
-{ id: 'tree', label: 'Network Tree', icon: Users },
-{ id: 'withdraw', label: 'Withdraw', icon: Wallet },
+ { id: 'overview', label: 'Overview', icon: Activity },
+ { id: 'link', label: 'Referral Link', icon: GitBranch },
+ { id: 'history', label: 'Commissions', icon: DollarSign },
+ { id: 'tree', label: 'Network Tree', icon: Users },
+ { id: 'withdraw', label: 'Withdraw', icon: Wallet },
 ];
 
 export default function Affiliate({ user }) {
@@ -147,8 +146,12 @@ export default function Affiliate({ user }) {
         <motion.div key={activeTab}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}>
-          {activeTab === 'overview' && <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />}
-          {activeTab === 'ranks' && <AffiliateRanks user={user} onSupport={() => setActiveTab('overview')} />}
+          {activeTab === 'overview' && (
+            <>
+              <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />
+              <AffiliateRanks user={user} onSupport={() => setActiveTab('withdraw')} />
+            </>
+          )}
           {activeTab === 'link' && <ReferralLink profile={profile} />}
           {activeTab === 'history' && <CommissionHistory commissions={commissions} />}
           {activeTab === 'tree' && <ReferralTree commissions={commissions} userEmail={user?.email} />}
