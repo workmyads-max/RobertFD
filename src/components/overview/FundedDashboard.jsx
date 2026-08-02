@@ -9,7 +9,6 @@ import { useAccountStats } from './useAccountStats';
 import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import B2G1PromoBanner from '../dashboard/B2G1PromoBanner';
-import TravelIncentiveBanner from '@/components/affiliate/TravelIncentiveBanner';
 import PromoCarousel from '@/components/shared/PromoCarousel';
 import NewsAlertsBar from '../dashboard/NewsAlertsBar';
 import AffiliateSection from '../dashboard/AffiliateSection';
@@ -231,9 +230,6 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
           {/* Three Paths to Funded Trading - ALWAYS SHOWN */}
           <ThreePathsToFunded onNavigate={onNavigate} />
           
-          {/* Travel Incentive — above Affiliate Program */}
-          <TravelIncentiveBanner onSupport={() => onNavigate?.('affiliate')} />
-
           {/* Affiliate Section - ALWAYS SHOWN */}
           <AffiliateSection onNavigate={onNavigate} />
           

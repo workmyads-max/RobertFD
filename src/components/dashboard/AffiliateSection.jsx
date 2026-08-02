@@ -35,7 +35,7 @@ export default function AffiliateSection({ onNavigate }) {
               clipPath: 'polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%)',
               borderRadius: '0 0 0 10px'
             }}>
-            Partner Program
+            Limited-Time Offer
           </div>
         </div>
 
