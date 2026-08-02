@@ -96,26 +96,33 @@ export default function B2G1PromoBanner({ onStartChallenge }) {
             transition={{ delay: 0.2 }}
             className="relative w-full max-w-md rounded-2xl overflow-hidden p-6"
             style={{
-              background: '#FF5C00',
-              boxShadow: '0 20px 60px rgba(255,92,0,0.3)',
+              background: '#CCFF00',
+              boxShadow: '0 20px 60px rgba(204,255,0,0.3)',
             }}
           >
-            <div className="absolute -top-2 -right-2 z-10 shadow-xl"
+            {/* Promo Ribbon */}
+            <div
+              className="absolute -top-2 -right-2 z-10 shadow-xl overflow-visible"
               style={{
-                background: '#CCFF00',
+                background: '#FF4500',
                 transform: 'translateX(8px) translateY(8px) rotate(12deg)',
-              }}>
-              <span className="block px-6 py-3 text-[10px] font-black text-black uppercase tracking-wider whitespace-nowrap">PROMO</span>
+              }}
+            >
+              <span className="block px-6 py-3 text-[10px] font-black text-white uppercase tracking-wider whitespace-nowrap">PROMO</span>
             </div>
 
+            {/* Gift Icon */}
             <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(0,0,0,0.1)' }}>
               <Gift className="w-5 h-5 text-black" />
             </div>
 
+            {/* Headline */}
             <h3 className="text-lg font-bold text-black mb-4 leading-snug">How It Works</h3>
 
+            {/* Separator */}
             <div className="h-px mb-4" style={{ background: 'rgba(0,0,0,0.15)' }} />
 
+            {/* Checklist */}
             <div className="space-y-2.5 mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(0,0,0,0.1)' }}>
@@ -136,6 +143,20 @@ export default function B2G1PromoBanner({ onStartChallenge }) {
                 <span className="text-sm font-medium text-black">Get 1 smaller account FREE</span>
               </div>
             </div>
+
+            {/* CTA */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onStartChallenge}
+              className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all"
+              style={{
+                background: '#FF4500',
+                boxShadow: '0 4px 15px rgba(255,69,0,0.4)',
+              }}
+            >
+              Claim Your Free Account →
+            </motion.button>
           </motion.div>
         </div>
       </div>
