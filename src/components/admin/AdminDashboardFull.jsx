@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useCustomAuth } from '@/lib/CustomAuthContext';
 
 const ADMIN_SECTIONS = [
   {
@@ -77,6 +78,8 @@ const ADMIN_SECTIONS = [
 
 export default function AdminDashboard({ onNavigate }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useCustomAuth();
+  const isXfundedAdmin = user?.email?.toLowerCase() === 'xfundedtrader@gmail.com';
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
@@ -116,12 +119,15 @@ export default function AdminDashboard({ onNavigate }) {
     refetchInterval: 30000,
   });
 
-  const filteredSections = ADMIN_SECTIONS.map(section => ({
-    ...section,
-    items: section.items.filter(item => 
-      item.label.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })).filter(section => section.items.length > 0);
+  const filteredSections = ADMIN_SECTIONS
+    .filter(section => !(isXfundedAdmin && section.category === 'Staff & Audit'))
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item =>
+        item.label.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !(isXfundedAdmin && item.id === 'admin-wallets')
+      )
+    })).filter(section => section.items.length > 0);
 
   return (
     <div className="max-w-7xl mx-auto">
