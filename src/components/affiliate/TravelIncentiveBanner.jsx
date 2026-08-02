@@ -50,10 +50,10 @@ export default function TravelIncentiveBanner({ onSupport }) {
           </h2>
 
           <div className="mt-5 space-y-1.5 text-[11px] text-[#808080] leading-relaxed max-w-lg">
-            <p>Forfeit the Bronze ($450) bonus and continue accumulating Level-1 direct sales.</p>
+            <p>Decline the Bronze ($450) bonus to keep accumulating Level-1 direct sales toward Silver.</p>
             <p>
-              Reach the Silver threshold ($12,500 cumulative) and you'll receive the $1,350 Silver bonus
-              PLUS an instant International 7-Nights Tour — on us.
+              Reach the Silver threshold ($12,500 cumulative) to receive the $1,350 Silver bonus plus a
+              7-night international tour, fully covered by us.
             </p>
             <p className="text-[#505050] text-[10px] pt-1 italic">
               Free promo (Buy-2-Get-1-Free) accounts do not count toward qualifying sales.
