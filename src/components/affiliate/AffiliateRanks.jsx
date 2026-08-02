@@ -108,7 +108,7 @@ export default function AffiliateRanks({ user, onSupport }) {
               </>
             ) : (
               <>
-                <div className="text-2xl font-black text-white/50">Current Rank: Zero</div>
+                <div className="text-2xl font-black text-white/50">Current Rank: Starter</div>
                 <div className="text-[11px] text-white/40">Generate L1 sales to reach Bronze</div>
               </>
             )}
