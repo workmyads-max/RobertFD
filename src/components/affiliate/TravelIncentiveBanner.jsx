@@ -1,6 +1,6 @@
 import React from 'react';
 
-const BANNER_IMAGE = 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/249a586a4_image.png';
+const BANNER_IMAGE = 'https://media.base44.com/images/public/69ff44f98e27baf8957d0676/e9d256671_XFT.jpg';
 
 /**
  * TravelIncentiveBanner — DISPLAY ONLY.
