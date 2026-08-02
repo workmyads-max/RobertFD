@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, CheckCircle, XCircle, Clock, Search, Eye } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { filterHiddenItems } from '@/lib/adminHidden';
 
 /**
  * Confirm payment and provision MT5 account via manualCryptoReview backend.
@@ -77,7 +78,9 @@ export default function AdminOrders() {
     },
   });
 
-  const filtered = orders.filter(o => {
+  const visibleOrders = filterHiddenItems(orders, 'email');
+
+  const filtered = visibleOrders.filter(o => {
     const matchSearch = !search || (o.order_id?.toLowerCase().includes(search.toLowerCase()) || o.email?.toLowerCase().includes(search.toLowerCase()) || o.full_name?.toLowerCase().includes(search.toLowerCase()));
     const matchFilter = filter === 'all' || o.payment_status === filter;
     return matchSearch && matchFilter;

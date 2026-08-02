@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Users, Search, Shield, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { filterHiddenItems } from '@/lib/adminHidden';
 
 export default function AdminUsers() {
   const [search, setSearch] = useState('');
@@ -11,7 +12,9 @@ export default function AdminUsers() {
     queryFn: () => base44.entities.User.list('-created_date', 200),
   });
 
-  const filtered = users.filter(u =>
+  const visibleUsers = filterHiddenItems(users, 'email');
+
+  const filtered = visibleUsers.filter(u =>
     !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -21,7 +24,7 @@ export default function AdminUsers() {
         <h1 className="text-2xl font-black text-foreground flex items-center gap-3">
           <Users className="w-6 h-6 text-primary" /> Users
         </h1>
-        <p className="text-sm text-muted-foreground font-mono mt-1">{users.length} registered users</p>
+        <p className="text-sm text-muted-foreground font-mono mt-1">{visibleUsers.length} registered users</p>
       </div>
 
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-5 w-full max-w-sm"

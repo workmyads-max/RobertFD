@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, XCircle, AlertTriangle, MessageSquare, Eye, RefreshCw, Loader2, ExternalLink, Copy, Flag, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { filterHiddenItems, isHiddenEmail } from '@/lib/adminHidden';
 
 const STATUS_COLORS = {
   awaiting_confirmation: { bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.3)', text: '#fbbf24', label: 'Awaiting Review' },
@@ -153,8 +154,9 @@ export default function AdminPaymentReview() {
     },
   });
 
-  const filtered = reviews.filter(r => filterStatus === 'all' || r.payment_status === filterStatus);
-  const pendingCount = reviews.filter(r => r.payment_status === 'awaiting_confirmation').length;
+  const visibleReviews = filterHiddenItems(reviews, 'email');
+  const filtered = visibleReviews.filter(r => filterStatus === 'all' || r.payment_status === filterStatus);
+  const pendingCount = visibleReviews.filter(r => r.payment_status === 'awaiting_confirmation').length;
 
   return (
     <div>
@@ -307,7 +309,7 @@ export default function AdminPaymentReview() {
         <div className="flex items-center gap-2 mb-4">
           <Clock className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Decision History</h2>
-          <span className="text-xs text-muted-foreground font-mono">({history.length})</span>
+          <span className="text-xs text-muted-foreground font-mono">({filterHiddenItems(history, 'trader_email').length})</span>
         </div>
         {historyLoading ? (
           <div className="rounded-xl py-10 text-center" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -328,7 +330,7 @@ export default function AdminPaymentReview() {
               <span className="col-span-2">MT5 ID</span>
               <span className="col-span-1">Time</span>
             </div>
-            {history.map((h, i) => {
+            {filterHiddenItems(history, 'trader_email').map((h, i) => {
               const isApprove = h.event_type === 'admin_approved';
               const isReject = h.event_type === 'admin_rejected' || h.event_type === 'fraud_flagged';
               const color = isApprove ? '#10b981' : isReject ? '#ef4444' : '#818cf8';
