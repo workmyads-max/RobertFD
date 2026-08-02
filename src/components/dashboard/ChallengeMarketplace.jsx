@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import FeeRefundNote from '@/components/shared/FeeRefundNote';
-import B2G1Banner from '@/components/shared/B2G1Banner';
+import PromoCarousel from '@/components/shared/PromoCarousel';
 import { getFreeSize, isEligibleSize, formatSize as formatB2G1Size } from '@/lib/b2g1Promo';
 
 const ACCOUNT_TYPES = {
@@ -351,37 +351,11 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {challengeType === 'two-step' && <FeeRefundNote className="mb-6" />}
 
-      {/* Buy 2 Get 1 Free — static banner */}
-      <B2G1Banner className="mb-6" />
-
-      {/* B2G1 tier table — flat rows, not pills */}
-      {b2g1Enabled && b2g1Tiers.length > 0 && (
-        <div className="mb-6" style={{ borderTop: '1px solid #1a1a1d', borderBottom: '1px solid #1a1a1d' }}>
-          <div className="grid" style={{ gridTemplateColumns: `repeat(${b2g1Tiers.length}, 1fr)` }}>
-            {b2g1Tiers.map((t, i) => (
-              <div
-                key={i}
-                className="py-3 px-3 text-center"
-                style={{ borderRight: i < b2g1Tiers.length - 1 ? '1px solid #141416' : 'none' }}
-              >
-                <div className="text-[10px] font-mono text-[#52525b] uppercase tracking-[0.15em] mb-1">
-                  Buy 2×
-                </div>
-                <div className="text-[13px] font-bold text-white">
-                  {formatB2G1Size(t.buy_size)}
-                </div>
-                <div className="text-[10px] text-[#52525b] my-1">↓</div>
-                <div className="text-[10px] font-mono text-[#52525b] uppercase tracking-[0.15em] mb-1">
-                  Get Free
-                </div>
-                <div className="text-[13px] font-bold text-[#FF5C00]">
-                  {formatB2G1Size(t.free_size)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Combined promo carousel — auto-sliding hero */}
+      <PromoCarousel className="mb-6" onShopChallenges={() => {
+        const cardsEl = document.querySelector('[data-plans-grid]');
+        if (cardsEl) cardsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }} />
 
       {/* Plans grid */}
       {plansLoading ? (
