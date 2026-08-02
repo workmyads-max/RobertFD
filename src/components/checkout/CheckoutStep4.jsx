@@ -20,6 +20,12 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
     { label: 'Est. Delivery', value: '1-24 hours after confirmation' },
   ];
 
+  // Show promo info if B2G1 is active
+  const promoDetails = order.promo_applied ? [
+    { label: 'Paid Accounts', value: `${order.promo_quantity}× $${order.account_size?.toLocaleString()}` },
+    { label: 'Free Account', value: `$${order.promo_free_account_size?.toLocaleString()} (Promo)`, highlight: true },
+  ] : [];
+
   return (
     <div className="max-w-2xl mx-auto text-center py-6">
       {/* Animated checkmark */}
@@ -70,6 +76,12 @@ export default function CheckoutStep4({ order, onGoToDashboard }) {
             <div key={label}>
               <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">{label}</div>
               <div className={`text-sm font-semibold text-foreground break-all ${mono ? 'font-mono text-xs' : ''}`}>{value}</div>
+            </div>
+          ))}
+          {promoDetails.map(({ label, value, highlight }) => (
+            <div key={label}>
+              <div className="text-[10px] font-mono text-primary uppercase tracking-wider mb-1">{label}</div>
+              <div className="text-sm font-bold text-primary">{value}</div>
             </div>
           ))}
         </div>

@@ -62,6 +62,11 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
         coupon_code: order.coupon_code || '',
         discount_amount: order.discount_amount || 0,
         affiliate_code: affiliateCode,
+        promo_applied: order.promo_applied || false,
+        promo_type: order.promo_type || '',
+        promo_quantity: order.promo_quantity || 1,
+        promo_free_account_size: order.promo_free_account_size || 0,
+        promo_free_account_provisioned: false,
       });
 
       return { order_id: orderId, exists: false };
@@ -314,11 +319,33 @@ export default function CheckoutStep3({ order, updateOrder, onNext, onBack, isLo
               </div>
             ))}
 
-            <div className="border-t border-white/10 pt-3 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
+            {/* B2G1 Promo summary */}
+            {order.promo_applied && (
+              <div className="rounded-xl p-3 my-2" style={{ background: 'rgba(255,92,0,0.06)', border: '1px solid rgba(255,92,0,0.2)' }}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[10px] font-mono text-primary uppercase tracking-widest">Buy 2 Get 1 Free Active</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">{order.promo_quantity}× ${order.account_size?.toLocaleString()} Accounts</span>
+                    <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-emerald-400 font-bold">FREE ${order.promo_free_account_size?.toLocaleString()} Account</span>
+                    <span className="text-emerald-400 font-mono">$0</span>
+                  </div>
+                </div>
               </div>
+            )}
+
+            <div className="border-t border-white/10 pt-3 space-y-2">
+              {!order.promo_applied && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
+                </div>
+              )}
               {order.discount_amount > 0 && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-emerald-400">Discount ({order.coupon_code})</span>

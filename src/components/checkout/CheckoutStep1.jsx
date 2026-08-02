@@ -172,10 +172,24 @@ export default function CheckoutStep1({ order, updateOrder, onNext }) {
               ))}
 
               <div className="border-t border-white/10 pt-4 mt-2 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
-                </div>
+                {order.promo_applied && (
+                  <>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-primary font-bold">B2G1: {order.promo_quantity}× ${order.account_size?.toLocaleString()} accounts</span>
+                      <span className="text-primary font-mono">${order.price?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-emerald-400 font-bold">FREE ${order.promo_free_account_size?.toLocaleString()} account (Promo)</span>
+                      <span className="text-emerald-400 font-mono">$0</span>
+                    </div>
+                  </>
+                )}
+                {!order.promo_applied && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-foreground font-mono">${order.price?.toLocaleString()}</span>
+                  </div>
+                )}
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-emerald-400">Discount ({order.coupon_code})</span>

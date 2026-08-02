@@ -9,6 +9,7 @@ import { useAccountStats } from './useAccountStats';
 import { useAccountTradeData } from '@/hooks/useAccountTradeData';
 import ThreePathsToFunded from '../dashboard/ThreePathsToFunded';
 import FirstTimePromoBanner from '../dashboard/FirstTimePromoBanner';
+import B2G1PromoBanner from '../dashboard/B2G1PromoBanner';
 import NewsAlertsBar from '../dashboard/NewsAlertsBar';
 import AffiliateSection from '../dashboard/AffiliateSection';
 import Footer from '../dashboard/Footer';
@@ -176,8 +177,9 @@ export default function FundedDashboard({ user, kyc, accounts: propAccounts, isL
 
         {/* Main content area with proper spacing */}
         <div className="space-y-8 mt-8 min-h-[40vh]">
-          {/* First-Time Promo Banner - ALWAYS SHOWN */}
+          {/* Promo Banners - rotation: First-Time Discount then B2G1 */}
           <FirstTimePromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
+          <B2G1PromoBanner onStartChallenge={() => onNavigate?.('marketplace')} />
 
           {/* Live News Alerts Bar - high-impact upcoming events ticker */}
           <NewsAlertsBar onNavigate={onNavigate} />

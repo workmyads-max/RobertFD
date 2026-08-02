@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { useFeatureVisibility } from '@/hooks/useFeatureVisibility';
 import FeeRefundNote from '@/components/shared/FeeRefundNote';
 import B2G1Banner from '@/components/shared/B2G1Banner';
+import { getFreeSize, isEligibleSize, formatSize as formatB2G1Size } from '@/lib/b2g1Promo';
 
 const ACCOUNT_TYPES = {
   standard: {
@@ -66,6 +67,19 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
   const enabledPlatforms = Object.fromEntries(
     platformSettings.map(s => [s.setting_key, s.is_enabled !== false])
   );
+
+  // Fetch B2G1 promo settings (public backend function)
+  const { data: b2g1Settings } = useQuery({
+    queryKey: ['b2g1-promo-settings-public'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getB2G1PromoSettings', {});
+      return res?.settings || res?.data?.settings || null;
+    },
+    staleTime: 60000,
+  });
+  const b2g1Enabled = b2g1Settings?.b2g1_enabled === true;
+  const b2g1Tiers = b2g1Settings?.b2g1_tier_mapping || [];
+
   const [selected, setSelected] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
@@ -77,7 +91,7 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
   const accCfg = ACCOUNT_TYPES[accountType];
 
-  const handleSelect = (plan) => {
+  const handleSelect = (plan, qty = 1) => {
     const availablePlatform = PLATFORMS.find(p => p.id === platform);
     if (!availablePlatform?.available) return;
     setSelected(plan);
@@ -107,11 +121,24 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
       account_type: accountType,
       account_size: plan.size,
       leverage,
-      price: plan.price,
-      final_price: plan.price,
+      price: plan.price * qty,
+      final_price: plan.price * qty,
+      unit_price: plan.price,
       platform,
       rule_snapshot: ruleSnapshot,
+      quantity: qty,
     };
+
+    // Apply B2G1 promo: 2 same-size accounts in one order → 1 free smaller account
+    if (qty === 2 && b2g1Enabled && isEligibleSize(plan.size, b2g1Tiers)) {
+      const freeSize = getFreeSize(plan.size, b2g1Tiers);
+      if (freeSize) {
+        order.promo_applied = true;
+        order.promo_type = 'buy2get1';
+        order.promo_quantity = 2;
+        order.promo_free_account_size = freeSize;
+      }
+    }
 
     setPendingOrder(order);
     setShowTerms(true);
@@ -326,6 +353,18 @@ export default function ChallengeMarketplace({ onProceedToCheckout }) {
 
       {/* Buy 2 Get 1 Free — static banner */}
       <B2G1Banner className="mb-6" />
+
+      {/* B2G1 tier pills (shown when promo is enabled) */}
+      {b2g1Enabled && b2g1Tiers.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-6">
+          {b2g1Tiers.map((t, i) => (
+            <span key={i} className="px-2.5 py-1 rounded-lg text-[10px] font-mono"
+              style={{ background: 'rgba(255,92,0,0.1)', border: '1px solid rgba(255,92,0,0.2)', color: '#FF7A2F' }}>
+              2×{formatB2G1Size(t.buy_size)} → {formatB2G1Size(t.free_size)} FREE
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Plans grid */}
       {plansLoading ? (

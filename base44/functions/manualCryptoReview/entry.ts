@@ -205,7 +205,77 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, error: `Payment confirmed but MT5 provisioning failed: ${provisionData?.error || 'unknown error'}. Order set to "authorized" — retry provisioning from Admin Orders.` }, { status: 500 });
       }
 
-      // Affiliate commissions L1/L2/L3 — blocking (must succeed for payment integrity)
+      // ── B2G1 PROMO: provision 2nd paid account + 1 free account ──────────────
+      // When promo_applied is true, the order includes 2 paid accounts + 1 free.
+      // The first paid account was provisioned above. We now provision:
+      //   1. Second paid account (same size)
+      //   2. Free promotional account (smaller size, flagged is_promo_free_account)
+      if (order.promo_applied && order.promo_type === 'buy2get1' && !order.promo_free_account_provisioned) {
+        const promoLog = (msg: string) => console.log(`[ManualCrypto][B2G1] Order ${order.order_id}: ${msg}`);
+
+        // Provision second paid account
+        try {
+          const secondPaidId = `${order.account_id || order.order_id}-2`;
+          promoLog(`Provisioning 2nd paid account ${secondPaidId} ($${order.account_size})`);
+          const r2 = await sr.functions.invoke('provisionMT5Account', {
+            account_id: secondPaidId,
+            order_id: order.order_id,
+            user_email: order.email,
+            challenge_type: order.challenge_type,
+            account_type: order.account_type || 'standard',
+            account_size: order.account_size,
+            leverage: order.leverage || '1:100',
+            platform: 'mt5',
+            country: order.country || null,
+            rule_snapshot: order.rule_snapshot || null,
+          });
+          const d2 = r2?.data ?? r2;
+          promoLog(`2nd paid account result: ${JSON.stringify(d2)}`);
+        } catch (e) {
+          promoLog(`2nd paid account FAILED: ${e.message}`);
+        }
+
+        // Provision free promotional account (flagged, excluded from affiliate)
+        if (order.promo_free_account_size > 0) {
+          try {
+            const freeAccountId = `${order.account_id || order.order_id}-FREE`;
+            promoLog(`Provisioning FREE account ${freeAccountId} ($${order.promo_free_account_size})`);
+            const rFree = await sr.functions.invoke('provisionMT5Account', {
+              account_id: freeAccountId,
+              order_id: order.order_id,
+              user_email: order.email,
+              challenge_type: order.challenge_type,
+              account_type: order.account_type || 'standard',
+              account_size: order.promo_free_account_size,
+              leverage: order.leverage || '1:100',
+              platform: 'mt5',
+              country: order.country || null,
+              rule_snapshot: order.rule_snapshot || null,
+            });
+            const dFree = rFree?.data ?? rFree;
+            promoLog(`FREE account result: ${JSON.stringify(dFree)}`);
+
+            // Flag the free ChallengeAccount as promo free (excluded from affiliate)
+            try {
+              const freeAccs = await sr.entities.ChallengeAccount.filter({ account_id: freeAccountId });
+              if (freeAccs[0]) {
+                await sr.entities.ChallengeAccount.update(freeAccs[0].id, { is_promo_free_account: true });
+                promoLog(`Flagged account ${freeAccountId} as is_promo_free_account=true`);
+              }
+            } catch (e) {
+              promoLog(`Failed to flag free account: ${e.message}`);
+            }
+
+            await sr.entities.Order.update(order.id, { promo_free_account_provisioned: true });
+          } catch (e) {
+            promoLog(`FREE account FAILED: ${e.message}`);
+          }
+        }
+      }
+
+      // Affiliate commissions L1/L2/L3 — calculated ONLY on paid accounts (order.price = 2× unit price).
+      // The free promotional account generates ZERO commission because it is never
+      // passed to createAffiliateCommissions and is flagged is_promo_free_account.
       try {
         await sr.functions.invoke('createAffiliateCommissions', {
           user_email: order.email,
@@ -225,9 +295,12 @@ Deno.serve(async (req) => {
         });
       } catch (e) { console.error('[ManualCrypto] Email failed:', e.message); }
 
+      const promoNote = order.promo_applied
+        ? ` (B2G1: ${order.promo_quantity}× paid + 1× FREE $${order.promo_free_account_size})`
+        : '';
       await sr.entities.Notification.create({
         title: '✅ Payment Approved — Challenge Account Ready',
-        message: `Your payment for ${order.challenge_type} $${order.account_size} challenge has been verified. Your account is being provisioned.`,
+        message: `Your payment for ${order.challenge_type} $${order.account_size} challenge has been verified. Your account is being provisioned${promoNote}.`,
         type: 'payout', priority: 'critical', display_mode: 'popup', is_active: true, target: 'challenge',
       });
 

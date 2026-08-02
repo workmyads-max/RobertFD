@@ -21,6 +21,7 @@ import AffiliateSection from '../components/landing/AffiliateSection';
 import FAQSection from '../components/landing/FAQSection';
 import AboutSection from '../components/landing/AboutSection';
 import PromoPopup from '../components/landing/PromoPopup';
+import Buy2Get1Popup from '../components/landing/Buy2Get1Popup';
 import LiveChat from '../components/landing/LiveChat';
 import Footer from '../components/landing/Footer';
 import { captureReferralCode } from '@/utils/referralUtils';
@@ -53,6 +54,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-inter dark">
       <PromoPopup mascotImage={IMAGES.mascot} />
+      <Buy2Get1Popup />
       <Navbar />
       <HeroSection heroImage={IMAGES.hero} />
       <TrustBar />
