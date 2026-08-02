@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, Activity, DollarSign, GitBranch, Wallet, Radio, TrendingUp
+  Users, Activity, DollarSign, GitBranch, Wallet, Radio, TrendingUp, Award
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -10,12 +10,14 @@ import ReferralLink from '../affiliate/ReferralLink';
 import CommissionHistory from '../affiliate/CommissionHistory';
 import ReferralTree from '../affiliate/ReferralTree';
 import AffiliateWithdrawal from '../affiliate/AffiliateWithdrawal';
+import AffiliateRanks from '../affiliate/AffiliateRanks';
 
 const ORANGE = '#FF5C00';
 const CARD = '#15171e';
 
 const TABS = [
 { id: 'overview', label: 'Overview', icon: Activity },
+{ id: 'ranks', label: 'Ranks & Bonuses', icon: Award },
 { id: 'link', label: 'Referral Link', icon: GitBranch },
 { id: 'history', label: 'Commissions', icon: DollarSign },
 { id: 'tree', label: 'Network Tree', icon: Users },
@@ -146,6 +148,7 @@ export default function Affiliate({ user }) {
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}>
           {activeTab === 'overview' && <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />}
+          {activeTab === 'ranks' && <AffiliateRanks user={user} onSupport={() => setActiveTab('overview')} />}
           {activeTab === 'link' && <ReferralLink profile={profile} />}
           {activeTab === 'history' && <CommissionHistory commissions={commissions} />}
           {activeTab === 'tree' && <ReferralTree commissions={commissions} userEmail={user?.email} />}

@@ -1,0 +1,69 @@
+{
+  "name": "AffiliateRankBonus",
+  "type": "object",
+  "permissions": {
+    "read": "authenticated",
+    "create": "admin",
+    "update": "admin",
+    "delete": "admin"
+  },
+  "rls": {
+    "read": {
+      "data.user_email": "{{user.email}}"
+    }
+  },
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "The affiliate's email"
+    },
+    "rank_key": {
+      "type": "string",
+      "enum": [
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ],
+      "description": "Which rank this record resolves"
+    },
+    "rank_name": {
+      "type": "string",
+      "description": "Display name e.g. Bronze Partner"
+    },
+    "bonus_amount": {
+      "type": "number",
+      "description": "Bonus amount in USD for this rank"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "claimed",
+        "forfeited"
+      ],
+      "description": "claimed = bonus granted + sales counter reset; forfeited = bonus skipped, sales carry over"
+    },
+    "sales_at_action": {
+      "type": "number",
+      "description": "Cumulative total L1 direct sales at the moment of claim/forfeit"
+    },
+    "effective_sales_at_action": {
+      "type": "number",
+      "description": "Effective sales (since last claim) at the moment of claim/forfeit"
+    },
+    "commission_id": {
+      "type": "string",
+      "description": "AffiliateCommission id created for claimed bonuses (empty for forfeited)"
+    },
+    "claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the claim/forfeit action"
+    }
+  },
+  "required": [
+    "user_email",
+    "rank_key",
+    "status"
+  ]
+}
