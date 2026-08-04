@@ -346,30 +346,31 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       {/* ── Footer ── */}
       <div style={{
         position: 'absolute', bottom: '46px', left: '60px', right: '60px',
-        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '24px',
+        height: '80px',
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'flex-end', gap: '40px',
         paddingTop: '20px',
         borderTop: `0.5px solid ${T.border}`,
       }}>
         {/* Website / Verify */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'flex-end', height: '100%' }}>
           <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.22em', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>VERIFY AT</div>
           <div style={{ color: 'rgba(226,232,240,0.75)', fontSize: '11px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
             {FIRM.website}
           </div>
         </div>
 
-        {/* Seal */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {/* Seal - centered */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: '100%' }}>
           <Seal />
         </div>
 
-        {/* CEO */}
-        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.22em', marginBottom: '4px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>CERTIFIED BY</div>
+        {/* CEO - properly stacked, bottom-aligned */}
+        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', height: '100%', gap: '0' }}>
+          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.22em', marginBottom: '6px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>CERTIFIED BY</div>
           <Signature />
-          <div style={{ width: '120px', height: '0.5px', background: T.border, marginTop: '4px', marginBottom: '6px' }} />
+          <div style={{ width: '130px', height: '0.5px', background: T.border, marginTop: '2px', marginBottom: '5px' }} />
           <div style={{ color: 'rgba(226,232,240,0.85)', fontSize: '11px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
-          <div style={{ color: T.muted, fontSize: '7px', marginTop: '3px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>Chief Executive Officer</div>
+          <div style={{ color: T.muted, fontSize: '7px', marginTop: '2px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>Chief Executive Officer</div>
         </div>
       </div>
     </div>
