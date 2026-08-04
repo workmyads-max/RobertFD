@@ -128,9 +128,9 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         position: 'absolute', inset: '70px 90px',
         display: 'flex', flexDirection: 'column',
       }}>
-        {/* ── Logo centered ── */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
-          <XFLogo size="md" />
+        {/* ── Logo centered (large) ── */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '36px' }}>
+          <XFLogo size="xl" />
         </div>
 
         {/* ── "CERTIFICATE OF COMPLETION" ── */}
@@ -217,11 +217,13 @@ export default function CertificateDocument({ cert, forCapture = false }) {
             </div>
           </div>
 
-          {/* CENTER: Verification QR */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <VerifyQR />
-            <div style={{ fontSize: '9px', color: C.textMuted, letterSpacing: '0.1em' }}>
-              Verify at {FIRM.website}
+          {/* CENTER: Verify at domain */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '9px', color: C.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              Verify At
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: C.textSoft }}>
+              {FIRM.website}
             </div>
           </div>
 
