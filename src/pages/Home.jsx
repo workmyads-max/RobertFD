@@ -78,10 +78,10 @@ export default function Home() {
       <PlatformsSection mobileImage={IMAGES.mobile} />
       <MobileAppShowcase />
       <WhyChooseUs />
-      <LivePayouts />
-      <section className="max-w-[1400px] mx-auto px-6 py-20">
+      {/* <LivePayouts /> — hidden temporarily */}
+      {/* <section className="max-w-[1400px] mx-auto px-6 py-20">
         <HomeLeaderboard />
-      </section>
+      </section> — hidden temporarily */}
       <AffiliateSection />
       <FAQSection />
       <AboutSection aboutImage={IMAGES.singapore} />
