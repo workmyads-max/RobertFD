@@ -1,25 +1,23 @@
 import React from 'react';
 import XFLogo from '@/components/shared/XFLogo';
-// No icon imports needed - using inline SVGs for html2canvas compatibility
 
 const FIRM = {
   name: 'XFUNDED TRADER',
   website: 'xfundedtrader.com',
-  verifyUrl: 'xfundedtrader.com/verify',
   ceo: 'Diego Reyes',
 };
 
-// ─── Theme - single premium dark theme matching homepage ──────────────────
+// ─── Luxury Theme ──────────────────────────────────────────────────────────
 const T = {
   bg: '#05060a',
+  bgGrad: 'linear-gradient(135deg, #07080d 0%, #05060a 40%, #08070a 60%, #05060a 100%)',
   text: '#f1f5f9',
   muted: 'rgba(148,163,184,0.5)',
   accent: '#FF5C00',
-  accent2: '#CCFF00',
   gold: '#C5A059',
-  cardBg: 'rgba(255,255,255,0.04)',
+  goldDim: 'rgba(197,160,89,0.35)',
   border: 'rgba(255,255,255,0.08)',
-  glassBg: 'rgba(255,255,255,0.03)',
+  statBg: 'rgba(255,255,255,0.02)',
 };
 
 const BADGES = {
@@ -40,128 +38,107 @@ const SUBTITLES = {
   special:       'SPECIAL ACHIEVEMENT',
 };
 
-// ─── Trading Chart Watermark ───────────────────────────────────────────────
+// ─── Subtle Candlestick Watermark ──────────────────────────────────────────
 function Watermark() {
-  // Generate realistic-looking candle data
   const candles = [
-    { o: 120, c: 135, h: 142, l: 115 },
-    { o: 135, c: 128, h: 140, l: 122 },
-    { o: 128, c: 145, h: 150, l: 125 },
-    { o: 145, c: 160, h: 165, l: 140 },
-    { o: 160, c: 152, h: 168, l: 148 },
-    { o: 152, c: 170, h: 175, l: 148 },
-    { o: 170, c: 162, h: 178, l: 158 },
-    { o: 162, c: 185, h: 190, l: 160 },
-    { o: 185, c: 178, h: 192, l: 172 },
-    { o: 178, c: 195, h: 200, l: 175 },
-    { o: 195, c: 210, h: 215, l: 190 },
-    { o: 210, c: 200, h: 218, l: 195 },
-    { o: 200, c: 225, h: 230, l: 198 },
-    { o: 225, c: 240, h: 248, l: 220 },
+    { o: 120, c: 135, h: 142, l: 115 }, { o: 135, c: 128, h: 140, l: 122 },
+    { o: 128, c: 145, h: 150, l: 125 }, { o: 145, c: 160, h: 165, l: 140 },
+    { o: 160, c: 152, h: 168, l: 148 }, { o: 152, c: 170, h: 175, l: 148 },
+    { o: 170, c: 162, h: 178, l: 158 }, { o: 162, c: 185, h: 190, l: 160 },
+    { o: 185, c: 178, h: 192, l: 172 }, { o: 178, c: 195, h: 200, l: 175 },
+    { o: 195, c: 210, h: 215, l: 190 }, { o: 210, c: 200, h: 218, l: 195 },
+    { o: 200, c: 225, h: 230, l: 198 }, { o: 225, c: 240, h: 248, l: 220 },
     { o: 240, c: 260, h: 265, l: 238 },
   ];
-
-  const chartW = 480;
-  const chartH = 330;
-  const padding = { top: 30, right: 25, bottom: 25, left: 25 };
+  const chartW = 480, chartH = 330, padding = { top: 30, right: 25, bottom: 25, left: 25 };
   const candleW = (chartW - padding.left - padding.right) / candles.length - 3;
   const allPrices = candles.flatMap(c => [c.h, c.l]);
-  const minP = Math.min(...allPrices) - 10;
-  const maxP = Math.max(...allPrices) + 10;
+  const minP = Math.min(...allPrices) - 10, maxP = Math.max(...allPrices) + 10;
   const scale = (v) => padding.top + chartH - padding.bottom - ((v - minP) / (maxP - minP)) * (chartH - padding.top - padding.bottom);
-
-  // Support & resistance levels
-  const levels = [135, 160, 185, 210, 240];
-
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${chartW} ${chartH}`} fill="none"
-      style={{ position: 'absolute', inset: 0, opacity: 0.025, pointerEvents: 'none' }}>
-      {/* Grid lines */}
+      style={{ position: 'absolute', inset: 0, opacity: 0.02, pointerEvents: 'none' }}>
       {Array.from({ length: 16 }, (_, i) => (
         <React.Fragment key={`grid-${i}`}>
-          <line x1={padding.left} y1={padding.top + i * 19} x2={chartW - padding.right} y2={padding.top + i * 19}
-            stroke="#C5A059" strokeWidth="0.2" />
-          <line x1={padding.left + i * 30} y1={padding.top} x2={padding.left + i * 30} y2={chartH - padding.bottom}
-            stroke="#C5A059" strokeWidth="0.2" />
+          <line x1={padding.left} y1={padding.top + i * 19} x2={chartW - padding.right} y2={padding.top + i * 19} stroke="#C5A059" strokeWidth="0.2" />
+          <line x1={padding.left + i * 30} y1={padding.top} x2={padding.left + i * 30} y2={chartH - padding.bottom} stroke="#C5A059" strokeWidth="0.2" />
         </React.Fragment>
       ))}
-
-      {/* Support/Resistance levels */}
-      {levels.map((lv, i) => (
-        <line key={`sr-${i}`} x1={padding.left} y1={scale(lv)} x2={chartW - padding.right} y2={scale(lv)}
-          stroke="#C5A059" strokeWidth="0.6" strokeDasharray="6,4" opacity="0.8" />
-      ))}
-
-      {/* Candlesticks */}
       {candles.map((c, i) => {
         const x = padding.left + i * (candleW + 3) + candleW / 2;
         const isBullish = c.c >= c.o;
         const fill = isBullish ? 'none' : '#C5A059';
         const strokeC = '#C5A059';
-        const bodyTop = scale(Math.max(c.o, c.c));
-        const bodyBottom = scale(Math.min(c.o, c.c));
+        const bodyTop = scale(Math.max(c.o, c.c)), bodyBottom = scale(Math.min(c.o, c.c));
         const bodyH = Math.max(bodyBottom - bodyTop, 1);
         return (
           <React.Fragment key={i}>
-            {/* Wick */}
             <line x1={x} y1={scale(c.h)} x2={x} y2={scale(c.l)} stroke={strokeC} strokeWidth="0.8" />
-            {/* Body */}
-            <rect x={x - candleW / 2} y={bodyTop} width={candleW} height={bodyH} rx="1"
-              fill={fill} stroke={strokeC} strokeWidth="0.7" />
-            {/* Volume bar below */}
-            <rect x={x - candleW / 2 + 0.5} y={chartH - padding.bottom + 2} width={candleW - 1}
-              height={3 + Math.abs(c.c - c.o) * 0.5} fill={strokeC} opacity="0.35" rx="0.5" />
+            <rect x={x - candleW / 2} y={bodyTop} width={candleW} height={bodyH} rx="1" fill={fill} stroke={strokeC} strokeWidth="0.7" />
+            <rect x={x - candleW / 2 + 0.5} y={chartH - padding.bottom + 2} width={candleW - 1} height={3 + Math.abs(c.c - c.o) * 0.5} fill={strokeC} opacity="0.35" rx="0.5" />
           </React.Fragment>
         );
       })}
-
-      {/* Trend line - rising channel */}
-      <line x1={padding.left} y1={scale(118)} x2={chartW - padding.right} y2={scale(250)}
-        stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
-      <line x1={padding.left + 20} y1={scale(105)} x2={chartW - padding.right} y2={scale(238)}
-        stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
-
-      {/* Pulsing breakout arrow - top right */}
-      <line x1={400} y1={scale(230)} x2={430} y2={scale(210)} stroke="#C5A059" strokeWidth="1" opacity="0.6" />
-      <polygon points="430,150 436,166 424,166" fill="#C5A059" opacity="0.6"
-        transform={`translate(0, ${scale(210) - 158})`} />
+      <line x1={padding.left} y1={scale(118)} x2={chartW - padding.right} y2={scale(250)} stroke="#C5A059" strokeWidth="0.5" strokeDasharray="3,5" opacity="0.5" />
     </svg>
   );
 }
 
-// ─── Phase badge ───────────────────────────────────────────────────────────
+// ─── Gold Corner Ornaments ─────────────────────────────────────────────────
+function CornerOrnament({ position }) {
+  const base = { position: 'absolute', width: '40px', height: '40px', pointerEvents: 'none' };
+  const pos = {
+    topLeft:     { top: '16px', left: '16px' },
+    topRight:    { top: '16px', right: '16px', transform: 'scaleX(-1)' },
+    bottomLeft:  { bottom: '16px', left: '16px', transform: 'scaleY(-1)' },
+    bottomRight: { bottom: '16px', right: '16px', transform: 'scale(-1,-1)' },
+  };
+  return (
+    <div style={{ ...base, ...pos[position] }}>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <path d="M4 20 L4 4 L20 4" stroke={T.gold} strokeWidth="1" fill="none" opacity="0.6" />
+        <path d="M8 20 L8 8 L20 8" stroke={T.gold} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <circle cx="4" cy="4" r="2" fill="none" stroke={T.gold} strokeWidth="0.8" opacity="0.7" />
+      </svg>
+    </div>
+  );
+}
+
+// ─── Phase Badge ───────────────────────────────────────────────────────────
 function Badge({ type }) {
   const b = BADGES[type] || BADGES.phase1_passed;
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.04)',
+      background: 'rgba(255,255,255,0.03)',
       border: `1px solid ${b.color}40`,
-      borderRadius: '6px',
-      padding: '5px 14px',
-      display: 'flex', alignItems: 'center', gap: '6px',
+      borderRadius: '100px',
+      padding: '6px 16px',
+      display: 'flex', alignItems: 'center', gap: '8px',
     }}>
-      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: b.color, boxShadow: `0 0 8px ${b.color}80` }} />
-      <span style={{ color: b.color, fontSize: '9px', fontWeight: 800, letterSpacing: '0.2em', fontFamily: "'Inter', sans-serif" }}>
+      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: b.color }} />
+      <span style={{ color: b.color, fontSize: '9px', fontWeight: 700, letterSpacing: '0.25em', fontFamily: "'Inter', sans-serif" }}>
         {b.label}
       </span>
     </div>
   );
 }
 
-// ─── XF Gold Seal ──────────────────────────────────────────────────────────
+// ─── Gold Seal ─────────────────────────────────────────────────────────────
 function Seal() {
   return (
-    <div style={{ position: 'relative', width: '72px', height: '72px' }}>
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-        <circle cx="36" cy="36" r="34" fill="none" stroke="#C5A059" strokeWidth="1.5" opacity="0.8" />
-        <circle cx="36" cy="36" r="30" fill="none" stroke="#C5A059" strokeWidth="0.5" opacity="0.45" />
-        <circle cx="36" cy="36" r="25" fill="none" stroke="#C5A059" strokeWidth="0.8" opacity="0.6" />
-        <text x="36" y="43" textAnchor="middle" fontSize="20" fontWeight="900" fill="#C5A059" fontFamily="'Inter', sans-serif" opacity="0.9">XF</text>
+    <div style={{ position: 'relative', width: '76px', height: '76px' }}>
+      <svg width="76" height="76" viewBox="0 0 76 76" fill="none">
+        <circle cx="38" cy="38" r="36" fill="none" stroke={T.gold} strokeWidth="1" opacity="0.7" />
+        <circle cx="38" cy="38" r="33" fill="none" stroke={T.gold} strokeWidth="0.4" opacity="0.3" />
+        <circle cx="38" cy="38" r="28" fill="none" stroke={T.gold} strokeWidth="0.6" opacity="0.5" />
+        <circle cx="38" cy="38" r="25" fill="none" stroke={T.gold} strokeWidth="0.3" opacity="0.2" />
+        <text x="38" y="45" textAnchor="middle" fontSize="18" fontWeight="900" fill={T.gold} fontFamily="'Cinzel', serif" opacity="0.9">XF</text>
         {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
           const rad = (deg * Math.PI) / 180;
-          return <circle key={deg} cx={36 + 27 * Math.cos(rad)} cy={36 + 27 * Math.sin(rad)} r="1.3" fill="#C5A059" opacity="0.65" />;
+          return <circle key={deg} cx={38 + 30 * Math.cos(rad)} cy={38 + 30 * Math.sin(rad)} r="1.2" fill={T.gold} opacity="0.5" />;
         })}
-        <text x="36" y="62" textAnchor="middle" fontSize="4.5" fontWeight="700" fill="#C5A059" opacity="0.4" fontFamily="'Inter', sans-serif" letterSpacing="0.15em">PROP TRADER</text>
+        <path d="M14 50 Q38 54 62 50" fill="none" stroke={T.gold} strokeWidth="0.3" opacity="0.3" />
+        <text x="38" y="65" textAnchor="middle" fontSize="4" fontWeight="700" fill={T.gold} opacity="0.4" fontFamily="'Inter', sans-serif" letterSpacing="0.2em">PROP TRADER</text>
       </svg>
     </div>
   );
@@ -170,7 +147,7 @@ function Seal() {
 // ─── CEO Signature ─────────────────────────────────────────────────────────
 function Signature() {
   return (
-    <svg width="140" height="48" viewBox="0 0 200 70" fill="none" style={{ marginBottom: '2px' }}>
+    <svg width="130" height="42" viewBox="0 0 200 70" fill="none" style={{ marginBottom: '2px' }}>
       <path d="M10 48 C10 20, 14 12, 20 12 C28 12, 34 18, 34 30 C34 42, 28 50, 18 50 C14 50, 10 48, 10 48" stroke="#e2e8f0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85"/>
       <path d="M38 34 C39 30, 41 26, 43 24 C44 32, 44 40, 43 48" stroke="#e2e8f0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85"/>
       <circle cx="42" cy="20" r="1.5" fill="#e2e8f0" opacity="0.8"/>
@@ -191,7 +168,20 @@ function Signature() {
   );
 }
 
-// ─── MAIN: Certificate Document ──────────────────────────────────────────
+// ─── Ornamental Divider ────────────────────────────────────────────────────
+function OrnamentalDivider() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', width: '50%', maxWidth: '420px', margin: '26px 0' }}>
+      <div style={{ flex: 1, height: '1px', background: `linear-gradient(to right, transparent, ${T.goldDim})` }} />
+      <div style={{ width: '5px', height: '5px', background: T.gold, transform: 'rotate(45deg)', margin: '0 10px' }} />
+      <div style={{ width: '1px', height: '12px', background: T.goldDim }} />
+      <div style={{ width: '5px', height: '5px', background: T.gold, transform: 'rotate(45deg)', margin: '0 10px' }} />
+      <div style={{ flex: 1, height: '1px', background: `linear-gradient(to left, transparent, ${T.goldDim})` }} />
+    </div>
+  );
+}
+
+// ─── MAIN: Certificate Document ────────────────────────────────────────────
 export default function CertificateDocument({ cert, forCapture = false }) {
   const type = cert?.type || 'phase1_passed';
   const badge = BADGES[type] || BADGES.phase1_passed;
@@ -203,12 +193,12 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       width: forCapture ? '1400px' : '100%',
       height: forCapture ? '990px' : undefined,
       aspectRatio: forCapture ? undefined : '1.414 / 1',
-      background: T.bg,
+      background: T.bgGrad,
       position: 'relative',
       overflow: 'hidden',
       fontFamily: "'Inter', sans-serif",
-      borderRadius: forCapture ? '0' : '16px',
-      boxShadow: forCapture ? 'none' : '0 0 60px rgba(255,92,0,0.08), 0 0 120px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)',
+      borderRadius: forCapture ? '0' : '14px',
+      boxShadow: forCapture ? 'none' : '0 0 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)',
       flexShrink: 0,
       color: T.text,
       border: forCapture ? 'none' : '1px solid rgba(255,255,255,0.06)',
@@ -216,15 +206,22 @@ export default function CertificateDocument({ cert, forCapture = false }) {
       {/* Chart watermark */}
       <Watermark />
 
-      {/* Clean border frame */}
-      <div style={{ position: 'absolute', inset: '24px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '2px', pointerEvents: 'none' }} />
+      {/* ── Double border frame ── */}
+      <div style={{ position: 'absolute', inset: '20px', border: `1px solid ${T.goldDim}`, borderRadius: '2px', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: '26px', border: `0.5px solid ${T.border}`, borderRadius: '1px', pointerEvents: 'none' }} />
+
+      {/* Gold corner ornaments */}
+      <CornerOrnament position="topLeft" />
+      <CornerOrnament position="topRight" />
+      <CornerOrnament position="bottomLeft" />
+      <CornerOrnament position="bottomRight" />
 
       {/* ── Header ── */}
       <div style={{
-        position: 'absolute', top: '42px', left: '56px', right: '56px',
+        position: 'absolute', top: '46px', left: '60px', right: '60px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        paddingBottom: '16px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        paddingBottom: '18px',
+        borderBottom: `0.5px solid ${T.border}`,
       }}>
         <XFLogo size="md" />
         <Badge type={type} />
@@ -232,66 +229,69 @@ export default function CertificateDocument({ cert, forCapture = false }) {
 
       {/* ── Body ── */}
       <div style={{
-        position: 'absolute', top: '120px', left: '56px', right: '56px', bottom: '100px',
+        position: 'absolute', top: '130px', left: '60px', right: '60px', bottom: '110px',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* Crown icon - clean, no glow */}
+        {/* Crown icon */}
         <div style={{
-          width: '52px', height: '52px', borderRadius: '12px',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          width: '48px', height: '48px', borderRadius: '10px',
+          background: 'rgba(197,160,89,0.04)',
+          border: `0.5px solid ${T.goldDim}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: '20px',
+          marginBottom: '24px',
         }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C5A059" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
             <path d="M3 20h18" />
           </svg>
         </div>
 
-        {/* Certificate title */}
+        {/* Certificate title - luxury serif */}
         <div style={{
-          fontSize: '42px', fontWeight: 900, color: T.text, letterSpacing: '0.06em',
-          fontFamily: "'Inter', sans-serif", lineHeight: 1, textAlign: 'center',
+          fontSize: '52px', fontWeight: 600, color: T.text, letterSpacing: '0.08em',
+          fontFamily: "'Cormorant Garamond', serif", lineHeight: 1, textAlign: 'center',
         }}>
           CERTIFICATE
         </div>
         <div style={{
-          fontSize: '15px', fontWeight: 700, color: badge.color,
-          letterSpacing: '0.3em', marginTop: '6px', fontFamily: "'Inter', sans-serif",
+          fontSize: '13px', fontWeight: 600, color: badge.color,
+          letterSpacing: '0.35em', marginTop: '8px', fontFamily: "'Inter', sans-serif",
         }}>
           {isWithdrawal ? 'OF WITHDRAWAL' : 'OF COMPLETION'}
         </div>
 
-        {/* Clean divider */}
-        <div style={{ display: 'flex', alignItems: 'center', width: '55%', maxWidth: '420px', margin: '22px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
-          <div style={{ width: '6px', height: '6px', background: '#C5A059', transform: 'rotate(45deg)', margin: '0 14px' }} />
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
-        </div>
+        {/* Ornamental divider */}
+        <OrnamentalDivider />
 
         {/* Presented to */}
         <div style={{
-          color: T.muted, fontSize: '10px', letterSpacing: '0.22em', fontWeight: 600,
-          fontFamily: "'Inter', sans-serif", marginBottom: '8px',
+          color: T.muted, fontSize: '9px', letterSpacing: '0.28em', fontWeight: 600,
+          fontFamily: "'Inter', sans-serif", marginBottom: '12px',
         }}>
           PROUDLY PRESENTED TO
         </div>
 
-        {/* Trader name */}
+        {/* Trader name - luxury serif */}
         <div style={{
-          fontSize: '44px', fontWeight: 800, color: T.text,
-          fontFamily: "'Inter', sans-serif",
-          textAlign: 'center', marginBottom: '12px', lineHeight: 1.15,
-          letterSpacing: '-0.01em',
+          fontSize: '48px', fontWeight: 600, color: T.text,
+          fontFamily: "'Cormorant Garamond', serif",
+          textAlign: 'center', marginBottom: '14px', lineHeight: 1.1,
+          letterSpacing: '0.02em',
         }}>
           {cert?.trader_name || 'Your Name'}
         </div>
 
+        {/* Underline beneath name */}
+        <div style={{
+          width: '200px', height: '1px',
+          background: `linear-gradient(to right, transparent, ${T.goldDim}, transparent)`,
+          marginBottom: '16px',
+        }} />
+
         {/* Achievement text */}
         <div style={{
           color: 'rgba(148,163,184,0.6)', fontSize: '12px', fontWeight: 500, textAlign: 'center',
-          fontFamily: "'Inter', sans-serif", lineHeight: 1.6,
+          fontFamily: "'Inter', sans-serif", lineHeight: 1.7,
         }}>
           {isWithdrawal ? (
             <>For successfully processing a withdrawal from{' '}<span style={{ color: badge.color, fontWeight: 700 }}>XFUNDED TRADER</span></>
@@ -301,19 +301,17 @@ export default function CertificateDocument({ cert, forCapture = false }) {
         </div>
         <div style={{
           color: 'rgba(148,163,184,0.4)', fontSize: '11px', fontWeight: 400, textAlign: 'center',
-          fontFamily: "'Inter', sans-serif", marginTop: '4px',
+          fontFamily: "'Inter', sans-serif", marginTop: '6px',
         }}>
           {isWithdrawal
             ? 'Your hard work and consistency have paid off. Congratulations!'
             : 'You have demonstrated exceptional skill, discipline and consistency.'}
         </div>
 
-
-
-        {/* Stats row - 4 uniform boxes, evenly distributed */}
+        {/* Stats row - refined minimalist boxes */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px',
-          marginTop: '32px', width: '100%', maxWidth: '640px',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px',
+          marginTop: '36px', width: '100%', maxWidth: '660px',
         }}>
           {(isWithdrawal
             ? [
@@ -330,46 +328,48 @@ export default function CertificateDocument({ cert, forCapture = false }) {
             ]
           ).map((s) => (
             <div key={s.label} style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '6px', padding: '14px 8px', textAlign: 'center',
+              background: T.statBg,
+              borderTop: `1px solid ${T.goldDim}`,
+              borderBottom: `0.5px solid ${T.border}`,
+              borderLeft: 'none', borderRight: 'none',
+              padding: '16px 8px', textAlign: 'center',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              minHeight: '56px',
+              minHeight: '58px',
             }}>
-              <div style={{ color: '#C5A059', fontSize: '13px', fontWeight: 700, fontFamily: "'Inter', sans-serif", lineHeight: 1.2 }}>{s.value}</div>
-              <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.14em', marginTop: '6px', fontFamily: "'Inter', sans-serif" }}>{s.label}</div>
+              <div style={{ color: T.gold, fontSize: '14px', fontWeight: 600, fontFamily: "'Cormorant Garamond', serif", lineHeight: 1.2 }}>{s.value}</div>
+              <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.18em', marginTop: '7px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Footer - 3-column grid: Verify | Seal | Certified By ── */}
+      {/* ── Footer ── */}
       <div style={{
-        position: 'absolute', bottom: '40px', left: '56px', right: '56px',
+        position: 'absolute', bottom: '46px', left: '60px', right: '60px',
         display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '24px',
-        paddingTop: '18px',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        paddingTop: '20px',
+        borderTop: `0.5px solid ${T.border}`,
       }}>
         {/* Website / Verify */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.18em', fontFamily: "'Inter', sans-serif" }}>VERIFY AT</div>
-          <div style={{ color: 'rgba(226,232,240,0.75)', fontSize: '10px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.22em', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>VERIFY AT</div>
+          <div style={{ color: 'rgba(226,232,240,0.75)', fontSize: '11px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
             {FIRM.website}
           </div>
         </div>
 
-        {/* Seal - centered */}
+        {/* Seal */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <Seal />
         </div>
 
-        {/* CEO - right aligned */}
+        {/* CEO */}
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.18em', marginBottom: '2px', fontFamily: "'Inter', sans-serif" }}>CERTIFIED BY</div>
+          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.22em', marginBottom: '4px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>CERTIFIED BY</div>
           <Signature />
-          <div style={{ width: '130px', height: '1px', background: 'rgba(255,255,255,0.2)', marginTop: '2px', marginBottom: '4px' }} />
-          <div style={{ color: 'rgba(226,232,240,0.85)', fontSize: '10px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
-          <div style={{ color: T.muted, fontSize: '7px', marginTop: '2px', fontFamily: "'Inter', sans-serif" }}>Chief Executive Officer</div>
+          <div style={{ width: '120px', height: '0.5px', background: T.border, marginTop: '4px', marginBottom: '6px' }} />
+          <div style={{ color: 'rgba(226,232,240,0.85)', fontSize: '11px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
+          <div style={{ color: T.muted, fontSize: '7px', marginTop: '3px', fontFamily: "'Inter', sans-serif", letterSpacing: '0.05em' }}>Chief Executive Officer</div>
         </div>
       </div>
     </div>

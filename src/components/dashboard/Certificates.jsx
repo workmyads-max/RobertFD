@@ -35,8 +35,12 @@ async function downloadPDF(cert, setLoading) {
   const root = createRoot(container);
   await new Promise(r => {
     root.render(React.createElement(CertificateDocument, { cert, forCapture: true }));
-    setTimeout(r, 500);
+    setTimeout(r, 800);
   });
+  // Ensure all web fonts (Cormorant Garamond, Cinzel) are fully loaded before capture
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
 
   const certEl = container.querySelector('div');
   const canvas = await html2canvas(certEl, {
