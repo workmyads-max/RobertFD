@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const certData = {
       certificate_id: certId,
       user_email: account.user_email,
-      trader_name: user.full_name || 'Trader',
+      trader_name: user.display_name || user.full_name || 'Trader',
       type: certType,
       title,
       account_id: account.account_id,

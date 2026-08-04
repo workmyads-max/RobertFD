@@ -310,9 +310,10 @@ export default function CertificateDocument({ cert, forCapture = false }) {
 
 
 
-        {/* Stats row - always 4 uniform boxes */}
+        {/* Stats row - 4 uniform boxes, evenly distributed */}
         <div style={{
-          display: 'flex', gap: '14px', marginTop: '28px', width: '100%', maxWidth: '620px', justifyContent: 'center',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px',
+          marginTop: '32px', width: '100%', maxWidth: '640px',
         }}>
           {(isWithdrawal
             ? [
@@ -329,43 +330,46 @@ export default function CertificateDocument({ cert, forCapture = false }) {
             ]
           ).map((s) => (
             <div key={s.label} style={{
-              flex: '1 1 0', minWidth: 0,
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '8px', padding: '12px 10px', textAlign: 'center',
+              borderRadius: '6px', padding: '14px 8px', textAlign: 'center',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: '56px',
             }}>
-              <div style={{ color: '#C5A059', fontSize: '13px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{s.value}</div>
-              <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginTop: '5px', fontFamily: "'Inter', sans-serif" }}>{s.label}</div>
+              <div style={{ color: '#C5A059', fontSize: '13px', fontWeight: 700, fontFamily: "'Inter', sans-serif", lineHeight: 1.2 }}>{s.value}</div>
+              <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.14em', marginTop: '6px', fontFamily: "'Inter', sans-serif" }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Footer ── */}
+      {/* ── Footer - 3-column grid: Verify | Seal | Certified By ── */}
       <div style={{
-        position: 'absolute', bottom: '44px', left: '56px', right: '56px',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        paddingTop: '14px',
+        position: 'absolute', bottom: '40px', left: '56px', right: '56px',
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '24px',
+        paddingTop: '18px',
         borderTop: '1px solid rgba(255,255,255,0.08)',
       }}>
-        {/* Website */}
-        <div>
-          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '6px', fontFamily: "'Inter', sans-serif" }}>VERIFY AT</div>
-          <div style={{ color: 'rgba(226,232,240,0.7)', fontSize: '10px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+        {/* Website / Verify */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.18em', fontFamily: "'Inter', sans-serif" }}>VERIFY AT</div>
+          <div style={{ color: 'rgba(226,232,240,0.75)', fontSize: '10px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
             {FIRM.website}
           </div>
         </div>
 
-        {/* Seal */}
-        <Seal />
+        {/* Seal - centered */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Seal />
+        </div>
 
-        {/* CEO */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: T.muted, fontSize: '8px', letterSpacing: '0.12em', marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>CERTIFIED BY</div>
+        {/* CEO - right aligned */}
+        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+          <div style={{ color: T.muted, fontSize: '7px', letterSpacing: '0.18em', marginBottom: '2px', fontFamily: "'Inter', sans-serif" }}>CERTIFIED BY</div>
           <Signature />
-          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.25)', marginLeft: 'auto', marginBottom: '3px' }} />
-          <div style={{ color: 'rgba(226,232,240,0.8)', fontSize: '9px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
-          <div style={{ color: T.muted, fontSize: '7px', marginTop: '1px', fontFamily: "'Inter', sans-serif" }}>Chief Executive Officer</div>
+          <div style={{ width: '130px', height: '1px', background: 'rgba(255,255,255,0.2)', marginTop: '2px', marginBottom: '4px' }} />
+          <div style={{ color: 'rgba(226,232,240,0.85)', fontSize: '10px', fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>{FIRM.ceo}</div>
+          <div style={{ color: T.muted, fontSize: '7px', marginTop: '2px', fontFamily: "'Inter', sans-serif" }}>Chief Executive Officer</div>
         </div>
       </div>
     </div>
