@@ -215,15 +215,30 @@ function CertPreviewModal({ cert, onClose }) {
 export default function Certificates({ user }) {
   const [previewCert, setPreviewCert] = useState(null);
 
+  const { data: currentUser = user } = useQuery({
+    queryKey: ['current-user-certs'],
+    queryFn: async () => {
+      try { return await base44.auth.me() || user; } catch { return user; }
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+  });
+
+  const realName = currentUser?.display_name || currentUser?.full_name || 'Trader';
+
   const { data: certs = [], isLoading } = useQuery({
     queryKey: ['certificates', user?.email],
     queryFn: () => base44.entities.Certificate.filter({ user_email: user?.email }),
     enabled: !!user?.email,
   });
 
-  const phaseCerts = certs.filter(c => c.type === 'phase1_passed' || c.type === 'phase2_passed');
-  const fundedCerts = certs.filter(c => c.type === 'funded');
-  const payoutCerts = certs.filter(c => c.type === 'first_payout');
+  // Override stored trader_name with the authenticated user's real name
+  // (legacy certs may have been saved with usernames or stale names)
+  const certsWithName = certs.map(c => ({ ...c, trader_name: realName }));
+
+  const phaseCerts = certsWithName.filter(c => c.type === 'phase1_passed' || c.type === 'phase2_passed');
+  const fundedCerts = certsWithName.filter(c => c.type === 'funded');
+  const payoutCerts = certsWithName.filter(c => c.type === 'first_payout');
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -245,14 +260,14 @@ export default function Certificates({ user }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <PerfCard
           label="Total Certificates"
-          value={certs.length}
+          value={certsWithName.length}
           icon={VaultIcon}
           highlight
         />
         <PerfCard
           label="Latest Achievement"
-          value={certs.length > 0 ? (CERT_TYPES[certs[0]?.type]?.label || '-') : '-'}
-          sub={certs.length > 0 ? (certs[0]?.issue_date || '') : 'No certificates yet'}
+          value={certsWithName.length > 0 ? (CERT_TYPES[certsWithName[0]?.type]?.label || '-') : '-'}
+          sub={certsWithName.length > 0 ? (certsWithName[0]?.issue_date || '') : 'No certificates yet'}
           icon={MoneyBagIcon}
         />
         <PerfCard
@@ -283,7 +298,7 @@ export default function Certificates({ user }) {
           <div className="flex justify-center py-16">
             <div className="w-7 h-7 border-2 border-[#CCFF00]/30 border-t-[#CCFF00] rounded-full animate-spin" />
           </div>
-        ) : certs.length === 0 ? (
+        ) : certsWithName.length === 0 ? (
           <div className="text-center py-20 rounded-2xl border border-dashed border-white/[0.06]" style={{ background: '#121212' }}>
             <Award className="w-10 h-10 mx-auto mb-3" style={{ color: '#CCFF00', opacity: 0.25 }} />
             <div className="text-base font-bold text-white/30 mb-1">No Certificates Yet</div>
@@ -291,7 +306,7 @@ export default function Certificates({ user }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {certs.map((c, i) => (
+            {certsWithName.map((c, i) => (
               <CertListItem key={c.id} cert={c} index={i} onPreview={setPreviewCert} />
             ))}
           </div>
