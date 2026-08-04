@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Clock, CheckCircle, Award, Users, TrendingUp, Zap, ArrowRight } from 'lucide-react';
-import ReferralLinkCard from '@/components/affiliate/ReferralLinkCard';
 
 function AnimatedNumber({ value, prefix = '', decimals = 2 }) {
   const [displayed, setDisplayed] = useState(0);
@@ -57,9 +56,6 @@ export default function AffiliateOverview({ commissions = [], profile, accounts 
 
   return (
     <div className="space-y-8">
-
-      {/* Referral Link - modern classic card */}
-      <ReferralLinkCard profile={profile} />
 
       {/* Tier status - large institutional panel */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'hsl(var(--border))' }}>

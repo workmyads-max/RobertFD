@@ -11,6 +11,7 @@ import CommissionHistory from '../affiliate/CommissionHistory';
 import ReferralTree from '../affiliate/ReferralTree';
 import AffiliateWithdrawal from '../affiliate/AffiliateWithdrawal';
 import AffiliateRanks from '../affiliate/AffiliateRanks';
+import ReferralLinkCard from '../affiliate/ReferralLinkCard';
 
 const ORANGE = '#FF5C00';
 const CARD = '#15171e';
@@ -148,6 +149,7 @@ export default function Affiliate({ user }) {
           transition={{ duration: 0.2 }}>
           {activeTab === 'overview' && (
             <>
+              <div className="mb-8"><ReferralLinkCard profile={profile} /></div>
               <AffiliateRanks user={user} onSupport={() => setActiveTab('withdraw')} />
               <AffiliateOverview commissions={commissions} profile={profile} accounts={accounts} />
             </>

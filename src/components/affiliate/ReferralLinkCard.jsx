@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as LinkIcon, Copy, CheckCircle2, Share2, Twitter, Send } from 'lucide-react';
+import { Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 
 const ACCENT = '#FF5C00';
 
@@ -78,26 +78,6 @@ export default function ReferralLinkCard({ profile }) {
           </button>
         </div>
 
-        {/* Social actions row */}
-        <div className="flex gap-2">
-          <a href={`https://twitter.com/intent/tweet?text=Join%20XFunded%20Trader%20with%20my%20link!&url=${encodeURIComponent(refLink)}`}
-            target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: 'rgba(29,161,242,0.1)', color: '#1da1f2', border: '1px solid rgba(29,161,242,0.2)' }}>
-            <Twitter className="w-3.5 h-3.5" /> Twitter
-          </a>
-          <a href={`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=Trade+with+XFunded+Trader!`}
-            target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: 'rgba(0,136,204,0.1)', color: '#0088cc', border: '1px solid rgba(0,136,204,0.2)' }}>
-            <Send className="w-3.5 h-3.5" /> Telegram
-          </a>
-          <button onClick={() => navigator.share?.({ url: refLink, title: 'XFunded Trader' })}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all hover:opacity-80"
-            style={{ background: 'rgba(255,255,255,0.04)', color: '#888', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Share2 className="w-3.5 h-3.5" /> Share
-          </button>
-        </div>
       </div>
     </div>
   );
