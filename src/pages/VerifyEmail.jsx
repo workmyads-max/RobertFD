@@ -13,6 +13,7 @@ export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
@@ -29,6 +30,9 @@ export default function VerifyEmail() {
     }
     if (state?.password) {
       setPassword(state.password);
+    }
+    if (state?.full_name) {
+      setFullName(state.full_name);
     }
     // Referral code from navigation state, with localStorage fallback
     const refFromState = state?.referral_code;
@@ -121,6 +125,18 @@ export default function VerifyEmail() {
       if (password) {
         await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
 
+        // ── Persist display_name on the user profile so the dashboard welcome
+        // header and Settings > Full Name show the real name, not the email
+        // prefix. The built-in full_name field cannot be updated via updateMe,
+        // so we use the custom display_name field. Non-blocking — never breaks
+        // the login flow if it fails.
+        const displayName = fullName || email.split('@')[0];
+        try {
+          await base44.auth.updateMe({ display_name: displayName });
+        } catch (nameErr) {
+          console.error('Failed to persist display_name:', nameErr);
+        }
+
         // ── Affiliate attribution: create the new user's AffiliateProfile and
         // increment the referrer's total_referrals. Non-blocking - failures are
         // logged but never break the auth flow.
@@ -145,7 +161,7 @@ export default function VerifyEmail() {
             action: 'send_notification',
             to: email.toLowerCase().trim(),
             type: 'registration',
-            data: { name: email.split('@')[0], email }
+            data: { name: displayName, email }
           });
           console.log('Welcome email sent to:', email);
         } catch (emailErr) {

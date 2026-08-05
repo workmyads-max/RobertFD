@@ -122,12 +122,16 @@ export default function Register() {
 
       // Use Base44 native registration - creates user in native User entity
       // Email verification and password reset are handled by Base44 native auth
+      // display_name is a custom field (built-in full_name cannot be updated via
+      // updateMe) — set it at registration AND re-persist after login in
+      // VerifyEmail to guarantee it survives.
       await base44.auth.register({
         email: normalizedEmail,
         password: formData.password,
         full_name: fullName,
         data: {
           country: formData.country || undefined,
+          display_name: fullName,
         }
       });
 
@@ -141,6 +145,7 @@ export default function Register() {
           email: normalizedEmail, 
           password: formData.password,
           referral_code: storedRef || '',
+          full_name: fullName,
         } 
       });
     } catch (err) {
