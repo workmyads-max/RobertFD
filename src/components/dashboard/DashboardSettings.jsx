@@ -195,8 +195,6 @@ const ALL_COUNTRIES = [
 const WALLET_TYPES = [
   { value: 'usdt_trc20', label: 'USDT TRC20', network: 'Tron', placeholder: 'T...' },
   { value: 'usdt_bep20', label: 'USDT BEP20', network: 'BSC', placeholder: '0x...' },
-  { value: 'btc', label: 'Bitcoin', network: 'Bitcoin', placeholder: 'bc1... or 1...' },
-  { value: 'eth', label: 'Ethereum', network: 'ERC20', placeholder: '0x...' },
 ];
 
 export default function DashboardSettings({ user }) {
