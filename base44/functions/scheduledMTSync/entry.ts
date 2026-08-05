@@ -830,7 +830,10 @@ Deno.serve(async (req) => {
           // trader + admins with full trade + MT5 details. At 7 violations the account is
           // red-flagged (risk_warning_level='critical'); only an admin may then terminate
           // the funded contract manually. This block never sets status='failed'.
-          if (newDeals.length > 0 && !breachDetected) {
+          //
+          // APPLIES TO LIVE FUNDED ACCOUNTS ONLY — phase 1 / phase 2 challenge accounts
+          // are exempt from the 1% per-trade risk rule (they are not yet funded).
+          if (newDeals.length > 0 && !breachDetected && acc.status === 'funded' && acc.phase === 'funded') {
             const riskLimit$ = accountSize * 0.01;
             const parseRiskTime = (t) => {
               if (!t) return null;
