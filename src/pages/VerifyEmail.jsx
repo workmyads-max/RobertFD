@@ -137,70 +137,15 @@ export default function VerifyEmail() {
         }
 
         // ── Welcome email: always send once after first successful verification.
-        // Uses Base44 SendEmail so it's delivered from our verified custom domain
-        // (support@xfundedtrader.com). Wrapped in try/catch so email failures
-        // never block login.
+        // Routed through the custom emailService so it is delivered from
+        // support@xfundedtrader.com (never a third-party/base44 default address).
+        // Wrapped in try/catch so email failures never block login.
         try {
-          await base44.integrations.Core.SendEmail({
+          await base44.functions.invoke('emailService', {
+            action: 'send_notification',
             to: email.toLowerCase().trim(),
-            subject: 'Welcome to XFunded Trader - Your Journey Begins Now',
-            body: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #0a0a0a; color: #ebebeb; line-height: 1.6; }
-    .container { max-width: 600px; margin: 0 auto; background-color: #111111; }
-    .header { padding: 40px 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .logo { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; color: #ffffff; }
-    .logo span { color: #FF7A00; }
-    .tagline { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; color: rgba(255,255,255,0.38); text-transform: uppercase; margin-top: 6px; }
-    .content { padding: 40px 30px; }
-    h1 { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 20px; line-height: 1.3; }
-    p { font-size: 16px; color: #a3a3a3; margin-bottom: 24px; }
-    .cta-button { display: inline-block; padding: 14px 32px; background-color: #FF7A00; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-top: 20px; }
-    .cta-button:hover { background-color: #ff6a00; }
-    .features { margin: 30px 0; padding: 20px; background-color: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
-    .feature-item { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; color: #d4d4d4; }
-    .feature-item:last-child { margin-bottom: 0; }
-    .check { color: #FF7A00; font-weight: bold; }
-    .footer { padding: 30px; text-align: center; font-size: 13px; color: #737373; border-top: 1px solid rgba(255,255,255,0.08); }
-    .footer a { color: #FF7A00; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo"><span>X</span>Funded</div>
-      <div class="tagline">Trader</div>
-    </div>
-    <div class="content">
-      <h1>Welcome to XFunded Trader</h1>
-      <p>Congratulations on taking the first step toward professional trading success. Your account is now verified and ready to go.</p>
-      
-      <p>You now have access to:</p>
-      <div class="features">
-        <div class="feature-item"><span class="check">✓</span> Trading capital up to $200,000</div>
-        <div class="feature-item"><span class="check">✓</span> Keep up to 80% of profits</div>
-        <div class="feature-item"><span class="check">✓</span> Professional trading platforms</div>
-        <div class="feature-item"><span class="check">✓</span> Fast, reliable withdrawals</div>
-      </div>
-      
-      <div style="text-align: center;">
-        <a href="${window.location.origin}/dashboard" class="cta-button">Go to Dashboard</a>
-      </div>
-      
-      <p style="margin-top: 30px; font-size: 14px;">Ready to start? Head to your dashboard and choose your first challenge. Our team is here to support you every step of the way.</p>
-    </div>
-    <div class="footer">
-      <p>© 2026 XFunded Trader. All rights reserved.</p>
-      <p style="margin-top: 8px;">Questions? Contact us at <a href="mailto:support@xfundedtrader.com">support@xfundedtrader.com</a></p>
-    </div>
-  </div>
-</body>
-</html>`
+            type: 'registration',
+            data: { name: email.split('@')[0], email }
           });
           console.log('Welcome email sent to:', email);
         } catch (emailErr) {

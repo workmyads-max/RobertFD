@@ -395,7 +395,7 @@ async function sendEmailViaSMTP(to, subject, body, sr) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'XFunded Trader <noreply@xfundedtrader.com>',
+        from: 'XFunded Trader <support@xfundedtrader.com>',
         reply_to: 'support@xfundedtrader.com',
         to: [to],
         subject,
@@ -474,7 +474,6 @@ Deno.serve(async (req) => {
         withdrawal_approved: '✅ Withdrawal Approved',
         withdrawal_rejected: '❌ Withdrawal Rejected',
         kyc_approved: '✅ KYC Verification Approved',
-        kyc_approved: 'KYC Verified',
         };
 
       const subject = subjectMap[type] || 'XFunded Trader Notification';
@@ -489,6 +488,21 @@ Deno.serve(async (req) => {
         metadata: { userId, data }
       });
 
+      return Response.json({ success: sent, message: sent ? 'Email sent' : 'Failed to send' });
+    }
+
+    // ─── SEND RAW EMAIL (internal/admin lead capture) ───────────────────
+    if (action === 'send_raw') {
+      const { to, subject, body } = payload;
+      if (!to || !subject) {
+        return Response.json({ error: 'Email and subject required' }, { status: 400 });
+      }
+      const sent = await sendEmailViaSMTP(to, subject, body || '', sr);
+      await logEmailToSupabase({
+        to, subject, type: 'raw',
+        status: sent ? 'sent' : 'failed',
+        metadata: {}
+      });
       return Response.json({ success: sent, message: sent ? 'Email sent' : 'Failed to send' });
     }
 

@@ -25,7 +25,8 @@ export default function PromoPopup({ mascotImage }) {
     e.preventDefault();
     if (!email) return;
     try {
-      await base44.integrations.Core.SendEmail({
+      await base44.functions.invoke('emailService', {
+        action: 'send_raw',
         to: 'workmyads@gmail.com',
         subject: 'New Lead from Promo Popup',
         body: `New email signup from promo popup: ${email}`,
