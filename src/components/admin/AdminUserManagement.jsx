@@ -26,15 +26,10 @@ function Badge({ status }) {
   );
 }
 
-function UserDetailModal({ user, onClose, qc }) {
+function UserDetailModal({ user, accounts = [], onClose, qc }) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ full_name: user.full_name || '', role: user.role || 'user' });
   const [saving, setSaving] = useState(false);
-
-  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
-    queryKey: ['user-accounts-admin', user.email],
-    queryFn: () => base44.entities.ChallengeAccount.filter({ user_email: user.email }, '-created_date', 100),
-  });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['user-orders-admin', user.email],
@@ -226,9 +221,7 @@ function UserDetailModal({ user, onClose, qc }) {
             <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-3 flex items-center gap-2">
               <Server className="w-3.5 h-3.5" /> MT5 Accounts ({accounts.length})
             </div>
-            {loadingAccounts ? (
-              <div className="py-6 text-center"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
-            ) : accounts.length === 0 ? (
+            {accounts.length === 0 ? (
               <div className="py-6 text-center text-sm text-white/30 rounded-xl"
                 style={{ border: '1px dashed rgba(255,255,255,0.08)' }}>No accounts found</div>
             ) : (
@@ -383,7 +376,13 @@ export default function AdminUserManagement() {
 
   const { data: allAccounts = [] } = useQuery({
     queryKey: ['all-challenge-accounts-admin'],
-    queryFn: () => base44.entities.ChallengeAccount.list('-created_date', 500),
+    queryFn: async () => {
+      // Service-role endpoint bypasses RLS so admin sees ALL users' accounts,
+      // not just the logged-in admin's own. Without this, RLS silently overrides
+      // any user_email filter and returns only the admin's accounts for everyone.
+      const res = await base44.functions.invoke('adminListAllAccounts', {});
+      return res?.accounts || [];
+    },
   });
 
   const { data: flags = [] } = useQuery({
@@ -479,7 +478,12 @@ export default function AdminUserManagement() {
 
       <AnimatePresence>
         {selected && (
-          <UserDetailModal user={selected} onClose={() => setSelected(null)} qc={qc} />
+          <UserDetailModal
+            user={selected}
+            accounts={allAccounts.filter(a => a.user_email === selected.email)}
+            onClose={() => setSelected(null)}
+            qc={qc}
+          />
         )}
       </AnimatePresence>
     </div>
