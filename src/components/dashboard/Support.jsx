@@ -126,14 +126,7 @@ export default function Support() {
           <div className="text-[11px] text-white/30">Get help via email</div>
           <div className="text-sm font-bold text-white mt-0.5">support@xfundedtrader.com</div>
         </div>
-        <button onClick={() => setTab('chat')}
-          className="text-left rounded-2xl p-5 transition-all hover:bg-white/[0.02]"
-          style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <MessageCircle className="w-6 h-6 mb-3" style={{ color: ACCENT }} />
-          <div className="text-xs font-semibold text-white mb-1">Live Chat</div>
-          <div className="text-[11px] text-white/30">Instant assistance</div>
-          <div className="text-sm font-bold text-white mt-0.5">Open chat →</div>
-        </button>
+
         <button onClick={() => setTab('faq')}
           className="text-left rounded-2xl p-5 transition-all hover:bg-white/[0.02]"
           style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -148,7 +141,6 @@ export default function Support() {
       <div className="flex gap-1 mb-5 p-1 rounded-xl" style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.06)' }}>
         {[
           { id: 'tickets', label: 'My Tickets' },
-          { id: 'chat', label: 'Live Chat' },
           { id: 'faq', label: 'FAQ & Knowledge Base' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -163,7 +155,6 @@ export default function Support() {
       {tab === 'tickets' && (
         <TicketList tickets={tickets} loading={ticketsLoading} onCreate={() => setShowForm(true)} />
       )}
-      {tab === 'chat' && <LiveChat userEmail={userEmail} userName={me?.full_name} />}
       {tab === 'faq' && <FaqKb openFaq={openFaq} setOpenFaq={setOpenFaq} />}
 
       {/* New ticket modal */}
