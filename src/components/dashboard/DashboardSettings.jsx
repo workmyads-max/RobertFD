@@ -220,13 +220,6 @@ export default function DashboardSettings({ user }) {
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
-  // 2FA state
-  const [twoFAEnabled, setTwoFAEnabled] = useState(user?.two_factor_enabled || false);
-
-  // Google auth state
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleDisconnectLoading, setGoogleDisconnectLoading] = useState(false);
-
   // Payout wallet selection
   const [selectedWalletType, setSelectedWalletType] = useState(user?.payout_wallet_type || 'usdt_trc20');
 
@@ -333,31 +326,6 @@ export default function DashboardSettings({ user }) {
       console.error('Failed to save phone:', err);
     } finally {
       setPhoneLoading(false);
-    }
-  };
-
-  const handleGoogleConnect = async () => {
-    setGoogleLoading(true);
-    try {
-      // Redirect to Google OAuth - the googleAuth function handles the redirect
-      window.location.href = '/api/auth/google';
-    } catch (err) {
-      console.error('Google auth failed:', err);
-      setGoogleLoading(false);
-    }
-  };
-
-  const handleGoogleDisconnect = async () => {
-    setGoogleDisconnectLoading(true);
-    try {
-      await base44.auth.updateMe({ 
-        google_linked: false, 
-        google_id: null 
-      });
-    } catch (err) {
-      console.error('Google disconnect failed:', err);
-    } finally {
-      setGoogleDisconnectLoading(false);
     }
   };
 
@@ -504,49 +472,6 @@ export default function DashboardSettings({ user }) {
               {/* ── SECURITY & AUTH ── */}
               {activeTab === 'security' && (
                 <>
-                  {/* Google Auth */}
-                  <Card title="Google Authentication" subtitle="Link your Google account for one-click sign-in">
-                    <div className="p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <Chrome className="w-5 h-5 text-white/70" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-semibold text-white">Google Sign-In</div>
-                            <div className="text-[11px] text-white/30 font-mono mt-0.5">
-                              {user?.google_linked ? `Connected as ${user.email}` : 'Not connected'}
-                            </div>
-                          </div>
-                        </div>
-                        <StatusBadge verified={!!user?.google_linked} />
-                      </div>
-                      
-                      <button
-                        onClick={user?.google_linked ? handleGoogleDisconnect : handleGoogleConnect}
-                        disabled={googleLoading || googleDisconnectLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-                        style={{
-                          background: user?.google_linked ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.06)',
-                          border: user?.google_linked ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,255,255,0.12)',
-                          color: user?.google_linked ? '#ef4444' : 'rgba(255,255,255,0.9)',
-                        }}>
-                        {googleLoading || googleDisconnectLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Chrome className="w-4 h-4" />}
-                        {googleLoading ? 'Connecting...' : googleDisconnectLoading ? 'Disconnecting...' : user?.google_linked ? 'Disconnect Google' : 'Connect with Google'}
-                      </button>
-
-                      {user?.google_linked && (
-                        <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                          <div className="flex items-center gap-2 text-[11px] text-emerald-400/80">
-                            <CheckCircle className="w-3 h-3" />
-                            <span>Google authentication enabled for quick login</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
                   {/* Phone Verification */}
                   <Card title="Phone Verification" subtitle="Verify your phone number for enhanced account security">
                     <div className="space-y-4">
@@ -622,34 +547,6 @@ export default function DashboardSettings({ user }) {
                             ✓ Saved: {user.phone}
                           </div>
                         )}
-                      </div>
-                    </div>
-                  </Card>
-
-                  {/* Two-Factor Auth */}
-                  <Card title="Two-Factor Authentication" subtitle="Add an extra layer of security with authenticator app 2FA">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: twoFAEnabled ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.06)', border: `1px solid ${twoFAEnabled ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.1)'}` }}>
-                          <Key className="w-5 h-5" style={{ color: twoFAEnabled ? '#10b981' : 'rgba(255,255,255,0.4)' }} />
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-white">Authenticator App (TOTP)</div>
-                          <div className="text-[11px] text-white/30 font-mono mt-0.5">{twoFAEnabled ? 'Active - Your account is protected' : 'Not enabled - Recommended for security'}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge verified={twoFAEnabled} />
-                        <button onClick={() => setTwoFAEnabled(v => !v)}
-                          className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-                          style={{
-                            background: twoFAEnabled ? 'rgba(239,68,68,0.1)' : 'rgba(255,92,0,0.15)',
-                            border: twoFAEnabled ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(255,92,0,0.3)',
-                            color: twoFAEnabled ? '#ef4444' : '#FF5C00',
-                          }}>
-                          {twoFAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-                        </button>
                       </div>
                     </div>
                   </Card>
