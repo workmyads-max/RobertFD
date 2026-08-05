@@ -1,0 +1,14 @@
+# Allow all crawlers full access
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /challenges
+Disallow: /login
+Disallow: /register
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Sitemap location
+Sitemap: https://xfundedtrader.com/sitemap.xml

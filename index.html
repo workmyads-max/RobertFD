@@ -28,6 +28,37 @@
 
     <!-- Canonical -->
     <link rel="canonical" href="https://xfundedtrader.com" />
+
+    <!-- Explicitly allow indexing -->
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "XFunded Trader",
+      "url": "https://xfundedtrader.com",
+      "description": "An institutional-grade proprietary trading platform offering instant capital, advanced analytics, and professional evaluation challenges to elite traders worldwide.",
+      "logo": "https://xfundedtrader.com/logo.png"
+    }
+    </script>
+
+    <!-- Structured Data: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "XFunded Trader",
+      "url": "https://xfundedtrader.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://xfundedtrader.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
